@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="Camera2D" inherits="Node2D" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		Camera node for 2D scenes.
+	</brief_description>
+	<description>
+		Camera node for 2D scenes. It forces the screen (current layer) to scroll following this node. This makes it easier (and faster) to program scrollable scenes than manually changing the position of [CanvasItem]-based nodes.
+		Cameras register themselves in the nearest [Viewport] node (when ascending the tree). Only one camera can be active per viewport. If no viewport is available ascending the tree, the camera will register in the global viewport.
+		This node is intended to be a simple helper to get things going quickly, but more functionality may be desired to change how the camera works. To make your own custom camera node, inherit it from [Node2D] and change the transform of the canvas by setting [member Viewport.canvas_transform] in [Viewport] (you can obtain the current [Viewport] by using [method Node.get_viewport]).
+		Note that the [Camera2D] node's [code]position[/code] doesn't represent the actual position of the screen, which may differ due to applied smoothing or limits. You can use [method get_screen_center_position] to get the real position.
+	</description>
+	<tutorials>
+		<link title="2D Platformer Demo">https://godotengine.org/asset-library/asset/120</link>
+		<link title="2D Isometric Demo">https://godotengine.org/asset-library/asset/112</link>
+		<link title="2D HDR Demo">https://godotengine.org/asset-library/asset/110</link>
+	</tutorials>
+	<methods>
+		<method name="force_update_scroll">
+			<return type="void" />
+			<description>
+				Forces the camera to update scroll immediately.
+			</description>
+		</method>
+		<method name="is_current" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] if this [Camera2D] is the active camera (see [method Viewport.get_camera_2d]).
+			</description>
+		</method>
+		<method name="make_current">
+			<return type="void" />
+			<description>
+				Forces this [Camera2D] to become the current active one. [member enabled] must be [code]true[/code].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="anchor_mode" type="int" setter="set_anchor_mode" getter="get_anchor_mode" enum="Camera2D.AnchorMode" default="1">
+			The Camera2D's anchor point. See [enum AnchorMode] constants.
+		</member>
+		<member name="custom_viewport" type="Node" setter="set_custom_viewport" getter="get_custom_viewport">
+			The custom [Viewport] node attached to the [Camera2D]. If [code]null[/code] or not a [Viewport], uses the default viewport instead.
+		</member>
+		<member name="editor_draw_screen" type="bool" setter="set_screen_drawing_enabled" getter="is_screen_drawing_enabled" default="true">
+			If [code]true[/code], draws the camera's screen rectangle in the editor.
+		</member>
+		<member name="enabled" type="bool" setter="set_enabled" getter="is_enabled" default="true">
+			Controls whether the camera can be active or not. If [code]true[/code], the [Camera2D] will become the main camera when it enters the scene tree and there is no active camera currently (see [method Viewport.get_camera_2d]).
+			When the camera is currently active and [member enabled] is set to [code]false[/code], the next enabled [Camera2D] in the scene tree will become active.
+		</member>
+		<member name="offset" type="Vector2" setter="set_offset" getter="get_offset" default="Vector2(0, 0)">
+			The camera's relative offset. Useful for looking around or camera shake animations. The offsetted camera can go past the limits defined in [member limit_top], [member limit_bottom], [member limit_left] and [member limit_right].
+		</member>
+	</members>
+	<constants>
+		<constant name="ANCHOR_MODE_FIXED_TOP_LEFT" value="0" enum="AnchorMode">
+			The camera's position is fixed so that the top-left corner is always at the origin.
+		</constant>
+		<constant name="ANCHOR_MODE_DRAG_CENTER" value="1" enum="AnchorMode">
+			The camera's position takes into account vertical/horizontal offsets and the screen size.
+		</constant>
+	</constants>
+</class>

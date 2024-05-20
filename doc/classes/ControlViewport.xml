@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ControlViewport" inherits="Control" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="_custom_draw" qualifiers="virtual">
+			<return type="void" />
+			<param index="0" name="control" type="Control" />
+			<description>
+			</description>
+		</method>
+		<method name="center_view">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="clear_guides">
+			<return type="void" />
+			<description>
+			</description>
+		</method>
+		<method name="get_control_viewport" qualifiers="const">
+			<return type="Control" />
+			<description>
+			</description>
+		</method>
+		<method name="get_controls_container" qualifiers="const">
+			<return type="HBoxContainer" />
+			<description>
+			</description>
+		</method>
+		<method name="get_custom_transform" qualifiers="const">
+			<return type="Transform2D" />
+			<description>
+			</description>
+		</method>
+		<method name="get_zoom_widget" qualifiers="const">
+			<return type="ZoomWidget" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="clip_contents" type="bool" setter="set_clip_contents" getter="is_clipping_contents" overrides="Control" default="true" />
+		<member name="grid_offset" type="Vector2" setter="set_grid_offset" getter="get_grid_offset" default="Vector2(0, 0)">
+		</member>
+		<member name="grid_step" type="Vector2" setter="set_grid_step" getter="get_grid_step" default="Vector2(16, 16)">
+		</member>
+		<member name="primary_grid_step" type="Vector2i" setter="set_primary_grid_step" getter="get_primary_grid_step" default="Vector2i(8, 8)">
+		</member>
+		<member name="show_axis" type="bool" setter="set_show_axis" getter="is_axis_visible" default="true">
+		</member>
+		<member name="show_grid" type="bool" setter="set_show_grid" getter="is_grid_visible" default="true">
+		</member>
+		<member name="show_guides" type="bool" setter="set_show_guides" getter="is_guides_visible" default="true">
+		</member>
+		<member name="show_rulers" type="bool" setter="set_show_rulers" getter="is_rulers_visible" default="true">
+		</member>
+		<member name="show_viewport" type="bool" setter="set_show_viewport" getter="is_viewport_visible" default="true">
+		</member>
+		<member name="show_zoom_widget" type="bool" setter="set_show_zoom_widget" getter="is_zoom_widget_visible" default="true">
+		</member>
+		<member name="size_flags_horizontal" type="int" setter="set_h_size_flags" getter="get_h_size_flags" overrides="Control" enum="Control.SizeFlags" is_bitfield="true" default="3" />
+		<member name="size_flags_vertical" type="int" setter="set_v_size_flags" getter="get_v_size_flags" overrides="Control" enum="Control.SizeFlags" is_bitfield="true" default="3" />
+		<member name="view_offset" type="Vector2" setter="set_view_offset" getter="get_view_offset" default="Vector2(-20, -20)">
+		</member>
+		<member name="view_size" type="Vector2" setter="set_view_size" getter="get_view_size" default="Vector2(64, 64)">
+		</member>
+	</members>
+	<signals>
+		<signal name="view_transform_changed">
+			<param index="0" name="transform" type="Transform2D" />
+			<description>
+			</description>
+		</signal>
+	</signals>
+	<theme_items>
+		<theme_item name="guides_color" data_type="color" type="Color" default="Color(0.725, 0.467, 0.988, 1)">
+		</theme_item>
+		<theme_item name="primary_grid_color" data_type="color" type="Color" default="Color(1, 1, 1, 0.6)">
+		</theme_item>
+		<theme_item name="ruler_bg_color" data_type="color" type="Color" default="Color(0.1062, 0.0972, 0.1254, 1)">
+		</theme_item>
+		<theme_item name="ruler_font_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
+		</theme_item>
+		<theme_item name="secondary_grid_color" data_type="color" type="Color" default="Color(1, 1, 1, 0.2)">
+		</theme_item>
+		<theme_item name="viewport_color" data_type="color" type="Color" default="Color(0.4, 0.4, 1, 0.8)">
+		</theme_item>
+		<theme_item name="ruler_width" data_type="constant" type="int" default="20">
+		</theme_item>
+		<theme_item name="ruler_font" data_type="font" type="Font">
+		</theme_item>
+		<theme_item name="ruler_font_size" data_type="font_size" type="int">
+		</theme_item>
+		<theme_item name="focus_style" data_type="style" type="StyleBox">
+		</theme_item>
+	</theme_items>
+</class>

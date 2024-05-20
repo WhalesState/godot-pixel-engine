@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="ZoomWidget" inherits="HBoxContainer" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_zoom_minus_button">
+			<return type="Button" />
+			<description>
+			</description>
+		</method>
+		<method name="get_zoom_plus_button">
+			<return type="Button" />
+			<description>
+			</description>
+		</method>
+		<method name="get_zoom_reset_button">
+			<return type="Button" />
+			<description>
+			</description>
+		</method>
+		<method name="set_zoom_by_increments">
+			<return type="void" />
+			<param index="0" name="increment" type="int" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="max_zoom" type="float" setter="set_max_zoom" getter="get_max_zoom" default="256.0">
+		</member>
+		<member name="min_zoom" type="float" setter="set_min_zoom" getter="get_min_zoom" default="0.125">
+		</member>
+		<member name="zoom" type="float" setter="set_zoom" getter="get_zoom" default="1.0">
+		</member>
+	</members>
+	<signals>
+		<signal name="zoom_changed">
+			<param index="0" name="zoom" type="float" />
+			<description>
+			</description>
+		</signal>
+	</signals>
+	<theme_items>
+		<theme_item name="zoom_less" data_type="icon" type="Texture2D">
+		</theme_item>
+		<theme_item name="zoom_more" data_type="icon" type="Texture2D">
+		</theme_item>
+	</theme_items>
+</class>

@@ -1,0 +1,2035 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="RenderingServer" inherits="Object" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		Server for anything visible.
+	</brief_description>
+	<description>
+		The rendering server is the API backend for everything visible. The whole scene system mounts on it to display. The rendering server is completely opaque: the internals are entirely implementation-specific and cannot be accessed.
+		The rendering server can be used to bypass the scene/[Node] system entirely. This can improve performance in cases where the scene system is the bottleneck, but won't improve performance otherwise (for instance, if the GPU is already fully utilized).
+		Resources are created using the [code]*_create[/code] functions. These functions return [RID]s which are not references to the objects themselves, but opaque [i]pointers[/i] towards these objects.
+		All objects are drawn to a viewport. You can use the [Viewport] attached to the [SceneTree] or you can create one yourself with [method viewport_create]. When using a custom canvas, the canvas needs to be attached to the viewport using [method viewport_attach_canvas].
+		in 2D, a canvas is needed to draw all canvas items.
+		[b]2D:[/b] In 2D, all visible objects are some form of canvas item. In order to be visible, a canvas item needs to be the child of a canvas attached to a viewport, or it needs to be the child of another canvas item that is eventually attached to the canvas. 2D-specific RenderingServer methods generally start with [code]canvas_*[/code].
+		[b]Headless mode:[/b] Starting the engine with the [code]--headless[/code] [url=$DOCS_URL/tutorials/editor/command_line_tutorial.html]command line argument[/url] disables all rendering and window management functions. Most functions from [RenderingServer] will return dummy values in this case.
+	</description>
+	<tutorials>
+		<link title="Optimization using Servers">$DOCS_URL/tutorials/performance/using_servers.html</link>
+	</tutorials>
+	<methods>
+		<method name="call_on_render_thread">
+			<return type="void" />
+			<param index="0" name="callable" type="Callable" />
+			<description>
+				As the RenderingServer actual logic may run on an separate thread, accessing its internals from the main (or any other) thread will result in errors. To make it easier to run code that can safely access the rendering internals (such as RenderingDevice and similar RD classes), push a callable via this function so it will be executed on the render thread.
+			</description>
+		</method>
+		<method name="canvas_create">
+			<return type="RID" />
+			<description>
+				Creates a canvas and returns the assigned [RID]. It can be accessed with the RID that is returned. This RID will be used in all [code]canvas_*[/code] RenderingServer functions.
+				Once finished with your RID, you will want to free the RID using the RenderingServer's [method free_rid] method.
+				Canvas has no [Resource] or [Node] equivalent.
+			</description>
+		</method>
+		<method name="canvas_item_add_animation_slice">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="animation_length" type="float" />
+			<param index="2" name="slice_begin" type="float" />
+			<param index="3" name="slice_end" type="float" />
+			<param index="4" name="offset" type="float" default="0.0" />
+			<description>
+				Subsequent drawing commands will be ignored unless they fall within the specified animation slice. This is a faster way to implement animations that loop on background rather than redrawing constantly.
+			</description>
+		</method>
+		<method name="canvas_item_add_circle">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="pos" type="Vector2" />
+			<param index="2" name="radius" type="float" />
+			<param index="3" name="color" type="Color" />
+			<description>
+				Draws a circle on the [CanvasItem] pointed to by the [param item] [RID]. See also [method CanvasItem.draw_circle].
+			</description>
+		</method>
+		<method name="canvas_item_add_clip_ignore">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="ignore" type="bool" />
+			<description>
+				If [param ignore] is [code]true[/code], ignore clipping on items drawn with this canvas item until this is called again with [param ignore] set to false.
+			</description>
+		</method>
+		<method name="canvas_item_add_lcd_texture_rect_region">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="rect" type="Rect2" />
+			<param index="2" name="texture" type="RID" />
+			<param index="3" name="src_rect" type="Rect2" />
+			<param index="4" name="modulate" type="Color" />
+			<description>
+				See also [method CanvasItem.draw_lcd_texture_rect_region].
+			</description>
+		</method>
+		<method name="canvas_item_add_line">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="from" type="Vector2" />
+			<param index="2" name="to" type="Vector2" />
+			<param index="3" name="color" type="Color" />
+			<param index="4" name="width" type="float" default="-1.0" />
+			<param index="5" name="antialiased" type="bool" default="false" />
+			<description>
+				Draws a line on the [CanvasItem] pointed to by the [param item] [RID]. See also [method CanvasItem.draw_line].
+			</description>
+		</method>
+		<method name="canvas_item_add_msdf_texture_rect_region">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="rect" type="Rect2" />
+			<param index="2" name="texture" type="RID" />
+			<param index="3" name="src_rect" type="Rect2" />
+			<param index="4" name="modulate" type="Color" default="Color(1, 1, 1, 1)" />
+			<param index="5" name="outline_size" type="int" default="0" />
+			<param index="6" name="px_range" type="float" default="1.0" />
+			<param index="7" name="scale" type="float" default="1.0" />
+			<description>
+				See also [method CanvasItem.draw_msdf_texture_rect_region].
+			</description>
+		</method>
+		<method name="canvas_item_add_multiline">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="points" type="PackedVector2Array" />
+			<param index="2" name="colors" type="PackedColorArray" />
+			<param index="3" name="width" type="float" default="-1.0" />
+			<description>
+				Draws a 2D multiline on the [CanvasItem] pointed to by the [param item] [RID]. See also [method CanvasItem.draw_multiline] and [method CanvasItem.draw_multiline_colors].
+			</description>
+		</method>
+		<method name="canvas_item_add_nine_patch">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="rect" type="Rect2" />
+			<param index="2" name="source" type="Rect2" />
+			<param index="3" name="texture" type="RID" />
+			<param index="4" name="topleft" type="Vector2" />
+			<param index="5" name="bottomright" type="Vector2" />
+			<param index="6" name="x_axis_mode" type="int" enum="RenderingServer.NinePatchAxisMode" default="0" />
+			<param index="7" name="y_axis_mode" type="int" enum="RenderingServer.NinePatchAxisMode" default="0" />
+			<param index="8" name="draw_center" type="bool" default="true" />
+			<param index="9" name="modulate" type="Color" default="Color(1, 1, 1, 1)" />
+			<description>
+				Draws a nine-patch rectangle on the [CanvasItem] pointed to by the [param item] [RID].
+			</description>
+		</method>
+		<method name="canvas_item_add_polygon">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="points" type="PackedVector2Array" />
+			<param index="2" name="colors" type="PackedColorArray" />
+			<param index="3" name="uvs" type="PackedVector2Array" default="PackedVector2Array()" />
+			<param index="4" name="texture" type="RID" default="RID()" />
+			<description>
+				Draws a 2D polygon on the [CanvasItem] pointed to by the [param item] [RID]. If you need more flexibility (such as being able to use bones), use [method canvas_item_add_triangle_array] instead. See also [method CanvasItem.draw_polygon].
+			</description>
+		</method>
+		<method name="canvas_item_add_polyline">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="points" type="PackedVector2Array" />
+			<param index="2" name="colors" type="PackedColorArray" />
+			<param index="3" name="width" type="float" default="-1.0" />
+			<param index="4" name="antialiased" type="bool" default="false" />
+			<description>
+				Draws a 2D polyline on the [CanvasItem] pointed to by the [param item] [RID]. See also [method CanvasItem.draw_polyline] and [method CanvasItem.draw_polyline_colors].
+			</description>
+		</method>
+		<method name="canvas_item_add_primitive">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="points" type="PackedVector2Array" />
+			<param index="2" name="colors" type="PackedColorArray" />
+			<param index="3" name="uvs" type="PackedVector2Array" />
+			<param index="4" name="texture" type="RID" />
+			<description>
+				Draws a 2D primitive on the [CanvasItem] pointed to by the [param item] [RID]. See also [method CanvasItem.draw_primitive].
+			</description>
+		</method>
+		<method name="canvas_item_add_rect">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="rect" type="Rect2" />
+			<param index="2" name="color" type="Color" />
+			<description>
+				Draws a rectangle on the [CanvasItem] pointed to by the [param item] [RID]. See also [method CanvasItem.draw_rect].
+			</description>
+		</method>
+		<method name="canvas_item_add_set_transform">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="transform" type="Transform2D" />
+			<description>
+				Sets a [Transform2D] that will be used to transform subsequent canvas item commands.
+			</description>
+		</method>
+		<method name="canvas_item_add_texture_rect">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="rect" type="Rect2" />
+			<param index="2" name="texture" type="RID" />
+			<param index="3" name="tile" type="bool" default="false" />
+			<param index="4" name="modulate" type="Color" default="Color(1, 1, 1, 1)" />
+			<param index="5" name="transpose" type="bool" default="false" />
+			<description>
+				Draws a 2D textured rectangle on the [CanvasItem] pointed to by the [param item] [RID]. See also [method CanvasItem.draw_texture_rect] and [method Texture2D.draw_rect].
+			</description>
+		</method>
+		<method name="canvas_item_add_texture_rect_region">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="rect" type="Rect2" />
+			<param index="2" name="texture" type="RID" />
+			<param index="3" name="src_rect" type="Rect2" />
+			<param index="4" name="modulate" type="Color" default="Color(1, 1, 1, 1)" />
+			<param index="5" name="transpose" type="bool" default="false" />
+			<param index="6" name="clip_uv" type="bool" default="true" />
+			<description>
+				Draws the specified region of a 2D textured rectangle on the [CanvasItem] pointed to by the [param item] [RID]. See also [method CanvasItem.draw_texture_rect_region] and [method Texture2D.draw_rect_region].
+			</description>
+		</method>
+		<method name="canvas_item_add_triangle_array">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="indices" type="PackedInt32Array" />
+			<param index="2" name="points" type="PackedVector2Array" />
+			<param index="3" name="colors" type="PackedColorArray" />
+			<param index="4" name="uvs" type="PackedVector2Array" default="PackedVector2Array()" />
+			<param index="5" name="texture" type="RID" default="RID()" />
+			<param index="6" name="count" type="int" default="-1" />
+			<description>
+				Draws a triangle array on the [CanvasItem] pointed to by the [param item] [RID]. This is internally used by [Line2D] and [StyleBoxFlat] for rendering. [method canvas_item_add_triangle_array] is highly flexible, but more complex to use than [method canvas_item_add_polygon].
+				[b]Note:[/b] [param count] is unused and can be left unspecified.
+			</description>
+		</method>
+		<method name="canvas_item_clear">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<description>
+				Clears the [CanvasItem] and removes all commands in it.
+			</description>
+		</method>
+		<method name="canvas_item_create">
+			<return type="RID" />
+			<description>
+				Creates a new CanvasItem instance and returns its [RID]. It can be accessed with the RID that is returned. This RID will be used in all [code]canvas_item_*[/code] RenderingServer functions.
+				Once finished with your RID, you will want to free the RID using the RenderingServer's [method free_rid] method.
+				[b]Note:[/b] The equivalent node is [CanvasItem].
+			</description>
+		</method>
+		<method name="canvas_item_set_canvas_group_mode">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="mode" type="int" enum="RenderingServer.CanvasGroupMode" />
+			<param index="2" name="clear_margin" type="float" default="5.0" />
+			<param index="3" name="fit_empty" type="bool" default="false" />
+			<param index="4" name="fit_margin" type="float" default="0.0" />
+			<param index="5" name="blur_mipmaps" type="bool" default="false" />
+			<description>
+				Sets the canvas group mode used during 2D rendering for the canvas item specified by the [param item] RID. For faster but more limited clipping, use [method canvas_item_set_clip] instead.
+				[b]Note:[/b] The equivalent node functionality is found in [CanvasGroup] and [member CanvasItem.clip_children].
+			</description>
+		</method>
+		<method name="canvas_item_set_clip">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="clip" type="bool" />
+			<description>
+				If [param clip] is [code]true[/code], makes the canvas item specified by the [param item] RID not draw anything outside of its rect's coordinates. This clipping is fast, but works only with axis-aligned rectangles. This means that rotation is ignored by the clipping rectangle. For more advanced clipping shapes, use [method canvas_item_set_canvas_group_mode] instead.
+				[b]Note:[/b] The equivalent node functionality is found in [member Label.clip_text], [RichTextLabel] (always enabled) and more.
+			</description>
+		</method>
+		<method name="canvas_item_set_copy_to_backbuffer">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="enabled" type="bool" />
+			<param index="2" name="rect" type="Rect2" />
+			<description>
+				Sets the [CanvasItem] to copy a rect to the backbuffer.
+			</description>
+		</method>
+		<method name="canvas_item_set_custom_rect">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="use_custom_rect" type="bool" />
+			<param index="2" name="rect" type="Rect2" default="Rect2(0, 0, 0, 0)" />
+			<description>
+				If [param use_custom_rect] is [code]true[/code], sets the custom visibility rectangle (used for culling) to [param rect] for the canvas item specified by [param item]. Setting a custom visibility rect can reduce CPU load when drawing lots of 2D instances. If [param use_custom_rect] is [code]false[/code], automatically computes a visibility rectangle based on the canvas item's draw commands.
+			</description>
+		</method>
+		<method name="canvas_item_set_default_texture_filter">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="filter" type="int" enum="RenderingServer.CanvasItemTextureFilter" />
+			<description>
+				Sets the default texture filter mode for the canvas item specified by the [param item] RID. Equivalent to [member CanvasItem.texture_filter].
+			</description>
+		</method>
+		<method name="canvas_item_set_default_texture_repeat">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="repeat" type="int" enum="RenderingServer.CanvasItemTextureRepeat" />
+			<description>
+				Sets the default texture repeat mode for the canvas item specified by the [param item] RID. Equivalent to [member CanvasItem.texture_repeat].
+			</description>
+		</method>
+		<method name="canvas_item_set_distance_field_mode">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="enabled" type="bool" />
+			<description>
+				If [param enabled] is [code]true[/code], enables multichannel signed distance field rendering mode for the canvas item specified by the [param item] RID. This is meant to be used for font rendering, or with specially generated images using [url=https://github.com/Chlumsky/msdfgen]msdfgen[/url].
+			</description>
+		</method>
+		<method name="canvas_item_set_draw_behind_parent">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="enabled" type="bool" />
+			<description>
+				If [param enabled] is [code]true[/code], draws the canvas item specified by the [param item] RID behind its parent. Equivalent to [member CanvasItem.show_behind_parent].
+			</description>
+		</method>
+		<method name="canvas_item_set_draw_index">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="index" type="int" />
+			<description>
+				Sets the index for the [CanvasItem].
+			</description>
+		</method>
+		<method name="canvas_item_set_light_mask">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="mask" type="int" />
+			<description>
+				Sets the light [param mask] for the canvas item specified by the [param item] RID. Equivalent to [member CanvasItem.light_mask].
+			</description>
+		</method>
+		<method name="canvas_item_set_material">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="material" type="RID" />
+			<description>
+				Sets a new [param material] to the canvas item specified by the [param item] RID. Equivalent to [member CanvasItem.material].
+			</description>
+		</method>
+		<method name="canvas_item_set_modulate">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="color" type="Color" />
+			<description>
+				Multiplies the color of the canvas item specified by the [param item] RID, while affecting its children. See also [method canvas_item_set_self_modulate]. Equivalent to [member CanvasItem.modulate].
+			</description>
+		</method>
+		<method name="canvas_item_set_parent">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="parent" type="RID" />
+			<description>
+				Sets a parent [CanvasItem] to the [CanvasItem]. The item will inherit transform, modulation and visibility from its parent, like [CanvasItem] nodes in the scene tree.
+			</description>
+		</method>
+		<method name="canvas_item_set_self_modulate">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="color" type="Color" />
+			<description>
+				Multiplies the color of the canvas item specified by the [param item] RID, without affecting its children. See also [method canvas_item_set_modulate]. Equivalent to [member CanvasItem.self_modulate].
+			</description>
+		</method>
+		<method name="canvas_item_set_sort_children_by_y">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="enabled" type="bool" />
+			<description>
+				If [param enabled] is [code]true[/code], child nodes with the lowest Y position are drawn before those with a higher Y position. Y-sorting only affects children that inherit from the canvas item specified by the [param item] RID, not the canvas item itself. Equivalent to [member CanvasItem.y_sort_enabled].
+			</description>
+		</method>
+		<method name="canvas_item_set_transform">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="transform" type="Transform2D" />
+			<description>
+				Sets the [param transform] of the canvas item specified by the [param item] RID. This affects where and how the item will be drawn. Child canvas items' transforms are multiplied by their parent's transform. Equivalent to [member Node2D.transform].
+			</description>
+		</method>
+		<method name="canvas_item_set_use_parent_material">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="enabled" type="bool" />
+			<description>
+				Sets if the [CanvasItem] uses its parent's material.
+			</description>
+		</method>
+		<method name="canvas_item_set_visibility_layer">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="visibility_layer" type="int" />
+			<description>
+				Sets the rendering visibility layer associated with this [CanvasItem]. Only [Viewport] nodes with a matching rendering mask will render this [CanvasItem].
+			</description>
+		</method>
+		<method name="canvas_item_set_visibility_notifier">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="enable" type="bool" />
+			<param index="2" name="area" type="Rect2" />
+			<param index="3" name="enter_callable" type="Callable" />
+			<param index="4" name="exit_callable" type="Callable" />
+			<description>
+				Sets the given [CanvasItem] as visibility notifier. [param area] defines the area of detecting visibility. [param enter_callable] is called when the [CanvasItem] enters the screen, [param exit_callable] is called when the [CanvasItem] exits the screen. If [param enable] is [code]false[/code], the item will no longer function as notifier.
+				This method can be used to manually mimic [VisibleOnScreenNotifier2D].
+			</description>
+		</method>
+		<method name="canvas_item_set_visible">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="visible" type="bool" />
+			<description>
+				Sets the visibility of the [CanvasItem].
+			</description>
+		</method>
+		<method name="canvas_item_set_z_as_relative_to_parent">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="enabled" type="bool" />
+			<description>
+				If this is enabled, the Z index of the parent will be added to the children's Z index.
+			</description>
+		</method>
+		<method name="canvas_item_set_z_index">
+			<return type="void" />
+			<param index="0" name="item" type="RID" />
+			<param index="1" name="z_index" type="int" />
+			<description>
+				Sets the [CanvasItem]'s Z index, i.e. its draw order (lower indexes are drawn first).
+			</description>
+		</method>
+		<method name="canvas_light_attach_to_canvas">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="canvas" type="RID" />
+			<description>
+				Attaches the canvas light to the canvas. Removes it from its previous canvas.
+			</description>
+		</method>
+		<method name="canvas_light_create">
+			<return type="RID" />
+			<description>
+				Creates a canvas light and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]canvas_light_*[/code] RenderingServer functions.
+				Once finished with your RID, you will want to free the RID using the RenderingServer's [method free_rid] method.
+				[b]Note:[/b] The equivalent node is [Light2D].
+			</description>
+		</method>
+		<method name="canvas_light_occluder_attach_to_canvas">
+			<return type="void" />
+			<param index="0" name="occluder" type="RID" />
+			<param index="1" name="canvas" type="RID" />
+			<description>
+				Attaches a light occluder to the canvas. Removes it from its previous canvas.
+			</description>
+		</method>
+		<method name="canvas_light_occluder_create">
+			<return type="RID" />
+			<description>
+				Creates a light occluder and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]canvas_light_occluder_*[/code] RenderingServer functions.
+				Once finished with your RID, you will want to free the RID using the RenderingServer's [method free_rid] method.
+				[b]Note:[/b] The equivalent node is [LightOccluder2D].
+			</description>
+		</method>
+		<method name="canvas_light_occluder_set_as_sdf_collision">
+			<return type="void" />
+			<param index="0" name="occluder" type="RID" />
+			<param index="1" name="enable" type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="canvas_light_occluder_set_enabled">
+			<return type="void" />
+			<param index="0" name="occluder" type="RID" />
+			<param index="1" name="enabled" type="bool" />
+			<description>
+				Enables or disables light occluder.
+			</description>
+		</method>
+		<method name="canvas_light_occluder_set_light_mask">
+			<return type="void" />
+			<param index="0" name="occluder" type="RID" />
+			<param index="1" name="mask" type="int" />
+			<description>
+				The light mask. See [LightOccluder2D] for more information on light masks.
+			</description>
+		</method>
+		<method name="canvas_light_occluder_set_polygon">
+			<return type="void" />
+			<param index="0" name="occluder" type="RID" />
+			<param index="1" name="polygon" type="RID" />
+			<description>
+				Sets a light occluder's polygon.
+			</description>
+		</method>
+		<method name="canvas_light_occluder_set_transform">
+			<return type="void" />
+			<param index="0" name="occluder" type="RID" />
+			<param index="1" name="transform" type="Transform2D" />
+			<description>
+				Sets a light occluder's [Transform2D].
+			</description>
+		</method>
+		<method name="canvas_light_set_blend_mode">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="mode" type="int" enum="RenderingServer.CanvasLightBlendMode" />
+			<description>
+				Sets the blend mode for the given canvas light. See [enum CanvasLightBlendMode] for options. Equivalent to [member Light2D.blend_mode].
+			</description>
+		</method>
+		<method name="canvas_light_set_color">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="color" type="Color" />
+			<description>
+				Sets the color for a light.
+			</description>
+		</method>
+		<method name="canvas_light_set_enabled">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="enabled" type="bool" />
+			<description>
+				Enables or disables a canvas light.
+			</description>
+		</method>
+		<method name="canvas_light_set_energy">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="energy" type="float" />
+			<description>
+				Sets a canvas light's energy.
+			</description>
+		</method>
+		<method name="canvas_light_set_height">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="height" type="float" />
+			<description>
+				Sets a canvas light's height.
+			</description>
+		</method>
+		<method name="canvas_light_set_item_cull_mask">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="mask" type="int" />
+			<description>
+				The light mask. See [LightOccluder2D] for more information on light masks.
+			</description>
+		</method>
+		<method name="canvas_light_set_item_shadow_cull_mask">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="mask" type="int" />
+			<description>
+				The binary mask used to determine which layers this canvas light's shadows affects. See [LightOccluder2D] for more information on light masks.
+			</description>
+		</method>
+		<method name="canvas_light_set_layer_range">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="min_layer" type="int" />
+			<param index="2" name="max_layer" type="int" />
+			<description>
+				The layer range that gets rendered with this light.
+			</description>
+		</method>
+		<method name="canvas_light_set_mode">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="mode" type="int" enum="RenderingServer.CanvasLightMode" />
+			<description>
+				The mode of the light, see [enum CanvasLightMode] constants.
+			</description>
+		</method>
+		<method name="canvas_light_set_shadow_color">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="color" type="Color" />
+			<description>
+				Sets the color of the canvas light's shadow.
+			</description>
+		</method>
+		<method name="canvas_light_set_shadow_enabled">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="enabled" type="bool" />
+			<description>
+				Enables or disables the canvas light's shadow.
+			</description>
+		</method>
+		<method name="canvas_light_set_shadow_filter">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="filter" type="int" enum="RenderingServer.CanvasLightShadowFilter" />
+			<description>
+				Sets the canvas light's shadow's filter, see [enum CanvasLightShadowFilter] constants.
+			</description>
+		</method>
+		<method name="canvas_light_set_shadow_smooth">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="smooth" type="float" />
+			<description>
+				Smoothens the shadow. The lower, the smoother.
+			</description>
+		</method>
+		<method name="canvas_light_set_texture">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="texture" type="RID" />
+			<description>
+				Sets the texture to be used by a [PointLight2D]. Equivalent to [member PointLight2D.texture].
+			</description>
+		</method>
+		<method name="canvas_light_set_texture_offset">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="offset" type="Vector2" />
+			<description>
+				Sets the offset of a [PointLight2D]'s texture. Equivalent to [member PointLight2D.offset].
+			</description>
+		</method>
+		<method name="canvas_light_set_texture_scale">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="scale" type="float" />
+			<description>
+				Sets the scale factor of a [PointLight2D]'s texture. Equivalent to [member PointLight2D.texture_scale].
+			</description>
+		</method>
+		<method name="canvas_light_set_transform">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="transform" type="Transform2D" />
+			<description>
+				Sets the canvas light's [Transform2D].
+			</description>
+		</method>
+		<method name="canvas_light_set_z_range">
+			<return type="void" />
+			<param index="0" name="light" type="RID" />
+			<param index="1" name="min_z" type="int" />
+			<param index="2" name="max_z" type="int" />
+			<description>
+				Sets the Z range of objects that will be affected by this light. Equivalent to [member Light2D.range_z_min] and [member Light2D.range_z_max].
+			</description>
+		</method>
+		<method name="canvas_occluder_polygon_create">
+			<return type="RID" />
+			<description>
+				Creates a new light occluder polygon and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]canvas_occluder_polygon_*[/code] RenderingServer functions.
+				Once finished with your RID, you will want to free the RID using the RenderingServer's [method free_rid] method.
+				[b]Note:[/b] The equivalent resource is [OccluderPolygon2D].
+			</description>
+		</method>
+		<method name="canvas_occluder_polygon_set_cull_mode">
+			<return type="void" />
+			<param index="0" name="occluder_polygon" type="RID" />
+			<param index="1" name="mode" type="int" enum="RenderingServer.CanvasOccluderPolygonCullMode" />
+			<description>
+				Sets an occluder polygons cull mode. See [enum CanvasOccluderPolygonCullMode] constants.
+			</description>
+		</method>
+		<method name="canvas_occluder_polygon_set_shape">
+			<return type="void" />
+			<param index="0" name="occluder_polygon" type="RID" />
+			<param index="1" name="shape" type="PackedVector2Array" />
+			<param index="2" name="closed" type="bool" />
+			<description>
+				Sets the shape of the occluder polygon.
+			</description>
+		</method>
+		<method name="canvas_set_disable_scale">
+			<return type="void" />
+			<param index="0" name="disable" type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="canvas_set_item_mirroring">
+			<return type="void" />
+			<param index="0" name="canvas" type="RID" />
+			<param index="1" name="item" type="RID" />
+			<param index="2" name="mirroring" type="Vector2" />
+			<description>
+				A copy of the canvas item will be drawn with a local offset of the mirroring [Vector2].
+			</description>
+		</method>
+		<method name="canvas_set_modulate">
+			<return type="void" />
+			<param index="0" name="canvas" type="RID" />
+			<param index="1" name="color" type="Color" />
+			<description>
+				Modulates all colors in the given canvas.
+			</description>
+		</method>
+		<method name="canvas_set_shadow_texture_size">
+			<return type="void" />
+			<param index="0" name="size" type="int" />
+			<description>
+				Sets the [member ProjectSettings.rendering/2d/shadow_atlas/size] to use for [Light2D] shadow rendering (in pixels). The value is rounded up to the nearest power of 2.
+			</description>
+		</method>
+		<method name="canvas_texture_create">
+			<return type="RID" />
+			<description>
+				Creates a canvas texture and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]canvas_texture_*[/code] RenderingServer functions.
+				Once finished with your RID, you will want to free the RID using the RenderingServer's [method free_rid] method. See also [method texture_2d_create].
+				[b]Note:[/b] The equivalent resource is [CanvasTexture] and is only meant to be used in 2D rendering, not 3D.
+			</description>
+		</method>
+		<method name="canvas_texture_set_channel">
+			<return type="void" />
+			<param index="0" name="canvas_texture" type="RID" />
+			<param index="1" name="channel" type="int" enum="RenderingServer.CanvasTextureChannel" />
+			<param index="2" name="texture" type="RID" />
+			<description>
+				Sets the [param channel]'s [param texture] for the canvas texture specified by the [param canvas_texture] RID. Equivalent to [member CanvasTexture.diffuse_texture], [member CanvasTexture.normal_texture] and [member CanvasTexture.specular_texture].
+			</description>
+		</method>
+		<method name="canvas_texture_set_shading_parameters">
+			<return type="void" />
+			<param index="0" name="canvas_texture" type="RID" />
+			<param index="1" name="base_color" type="Color" />
+			<param index="2" name="shininess" type="float" />
+			<description>
+				Sets the [param base_color] and [param shininess] to use for the canvas texture specified by the [param canvas_texture] RID. Equivalent to [member CanvasTexture.specular_color] and [member CanvasTexture.specular_shininess].
+			</description>
+		</method>
+		<method name="canvas_texture_set_texture_filter">
+			<return type="void" />
+			<param index="0" name="canvas_texture" type="RID" />
+			<param index="1" name="filter" type="int" enum="RenderingServer.CanvasItemTextureFilter" />
+			<description>
+				Sets the texture [param filter] mode to use for the canvas texture specified by the [param canvas_texture] RID.
+			</description>
+		</method>
+		<method name="canvas_texture_set_texture_repeat">
+			<return type="void" />
+			<param index="0" name="canvas_texture" type="RID" />
+			<param index="1" name="repeat" type="int" enum="RenderingServer.CanvasItemTextureRepeat" />
+			<description>
+				Sets the texture [param repeat] mode to use for the canvas texture specified by the [param canvas_texture] RID.
+			</description>
+		</method>
+		<method name="debug_canvas_item_get_rect">
+			<return type="Rect2" />
+			<param index="0" name="item" type="RID" />
+			<description>
+				Returns the bounding rectangle for a canvas item in local space, as calculated by the renderer. This bound is used internally for culling.
+				[b]Warning:[/b] This function is intended for debugging in the editor, and will pass through and return a zero [Rect2] in exported projects.
+			</description>
+		</method>
+		<method name="force_draw">
+			<return type="void" />
+			<param index="0" name="swap_buffers" type="bool" default="true" />
+			<param index="1" name="frame_step" type="float" default="0.0" />
+			<description>
+				Forces redrawing of all viewports at once. Must be called from the main thread.
+			</description>
+		</method>
+		<method name="force_sync">
+			<return type="void" />
+			<description>
+				Forces a synchronization between the CPU and GPU, which may be required in certain cases. Only call this when needed, as CPU-GPU synchronization has a performance cost.
+			</description>
+		</method>
+		<method name="free_rid">
+			<return type="void" />
+			<param index="0" name="rid" type="RID" />
+			<description>
+				Tries to free an object in the RenderingServer. To avoid memory leaks, this should be called after using an object as memory management does not occur automatically when using RenderingServer directly.
+			</description>
+		</method>
+		<method name="get_default_clear_color">
+			<return type="Color" />
+			<description>
+				Returns the default clear color which is used when a specific clear color has not been selected. See also [method set_default_clear_color].
+			</description>
+		</method>
+		<method name="get_frame_setup_time_cpu" qualifiers="const">
+			<return type="float" />
+			<description>
+				Returns the time taken to setup rendering on the CPU in milliseconds. This value is shared across all viewports and does [i]not[/i] require [method viewport_set_measure_render_time] to be enabled on a viewport to be queried. See also [method viewport_get_measured_render_time_cpu].
+			</description>
+		</method>
+		<method name="get_rendering_info">
+			<return type="int" />
+			<param index="0" name="info" type="int" enum="RenderingServer.RenderingInfo" />
+			<description>
+				Returns a statistic about the rendering engine which can be used for performance profiling. See [enum RenderingServer.RenderingInfo] for a list of values that can be queried. See also [method viewport_get_render_info], which returns information specific to a viewport.
+				[b]Note:[/b] Only 3D rendering is currently taken into account by some of these values, such as the number of draw calls.
+				[b]Note:[/b] Rendering information is not available until at least 2 frames have been rendered by the engine. If rendering information is not available, [method get_rendering_info] returns [code]0[/code]. To print rendering information in [code]_ready()[/code] successfully, use the following:
+				[codeblock]
+				func _ready():
+				    for _i in 2:
+				        await get_tree().process_frame
+
+				    print(RenderingServer.get_rendering_info(RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME))
+				[/codeblock]
+			</description>
+		</method>
+		<method name="get_shader_parameter_list" qualifiers="const">
+			<return type="Dictionary[]" />
+			<param index="0" name="shader" type="RID" />
+			<description>
+				Returns the parameters of a shader.
+			</description>
+		</method>
+		<method name="get_test_texture">
+			<return type="RID" />
+			<description>
+				Returns the RID of a 256×256 texture with a testing pattern on it (in [constant Image.FORMAT_RGB8] format). This texture will be created and returned on the first call to [method get_test_texture], then it will be cached for subsequent calls. See also [method get_white_texture].
+				Example of getting the test texture and applying it to a [Sprite2D] node:
+				[codeblock]
+				var texture_rid = RenderingServer.get_test_texture()
+				var texture = ImageTexture.create_from_image(RenderingServer.texture_2d_get(texture_rid))
+				$Sprite2D.texture = texture
+				[/codeblock]
+			</description>
+		</method>
+		<method name="get_video_adapter_api_version" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the version of the graphics video adapter [i]currently in use[/i] (e.g. "1.2.189" for Vulkan, "3.3.0 NVIDIA 510.60.02" for OpenGL). This version may be different from the actual latest version supported by the hardware, as Godot may not always request the latest version. See also [method OS.get_video_adapter_driver_info].
+				[b]Note:[/b] When running a headless or server binary, this function returns an empty string.
+			</description>
+		</method>
+		<method name="get_video_adapter_name" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the name of the video adapter (e.g. "GeForce GTX 1080/PCIe/SSE2").
+				[b]Note:[/b] When running a headless or server binary, this function returns an empty string.
+				[b]Note:[/b] On the web platform, some browsers such as Firefox may report a different, fixed GPU name such as "GeForce GTX 980" (regardless of the user's actual GPU model). This is done to make fingerprinting more difficult.
+			</description>
+		</method>
+		<method name="get_video_adapter_vendor" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns the vendor of the video adapter (e.g. "NVIDIA Corporation").
+				[b]Note:[/b] When running a headless or server binary, this function returns an empty string.
+			</description>
+		</method>
+		<method name="get_white_texture">
+			<return type="RID" />
+			<description>
+				Returns the ID of a 4×4 white texture (in [constant Image.FORMAT_RGB8] format). This texture will be created and returned on the first call to [method get_white_texture], then it will be cached for subsequent calls. See also [method get_test_texture].
+				Example of getting the white texture and applying it to a [Sprite2D] node:
+				[codeblock]
+				var texture_rid = RenderingServer.get_white_texture()
+				var texture = ImageTexture.create_from_image(RenderingServer.texture_2d_get(texture_rid))
+				$Sprite2D.texture = texture
+				[/codeblock]
+			</description>
+		</method>
+		<method name="global_shader_parameter_add">
+			<return type="void" />
+			<param index="0" name="name" type="StringName" />
+			<param index="1" name="type" type="int" enum="RenderingServer.GlobalShaderParameterType" />
+			<param index="2" name="default_value" type="Variant" />
+			<description>
+				Creates a new global shader uniform.
+				[b]Note:[/b] Global shader parameter names are case-sensitive.
+			</description>
+		</method>
+		<method name="global_shader_parameter_get" qualifiers="const">
+			<return type="Variant" />
+			<param index="0" name="name" type="StringName" />
+			<description>
+				Returns the value of the global shader uniform specified by [param name].
+				[b]Note:[/b] [method global_shader_parameter_get] has a large performance penalty as the rendering thread needs to synchronize with the calling thread, which is slow. Do not use this method during gameplay to avoid stuttering. If you need to read values in a script after setting them, consider creating an autoload where you store the values you need to query at the same time you're setting them as global parameters.
+			</description>
+		</method>
+		<method name="global_shader_parameter_get_list" qualifiers="const">
+			<return type="StringName[]" />
+			<description>
+				Returns the list of global shader uniform names.
+				[b]Note:[/b] [method global_shader_parameter_get] has a large performance penalty as the rendering thread needs to synchronize with the calling thread, which is slow. Do not use this method during gameplay to avoid stuttering. If you need to read values in a script after setting them, consider creating an autoload where you store the values you need to query at the same time you're setting them as global parameters.
+			</description>
+		</method>
+		<method name="global_shader_parameter_get_type" qualifiers="const">
+			<return type="int" enum="RenderingServer.GlobalShaderParameterType" />
+			<param index="0" name="name" type="StringName" />
+			<description>
+				Returns the type associated to the global shader uniform specified by [param name].
+				[b]Note:[/b] [method global_shader_parameter_get] has a large performance penalty as the rendering thread needs to synchronize with the calling thread, which is slow. Do not use this method during gameplay to avoid stuttering. If you need to read values in a script after setting them, consider creating an autoload where you store the values you need to query at the same time you're setting them as global parameters.
+			</description>
+		</method>
+		<method name="global_shader_parameter_remove">
+			<return type="void" />
+			<param index="0" name="name" type="StringName" />
+			<description>
+				Removes the global shader uniform specified by [param name].
+			</description>
+		</method>
+		<method name="global_shader_parameter_set">
+			<return type="void" />
+			<param index="0" name="name" type="StringName" />
+			<param index="1" name="value" type="Variant" />
+			<description>
+				Sets the global shader uniform [param name] to [param value].
+			</description>
+		</method>
+		<method name="global_shader_parameter_set_override">
+			<return type="void" />
+			<param index="0" name="name" type="StringName" />
+			<param index="1" name="value" type="Variant" />
+			<description>
+				Overrides the global shader uniform [param name] with [param value]. Equivalent to the [ShaderGlobalsOverride] node.
+			</description>
+		</method>
+		<method name="has_changed" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] if changes have been made to the RenderingServer's data. [method force_draw] is usually called if this happens.
+			</description>
+		</method>
+		<method name="has_feature" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="feature" type="int" enum="RenderingServer.Features" />
+			<description>
+				Not yet implemented. Always returns [code]false[/code].
+			</description>
+		</method>
+		<method name="has_os_feature" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="feature" type="String" />
+			<description>
+				Returns [code]true[/code] if the OS supports a certain [param feature]. Features might be [code]s3tc[/code], [code]etc[/code], and [code]etc2[/code].
+			</description>
+		</method>
+		<method name="material_create">
+			<return type="RID" />
+			<description>
+				Creates an empty material and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]material_*[/code] RenderingServer functions.
+				Once finished with your RID, you will want to free the RID using the RenderingServer's [method free_rid] method.
+				[b]Note:[/b] The equivalent resource is [Material].
+			</description>
+		</method>
+		<method name="material_get_param" qualifiers="const">
+			<return type="Variant" />
+			<param index="0" name="material" type="RID" />
+			<param index="1" name="parameter" type="StringName" />
+			<description>
+				Returns the value of a certain material's parameter.
+			</description>
+		</method>
+		<method name="material_set_param">
+			<return type="void" />
+			<param index="0" name="material" type="RID" />
+			<param index="1" name="parameter" type="StringName" />
+			<param index="2" name="value" type="Variant" />
+			<description>
+				Sets a material's parameter.
+			</description>
+		</method>
+		<method name="material_set_shader">
+			<return type="void" />
+			<param index="0" name="shader_material" type="RID" />
+			<param index="1" name="shader" type="RID" />
+			<description>
+				Sets a shader material's shader.
+			</description>
+		</method>
+		<method name="request_frame_drawn_callback">
+			<return type="void" />
+			<param index="0" name="callable" type="Callable" />
+			<description>
+				Schedules a callback to the given callable after a frame has been drawn.
+			</description>
+		</method>
+		<method name="set_boot_image">
+			<return type="void" />
+			<param index="0" name="image" type="Image" />
+			<param index="1" name="color" type="Color" />
+			<param index="2" name="scale" type="bool" />
+			<param index="3" name="use_filter" type="bool" default="true" />
+			<description>
+				Sets a boot image. The color defines the background color. If [param scale] is [code]true[/code], the image will be scaled to fit the screen size. If [param use_filter] is [code]true[/code], the image will be scaled with linear interpolation. If [param use_filter] is [code]false[/code], the image will be scaled with nearest-neighbor interpolation.
+			</description>
+		</method>
+		<method name="set_debug_generate_wireframes">
+			<return type="void" />
+			<param index="0" name="generate" type="bool" />
+			<description>
+				This method is currently unimplemented and does nothing if called with [param generate] set to [code]true[/code].
+			</description>
+		</method>
+		<method name="set_default_clear_color">
+			<return type="void" />
+			<param index="0" name="color" type="Color" />
+			<description>
+				Sets the default clear color which is used when a specific clear color has not been selected. See also [method get_default_clear_color].
+			</description>
+		</method>
+		<method name="shader_create">
+			<return type="RID" />
+			<description>
+				Creates an empty shader and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]shader_*[/code] RenderingServer functions.
+				Once finished with your RID, you will want to free the RID using the RenderingServer's [method free_rid] method.
+				[b]Note:[/b] The equivalent resource is [Shader].
+			</description>
+		</method>
+		<method name="shader_get_code" qualifiers="const">
+			<return type="String" />
+			<param index="0" name="shader" type="RID" />
+			<description>
+				Returns a shader's source code as a string.
+			</description>
+		</method>
+		<method name="shader_get_default_texture_parameter" qualifiers="const">
+			<return type="RID" />
+			<param index="0" name="shader" type="RID" />
+			<param index="1" name="name" type="StringName" />
+			<param index="2" name="index" type="int" default="0" />
+			<description>
+				Returns a default texture from a shader searched by name.
+				[b]Note:[/b] If the sampler array is used use [param index] to access the specified texture.
+			</description>
+		</method>
+		<method name="shader_get_parameter_default" qualifiers="const">
+			<return type="Variant" />
+			<param index="0" name="shader" type="RID" />
+			<param index="1" name="name" type="StringName" />
+			<description>
+				Returns the default value for the specified shader uniform. This is usually the value written in the shader source code.
+			</description>
+		</method>
+		<method name="shader_set_code">
+			<return type="void" />
+			<param index="0" name="shader" type="RID" />
+			<param index="1" name="code" type="String" />
+			<description>
+				Sets the shader's source code (which triggers recompilation after being changed).
+			</description>
+		</method>
+		<method name="shader_set_default_texture_parameter">
+			<return type="void" />
+			<param index="0" name="shader" type="RID" />
+			<param index="1" name="name" type="StringName" />
+			<param index="2" name="texture" type="RID" />
+			<param index="3" name="index" type="int" default="0" />
+			<description>
+				Sets a shader's default texture. Overwrites the texture given by name.
+				[b]Note:[/b] If the sampler array is used use [param index] to access the specified texture.
+			</description>
+		</method>
+		<method name="shader_set_path_hint">
+			<return type="void" />
+			<param index="0" name="shader" type="RID" />
+			<param index="1" name="path" type="String" />
+			<description>
+				Sets the path hint for the specified shader. This should generally match the [Shader] resource's [member Resource.resource_path].
+			</description>
+		</method>
+		<method name="texture_2d_create">
+			<return type="RID" />
+			<param index="0" name="image" type="Image" />
+			<description>
+				Creates a 2-dimensional texture and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]texture_2d_*[/code] RenderingServer functions.
+				Once finished with your RID, you will want to free the RID using the RenderingServer's [method free_rid] method.
+				[b]Note:[/b] The equivalent resource is [Texture2D].
+			</description>
+		</method>
+		<method name="texture_2d_get" qualifiers="const">
+			<return type="Image" />
+			<param index="0" name="texture" type="RID" />
+			<description>
+				Returns an [Image] instance from the given [param texture] [RID].
+				Example of getting the test texture from [method get_test_texture] and applying it to a [Sprite2D] node:
+				[codeblock]
+				var texture_rid = RenderingServer.get_test_texture()
+				var texture = ImageTexture.create_from_image(RenderingServer.texture_2d_get(texture_rid))
+				$Sprite2D.texture = texture
+				[/codeblock]
+			</description>
+		</method>
+		<method name="texture_2d_layer_get" qualifiers="const">
+			<return type="Image" />
+			<param index="0" name="texture" type="RID" />
+			<param index="1" name="layer" type="int" />
+			<description>
+				Returns an [Image] instance from the given [param texture] [RID] and [param layer].
+			</description>
+		</method>
+		<method name="texture_2d_layered_create">
+			<return type="RID" />
+			<param index="0" name="layers" type="Image[]" />
+			<param index="1" name="layered_type" type="int" enum="RenderingServer.TextureLayeredType" />
+			<description>
+				Creates a 2-dimensional layered texture and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]texture_2d_layered_*[/code] RenderingServer functions.
+				Once finished with your RID, you will want to free the RID using the RenderingServer's [method free_rid] method.
+				[b]Note:[/b] The equivalent resource is [TextureLayered].
+			</description>
+		</method>
+		<method name="texture_2d_layered_placeholder_create">
+			<return type="RID" />
+			<param index="0" name="layered_type" type="int" enum="RenderingServer.TextureLayeredType" />
+			<description>
+				Creates a placeholder for a 2-dimensional layered texture and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]texture_2d_layered_*[/code] RenderingServer functions, although it does nothing when used. See also [method texture_2d_placeholder_create].
+				[b]Note:[/b] The equivalent resource is [PlaceholderTextureLayered].
+			</description>
+		</method>
+		<method name="texture_2d_placeholder_create">
+			<return type="RID" />
+			<description>
+				Creates a placeholder for a 2-dimensional layered texture and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]texture_2d_layered_*[/code] RenderingServer functions, although it does nothing when used. See also [method texture_2d_layered_placeholder_create]
+				Once finished with your RID, you will want to free the RID using the RenderingServer's [method free_rid] method.
+				[b]Note:[/b] The equivalent resource is [PlaceholderTexture2D].
+			</description>
+		</method>
+		<method name="texture_2d_update">
+			<return type="void" />
+			<param index="0" name="texture" type="RID" />
+			<param index="1" name="image" type="Image" />
+			<param index="2" name="layer" type="int" />
+			<description>
+				Updates the texture specified by the [param texture] [RID] with the data in [param image]. A [param layer] must also be specified, which should be [code]0[/code] when updating a single-layer texture ([Texture2D]).
+				[b]Note:[/b] The [param image] must have the same width, height and format as the current [param texture] data. Otherwise, an error will be printed and the original texture won't be modified. If you need to use different width, height or format, use [method texture_replace] instead.
+			</description>
+		</method>
+		<method name="texture_3d_create">
+			<return type="RID" />
+			<param index="0" name="format" type="int" enum="Image.Format" />
+			<param index="1" name="width" type="int" />
+			<param index="2" name="height" type="int" />
+			<param index="3" name="depth" type="int" />
+			<param index="4" name="mipmaps" type="bool" />
+			<param index="5" name="data" type="Image[]" />
+			<description>
+				[b]Note:[/b] The equivalent resource is [Texture3D].
+			</description>
+		</method>
+		<method name="texture_3d_get" qualifiers="const">
+			<return type="Image[]" />
+			<param index="0" name="texture" type="RID" />
+			<description>
+				Returns 3D texture data as an array of [Image]s for the specified texture [RID].
+			</description>
+		</method>
+		<method name="texture_3d_placeholder_create">
+			<return type="RID" />
+			<description>
+				Creates a placeholder for a 3-dimensional texture and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]texture_3d_*[/code] RenderingServer functions, although it does nothing when used.
+				Once finished with your RID, you will want to free the RID using the RenderingServer's [method free_rid] method.
+				[b]Note:[/b] The equivalent resource is [PlaceholderTexture3D].
+			</description>
+		</method>
+		<method name="texture_3d_update">
+			<return type="void" />
+			<param index="0" name="texture" type="RID" />
+			<param index="1" name="data" type="Image[]" />
+			<description>
+				Updates the texture specified by the [param texture] [RID]'s data with the data in [param data]. All the texture's layers must be replaced at once.
+				[b]Note:[/b] The [param texture] must have the same width, height, depth and format as the current texture data. Otherwise, an error will be printed and the original texture won't be modified. If you need to use different width, height, depth or format, use [method texture_replace] instead.
+			</description>
+		</method>
+		<method name="texture_get_format" qualifiers="const">
+			<return type="int" enum="Image.Format" />
+			<param index="0" name="texture" type="RID" />
+			<description>
+				Returns the [enum Image.Format] for the texture.
+			</description>
+		</method>
+		<method name="texture_get_native_handle" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="texture" type="RID" />
+			<param index="1" name="srgb" type="bool" default="false" />
+			<description>
+				Returns the internal graphics handle for this texture object. For use when communicating with third-party APIs mostly with GDExtension.
+				[b]Note:[/b] This function returns a [code]uint64_t[/code] which internally maps to a [code]GLuint[/code] (OpenGL) or [code]VkImage[/code] (Vulkan).
+			</description>
+		</method>
+		<method name="texture_get_path" qualifiers="const">
+			<return type="String" />
+			<param index="0" name="texture" type="RID" />
+			<description>
+			</description>
+		</method>
+		<method name="texture_proxy_create" is_deprecated="true">
+			<return type="RID" />
+			<param index="0" name="base" type="RID" />
+			<description>
+				[i]Deprecated.[/i] ProxyTexture was removed in Godot 4, so this method does nothing when called and always returns a null [RID].
+			</description>
+		</method>
+		<method name="texture_proxy_update" is_deprecated="true">
+			<return type="void" />
+			<param index="0" name="texture" type="RID" />
+			<param index="1" name="proxy_to" type="RID" />
+			<description>
+				[i]Deprecated.[/i] ProxyTexture was removed in Godot 4, so this method cannot be used anymore.
+			</description>
+		</method>
+		<method name="texture_replace">
+			<return type="void" />
+			<param index="0" name="texture" type="RID" />
+			<param index="1" name="by_texture" type="RID" />
+			<description>
+				Replaces [param texture]'s texture data by the texture specified by the [param by_texture] RID, without changing [param texture]'s RID.
+			</description>
+		</method>
+		<method name="texture_set_force_redraw_if_visible">
+			<return type="void" />
+			<param index="0" name="texture" type="RID" />
+			<param index="1" name="enable" type="bool" />
+			<description>
+			</description>
+		</method>
+		<method name="texture_set_path">
+			<return type="void" />
+			<param index="0" name="texture" type="RID" />
+			<param index="1" name="path" type="String" />
+			<description>
+			</description>
+		</method>
+		<method name="texture_set_size_override">
+			<return type="void" />
+			<param index="0" name="texture" type="RID" />
+			<param index="1" name="width" type="int" />
+			<param index="2" name="height" type="int" />
+			<description>
+			</description>
+		</method>
+		<method name="viewport_attach_camera">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="camera" type="RID" />
+			<description>
+				Sets a viewport's camera.
+			</description>
+		</method>
+		<method name="viewport_attach_canvas">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="canvas" type="RID" />
+			<description>
+				Sets a viewport's canvas.
+			</description>
+		</method>
+		<method name="viewport_attach_to_screen">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="rect" type="Rect2" default="Rect2(0, 0, 0, 0)" />
+			<param index="2" name="screen" type="int" default="0" />
+			<description>
+				Copies the viewport to a region of the screen specified by [param rect]. If [method viewport_set_render_direct_to_screen] is [code]true[/code], then the viewport does not use a framebuffer and the contents of the viewport are rendered directly to screen. However, note that the root viewport is drawn last, therefore it will draw over the screen. Accordingly, you must set the root viewport to an area that does not cover the area that you have attached this viewport to.
+				For example, you can set the root viewport to not render at all with the following code:
+				FIXME: The method seems to be non-existent.
+				[codeblocks]
+				[gdscript]
+				func _ready():
+				    get_viewport().set_attach_to_screen_rect(Rect2())
+				    $Viewport.set_attach_to_screen_rect(Rect2(0, 0, 600, 600))
+				[/gdscript]
+				[/codeblocks]
+				Using this can result in significant optimization, especially on lower-end devices. However, it comes at the cost of having to manage your viewports manually. For further optimization, see [method viewport_set_render_direct_to_screen].
+			</description>
+		</method>
+		<method name="viewport_create">
+			<return type="RID" />
+			<description>
+				Creates an empty viewport and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]viewport_*[/code] RenderingServer functions.
+				Once finished with your RID, you will want to free the RID using the RenderingServer's [method free_rid] method.
+				[b]Note:[/b] The equivalent node is [Viewport].
+			</description>
+		</method>
+		<method name="viewport_get_measured_render_time_cpu" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="viewport" type="RID" />
+			<description>
+				Returns the CPU time taken to render the last frame in milliseconds. This [i]only[/i] includes time spent in rendering-related operations; scripts' [code]_process[/code] functions and other engine subsystems are not included in this readout. To get a complete readout of CPU time spent to render the scene, sum the render times of all viewports that are drawn every frame plus [method get_frame_setup_time_cpu]. Unlike [method Engine.get_frames_per_second], this method will accurately reflect CPU utilization even if framerate is capped via V-Sync or [member Engine.max_fps]. See also [method viewport_get_measured_render_time_gpu].
+				[b]Note:[/b] Requires measurements to be enabled on the specified [param viewport] using [method viewport_set_measure_render_time]. Otherwise, this method returns [code]0.0[/code].
+			</description>
+		</method>
+		<method name="viewport_get_measured_render_time_gpu" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="viewport" type="RID" />
+			<description>
+				Returns the GPU time taken to render the last frame in milliseconds. To get a complete readout of GPU time spent to render the scene, sum the render times of all viewports that are drawn every frame. Unlike [method Engine.get_frames_per_second], this method accurately reflects GPU utilization even if framerate is capped via V-Sync or [member Engine.max_fps]. See also [method viewport_get_measured_render_time_gpu].
+				[b]Note:[/b] Requires measurements to be enabled on the specified [param viewport] using [method viewport_set_measure_render_time]. Otherwise, this method returns [code]0.0[/code].
+				[b]Note:[/b] When GPU utilization is low enough during a certain period of time, GPUs will decrease their power state (which in turn decreases core and memory clock speeds). This can cause the reported GPU time to increase if GPU utilization is kept low enough by a framerate cap (compared to what it would be at the GPU's highest power state). Keep this in mind when benchmarking using [method viewport_get_measured_render_time_gpu]. This behavior can be overridden in the graphics driver settings at the cost of higher power usage.
+			</description>
+		</method>
+		<method name="viewport_get_render_info">
+			<return type="int" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="type" type="int" enum="RenderingServer.ViewportRenderInfoType" />
+			<param index="2" name="info" type="int" enum="RenderingServer.ViewportRenderInfo" />
+			<description>
+				Returns a statistic about the rendering engine which can be used for performance profiling. This is separated into render pass [param type]s, each of them having the same [param info]s you can query (different passes will return different values). See [enum RenderingServer.ViewportRenderInfoType] for a list of render pass types and [enum RenderingServer.ViewportRenderInfo] for a list of information that can be queried.
+				See also [method get_rendering_info], which returns global information across all viewports.
+				[b]Note:[/b] Viewport rendering information is not available until at least 2 frames have been rendered by the engine. If rendering information is not available, [method viewport_get_render_info] returns [code]0[/code]. To print rendering information in [code]_ready()[/code] successfully, use the following:
+				[codeblock]
+				func _ready():
+				    for _i in 2:
+				        await get_tree().process_frame
+
+				    print(
+				            RenderingServer.viewport_get_render_info(get_viewport().get_viewport_rid(),
+				            RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE,
+				            RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME)
+				    )
+				[/codeblock]
+			</description>
+		</method>
+		<method name="viewport_get_render_target" qualifiers="const">
+			<return type="RID" />
+			<param index="0" name="viewport" type="RID" />
+			<description>
+				Returns the render target for the viewport.
+			</description>
+		</method>
+		<method name="viewport_get_texture" qualifiers="const">
+			<return type="RID" />
+			<param index="0" name="viewport" type="RID" />
+			<description>
+				Returns the viewport's last rendered frame.
+			</description>
+		</method>
+		<method name="viewport_remove_canvas">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="canvas" type="RID" />
+			<description>
+				Detaches a viewport from a canvas and vice versa.
+			</description>
+		</method>
+		<method name="viewport_set_active">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="active" type="bool" />
+			<description>
+				If [code]true[/code], sets the viewport active, else sets it inactive.
+			</description>
+		</method>
+		<method name="viewport_set_canvas_cull_mask">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="canvas_cull_mask" type="int" />
+			<description>
+				Sets the rendering mask associated with this [Viewport]. Only [CanvasItem] nodes with a matching rendering visibility layer will be rendered by this [Viewport].
+			</description>
+		</method>
+		<method name="viewport_set_canvas_stacking">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="canvas" type="RID" />
+			<param index="2" name="layer" type="int" />
+			<param index="3" name="sublayer" type="int" />
+			<description>
+				Sets the stacking order for a viewport's canvas.
+				[param layer] is the actual canvas layer, while [param sublayer] specifies the stacking order of the canvas among those in the same layer.
+			</description>
+		</method>
+		<method name="viewport_set_canvas_transform">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="canvas" type="RID" />
+			<param index="2" name="offset" type="Transform2D" />
+			<description>
+				Sets the transformation of a viewport's canvas.
+			</description>
+		</method>
+		<method name="viewport_set_clear_mode">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="clear_mode" type="int" enum="RenderingServer.ViewportClearMode" />
+			<description>
+				Sets the clear mode of a viewport. See [enum ViewportClearMode] for options.
+			</description>
+		</method>
+		<method name="viewport_set_default_canvas_item_texture_filter">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="filter" type="int" enum="RenderingServer.CanvasItemTextureFilter" />
+			<description>
+				Sets the default texture filtering mode for the specified [param viewport] RID. See [enum CanvasItemTextureFilter] for options.
+			</description>
+		</method>
+		<method name="viewport_set_default_canvas_item_texture_repeat">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="repeat" type="int" enum="RenderingServer.CanvasItemTextureRepeat" />
+			<description>
+				Sets the default texture repeat mode for the specified [param viewport] RID. See [enum CanvasItemTextureRepeat] for options.
+			</description>
+		</method>
+		<method name="viewport_set_disable_2d">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="disable" type="bool" />
+			<description>
+				If [code]true[/code], the viewport's canvas (i.e. 2D and GUI elements) is not rendered.
+			</description>
+		</method>
+		<method name="viewport_set_global_canvas_transform">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="transform" type="Transform2D" />
+			<description>
+				Sets the viewport's global transformation matrix.
+			</description>
+		</method>
+		<method name="viewport_set_measure_render_time">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="enable" type="bool" />
+			<description>
+				Sets the measurement for the given [param viewport] RID (obtained using [method Viewport.get_viewport_rid]). Once enabled, [method viewport_get_measured_render_time_cpu] and [method viewport_get_measured_render_time_gpu] will return values greater than [code]0.0[/code] when queried with the given [param viewport].
+			</description>
+		</method>
+		<method name="viewport_set_msaa_2d">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="msaa" type="int" enum="RenderingServer.ViewportMSAA" />
+			<description>
+				Sets the multisample anti-aliasing mode for 2D/Canvas on the specified [param viewport] RID. See [enum ViewportMSAA] for options.
+			</description>
+		</method>
+		<method name="viewport_set_parent_viewport">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="parent_viewport" type="RID" />
+			<description>
+				Sets the viewport's parent to the viewport specified by the [param parent_viewport] RID.
+			</description>
+		</method>
+		<method name="viewport_set_render_direct_to_screen">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="enabled" type="bool" />
+			<description>
+				If [code]true[/code], render the contents of the viewport directly to screen. This allows a low-level optimization where you can skip drawing a viewport to the root viewport. While this optimization can result in a significant increase in speed (especially on older devices), it comes at a cost of usability. When this is enabled, you cannot read from the viewport or from the screen_texture. You also lose the benefit of certain window settings, such as the various stretch modes. Another consequence to be aware of is that in 2D the rendering happens in window coordinates, so if you have a viewport that is double the size of the window, and you set this, then only the portion that fits within the window will be drawn, no automatic scaling is possible, even if your game scene is significantly larger than the window size.
+			</description>
+		</method>
+		<method name="viewport_set_sdf_oversize_and_scale">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="oversize" type="int" enum="RenderingServer.ViewportSDFOversize" />
+			<param index="2" name="scale" type="int" enum="RenderingServer.ViewportSDFScale" />
+			<description>
+				Sets the viewport's 2D signed distance field [member ProjectSettings.rendering/2d/sdf/oversize] and [member ProjectSettings.rendering/2d/sdf/scale]. This is used when sampling the signed distance field in [CanvasItem] shaders.
+			</description>
+		</method>
+		<method name="viewport_set_size">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="width" type="int" />
+			<param index="2" name="height" type="int" />
+			<description>
+				Sets the viewport's width and height in pixels.
+			</description>
+		</method>
+		<method name="viewport_set_snap_2d_transforms_to_pixel">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="enabled" type="bool" />
+			<description>
+				If [code]true[/code], canvas item transforms (i.e. origin position) are snapped to the nearest pixel when rendering. This can lead to a crisper appearance at the cost of less smooth movement, especially when [Camera2D] smoothing is enabled. Equivalent to [member ProjectSettings.rendering/2d/snap/snap_2d_transforms_to_pixel].
+			</description>
+		</method>
+		<method name="viewport_set_snap_2d_vertices_to_pixel">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="enabled" type="bool" />
+			<description>
+				If [code]true[/code], canvas item vertices (i.e. polygon points) are snapped to the nearest pixel when rendering. This can lead to a crisper appearance at the cost of less smooth movement, especially when [Camera2D] smoothing is enabled. Equivalent to [member ProjectSettings.rendering/2d/snap/snap_2d_vertices_to_pixel].
+			</description>
+		</method>
+		<method name="viewport_set_transparent_background">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="enabled" type="bool" />
+			<description>
+				If [code]true[/code], the viewport renders its background as transparent.
+			</description>
+		</method>
+		<method name="viewport_set_update_mode">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="update_mode" type="int" enum="RenderingServer.ViewportUpdateMode" />
+			<description>
+				Sets when the viewport should be updated. See [enum ViewportUpdateMode] constants for options.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="render_loop_enabled" type="bool" setter="set_render_loop_enabled" getter="is_render_loop_enabled">
+			If [code]false[/code], disables rendering completely, but the engine logic is still being processed. You can call [method force_draw] to draw a frame even with rendering disabled.
+		</member>
+	</members>
+	<signals>
+		<signal name="frame_post_draw">
+			<description>
+				Emitted at the end of the frame, after the RenderingServer has finished updating all the Viewports.
+			</description>
+		</signal>
+		<signal name="frame_pre_draw">
+			<description>
+				Emitted at the beginning of the frame, before the RenderingServer updates all the Viewports.
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="NO_INDEX_ARRAY" value="-1">
+			Marks an error that shows that the index array is empty.
+		</constant>
+		<constant name="CANVAS_ITEM_Z_MIN" value="-4096">
+			The minimum Z-layer for canvas items.
+		</constant>
+		<constant name="CANVAS_ITEM_Z_MAX" value="4096">
+			The maximum Z-layer for canvas items.
+		</constant>
+		<constant name="MAX_GLOW_LEVELS" value="7">
+			The maximum number of glow levels that can be used with the glow post-processing effect.
+		</constant>
+		<constant name="MAX_CURSORS" value="8" is_deprecated="true">
+			[i]Deprecated.[/i] This constant is unused internally.
+		</constant>
+		<constant name="MAX_2D_DIRECTIONAL_LIGHTS" value="8">
+			The maximum number of directional lights that can be rendered at a given time in 2D.
+		</constant>
+		<constant name="TEXTURE_LAYERED_2D_ARRAY" value="0" enum="TextureLayeredType">
+			Array of 2-dimensional textures (see [Texture2DArray]).
+		</constant>
+		<constant name="TEXTURE_LAYERED_CUBEMAP" value="1" enum="TextureLayeredType">
+			Cubemap texture (see [Cubemap]).
+		</constant>
+		<constant name="TEXTURE_LAYERED_CUBEMAP_ARRAY" value="2" enum="TextureLayeredType">
+			Array of cubemap textures (see [CubemapArray]).
+		</constant>
+		<constant name="CUBEMAP_LAYER_LEFT" value="0" enum="CubeMapLayer">
+			Left face of a [Cubemap].
+		</constant>
+		<constant name="CUBEMAP_LAYER_RIGHT" value="1" enum="CubeMapLayer">
+			Right face of a [Cubemap].
+		</constant>
+		<constant name="CUBEMAP_LAYER_BOTTOM" value="2" enum="CubeMapLayer">
+			Bottom face of a [Cubemap].
+		</constant>
+		<constant name="CUBEMAP_LAYER_TOP" value="3" enum="CubeMapLayer">
+			Top face of a [Cubemap].
+		</constant>
+		<constant name="CUBEMAP_LAYER_FRONT" value="4" enum="CubeMapLayer">
+			Front face of a [Cubemap].
+		</constant>
+		<constant name="CUBEMAP_LAYER_BACK" value="5" enum="CubeMapLayer">
+			Back face of a [Cubemap].
+		</constant>
+		<constant name="SHADER_CANVAS_ITEM" value="0" enum="ShaderMode">
+			Shader is a 2D shader.
+		</constant>
+		<constant name="SHADER_MAX" value="1" enum="ShaderMode">
+			Represents the size of the [enum ShaderMode] enum.
+		</constant>
+		<constant name="ARRAY_VERTEX" value="0" enum="ArrayType">
+			Array is a vertex position array.
+		</constant>
+		<constant name="ARRAY_NORMAL" value="1" enum="ArrayType">
+			Array is a normal array.
+		</constant>
+		<constant name="ARRAY_TANGENT" value="2" enum="ArrayType">
+			Array is a tangent array.
+		</constant>
+		<constant name="ARRAY_COLOR" value="3" enum="ArrayType">
+			Array is a vertex color array.
+		</constant>
+		<constant name="ARRAY_TEX_UV" value="4" enum="ArrayType">
+			Array is a UV coordinates array.
+		</constant>
+		<constant name="ARRAY_TEX_UV2" value="5" enum="ArrayType">
+			Array is a UV coordinates array for the second set of UV coordinates.
+		</constant>
+		<constant name="ARRAY_CUSTOM0" value="6" enum="ArrayType">
+			Array is a custom data array for the first set of custom data.
+		</constant>
+		<constant name="ARRAY_CUSTOM1" value="7" enum="ArrayType">
+			Array is a custom data array for the second set of custom data.
+		</constant>
+		<constant name="ARRAY_CUSTOM2" value="8" enum="ArrayType">
+			Array is a custom data array for the third set of custom data.
+		</constant>
+		<constant name="ARRAY_CUSTOM3" value="9" enum="ArrayType">
+			Array is a custom data array for the fourth set of custom data.
+		</constant>
+		<constant name="ARRAY_INDEX" value="12" enum="ArrayType">
+			Array is an index array.
+		</constant>
+		<constant name="ARRAY_MAX" value="13" enum="ArrayType">
+			Represents the size of the [enum ArrayType] enum.
+		</constant>
+		<constant name="ARRAY_CUSTOM_COUNT" value="6">
+			The number of custom data arrays available ([constant ARRAY_CUSTOM0], [constant ARRAY_CUSTOM1], [constant ARRAY_CUSTOM2], [constant ARRAY_CUSTOM3]).
+		</constant>
+		<constant name="ARRAY_CUSTOM_RGBA8_UNORM" value="0" enum="ArrayCustomFormat">
+			Custom data array contains 8-bit-per-channel red/green/blue/alpha color data. Values are normalized, unsigned floating-point in the [code][0.0, 1.0][/code] range.
+		</constant>
+		<constant name="ARRAY_CUSTOM_RGBA8_SNORM" value="1" enum="ArrayCustomFormat">
+			Custom data array contains 8-bit-per-channel red/green/blue/alpha color data. Values are normalized, signed floating-point in the [code][-1.0, 1.0][/code] range.
+		</constant>
+		<constant name="ARRAY_CUSTOM_RG_HALF" value="2" enum="ArrayCustomFormat">
+			Custom data array contains 16-bit-per-channel red/green color data. Values are floating-point in half precision.
+		</constant>
+		<constant name="ARRAY_CUSTOM_RGBA_HALF" value="3" enum="ArrayCustomFormat">
+			Custom data array contains 16-bit-per-channel red/green/blue/alpha color data. Values are floating-point in half precision.
+		</constant>
+		<constant name="ARRAY_CUSTOM_R_FLOAT" value="4" enum="ArrayCustomFormat">
+			Custom data array contains 32-bit-per-channel red color data. Values are floating-point in single precision.
+		</constant>
+		<constant name="ARRAY_CUSTOM_RG_FLOAT" value="5" enum="ArrayCustomFormat">
+			Custom data array contains 32-bit-per-channel red/green color data. Values are floating-point in single precision.
+		</constant>
+		<constant name="ARRAY_CUSTOM_RGB_FLOAT" value="6" enum="ArrayCustomFormat">
+			Custom data array contains 32-bit-per-channel red/green/blue color data. Values are floating-point in single precision.
+		</constant>
+		<constant name="ARRAY_CUSTOM_RGBA_FLOAT" value="7" enum="ArrayCustomFormat">
+			Custom data array contains 32-bit-per-channel red/green/blue/alpha color data. Values are floating-point in single precision.
+		</constant>
+		<constant name="ARRAY_CUSTOM_MAX" value="8" enum="ArrayCustomFormat">
+			Represents the size of the [enum ArrayCustomFormat] enum.
+		</constant>
+		<constant name="ARRAY_FORMAT_VERTEX" value="1" enum="ArrayFormat" is_bitfield="true">
+			Flag used to mark a vertex position array.
+		</constant>
+		<constant name="ARRAY_FORMAT_NORMAL" value="2" enum="ArrayFormat" is_bitfield="true">
+			Flag used to mark a normal array.
+		</constant>
+		<constant name="ARRAY_FORMAT_TANGENT" value="4" enum="ArrayFormat" is_bitfield="true">
+			Flag used to mark a tangent array.
+		</constant>
+		<constant name="ARRAY_FORMAT_COLOR" value="8" enum="ArrayFormat" is_bitfield="true">
+			Flag used to mark a vertex color array.
+		</constant>
+		<constant name="ARRAY_FORMAT_TEX_UV" value="16" enum="ArrayFormat" is_bitfield="true">
+			Flag used to mark a UV coordinates array.
+		</constant>
+		<constant name="ARRAY_FORMAT_TEX_UV2" value="32" enum="ArrayFormat" is_bitfield="true">
+			Flag used to mark a UV coordinates array for the second UV coordinates.
+		</constant>
+		<constant name="ARRAY_FORMAT_CUSTOM0" value="64" enum="ArrayFormat" is_bitfield="true">
+			Flag used to mark an array of custom per-vertex data for the first set of custom data.
+		</constant>
+		<constant name="ARRAY_FORMAT_CUSTOM1" value="128" enum="ArrayFormat" is_bitfield="true">
+			Flag used to mark an array of custom per-vertex data for the second set of custom data.
+		</constant>
+		<constant name="ARRAY_FORMAT_CUSTOM2" value="256" enum="ArrayFormat" is_bitfield="true">
+			Flag used to mark an array of custom per-vertex data for the third set of custom data.
+		</constant>
+		<constant name="ARRAY_FORMAT_CUSTOM3" value="512" enum="ArrayFormat" is_bitfield="true">
+			Flag used to mark an array of custom per-vertex data for the fourth set of custom data.
+		</constant>
+		<constant name="ARRAY_FORMAT_INDEX" value="4096" enum="ArrayFormat" is_bitfield="true">
+			Flag used to mark an index array.
+		</constant>
+		<constant name="ARRAY_FORMAT_BLEND_SHAPE_MASK" value="7" enum="ArrayFormat" is_bitfield="true">
+		</constant>
+		<constant name="ARRAY_FORMAT_CUSTOM_BASE" value="13" enum="ArrayFormat" is_bitfield="true">
+		</constant>
+		<constant name="ARRAY_FORMAT_CUSTOM_BITS" value="3" enum="ArrayFormat" is_bitfield="true">
+		</constant>
+		<constant name="ARRAY_FORMAT_CUSTOM0_SHIFT" value="13" enum="ArrayFormat" is_bitfield="true">
+		</constant>
+		<constant name="ARRAY_FORMAT_CUSTOM1_SHIFT" value="16" enum="ArrayFormat" is_bitfield="true">
+		</constant>
+		<constant name="ARRAY_FORMAT_CUSTOM2_SHIFT" value="19" enum="ArrayFormat" is_bitfield="true">
+		</constant>
+		<constant name="ARRAY_FORMAT_CUSTOM3_SHIFT" value="22" enum="ArrayFormat" is_bitfield="true">
+		</constant>
+		<constant name="ARRAY_FORMAT_CUSTOM_MASK" value="7" enum="ArrayFormat" is_bitfield="true">
+		</constant>
+		<constant name="ARRAY_COMPRESS_FLAGS_BASE" value="25" enum="ArrayFormat" is_bitfield="true">
+		</constant>
+		<constant name="ARRAY_FLAG_USE_2D_VERTICES" value="33554432" enum="ArrayFormat" is_bitfield="true">
+			Flag used to mark that the array contains 2D vertices.
+		</constant>
+		<constant name="ARRAY_FLAG_USE_DYNAMIC_UPDATE" value="67108864" enum="ArrayFormat" is_bitfield="true">
+		</constant>
+		<constant name="ARRAY_FLAG_USES_EMPTY_VERTEX_ARRAY" value="268435456" enum="ArrayFormat" is_bitfield="true">
+			Flag used to mark that the mesh does not have a vertex array and instead will infer vertex positions in the shader using indices and other information.
+		</constant>
+		<constant name="ARRAY_FLAG_COMPRESS_ATTRIBUTES" value="536870912" enum="ArrayFormat" is_bitfield="true">
+			Flag used to mark that a mesh is using compressed attributes (vertices, normals, tangents, UVs). When this form of compression is enabled, vertex positions will be packed into an RGBA16UNORM attribute and scaled in the vertex shader. The normal and tangent will be packed into an RG16UNORM representing an axis, and a 16-bit float stored in the A-channel of the vertex. UVs will use 16-bit normalized floats instead of full 32-bit signed floats. When using this compression mode you must use either vertices, normals, and tangents or only vertices. You cannot use normals without tangents. Importers will automatically enable this compression if they can.
+		</constant>
+		<constant name="ARRAY_FLAG_FORMAT_VERSION_BASE" value="35" enum="ArrayFormat" is_bitfield="true">
+			Flag used to mark the start of the bits used to store the mesh version.
+		</constant>
+		<constant name="ARRAY_FLAG_FORMAT_VERSION_SHIFT" value="35" enum="ArrayFormat" is_bitfield="true">
+			Flag used to shift a mesh format int to bring the version into the lowest digits.
+		</constant>
+		<constant name="ARRAY_FLAG_FORMAT_VERSION_1" value="0" enum="ArrayFormat" is_bitfield="true">
+			Flag used to record the format used by prior mesh versions before the introduction of a version.
+		</constant>
+		<constant name="ARRAY_FLAG_FORMAT_VERSION_2" value="34359738368" enum="ArrayFormat" is_bitfield="true">
+			Flag used to record the second iteration of the mesh version flag. The primary difference between this and [constant ARRAY_FLAG_FORMAT_VERSION_1] is that this version supports [constant ARRAY_FLAG_COMPRESS_ATTRIBUTES] and in this version vertex positions are de-interleaved from normals and tangents.
+		</constant>
+		<constant name="ARRAY_FLAG_FORMAT_CURRENT_VERSION" value="34359738368" enum="ArrayFormat" is_bitfield="true">
+			Flag used to record the current version that the engine expects. Currently this is the same as [constant ARRAY_FLAG_FORMAT_VERSION_2].
+		</constant>
+		<constant name="ARRAY_FLAG_FORMAT_VERSION_MASK" value="255" enum="ArrayFormat" is_bitfield="true">
+			Flag used to isolate the bits used for mesh version after using [constant ARRAY_FLAG_FORMAT_VERSION_SHIFT] to shift them into place.
+		</constant>
+		<constant name="PRIMITIVE_POINTS" value="0" enum="PrimitiveType">
+			Primitive to draw consists of points.
+		</constant>
+		<constant name="PRIMITIVE_LINES" value="1" enum="PrimitiveType">
+			Primitive to draw consists of lines.
+		</constant>
+		<constant name="PRIMITIVE_LINE_STRIP" value="2" enum="PrimitiveType">
+			Primitive to draw consists of a line strip from start to end.
+		</constant>
+		<constant name="PRIMITIVE_TRIANGLES" value="3" enum="PrimitiveType">
+			Primitive to draw consists of triangles.
+		</constant>
+		<constant name="PRIMITIVE_TRIANGLE_STRIP" value="4" enum="PrimitiveType">
+			Primitive to draw consists of a triangle strip (the last 3 vertices are always combined to make a triangle).
+		</constant>
+		<constant name="PRIMITIVE_MAX" value="5" enum="PrimitiveType">
+			Represents the size of the [enum PrimitiveType] enum.
+		</constant>
+		<constant name="BLEND_SHAPE_MODE_NORMALIZED" value="0" enum="BlendShapeMode">
+			Blend shapes are normalized.
+		</constant>
+		<constant name="BLEND_SHAPE_MODE_RELATIVE" value="1" enum="BlendShapeMode">
+			Blend shapes are relative to base weight.
+		</constant>
+		<constant name="VIEWPORT_UPDATE_DISABLED" value="0" enum="ViewportUpdateMode">
+			Do not update the viewport's render target.
+		</constant>
+		<constant name="VIEWPORT_UPDATE_ONCE" value="1" enum="ViewportUpdateMode">
+			Update the viewport's render target once, then switch to [constant VIEWPORT_UPDATE_DISABLED].
+		</constant>
+		<constant name="VIEWPORT_UPDATE_WHEN_VISIBLE" value="2" enum="ViewportUpdateMode">
+			Update the viewport's render target only when it is visible. This is the default value.
+		</constant>
+		<constant name="VIEWPORT_UPDATE_WHEN_PARENT_VISIBLE" value="3" enum="ViewportUpdateMode">
+			Update the viewport's render target only when its parent is visible.
+		</constant>
+		<constant name="VIEWPORT_UPDATE_ALWAYS" value="4" enum="ViewportUpdateMode">
+			Always update the viewport's render target.
+		</constant>
+		<constant name="VIEWPORT_CLEAR_ALWAYS" value="0" enum="ViewportClearMode">
+			Always clear the viewport's render target before drawing.
+		</constant>
+		<constant name="VIEWPORT_CLEAR_NEVER" value="1" enum="ViewportClearMode">
+			Never clear the viewport's render target.
+		</constant>
+		<constant name="VIEWPORT_CLEAR_ONLY_NEXT_FRAME" value="2" enum="ViewportClearMode">
+			Clear the viewport's render target on the next frame, then switch to [constant VIEWPORT_CLEAR_NEVER].
+		</constant>
+		<constant name="VIEWPORT_SDF_OVERSIZE_100_PERCENT" value="0" enum="ViewportSDFOversize">
+			Do not oversize the 2D signed distance field. Occluders may disappear when touching the viewport's edges. This has the lowest GPU requirements.
+		</constant>
+		<constant name="VIEWPORT_SDF_OVERSIZE_120_PERCENT" value="1" enum="ViewportSDFOversize">
+			2D signed distance field covers 20% of the viewport's size outside the viewport on each side (top, right, bottom, left).
+		</constant>
+		<constant name="VIEWPORT_SDF_OVERSIZE_150_PERCENT" value="2" enum="ViewportSDFOversize">
+			2D signed distance field covers 50% of the viewport's size outside the viewport on each side (top, right, bottom, left).
+		</constant>
+		<constant name="VIEWPORT_SDF_OVERSIZE_200_PERCENT" value="3" enum="ViewportSDFOversize">
+			2D signed distance field covers 100% of the viewport's size outside the viewport on each side (top, right, bottom, left). This has the highest GPU requirements.
+		</constant>
+		<constant name="VIEWPORT_SDF_OVERSIZE_MAX" value="4" enum="ViewportSDFOversize">
+			Represents the size of the [enum ViewportSDFOversize] enum.
+		</constant>
+		<constant name="VIEWPORT_SDF_SCALE_100_PERCENT" value="0" enum="ViewportSDFScale">
+			Full resolution 2D signed distance field scale. This has the highest GPU requirements.
+		</constant>
+		<constant name="VIEWPORT_SDF_SCALE_50_PERCENT" value="1" enum="ViewportSDFScale">
+			Half resolution 2D signed distance field scale on each axis (25% of the viewport pixel count).
+		</constant>
+		<constant name="VIEWPORT_SDF_SCALE_25_PERCENT" value="2" enum="ViewportSDFScale">
+			Quarter resolution 2D signed distance field scale on each axis (6.25% of the viewport pixel count). This has the lowest GPU requirements.
+		</constant>
+		<constant name="VIEWPORT_SDF_SCALE_MAX" value="3" enum="ViewportSDFScale">
+			Represents the size of the [enum ViewportSDFScale] enum.
+		</constant>
+		<constant name="VIEWPORT_MSAA_DISABLED" value="0" enum="ViewportMSAA">
+			Multisample antialiasing for 3D is disabled. This is the default value, and also the fastest setting.
+		</constant>
+		<constant name="VIEWPORT_MSAA_2X" value="1" enum="ViewportMSAA">
+			Multisample antialiasing uses 2 samples per pixel for 3D. This has a moderate impact on performance.
+		</constant>
+		<constant name="VIEWPORT_MSAA_4X" value="2" enum="ViewportMSAA">
+			Multisample antialiasing uses 4 samples per pixel for 3D. This has a high impact on performance.
+		</constant>
+		<constant name="VIEWPORT_MSAA_8X" value="3" enum="ViewportMSAA">
+			Multisample antialiasing uses 8 samples per pixel for 3D. This has a very high impact on performance. Likely unsupported on low-end and older hardware.
+		</constant>
+		<constant name="VIEWPORT_MSAA_MAX" value="4" enum="ViewportMSAA">
+			Represents the size of the [enum ViewportMSAA] enum.
+		</constant>
+		<constant name="VIEWPORT_RENDER_INFO_OBJECTS_IN_FRAME" value="0" enum="ViewportRenderInfo">
+			Number of objects drawn in a single frame.
+		</constant>
+		<constant name="VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME" value="1" enum="ViewportRenderInfo">
+			Number of points, lines, or triangles drawn in a single frame.
+		</constant>
+		<constant name="VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME" value="2" enum="ViewportRenderInfo">
+			Number of draw calls during this frame.
+		</constant>
+		<constant name="VIEWPORT_RENDER_INFO_MAX" value="3" enum="ViewportRenderInfo">
+			Represents the size of the [enum ViewportRenderInfo] enum.
+		</constant>
+		<constant name="VIEWPORT_RENDER_INFO_TYPE_VISIBLE" value="0" enum="ViewportRenderInfoType">
+			Visible render pass (excluding shadows).
+		</constant>
+		<constant name="VIEWPORT_RENDER_INFO_TYPE_SHADOW" value="1" enum="ViewportRenderInfoType">
+			Shadow render pass. Objects will be rendered several times depending on the number of amounts of lights with shadows and the number of directional shadow splits.
+		</constant>
+		<constant name="VIEWPORT_RENDER_INFO_TYPE_MAX" value="2" enum="ViewportRenderInfoType">
+			Represents the size of the [enum ViewportRenderInfoType] enum.
+		</constant>
+		<constant name="INSTANCE_NONE" value="0" enum="InstanceType">
+			The instance does not have a type.
+		</constant>
+		<constant name="INSTANCE_MAX" value="1" enum="InstanceType">
+			Represents the size of the [enum InstanceType] enum.
+		</constant>
+		<constant name="VISIBILITY_RANGE_FADE_DISABLED" value="0" enum="VisibilityRangeFadeMode">
+			Disable visibility range fading for the given instance.
+		</constant>
+		<constant name="VISIBILITY_RANGE_FADE_SELF" value="1" enum="VisibilityRangeFadeMode">
+			Fade-out the given instance when it approaches its visibility range limits.
+		</constant>
+		<constant name="VISIBILITY_RANGE_FADE_DEPENDENCIES" value="2" enum="VisibilityRangeFadeMode">
+			Fade-in the given instance's dependencies when reaching its visibility range limits.
+		</constant>
+		<constant name="CANVAS_TEXTURE_CHANNEL_DIFFUSE" value="0" enum="CanvasTextureChannel">
+			Diffuse canvas texture ([member CanvasTexture.diffuse_texture]).
+		</constant>
+		<constant name="CANVAS_TEXTURE_CHANNEL_NORMAL" value="1" enum="CanvasTextureChannel">
+			Normal map canvas texture ([member CanvasTexture.normal_texture]).
+		</constant>
+		<constant name="CANVAS_TEXTURE_CHANNEL_SPECULAR" value="2" enum="CanvasTextureChannel">
+			Specular map canvas texture ([member CanvasTexture.specular_texture]).
+		</constant>
+		<constant name="NINE_PATCH_STRETCH" value="0" enum="NinePatchAxisMode">
+			The nine patch gets stretched where needed.
+		</constant>
+		<constant name="NINE_PATCH_TILE" value="1" enum="NinePatchAxisMode">
+			The nine patch gets filled with tiles where needed.
+		</constant>
+		<constant name="NINE_PATCH_TILE_FIT" value="2" enum="NinePatchAxisMode">
+			The nine patch gets filled with tiles where needed and stretches them a bit if needed.
+		</constant>
+		<constant name="CANVAS_ITEM_TEXTURE_FILTER_DEFAULT" value="0" enum="CanvasItemTextureFilter">
+			Uses the default filter mode for this [Viewport].
+		</constant>
+		<constant name="CANVAS_ITEM_TEXTURE_FILTER_NEAREST" value="1" enum="CanvasItemTextureFilter">
+			The texture filter reads from the nearest pixel only. This makes the texture look pixelated from up close, and grainy from a distance (due to mipmaps not being sampled).
+		</constant>
+		<constant name="CANVAS_ITEM_TEXTURE_FILTER_LINEAR" value="2" enum="CanvasItemTextureFilter">
+			The texture filter blends between the nearest 4 pixels. This makes the texture look smooth from up close, and grainy from a distance (due to mipmaps not being sampled).
+		</constant>
+		<constant name="CANVAS_ITEM_TEXTURE_FILTER_NEAREST_WITH_MIPMAPS" value="3" enum="CanvasItemTextureFilter">
+			The texture filter reads from the nearest pixel and blends between the nearest 2 mipmaps (or uses the nearest mipmap if [member ProjectSettings.rendering/textures/default_filters/use_nearest_mipmap_filter] is [code]true[/code]). This makes the texture look pixelated from up close, and smooth from a distance.
+			Use this for non-pixel art textures that may be viewed at a low scale (e.g. due to [Camera2D] zoom or sprite scaling), as mipmaps are important to smooth out pixels that are smaller than on-screen pixels.
+		</constant>
+		<constant name="CANVAS_ITEM_TEXTURE_FILTER_LINEAR_WITH_MIPMAPS" value="4" enum="CanvasItemTextureFilter">
+			The texture filter blends between the nearest 4 pixels and between the nearest 2 mipmaps (or uses the nearest mipmap if [member ProjectSettings.rendering/textures/default_filters/use_nearest_mipmap_filter] is [code]true[/code]). This makes the texture look smooth from up close, and smooth from a distance.
+			Use this for non-pixel art textures that may be viewed at a low scale (e.g. due to [Camera2D] zoom or sprite scaling), as mipmaps are important to smooth out pixels that are smaller than on-screen pixels.
+		</constant>
+		<constant name="CANVAS_ITEM_TEXTURE_FILTER_NEAREST_WITH_MIPMAPS_ANISOTROPIC" value="5" enum="CanvasItemTextureFilter">
+			The texture filter reads from the nearest pixel and blends between 2 mipmaps (or uses the nearest mipmap if [member ProjectSettings.rendering/textures/default_filters/use_nearest_mipmap_filter] is [code]true[/code]) based on the angle between the surface and the camera view. This makes the texture look pixelated from up close, and smooth from a distance. Anisotropic filtering improves texture quality on surfaces that are almost in line with the camera, but is slightly slower. The anisotropic filtering level can be changed by adjusting [member ProjectSettings.rendering/textures/default_filters/anisotropic_filtering_level].
+			[b]Note:[/b] This texture filter is rarely useful in 2D projects. [constant CANVAS_ITEM_TEXTURE_FILTER_NEAREST_WITH_MIPMAPS] is usually more appropriate in this case.
+		</constant>
+		<constant name="CANVAS_ITEM_TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC" value="6" enum="CanvasItemTextureFilter">
+			The texture filter blends between the nearest 4 pixels and blends between 2 mipmaps (or uses the nearest mipmap if [member ProjectSettings.rendering/textures/default_filters/use_nearest_mipmap_filter] is [code]true[/code]) based on the angle between the surface and the camera view. This makes the texture look smooth from up close, and smooth from a distance. Anisotropic filtering improves texture quality on surfaces that are almost in line with the camera, but is slightly slower. The anisotropic filtering level can be changed by adjusting [member ProjectSettings.rendering/textures/default_filters/anisotropic_filtering_level].
+			[b]Note:[/b] This texture filter is rarely useful in 2D projects. [constant CANVAS_ITEM_TEXTURE_FILTER_LINEAR_WITH_MIPMAPS] is usually more appropriate in this case.
+		</constant>
+		<constant name="CANVAS_ITEM_TEXTURE_FILTER_MAX" value="7" enum="CanvasItemTextureFilter">
+			Max value for [enum CanvasItemTextureFilter] enum.
+		</constant>
+		<constant name="CANVAS_ITEM_TEXTURE_REPEAT_DEFAULT" value="0" enum="CanvasItemTextureRepeat">
+			Uses the default repeat mode for this [Viewport].
+		</constant>
+		<constant name="CANVAS_ITEM_TEXTURE_REPEAT_DISABLED" value="1" enum="CanvasItemTextureRepeat">
+			Disables textures repeating. Instead, when reading UVs outside the 0-1 range, the value will be clamped to the edge of the texture, resulting in a stretched out look at the borders of the texture.
+		</constant>
+		<constant name="CANVAS_ITEM_TEXTURE_REPEAT_ENABLED" value="2" enum="CanvasItemTextureRepeat">
+			Enables the texture to repeat when UV coordinates are outside the 0-1 range. If using one of the linear filtering modes, this can result in artifacts at the edges of a texture when the sampler filters across the edges of the texture.
+		</constant>
+		<constant name="CANVAS_ITEM_TEXTURE_REPEAT_MIRROR" value="3" enum="CanvasItemTextureRepeat">
+			Flip the texture when repeating so that the edge lines up instead of abruptly changing.
+		</constant>
+		<constant name="CANVAS_ITEM_TEXTURE_REPEAT_MAX" value="4" enum="CanvasItemTextureRepeat">
+			Max value for [enum CanvasItemTextureRepeat] enum.
+		</constant>
+		<constant name="CANVAS_GROUP_MODE_DISABLED" value="0" enum="CanvasGroupMode">
+			Child draws over parent and is not clipped.
+		</constant>
+		<constant name="CANVAS_GROUP_MODE_CLIP_ONLY" value="1" enum="CanvasGroupMode">
+			Parent is used for the purposes of clipping only. Child is clipped to the parent's visible area, parent is not drawn.
+		</constant>
+		<constant name="CANVAS_GROUP_MODE_CLIP_AND_DRAW" value="2" enum="CanvasGroupMode">
+			Parent is used for clipping child, but parent is also drawn underneath child as normal before clipping child to its visible area.
+		</constant>
+		<constant name="CANVAS_GROUP_MODE_TRANSPARENT" value="3" enum="CanvasGroupMode">
+		</constant>
+		<constant name="CANVAS_LIGHT_MODE_POINT" value="0" enum="CanvasLightMode">
+			2D point light (see [PointLight2D]).
+		</constant>
+		<constant name="CANVAS_LIGHT_MODE_DIRECTIONAL" value="1" enum="CanvasLightMode">
+			2D directional (sun/moon) light (see [DirectionalLight2D]).
+		</constant>
+		<constant name="CANVAS_LIGHT_BLEND_MODE_ADD" value="0" enum="CanvasLightBlendMode">
+			Adds light color additive to the canvas.
+		</constant>
+		<constant name="CANVAS_LIGHT_BLEND_MODE_SUB" value="1" enum="CanvasLightBlendMode">
+			Adds light color subtractive to the canvas.
+		</constant>
+		<constant name="CANVAS_LIGHT_BLEND_MODE_MIX" value="2" enum="CanvasLightBlendMode">
+			The light adds color depending on transparency.
+		</constant>
+		<constant name="CANVAS_LIGHT_FILTER_NONE" value="0" enum="CanvasLightShadowFilter">
+			Do not apply a filter to canvas light shadows.
+		</constant>
+		<constant name="CANVAS_LIGHT_FILTER_PCF5" value="1" enum="CanvasLightShadowFilter">
+			Use PCF5 filtering to filter canvas light shadows.
+		</constant>
+		<constant name="CANVAS_LIGHT_FILTER_PCF13" value="2" enum="CanvasLightShadowFilter">
+			Use PCF13 filtering to filter canvas light shadows.
+		</constant>
+		<constant name="CANVAS_LIGHT_FILTER_MAX" value="3" enum="CanvasLightShadowFilter">
+			Max value of the [enum CanvasLightShadowFilter] enum.
+		</constant>
+		<constant name="CANVAS_OCCLUDER_POLYGON_CULL_DISABLED" value="0" enum="CanvasOccluderPolygonCullMode">
+			Culling of the canvas occluder is disabled.
+		</constant>
+		<constant name="CANVAS_OCCLUDER_POLYGON_CULL_CLOCKWISE" value="1" enum="CanvasOccluderPolygonCullMode">
+			Culling of the canvas occluder is clockwise.
+		</constant>
+		<constant name="CANVAS_OCCLUDER_POLYGON_CULL_COUNTER_CLOCKWISE" value="2" enum="CanvasOccluderPolygonCullMode">
+			Culling of the canvas occluder is counterclockwise.
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_BOOL" value="0" enum="GlobalShaderParameterType">
+			Boolean global shader parameter ([code]global uniform bool ...[/code]).
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_BVEC2" value="1" enum="GlobalShaderParameterType">
+			2-dimensional boolean vector global shader parameter ([code]global uniform bvec2 ...[/code]).
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_BVEC3" value="2" enum="GlobalShaderParameterType">
+			3-dimensional boolean vector global shader parameter ([code]global uniform bvec3 ...[/code]).
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_BVEC4" value="3" enum="GlobalShaderParameterType">
+			4-dimensional boolean vector global shader parameter ([code]global uniform bvec4 ...[/code]).
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_INT" value="4" enum="GlobalShaderParameterType">
+			Integer global shader parameter ([code]global uniform int ...[/code]).
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_IVEC2" value="5" enum="GlobalShaderParameterType">
+			2-dimensional integer vector global shader parameter ([code]global uniform ivec2 ...[/code]).
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_IVEC3" value="6" enum="GlobalShaderParameterType">
+			3-dimensional integer vector global shader parameter ([code]global uniform ivec3 ...[/code]).
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_IVEC4" value="7" enum="GlobalShaderParameterType">
+			4-dimensional integer vector global shader parameter ([code]global uniform ivec4 ...[/code]).
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_RECT2I" value="8" enum="GlobalShaderParameterType">
+			2-dimensional integer rectangle global shader parameter ([code]global uniform ivec4 ...[/code]). Equivalent to [constant GLOBAL_VAR_TYPE_IVEC4] in shader code, but exposed as a [Rect2i] in the editor UI.
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_UINT" value="9" enum="GlobalShaderParameterType">
+			Unsigned integer global shader parameter ([code]global uniform uint ...[/code]).
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_UVEC2" value="10" enum="GlobalShaderParameterType">
+			2-dimensional unsigned integer vector global shader parameter ([code]global uniform uvec2 ...[/code]).
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_UVEC3" value="11" enum="GlobalShaderParameterType">
+			3-dimensional unsigned integer vector global shader parameter ([code]global uniform uvec3 ...[/code]).
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_UVEC4" value="12" enum="GlobalShaderParameterType">
+			4-dimensional unsigned integer vector global shader parameter ([code]global uniform uvec4 ...[/code]).
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_FLOAT" value="13" enum="GlobalShaderParameterType">
+			Single-precision floating-point global shader parameter ([code]global uniform float ...[/code]).
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_VEC2" value="14" enum="GlobalShaderParameterType">
+			2-dimensional floating-point vector global shader parameter ([code]global uniform vec2 ...[/code]).
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_VEC3" value="15" enum="GlobalShaderParameterType">
+			3-dimensional floating-point vector global shader parameter ([code]global uniform vec3 ...[/code]).
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_VEC4" value="16" enum="GlobalShaderParameterType">
+			4-dimensional floating-point vector global shader parameter ([code]global uniform vec4 ...[/code]).
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_COLOR" value="17" enum="GlobalShaderParameterType">
+			Color global shader parameter ([code]global uniform vec4 ...[/code]). Equivalent to [constant GLOBAL_VAR_TYPE_VEC4] in shader code, but exposed as a [Color] in the editor UI.
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_RECT2" value="18" enum="GlobalShaderParameterType">
+			2-dimensional floating-point rectangle global shader parameter ([code]global uniform vec4 ...[/code]). Equivalent to [constant GLOBAL_VAR_TYPE_VEC4] in shader code, but exposed as a [Rect2] in the editor UI.
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_MAT2" value="19" enum="GlobalShaderParameterType">
+			2×2 matrix global shader parameter ([code]global uniform mat2 ...[/code]). Exposed as a [PackedInt32Array] in the editor UI.
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_MAT3" value="20" enum="GlobalShaderParameterType">
+			3×3 matrix global shader parameter ([code]global uniform mat3 ...[/code]). Exposed as a [Basis] in the editor UI.
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_MAT4" value="21" enum="GlobalShaderParameterType">
+			4×4 matrix global shader parameter ([code]global uniform mat4 ...[/code]). Exposed as a [Projection] in the editor UI.
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_TRANSFORM_2D" value="22" enum="GlobalShaderParameterType">
+			2-dimensional transform global shader parameter ([code]global uniform mat2x3 ...[/code]). Exposed as a [Transform2D] in the editor UI.
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_TRANSFORM" value="23" enum="GlobalShaderParameterType">
+			3-dimensional transform global shader parameter ([code]global uniform mat3x4 ...[/code]). Exposed as a [Transform3D] in the editor UI.
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_SAMPLER2D" value="24" enum="GlobalShaderParameterType">
+			2D sampler global shader parameter ([code]global uniform sampler2D ...[/code]). Exposed as a [Texture2D] in the editor UI.
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_SAMPLER2DARRAY" value="25" enum="GlobalShaderParameterType">
+			2D sampler array global shader parameter ([code]global uniform sampler2DArray ...[/code]). Exposed as a [Texture2DArray] in the editor UI.
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_SAMPLER3D" value="26" enum="GlobalShaderParameterType">
+			3D sampler global shader parameter ([code]global uniform sampler3D ...[/code]). Exposed as a [Texture3D] in the editor UI.
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_SAMPLERCUBE" value="27" enum="GlobalShaderParameterType">
+			Cubemap sampler global shader parameter ([code]global uniform samplerCube ...[/code]). Exposed as a [Cubemap] in the editor UI.
+		</constant>
+		<constant name="GLOBAL_VAR_TYPE_MAX" value="28" enum="GlobalShaderParameterType">
+			Represents the size of the [enum GlobalShaderParameterType] enum.
+		</constant>
+		<constant name="RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME" value="0" enum="RenderingInfo">
+			Number of objects rendered in the current 3D scene. This varies depending on camera position and rotation.
+		</constant>
+		<constant name="RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME" value="1" enum="RenderingInfo">
+			Number of points, lines, or triangles rendered in the current 3D scene. This varies depending on camera position and rotation.
+		</constant>
+		<constant name="RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME" value="2" enum="RenderingInfo">
+			Number of draw calls performed to render in the current 3D scene. This varies depending on camera position and rotation.
+		</constant>
+		<constant name="RENDERING_INFO_TEXTURE_MEM_USED" value="3" enum="RenderingInfo">
+			Texture memory used (in bytes).
+		</constant>
+		<constant name="RENDERING_INFO_BUFFER_MEM_USED" value="4" enum="RenderingInfo">
+			Buffer memory used (in bytes). This includes vertex data, uniform buffers, and many miscellaneous buffer types used internally.
+		</constant>
+		<constant name="RENDERING_INFO_VIDEO_MEM_USED" value="5" enum="RenderingInfo">
+			Video memory used (in bytes). When using the Forward+ or mobile rendering backends, this is always greater than the sum of [constant RENDERING_INFO_TEXTURE_MEM_USED] and [constant RENDERING_INFO_BUFFER_MEM_USED], since there is miscellaneous data not accounted for by those two metrics. When using the GL Compatibility backend, this is equal to the sum of [constant RENDERING_INFO_TEXTURE_MEM_USED] and [constant RENDERING_INFO_BUFFER_MEM_USED].
+		</constant>
+		<constant name="FEATURE_SHADERS" value="0" enum="Features">
+			Hardware supports shaders. This enum is currently unused in Godot 3.x.
+		</constant>
+		<constant name="FEATURE_MULTITHREADED" value="1" enum="Features">
+			Hardware supports multithreading. This enum is currently unused in Godot 3.x.
+		</constant>
+	</constants>
+</class>

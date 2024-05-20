@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="AnimationMixer" inherits="Node" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		Base class for [AnimationPlayer].
+	</brief_description>
+	<description>
+		Base class for [AnimationPlayer] to manage animation lists. It also has general properties and methods for playback and blending.
+		After instantiating the playback information data within the extended class, the blending is processed by the [AnimationMixer].
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="_post_process_key_value" qualifiers="virtual const">
+			<return type="Variant" />
+			<param index="0" name="animation" type="Animation" />
+			<param index="1" name="track" type="int" />
+			<param index="2" name="value" type="Variant" />
+			<param index="3" name="object" type="Object" />
+			<param index="4" name="object_idx" type="int" />
+			<description>
+				A virtual function for processing after key getting during playback.
+			</description>
+		</method>
+		<method name="add_animation_library">
+			<return type="int" enum="Error" />
+			<param index="0" name="name" type="StringName" />
+			<param index="1" name="library" type="AnimationLibrary" />
+			<description>
+				Adds [param library] to the animation player, under the key [param name].
+			</description>
+		</method>
+		<method name="advance">
+			<return type="void" />
+			<param index="0" name="delta" type="float" />
+			<description>
+				Manually advance the animations by the specified time (in seconds).
+			</description>
+		</method>
+		<method name="clear_caches">
+			<return type="void" />
+			<description>
+				[AnimationMixer] caches animated nodes. It may not notice if a node disappears; [method clear_caches] forces it to update the cache again.
+			</description>
+		</method>
+		<method name="find_animation" qualifiers="const">
+			<return type="StringName" />
+			<param index="0" name="animation" type="Animation" />
+			<description>
+				Returns the key of [param animation] or an empty [StringName] if not found.
+			</description>
+		</method>
+		<method name="find_animation_library" qualifiers="const">
+			<return type="StringName" />
+			<param index="0" name="animation" type="Animation" />
+			<description>
+				Returns the key for the [AnimationLibrary] that contains [param animation] or an empty [StringName] if not found.
+			</description>
+		</method>
+		<method name="get_animation" qualifiers="const">
+			<return type="Animation" />
+			<param index="0" name="name" type="StringName" />
+			<description>
+				Returns the [Animation] with the key [param name]. If the animation does not exist, [code]null[/code] is returned and an error is logged.
+			</description>
+		</method>
+		<method name="get_animation_library" qualifiers="const">
+			<return type="AnimationLibrary" />
+			<param index="0" name="name" type="StringName" />
+			<description>
+				Returns the first [AnimationLibrary] with key [param name] or [code]null[/code] if not found.
+				To get the [AnimationPlayer]'s global animation library, use [code]get_animation_library("")[/code].
+			</description>
+		</method>
+		<method name="get_animation_library_list" qualifiers="const">
+			<return type="StringName[]" />
+			<description>
+				Returns the list of stored library keys.
+			</description>
+		</method>
+		<method name="get_animation_list" qualifiers="const">
+			<return type="PackedStringArray" />
+			<description>
+				Returns the list of stored animation keys.
+			</description>
+		</method>
+		<method name="has_animation" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="name" type="StringName" />
+			<description>
+				Returns [code]true[/code] if the [AnimationPlayer] stores an [Animation] with key [param name].
+			</description>
+		</method>
+		<method name="has_animation_library" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="name" type="StringName" />
+			<description>
+				Returns [code]true[/code] if the [AnimationPlayer] stores an [AnimationLibrary] with key [param name].
+			</description>
+		</method>
+		<method name="remove_animation_library">
+			<return type="void" />
+			<param index="0" name="name" type="StringName" />
+			<description>
+				Removes the [AnimationLibrary] associated with the key [param name].
+			</description>
+		</method>
+		<method name="rename_animation_library">
+			<return type="void" />
+			<param index="0" name="name" type="StringName" />
+			<param index="1" name="newname" type="StringName" />
+			<description>
+				Moves the [AnimationLibrary] associated with the key [param name] to the key [param newname].
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="active" type="bool" setter="set_active" getter="is_active" default="true">
+			If [code]true[/code], the [AnimationMixer] will be processing.
+		</member>
+		<member name="audio_max_polyphony" type="int" setter="set_audio_max_polyphony" getter="get_audio_max_polyphony" default="32">
+			The number of possible simultaneous sounds for each of the assigned AudioStreamPlayers.
+			For example, if this value is [code]32[/code] and the animation has two audio tracks, the two [AudioStreamPlayer]s assigned can play simultaneously up to [code]32[/code] voices each.
+		</member>
+		<member name="callback_mode_method" type="int" setter="set_callback_mode_method" getter="get_callback_mode_method" enum="AnimationMixer.AnimationCallbackModeMethod" default="0">
+			The call mode to use for Call Method tracks.
+		</member>
+		<member name="callback_mode_process" type="int" setter="set_callback_mode_process" getter="get_callback_mode_process" enum="AnimationMixer.AnimationCallbackModeProcess" default="1">
+			The process notification in which to update animations.
+		</member>
+		<member name="deterministic" type="bool" setter="set_deterministic" getter="is_deterministic" default="false">
+			If [code]true[/code], the blending uses the deterministic algorithm. The total weight is not normalized and the result is accumulated with an initial value ([code]0[/code] or a [code]"RESET"[/code] animation if present).
+			This means that if the total amount of blending is [code]0.0[/code], the result is equal to the [code]"RESET"[/code] animation.
+			If the number of tracks between the blended animations is different, the animation with the missing track is treated as if it had the initial value.
+			If [code]false[/code], The blend does not use the deterministic algorithm. The total weight is normalized and always [code]1.0[/code]. If the number of tracks between the blended animations is different, nothing is done about the animation that is missing a track.
+		</member>
+		<member name="reset_on_save" type="bool" setter="set_reset_on_save_enabled" getter="is_reset_on_save_enabled" default="true">
+			This is used by the editor. If set to [code]true[/code], the scene will be saved with the effects of the reset animation (the animation with the key [code]"RESET"[/code]) applied as if it had been seeked to time 0, with the editor keeping the values that the scene had before saving.
+			This makes it more convenient to preview and edit animations in the editor, as changes to the scene will not be saved as long as they are set in the reset animation.
+		</member>
+		<member name="root_node" type="NodePath" setter="set_root_node" getter="get_root_node" default="NodePath(&quot;..&quot;)">
+			The node from which node path references will travel.
+		</member>
+	</members>
+	<signals>
+		<signal name="animation_finished">
+			<param index="0" name="anim_name" type="StringName" />
+			<description>
+				Notifies when an animation finished playing.
+				[b]Note:[/b] This signal is not emitted if an animation is looping.
+			</description>
+		</signal>
+		<signal name="animation_libraries_updated">
+			<description>
+				Notifies when the animation libraries have changed.
+			</description>
+		</signal>
+		<signal name="animation_list_changed">
+			<description>
+				Notifies when an animation list is changed.
+			</description>
+		</signal>
+		<signal name="animation_started">
+			<param index="0" name="anim_name" type="StringName" />
+			<description>
+				Notifies when an animation starts playing.
+			</description>
+		</signal>
+		<signal name="caches_cleared">
+			<description>
+				Notifies when the caches have been cleared, either automatically, or manually via [method clear_caches].
+			</description>
+		</signal>
+		<signal name="mixer_updated">
+			<description>
+				Editor only. Notifies when the property have been updated to update dummy [AnimationPlayer] in animation player editor.
+			</description>
+		</signal>
+	</signals>
+	<constants>
+		<constant name="ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS" value="0" enum="AnimationCallbackModeProcess">
+			Process animation during physics frames (see [constant Node.NOTIFICATION_INTERNAL_PHYSICS_PROCESS]). This is especially useful when animating physics bodies.
+		</constant>
+		<constant name="ANIMATION_CALLBACK_MODE_PROCESS_IDLE" value="1" enum="AnimationCallbackModeProcess">
+			Process animation during process frames (see [constant Node.NOTIFICATION_INTERNAL_PROCESS]).
+		</constant>
+		<constant name="ANIMATION_CALLBACK_MODE_PROCESS_MANUAL" value="2" enum="AnimationCallbackModeProcess">
+			Do not process animation. Use [method advance] to process the animation manually.
+		</constant>
+		<constant name="ANIMATION_CALLBACK_MODE_METHOD_DEFERRED" value="0" enum="AnimationCallbackModeMethod">
+			Batch method calls during the animation process, then do the calls after events are processed. This avoids bugs involving deleting nodes or modifying the AnimationPlayer while playing.
+		</constant>
+		<constant name="ANIMATION_CALLBACK_MODE_METHOD_IMMEDIATE" value="1" enum="AnimationCallbackModeMethod">
+			Make method calls immediately when reached in the animation.
+		</constant>
+	</constants>
+</class>
