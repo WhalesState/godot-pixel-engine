@@ -93,12 +93,9 @@ void RasterizerGLES3::begin_frame(double frame_step) {
 	time_total = Math::fmod(time_total, time_roll_over);
 
 	canvas->set_time(time_total);
-	scene->set_time(time_total, frame_step);
 
 	GLES3::Utilities *utils = GLES3::Utilities::get_singleton();
 	utils->_capture_timestamps_begin();
-
-	//scene->iteration();
 }
 
 void RasterizerGLES3::end_frame(bool p_swap_buffers) {
@@ -191,7 +188,6 @@ void RasterizerGLES3::initialize() {
 }
 
 void RasterizerGLES3::finalize() {
-	memdelete(scene);
 	memdelete(canvas);
 	memdelete(copy_effects);
 	memdelete(material_storage);
@@ -334,7 +330,6 @@ RasterizerGLES3::RasterizerGLES3() {
 	material_storage = memnew(GLES3::MaterialStorage);
 	copy_effects = memnew(GLES3::CopyEffects);
 	canvas = memnew(RasterizerCanvasGLES3());
-	scene = memnew(RasterizerSceneGLES3());
 }
 
 RasterizerGLES3::~RasterizerGLES3() {

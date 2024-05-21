@@ -33,7 +33,6 @@
 #define RENDERER_COMPOSITOR_H
 
 #include "servers/rendering/renderer_canvas_render.h"
-#include "servers/rendering/rendering_method.h"
 #include "servers/rendering/storage/material_storage.h"
 #include "servers/rendering/storage/texture_storage.h"
 #include "servers/rendering/storage/utilities.h"
@@ -78,7 +77,6 @@ public:
 	virtual RendererMaterialStorage *get_material_storage() = 0;
 	virtual RendererTextureStorage *get_texture_storage() = 0;
 	virtual RendererCanvasRender *get_canvas() = 0;
-	virtual RendererSceneRender *get_scene() = 0;
 
 	virtual void set_boot_image(const Ref<Image> &p_image, const Color &p_color, bool p_scale, bool p_use_filter = true) = 0;
 

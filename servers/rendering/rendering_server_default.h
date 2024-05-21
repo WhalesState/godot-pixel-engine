@@ -36,7 +36,6 @@
 #include "core/templates/command_queue_mt.h"
 #include "core/templates/hash_map.h"
 #include "renderer_canvas_cull.h"
-#include "renderer_scene_cull.h"
 #include "renderer_viewport.h"
 #include "rendering_server_globals.h"
 #include "servers/rendering/renderer_compositor.h"
@@ -304,17 +303,6 @@ public:
 	FUNC1RC(RID, viewport_find_from_screen_attachment, DisplayServer::WindowID)
 
 	FUNC2(call_set_vsync_mode, DisplayServer::VSyncMode, DisplayServer::WindowID)
-
-// 	/* SCENARIO API */
-
-// #undef server_name
-// #undef ServerName
-
-// #define ServerName RenderingMethod
-// #define server_name RSG::scene
-
-// 	/* INSTANCING API */
-// 	FUNCRIDSPLIT(instance)
 
 #undef server_name
 #undef ServerName

@@ -34,14 +34,12 @@
 
 #include "servers/rendering/renderer_canvas_cull.h"
 #include "servers/rendering/renderer_canvas_render.h"
-#include "servers/rendering/rendering_method.h"
 #include "servers/rendering/storage/material_storage.h"
 #include "servers/rendering/storage/texture_storage.h"
 #include "servers/rendering/storage/utilities.h"
 
 class RendererCanvasCull;
 class RendererViewport;
-class RenderingMethod;
 
 class RenderingServerGlobals {
 public:
@@ -55,7 +53,6 @@ public:
 
 	static RendererCanvasCull *canvas;
 	static RendererViewport *viewport;
-	static RenderingMethod *scene;
 };
 
 #define RSG RenderingServerGlobals

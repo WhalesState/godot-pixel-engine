@@ -35,10 +35,7 @@
 #include "core/templates/local_vector.h"
 #include "core/templates/rid_owner.h"
 #include "core/templates/self_list.h"
-#include "servers/rendering/renderer_scene_render.h"
-#include "servers/rendering/rendering_method.h"
 #include "servers/rendering_server.h"
-#include "storage/render_scene_buffers.h"
 
 class RendererViewport {
 public:
@@ -57,7 +54,6 @@ public:
 		RS::ViewportUpdateMode update_mode = RenderingServer::VIEWPORT_UPDATE_WHEN_VISIBLE;
 		RID render_target;
 		RID render_target_texture;
-		Ref<RenderSceneBuffers> render_buffers;
 
 		RS::ViewportMSAA msaa_2d = RenderingServer::VIEWPORT_MSAA_DISABLED;
 
@@ -90,6 +86,10 @@ public:
 
 		uint32_t canvas_cull_mask = 0xffffffff;
 
+		struct RenderInfo {
+			int info[RS::VIEWPORT_RENDER_INFO_TYPE_MAX][RS::VIEWPORT_RENDER_INFO_MAX] = {};
+		};
+
 		struct CanvasKey {
 			int64_t stacking;
 			RID canvas;
@@ -121,7 +121,7 @@ public:
 
 		HashMap<RID, CanvasData> canvas_map;
 
-		RenderingMethod::RenderInfo render_info;
+		RenderInfo render_info;
 
 		Viewport() {
 			view_count = 1;

@@ -35,7 +35,6 @@
 #include "core/templates/rid_owner.h"
 #include "core/templates/self_list.h"
 #include "servers/rendering/dummy/rasterizer_canvas_dummy.h"
-#include "servers/rendering/dummy/rasterizer_scene_dummy.h"
 #include "servers/rendering/dummy/storage/material_storage.h"
 #include "servers/rendering/dummy/storage/texture_storage.h"
 #include "servers/rendering/dummy/storage/utilities.h"
@@ -53,14 +52,12 @@ protected:
 	RendererDummy::Utilities utilities;
 	RendererDummy::MaterialStorage material_storage;
 	RendererDummy::TextureStorage texture_storage;
-	RasterizerSceneDummy scene;
 
 public:
 	RendererUtilities *get_utilities() override { return &utilities; };
 	RendererMaterialStorage *get_material_storage() override { return &material_storage; };
 	RendererTextureStorage *get_texture_storage() override { return &texture_storage; };
 	RendererCanvasRender *get_canvas() override { return &canvas; }
-	RendererSceneRender *get_scene() override { return &scene; }
 
 	void set_boot_image(const Ref<Image> &p_image, const Color &p_color, bool p_scale, bool p_use_filter = true) override {}
 

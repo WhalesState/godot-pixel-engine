@@ -838,9 +838,6 @@ bool RendererViewport::free(RID p_rid) {
 		Viewport *viewport = viewport_owner.get_or_null(p_rid);
 
 		RSG::texture_storage->render_target_free(viewport->render_target);
-		if (viewport->render_buffers.is_valid()) {
-			viewport->render_buffers.unref();
-		}
 
 		while (viewport->canvas_map.begin()) {
 			viewport_remove_canvas(p_rid, viewport->canvas_map.begin()->key);

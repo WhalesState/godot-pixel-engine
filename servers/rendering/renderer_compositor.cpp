@@ -44,7 +44,6 @@ RendererCompositor *RendererCompositor::create() {
 	return _create_func();
 }
 
-
 RendererCompositor::RendererCompositor() {
 	singleton = this;
 }

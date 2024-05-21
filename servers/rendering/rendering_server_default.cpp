@@ -36,7 +36,6 @@
 #include "core/os/os.h"
 #include "core/templates/sort_array.h"
 #include "renderer_canvas_cull.h"
-#include "renderer_scene_cull.h"
 #include "rendering_server_globals.h"
 
 // careful, these may run in different threads than the rendering server
@@ -56,9 +55,6 @@ void RenderingServerDefault::_free(RID p_rid) {
 		return;
 	}
 	if (RSG::viewport->free(p_rid)) {
-		return;
-	}
-	if (RSG::scene->free(p_rid)) {
 		return;
 	}
 }
@@ -81,12 +77,12 @@ void RenderingServerDefault::_draw(bool p_swap_buffers, double frame_step) {
 
 	uint64_t time_usec = OS::get_singleton()->get_ticks_usec();
 
-	RSG::scene->update(); //update scenes stuff before updating instances
+	RSG::utilities->update_dirty_resources();
 
 	frame_setup_time = double(OS::get_singleton()->get_ticks_usec() - time_usec) / 1000.0;
 
 	RSG::viewport->draw_viewports(p_swap_buffers);
-	RSG::canvas_render->update();
+	// RSG::canvas_render->update();
 
 	if (!OS::get_singleton()->get_current_rendering_driver_name().begins_with("opengl3")) {
 		// Already called for gl_compatibility renderer.
@@ -377,14 +373,11 @@ RenderingServerDefault::RenderingServerDefault(bool p_create_thread) :
 	RSG::threaded = p_create_thread;
 	RSG::canvas = memnew(RendererCanvasCull);
 	RSG::viewport = memnew(RendererViewport);
-	RendererSceneCull *sr = memnew(RendererSceneCull);
-	RSG::scene = sr;
 	RSG::rasterizer = RendererCompositor::create();
 	RSG::utilities = RSG::rasterizer->get_utilities();
 	RSG::material_storage = RSG::rasterizer->get_material_storage();
 	RSG::texture_storage = RSG::rasterizer->get_texture_storage();
 	RSG::canvas_render = RSG::rasterizer->get_canvas();
-	sr->set_scene_render(RSG::rasterizer->get_scene());
 
 	frame_profile_frame = 0;
 }
@@ -393,5 +386,4 @@ RenderingServerDefault::~RenderingServerDefault() {
 	memdelete(RSG::canvas);
 	memdelete(RSG::viewport);
 	memdelete(RSG::rasterizer);
-	memdelete(RSG::scene);
 }

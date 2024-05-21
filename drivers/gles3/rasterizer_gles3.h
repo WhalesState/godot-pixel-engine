@@ -36,7 +36,6 @@
 
 #include "effects/copy_effects.h"
 #include "rasterizer_canvas_gles3.h"
-#include "rasterizer_scene_gles3.h"
 #include "servers/rendering/renderer_compositor.h"
 #include "storage/config.h"
 #include "storage/material_storage.h"
@@ -59,7 +58,6 @@ protected:
 	GLES3::MaterialStorage *material_storage = nullptr;
 	GLES3::CopyEffects *copy_effects = nullptr;
 	RasterizerCanvasGLES3 *canvas = nullptr;
-	RasterizerSceneGLES3 *scene = nullptr;
 	static RasterizerGLES3 *singleton;
 
 	void _blit_render_target_to_screen(RID p_render_target, DisplayServer::WindowID p_screen, const Rect2 &p_screen_rect, uint32_t p_layer, bool p_first = true);
@@ -69,7 +67,6 @@ public:
 	RendererMaterialStorage *get_material_storage() { return material_storage; }
 	RendererTextureStorage *get_texture_storage() { return texture_storage; }
 	RendererCanvasRender *get_canvas() { return canvas; }
-	RendererSceneRender *get_scene() { return scene; }
 
 	void set_boot_image(const Ref<Image> &p_image, const Color &p_color, bool p_scale, bool p_use_filter = true);
 
