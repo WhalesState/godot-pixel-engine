@@ -206,12 +206,8 @@ int RenderingServer::global_shader_uniform_type_get_shader_datatype(GlobalShader
 			return ShaderLanguage::TYPE_MAT4;
 		case RS::GLOBAL_VAR_TYPE_SAMPLER2D:
 			return ShaderLanguage::TYPE_SAMPLER2D;
-		case RS::GLOBAL_VAR_TYPE_SAMPLER2DARRAY:
-			return ShaderLanguage::TYPE_SAMPLER2DARRAY;
 		case RS::GLOBAL_VAR_TYPE_SAMPLER3D:
 			return ShaderLanguage::TYPE_SAMPLER3D;
-		case RS::GLOBAL_VAR_TYPE_SAMPLERCUBE:
-			return ShaderLanguage::TYPE_SAMPLERCUBE;
 		default:
 			return ShaderLanguage::TYPE_MAX; // Invalid or not found.
 	}
@@ -224,9 +220,6 @@ static Vector<Ref<Image>> _get_imgvec(const TypedArray<Image> &p_layers) {
 		images.write[i] = p_layers[i];
 	}
 	return images;
-}
-RID RenderingServer::_texture_2d_layered_create(const TypedArray<Image> &p_layers, TextureLayeredType p_layered_type) {
-	return texture_2d_layered_create(_get_imgvec(p_layers), p_layered_type);
 }
 RID RenderingServer::_texture_3d_create(Image::Format p_format, int p_width, int p_height, int p_depth, bool p_mipmaps, const TypedArray<Image> &p_data) {
 	return texture_3d_create(p_format, p_width, p_height, p_depth, p_mipmaps, _get_imgvec(p_data));
@@ -263,7 +256,6 @@ void RenderingServer::_bind_methods() {
 	/* TEXTURE */
 
 	ClassDB::bind_method(D_METHOD("texture_2d_create", "image"), &RenderingServer::texture_2d_create);
-	ClassDB::bind_method(D_METHOD("texture_2d_layered_create", "layers", "layered_type"), &RenderingServer::_texture_2d_layered_create);
 	ClassDB::bind_method(D_METHOD("texture_3d_create", "format", "width", "height", "depth", "mipmaps", "data"), &RenderingServer::_texture_3d_create);
 	ClassDB::bind_method(D_METHOD("texture_proxy_create", "base"), &RenderingServer::texture_proxy_create);
 
@@ -272,11 +264,9 @@ void RenderingServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("texture_proxy_update", "texture", "proxy_to"), &RenderingServer::texture_proxy_update);
 
 	ClassDB::bind_method(D_METHOD("texture_2d_placeholder_create"), &RenderingServer::texture_2d_placeholder_create);
-	ClassDB::bind_method(D_METHOD("texture_2d_layered_placeholder_create", "layered_type"), &RenderingServer::texture_2d_layered_placeholder_create);
 	ClassDB::bind_method(D_METHOD("texture_3d_placeholder_create"), &RenderingServer::texture_3d_placeholder_create);
 
 	ClassDB::bind_method(D_METHOD("texture_2d_get", "texture"), &RenderingServer::texture_2d_get);
-	ClassDB::bind_method(D_METHOD("texture_2d_layer_get", "texture", "layer"), &RenderingServer::texture_2d_layer_get);
 	ClassDB::bind_method(D_METHOD("texture_3d_get", "texture"), &RenderingServer::_texture_3d_get);
 
 	ClassDB::bind_method(D_METHOD("texture_replace", "texture", "by_texture"), &RenderingServer::texture_replace);
@@ -289,16 +279,6 @@ void RenderingServer::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("texture_set_force_redraw_if_visible", "texture", "enable"), &RenderingServer::texture_set_force_redraw_if_visible);
 	ClassDB::bind_method(D_METHOD("texture_get_native_handle", "texture", "srgb"), &RenderingServer::texture_get_native_handle, DEFVAL(false));
-
-	BIND_ENUM_CONSTANT(TEXTURE_LAYERED_2D_ARRAY);
-	BIND_ENUM_CONSTANT(TEXTURE_LAYERED_CUBEMAP);
-
-	BIND_ENUM_CONSTANT(CUBEMAP_LAYER_LEFT);
-	BIND_ENUM_CONSTANT(CUBEMAP_LAYER_RIGHT);
-	BIND_ENUM_CONSTANT(CUBEMAP_LAYER_BOTTOM);
-	BIND_ENUM_CONSTANT(CUBEMAP_LAYER_TOP);
-	BIND_ENUM_CONSTANT(CUBEMAP_LAYER_FRONT);
-	BIND_ENUM_CONSTANT(CUBEMAP_LAYER_BACK);
 
 	/* SHADER */
 
@@ -669,9 +649,7 @@ void RenderingServer::_bind_methods() {
 	BIND_ENUM_CONSTANT(GLOBAL_VAR_TYPE_TRANSFORM_2D);
 	BIND_ENUM_CONSTANT(GLOBAL_VAR_TYPE_TRANSFORM);
 	BIND_ENUM_CONSTANT(GLOBAL_VAR_TYPE_SAMPLER2D);
-	BIND_ENUM_CONSTANT(GLOBAL_VAR_TYPE_SAMPLER2DARRAY);
 	BIND_ENUM_CONSTANT(GLOBAL_VAR_TYPE_SAMPLER3D);
-	BIND_ENUM_CONSTANT(GLOBAL_VAR_TYPE_SAMPLERCUBE);
 	BIND_ENUM_CONSTANT(GLOBAL_VAR_TYPE_MAX);
 
 	/* Free */

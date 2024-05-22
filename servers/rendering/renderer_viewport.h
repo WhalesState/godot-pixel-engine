@@ -48,7 +48,6 @@ public:
 
 		Size2i internal_size;
 		Size2i size;
-		uint32_t view_count;
 		RID camera;
 
 		RS::ViewportUpdateMode update_mode = RenderingServer::VIEWPORT_UPDATE_WHEN_VISIBLE;
@@ -124,7 +123,6 @@ public:
 		RenderInfo render_info;
 
 		Viewport() {
-			view_count = 1;
 			update_mode = RS::VIEWPORT_UPDATE_WHEN_VISIBLE;
 			clear_mode = RS::VIEWPORT_CLEAR_ALWAYS;
 			transparent_bg = false;
@@ -163,7 +161,7 @@ public:
 
 private:
 	Vector<Viewport *> _sort_active_viewports();
-	void _viewport_set_size(Viewport *p_viewport, int p_width, int p_height, uint32_t p_view_count);
+	void _viewport_set_size(Viewport *p_viewport, int p_width, int p_height);
 	void _draw_viewport(Viewport *p_viewport);
 
 public:

@@ -68,7 +68,6 @@ public:
 	virtual void texture_free(RID p_rid) = 0;
 
 	virtual void texture_2d_initialize(RID p_texture, const Ref<Image> &p_image) = 0;
-	virtual void texture_2d_layered_initialize(RID p_texture, const Vector<Ref<Image>> &p_layers, RS::TextureLayeredType p_layered_type) = 0;
 	virtual void texture_3d_initialize(RID p_texture, Image::Format, int p_width, int p_height, int p_depth, bool p_mipmaps, const Vector<Ref<Image>> &p_data) = 0;
 	virtual void texture_proxy_initialize(RID p_texture, RID p_base) = 0; //all slices, then all the mipmaps, must be coherent
 
@@ -78,11 +77,9 @@ public:
 
 	//these two APIs can be used together or in combination with the others.
 	virtual void texture_2d_placeholder_initialize(RID p_texture) = 0;
-	virtual void texture_2d_layered_placeholder_initialize(RID p_texture, RenderingServer::TextureLayeredType p_layered_type) = 0;
 	virtual void texture_3d_placeholder_initialize(RID p_texture) = 0;
 
 	virtual Ref<Image> texture_2d_get(RID p_texture) const = 0;
-	virtual Ref<Image> texture_2d_layer_get(RID p_texture, int p_layer) const = 0;
 	virtual Vector<Ref<Image>> texture_3d_get(RID p_texture) const = 0;
 
 	virtual void texture_replace(RID p_texture, RID p_by_texture) = 0;
@@ -112,7 +109,7 @@ public:
 
 	virtual void render_target_set_position(RID p_render_target, int p_x, int p_y) = 0; // Q change input to const Point2i &p_position ?
 	virtual Point2i render_target_get_position(RID p_render_target) const = 0;
-	virtual void render_target_set_size(RID p_render_target, int p_width, int p_height, uint32_t p_view_count) = 0; // Q change input to const Size2i &p_size ?
+	virtual void render_target_set_size(RID p_render_target, int p_width, int p_height) = 0; // Q change input to const Size2i &p_size ?
 	virtual Size2i render_target_get_size(RID p_render_target) const = 0;
 	virtual void render_target_set_transparent(RID p_render_target, bool p_is_transparent) = 0;
 	virtual bool render_target_get_transparent(RID p_render_target) const = 0;

@@ -98,19 +98,11 @@ static int _get_datatype_alignment(SL::DataType p_type) {
 			return 16;
 		case SL::TYPE_USAMPLER2D:
 			return 16;
-		case SL::TYPE_SAMPLER2DARRAY:
-			return 16;
-		case SL::TYPE_ISAMPLER2DARRAY:
-			return 16;
-		case SL::TYPE_USAMPLER2DARRAY:
-			return 16;
 		case SL::TYPE_SAMPLER3D:
 			return 16;
 		case SL::TYPE_ISAMPLER3D:
 			return 16;
 		case SL::TYPE_USAMPLER3D:
-			return 16;
-		case SL::TYPE_SAMPLERCUBE:
 			return 16;
 		case SL::TYPE_STRUCT:
 			return 0;
@@ -1189,7 +1181,6 @@ String ShaderCompiler::_dump_node_code(const SL::Node *p_node, int p_level, Gene
 					// if color backbuffer, depth backbuffer or normal roughness texture is used,
 					// we will add logic to automatically switch between
 					// sampler2D and sampler2D array and vec2 UV and vec3 UV.
-					bool multiview_uv_needed = false;
 
 					for (int i = 1; i < onode->arguments.size(); i++) {
 						if (i > 1) {
@@ -1299,38 +1290,13 @@ String ShaderCompiler::_dump_node_code(const SL::Node *p_node, int p_level, Gene
 								}
 
 								String data_type_name = "";
-								if (actions.check_multiview_samplers && (is_screen_texture || is_depth_texture || is_normal_roughness_texture)) {
-									data_type_name = "multiviewSampler";
-									multiview_uv_needed = true;
-								} else {
-									data_type_name = ShaderLanguage::get_datatype_name(onode->arguments[i]->get_datatype());
-								}
+
+								data_type_name = ShaderLanguage::get_datatype_name(onode->arguments[i]->get_datatype());
 
 								code += data_type_name + "(" + node_code + ", " + sampler_name + ")";
-							} else if (actions.check_multiview_samplers && correct_texture_uniform && RS::get_singleton()->is_low_end()) {
-								// Texture function on low end hardware (i.e. OpenGL).
-								// We just need to know if the texture supports multiview.
-
-								if (shader->uniforms.has(texture_uniform)) {
-									const ShaderLanguage::ShaderNode::Uniform &u = shader->uniforms[texture_uniform];
-									if (u.hint == ShaderLanguage::ShaderNode::Uniform::HINT_SCREEN_TEXTURE) {
-										multiview_uv_needed = true;
-									} else if (u.hint == ShaderLanguage::ShaderNode::Uniform::HINT_DEPTH_TEXTURE) {
-										multiview_uv_needed = true;
-									} else if (u.hint == ShaderLanguage::ShaderNode::Uniform::HINT_NORMAL_ROUGHNESS_TEXTURE) {
-										multiview_uv_needed = true;
-									}
-								}
-
-								code += node_code;
 							} else {
 								code += node_code;
 							}
-						} else if (multiview_uv_needed && !texture_func_no_uv && i == 2) {
-							// UV coordinate after using color, depth or normal roughness texture.
-							node_code = "multiview_uv(" + node_code + ".xy)";
-
-							code += node_code;
 						} else {
 							code += node_code;
 						}

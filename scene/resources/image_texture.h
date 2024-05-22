@@ -87,46 +87,6 @@ public:
 	~ImageTexture();
 };
 
-class ImageTextureLayered : public TextureLayered {
-	GDCLASS(ImageTextureLayered, TextureLayered);
-
-	LayeredType layered_type;
-
-	mutable RID texture;
-	Image::Format format = Image::FORMAT_L8;
-
-	int width = 0;
-	int height = 0;
-	int layers = 0;
-	bool mipmaps = false;
-
-	Error _create_from_images(const TypedArray<Image> &p_images);
-
-	TypedArray<Image> _get_images() const;
-	void _set_images(const TypedArray<Image> &p_images);
-
-protected:
-	static void _bind_methods();
-
-public:
-	virtual Image::Format get_format() const override;
-	virtual int get_width() const override;
-	virtual int get_height() const override;
-	virtual int get_layers() const override;
-	virtual bool has_mipmaps() const override;
-	virtual LayeredType get_layered_type() const override;
-
-	Error create_from_images(Vector<Ref<Image>> p_images);
-	void update_layer(const Ref<Image> &p_image, int p_layer);
-	virtual Ref<Image> get_layer_data(int p_layer) const override;
-
-	virtual RID get_rid() const override;
-	virtual void set_path(const String &p_path, bool p_take_over = false) override;
-
-	ImageTextureLayered(LayeredType p_layered_type);
-	~ImageTextureLayered();
-};
-
 class ImageTexture3D : public Texture3D {
 	GDCLASS(ImageTexture3D, Texture3D);
 
@@ -163,32 +123,6 @@ public:
 
 	ImageTexture3D();
 	~ImageTexture3D();
-};
-
-class Texture2DArray : public ImageTextureLayered {
-	GDCLASS(Texture2DArray, ImageTextureLayered)
-
-protected:
-	static void _bind_methods();
-
-public:
-	Texture2DArray() :
-			ImageTextureLayered(LAYERED_TYPE_2D_ARRAY) {}
-
-	virtual Ref<Resource> create_placeholder() const;
-};
-
-class Cubemap : public ImageTextureLayered {
-	GDCLASS(Cubemap, ImageTextureLayered);
-
-protected:
-	static void _bind_methods();
-
-public:
-	Cubemap() :
-			ImageTextureLayered(LAYERED_TYPE_CUBEMAP) {}
-
-	virtual Ref<Resource> create_placeholder() const;
 };
 
 #endif // IMAGE_TEXTURE_H

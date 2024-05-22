@@ -1061,32 +1061,6 @@
 				[/codeblock]
 			</description>
 		</method>
-		<method name="texture_2d_layer_get" qualifiers="const">
-			<return type="Image" />
-			<param index="0" name="texture" type="RID" />
-			<param index="1" name="layer" type="int" />
-			<description>
-				Returns an [Image] instance from the given [param texture] [RID] and [param layer].
-			</description>
-		</method>
-		<method name="texture_2d_layered_create">
-			<return type="RID" />
-			<param index="0" name="layers" type="Image[]" />
-			<param index="1" name="layered_type" type="int" enum="RenderingServer.TextureLayeredType" />
-			<description>
-				Creates a 2-dimensional layered texture and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]texture_2d_layered_*[/code] RenderingServer functions.
-				Once finished with your RID, you will want to free the RID using the RenderingServer's [method free_rid] method.
-				[b]Note:[/b] The equivalent resource is [TextureLayered].
-			</description>
-		</method>
-		<method name="texture_2d_layered_placeholder_create">
-			<return type="RID" />
-			<param index="0" name="layered_type" type="int" enum="RenderingServer.TextureLayeredType" />
-			<description>
-				Creates a placeholder for a 2-dimensional layered texture and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]texture_2d_layered_*[/code] RenderingServer functions, although it does nothing when used. See also [method texture_2d_placeholder_create].
-				[b]Note:[/b] The equivalent resource is [PlaceholderTextureLayered].
-			</description>
-		</method>
 		<method name="texture_2d_placeholder_create">
 			<return type="RID" />
 			<description>
@@ -1506,30 +1480,6 @@
 		</constant>
 		<constant name="MAX_2D_DIRECTIONAL_LIGHTS" value="8">
 			The maximum number of directional lights that can be rendered at a given time in 2D.
-		</constant>
-		<constant name="TEXTURE_LAYERED_2D_ARRAY" value="0" enum="TextureLayeredType">
-			Array of 2-dimensional textures (see [Texture2DArray]).
-		</constant>
-		<constant name="TEXTURE_LAYERED_CUBEMAP" value="1" enum="TextureLayeredType">
-			Cubemap texture (see [Cubemap]).
-		</constant>
-		<constant name="CUBEMAP_LAYER_LEFT" value="0" enum="CubeMapLayer">
-			Left face of a [Cubemap].
-		</constant>
-		<constant name="CUBEMAP_LAYER_RIGHT" value="1" enum="CubeMapLayer">
-			Right face of a [Cubemap].
-		</constant>
-		<constant name="CUBEMAP_LAYER_BOTTOM" value="2" enum="CubeMapLayer">
-			Bottom face of a [Cubemap].
-		</constant>
-		<constant name="CUBEMAP_LAYER_TOP" value="3" enum="CubeMapLayer">
-			Top face of a [Cubemap].
-		</constant>
-		<constant name="CUBEMAP_LAYER_FRONT" value="4" enum="CubeMapLayer">
-			Front face of a [Cubemap].
-		</constant>
-		<constant name="CUBEMAP_LAYER_BACK" value="5" enum="CubeMapLayer">
-			Back face of a [Cubemap].
 		</constant>
 		<constant name="SHADER_CANVAS_ITEM" value="0" enum="ShaderMode">
 			Shader is a 2D shader.
@@ -1992,16 +1942,10 @@
 		<constant name="GLOBAL_VAR_TYPE_SAMPLER2D" value="24" enum="GlobalShaderParameterType">
 			2D sampler global shader parameter ([code]global uniform sampler2D ...[/code]). Exposed as a [Texture2D] in the editor UI.
 		</constant>
-		<constant name="GLOBAL_VAR_TYPE_SAMPLER2DARRAY" value="25" enum="GlobalShaderParameterType">
-			2D sampler array global shader parameter ([code]global uniform sampler2DArray ...[/code]). Exposed as a [Texture2DArray] in the editor UI.
-		</constant>
-		<constant name="GLOBAL_VAR_TYPE_SAMPLER3D" value="26" enum="GlobalShaderParameterType">
+		<constant name="GLOBAL_VAR_TYPE_SAMPLER3D" value="25" enum="GlobalShaderParameterType">
 			3D sampler global shader parameter ([code]global uniform sampler3D ...[/code]). Exposed as a [Texture3D] in the editor UI.
 		</constant>
-		<constant name="GLOBAL_VAR_TYPE_SAMPLERCUBE" value="27" enum="GlobalShaderParameterType">
-			Cubemap sampler global shader parameter ([code]global uniform samplerCube ...[/code]). Exposed as a [Cubemap] in the editor UI.
-		</constant>
-		<constant name="GLOBAL_VAR_TYPE_MAX" value="28" enum="GlobalShaderParameterType">
+		<constant name="GLOBAL_VAR_TYPE_MAX" value="26" enum="GlobalShaderParameterType">
 			Represents the size of the [enum GlobalShaderParameterType] enum.
 		</constant>
 		<constant name="RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME" value="0" enum="RenderingInfo">

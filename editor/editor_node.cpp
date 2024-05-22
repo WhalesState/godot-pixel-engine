@@ -118,7 +118,6 @@
 #include "editor/import/resource_importer_dynamic_font.h"
 #include "editor/import/resource_importer_image.h"
 #include "editor/import/resource_importer_imagefont.h"
-#include "editor/import/resource_importer_layered_texture.h"
 #include "editor/import/resource_importer_texture.h"
 #include "editor/import/resource_importer_texture_atlas.h"
 #include "editor/import/resource_importer_wav.h"
@@ -6373,16 +6372,6 @@ EditorNode::EditorNode() {
 		// Register importers at the beginning, so dialogs are created with the right extensions.
 		Ref<ResourceImporterTexture> import_texture = memnew(ResourceImporterTexture(true));
 		ResourceFormatImporter::get_singleton()->add_importer(import_texture);
-
-		Ref<ResourceImporterLayeredTexture> import_cubemap;
-		import_cubemap.instantiate();
-		import_cubemap->set_mode(ResourceImporterLayeredTexture::MODE_CUBEMAP);
-		ResourceFormatImporter::get_singleton()->add_importer(import_cubemap);
-
-		Ref<ResourceImporterLayeredTexture> import_array;
-		import_array.instantiate();
-		import_array->set_mode(ResourceImporterLayeredTexture::MODE_2D_ARRAY);
-		ResourceFormatImporter::get_singleton()->add_importer(import_array);
 
 		Ref<ResourceImporterImage> import_image;
 		import_image.instantiate();

@@ -120,11 +120,8 @@ enum DefaultGLTexture {
 	DEFAULT_GL_TEXTURE_NORMAL,
 	DEFAULT_GL_TEXTURE_ANISO,
 	DEFAULT_GL_TEXTURE_DEPTH,
-	DEFAULT_GL_TEXTURE_CUBEMAP_BLACK,
-	DEFAULT_GL_TEXTURE_CUBEMAP_WHITE,
 	DEFAULT_GL_TEXTURE_3D_WHITE,
 	DEFAULT_GL_TEXTURE_3D_BLACK,
-	DEFAULT_GL_TEXTURE_2D_ARRAY_WHITE,
 	DEFAULT_GL_TEXTURE_2D_UINT,
 	DEFAULT_GL_TEXTURE_MAX
 };
@@ -165,12 +162,10 @@ struct Texture {
 
 	enum Type {
 		TYPE_2D,
-		TYPE_LAYERED,
 		TYPE_3D
 	};
 
 	Type type;
-	RS::TextureLayeredType layered_type = RS::TEXTURE_LAYERED_2D_ARRAY;
 
 	GLenum target = GL_TEXTURE_2D;
 	GLenum gl_format_cache = 0;
@@ -215,7 +210,6 @@ struct Texture {
 		alloc_height = o.alloc_height;
 		format = o.format;
 		type = o.type;
-		layered_type = o.layered_type;
 		target = o.target;
 		total_data_size = o.total_data_size;
 		compressed = o.compressed;
@@ -336,7 +330,6 @@ private:
 struct RenderTarget {
 	Point2i position = Point2i(0, 0);
 	Size2i size = Size2i(0, 0);
-	uint32_t view_count = 1;
 	int mipmap_count = 1;
 	RID self;
 	GLuint fbo = 0;
@@ -499,11 +492,10 @@ public:
 	virtual void texture_free(RID p_rid) override;
 
 	virtual void texture_2d_initialize(RID p_texture, const Ref<Image> &p_image) override;
-	virtual void texture_2d_layered_initialize(RID p_texture, const Vector<Ref<Image>> &p_layers, RS::TextureLayeredType p_layered_type) override;
 	virtual void texture_3d_initialize(RID p_texture, Image::Format, int p_width, int p_height, int p_depth, bool p_mipmaps, const Vector<Ref<Image>> &p_data) override;
 	virtual void texture_proxy_initialize(RID p_texture, RID p_base) override; //all slices, then all the mipmaps, must be coherent
 
-	RID texture_create_external(Texture::Type p_type, Image::Format p_format, unsigned int p_image, int p_width, int p_height, int p_depth, int p_layers, RS::TextureLayeredType p_layered_type = RS::TEXTURE_LAYERED_2D_ARRAY);
+	RID texture_create_external(Texture::Type p_type, Image::Format p_format, unsigned int p_image, int p_width, int p_height, int p_depth, int p_layers);
 
 	virtual void texture_2d_update(RID p_texture, const Ref<Image> &p_image, int p_layer = 0) override;
 	virtual void texture_3d_update(RID p_texture, const Vector<Ref<Image>> &p_data) override{};
@@ -511,11 +503,9 @@ public:
 
 	//these two APIs can be used together or in combination with the others.
 	virtual void texture_2d_placeholder_initialize(RID p_texture) override;
-	virtual void texture_2d_layered_placeholder_initialize(RID p_texture, RenderingServer::TextureLayeredType p_layered_type) override;
 	virtual void texture_3d_placeholder_initialize(RID p_texture) override;
 
 	virtual Ref<Image> texture_2d_get(RID p_texture) const override;
-	virtual Ref<Image> texture_2d_layer_get(RID p_texture, int p_layer) const override { return Ref<Image>(); };
 	virtual Vector<Ref<Image>> texture_3d_get(RID p_texture) const override { return Vector<Ref<Image>>(); };
 
 	virtual void texture_replace(RID p_texture, RID p_by_texture) override;
@@ -578,7 +568,7 @@ public:
 
 	virtual void render_target_set_position(RID p_render_target, int p_x, int p_y) override;
 	virtual Point2i render_target_get_position(RID p_render_target) const override;
-	virtual void render_target_set_size(RID p_render_target, int p_width, int p_height, uint32_t p_view_count) override;
+	virtual void render_target_set_size(RID p_render_target, int p_width, int p_height) override;
 	virtual Size2i render_target_get_size(RID p_render_target) const override;
 	virtual void render_target_set_transparent(RID p_render_target, bool p_is_transparent) override;
 	virtual bool render_target_get_transparent(RID p_render_target) const override;

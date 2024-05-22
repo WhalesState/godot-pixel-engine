@@ -228,11 +228,6 @@ Comment: Clipper
 Copyright: 2010-2017, Angus Johnson
 License: BSL-1.0
 
-Files: ./thirdparty/misc/cubemap_coeffs.h
-Comment: Fast Filtering of Reflection Probes
-Copyright: 2016, Activision Publishing, Inc.
-License: Expat
-
 Files: ./thirdparty/misc/fastlz.c
  ./thirdparty/misc/fastlz.h
 Comment: FastLZ

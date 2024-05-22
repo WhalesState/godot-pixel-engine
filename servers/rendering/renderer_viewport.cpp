@@ -557,16 +557,15 @@ void RendererViewport::viewport_set_size(RID p_viewport, int p_width, int p_heig
 	Viewport *viewport = viewport_owner.get_or_null(p_viewport);
 	ERR_FAIL_NULL(viewport);
 
-	_viewport_set_size(viewport, p_width, p_height, 1);
+	_viewport_set_size(viewport, p_width, p_height);
 }
 
-void RendererViewport::_viewport_set_size(Viewport *p_viewport, int p_width, int p_height, uint32_t p_view_count) {
+void RendererViewport::_viewport_set_size(Viewport *p_viewport, int p_width, int p_height) {
 	Size2i new_size(p_width, p_height);
-	if (p_viewport->size != new_size || p_viewport->view_count != p_view_count) {
+	if (p_viewport->size != new_size) {
 		p_viewport->size = new_size;
-		p_viewport->view_count = p_view_count;
 
-		RSG::texture_storage->render_target_set_size(p_viewport->render_target, p_width, p_height, p_view_count);
+		RSG::texture_storage->render_target_set_size(p_viewport->render_target, p_width, p_height);
 	}
 }
 
@@ -606,7 +605,7 @@ void RendererViewport::viewport_attach_to_screen(RID p_viewport, const Rect2 &p_
 		// If using OpenGL we can optimize this operation by rendering directly to system_fbo
 		// instead of rendering to fbo and copying to system_fbo after
 		if (RSG::rasterizer->is_low_end() && viewport->viewport_render_direct_to_screen) {
-			RSG::texture_storage->render_target_set_size(viewport->render_target, p_rect.size.x, p_rect.size.y, viewport->view_count);
+			RSG::texture_storage->render_target_set_size(viewport->render_target, p_rect.size.x, p_rect.size.y);
 			RSG::texture_storage->render_target_set_position(viewport->render_target, p_rect.position.x, p_rect.position.y);
 		}
 
@@ -616,7 +615,7 @@ void RendererViewport::viewport_attach_to_screen(RID p_viewport, const Rect2 &p_
 		// if render_direct_to_screen was used, reset size and position
 		if (RSG::rasterizer->is_low_end() && viewport->viewport_render_direct_to_screen) {
 			RSG::texture_storage->render_target_set_position(viewport->render_target, 0, 0);
-			RSG::texture_storage->render_target_set_size(viewport->render_target, viewport->size.x, viewport->size.y, viewport->view_count);
+			RSG::texture_storage->render_target_set_size(viewport->render_target, viewport->size.x, viewport->size.y);
 		}
 
 		viewport->viewport_to_screen_rect = Rect2();
@@ -635,7 +634,7 @@ void RendererViewport::viewport_set_render_direct_to_screen(RID p_viewport, bool
 	// if disabled, reset render_target size and position
 	if (!p_enable) {
 		RSG::texture_storage->render_target_set_position(viewport->render_target, 0, 0);
-		RSG::texture_storage->render_target_set_size(viewport->render_target, viewport->size.x, viewport->size.y, viewport->view_count);
+		RSG::texture_storage->render_target_set_size(viewport->render_target, viewport->size.x, viewport->size.y);
 	}
 
 	RSG::texture_storage->render_target_set_direct_to_screen(viewport->render_target, p_enable);
@@ -643,7 +642,7 @@ void RendererViewport::viewport_set_render_direct_to_screen(RID p_viewport, bool
 
 	// if attached to screen already, setup screen size and position, this needs to happen after setting flag to avoid an unnecessary buffer allocation
 	if (RSG::rasterizer->is_low_end() && viewport->viewport_to_screen_rect != Rect2() && p_enable) {
-		RSG::texture_storage->render_target_set_size(viewport->render_target, viewport->viewport_to_screen_rect.size.x, viewport->viewport_to_screen_rect.size.y, viewport->view_count);
+		RSG::texture_storage->render_target_set_size(viewport->render_target, viewport->viewport_to_screen_rect.size.x, viewport->viewport_to_screen_rect.size.y);
 		RSG::texture_storage->render_target_set_position(viewport->render_target, viewport->viewport_to_screen_rect.position.x, viewport->viewport_to_screen_rect.position.y);
 	}
 }

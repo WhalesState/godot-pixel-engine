@@ -671,13 +671,9 @@ static const GLenum target_from_type[ShaderLanguage::TYPE_MAX] = {
 	GL_TEXTURE_2D, // TYPE_SAMPLER2D,
 	GL_TEXTURE_2D, // TYPE_ISAMPLER2D,
 	GL_TEXTURE_2D, // TYPE_USAMPLER2D,
-	GL_TEXTURE_2D_ARRAY, // TYPE_SAMPLER2DARRAY,
-	GL_TEXTURE_2D_ARRAY, // TYPE_ISAMPLER2DARRAY,
-	GL_TEXTURE_2D_ARRAY, // TYPE_USAMPLER2DARRAY,
 	GL_TEXTURE_3D, // TYPE_SAMPLER3D,
 	GL_TEXTURE_3D, // TYPE_ISAMPLER3D,
 	GL_TEXTURE_3D, // TYPE_USAMPLER3D,
-	GL_TEXTURE_CUBE_MAP, // TYPE_SAMPLERCUBE,
 	GL_TEXTURE_2D, // TYPE_STRUCT
 };
 
@@ -935,17 +931,6 @@ void MaterialData::update_textures(const HashMap<StringName, Variant> &p_paramet
 					}
 				} break;
 
-				case ShaderLanguage::TYPE_SAMPLERCUBE: {
-					switch (p_texture_uniforms[i].hint) {
-						case ShaderLanguage::ShaderNode::Uniform::HINT_DEFAULT_BLACK: {
-							gl_texture = texture_storage->texture_gl_get_default(DEFAULT_GL_TEXTURE_CUBEMAP_BLACK);
-						} break;
-						default: {
-							gl_texture = texture_storage->texture_gl_get_default(DEFAULT_GL_TEXTURE_CUBEMAP_WHITE);
-						} break;
-					}
-				} break;
-
 				case ShaderLanguage::TYPE_ISAMPLER3D:
 				case ShaderLanguage::TYPE_USAMPLER3D:
 				case ShaderLanguage::TYPE_SAMPLER3D: {
@@ -957,12 +942,6 @@ void MaterialData::update_textures(const HashMap<StringName, Variant> &p_paramet
 							gl_texture = texture_storage->texture_gl_get_default(DEFAULT_GL_TEXTURE_3D_WHITE);
 						} break;
 					}
-				} break;
-
-				case ShaderLanguage::TYPE_ISAMPLER2DARRAY:
-				case ShaderLanguage::TYPE_USAMPLER2DARRAY:
-				case ShaderLanguage::TYPE_SAMPLER2DARRAY: {
-					gl_texture = texture_storage->texture_gl_get_default(DEFAULT_GL_TEXTURE_2D_ARRAY_WHITE);
 				} break;
 
 				default: {
@@ -1632,9 +1611,7 @@ void MaterialStorage::global_shader_parameters_load_settings(bool p_load_texture
 				"transform_2d",
 				"transform",
 				"sampler2D",
-				"sampler2DArray",
 				"sampler3D",
-				"samplerCube",
 			};
 
 			RS::GlobalShaderParameterType gvtype = RS::GLOBAL_VAR_TYPE_MAX;

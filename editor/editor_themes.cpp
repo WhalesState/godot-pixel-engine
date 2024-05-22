@@ -163,7 +163,7 @@ void EditorColorMap::create() {
 	// Visual shaders
 	add_conversion_color_pair("#77ce57", "#67c046"); // Vector funcs
 	add_conversion_color_pair("#ea686c", "#d95256"); // Vector transforms
-	add_conversion_color_pair("#eac968", "#d9b64f"); // Textures and cubemaps
+	add_conversion_color_pair("#eac968", "#d9b64f"); // Textures
 	add_conversion_color_pair("#cf68ea", "#c050dd"); // Functions and expressions
 
 	// These icons should not be converted.

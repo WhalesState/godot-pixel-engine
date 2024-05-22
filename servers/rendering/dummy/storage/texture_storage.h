@@ -89,7 +89,6 @@ public:
 		ERR_FAIL_NULL(t);
 		t->image = p_image->duplicate();
 	};
-	virtual void texture_2d_layered_initialize(RID p_texture, const Vector<Ref<Image>> &p_layers, RS::TextureLayeredType p_layered_type) override{};
 	virtual void texture_3d_initialize(RID p_texture, Image::Format, int p_width, int p_height, int p_depth, bool p_mipmaps, const Vector<Ref<Image>> &p_data) override{};
 	virtual void texture_proxy_initialize(RID p_texture, RID p_base) override{}; //all slices, then all the mipmaps, must be coherent
 
@@ -99,7 +98,6 @@ public:
 
 	//these two APIs can be used together or in combination with the others.
 	virtual void texture_2d_placeholder_initialize(RID p_texture) override{};
-	virtual void texture_2d_layered_placeholder_initialize(RID p_texture, RenderingServer::TextureLayeredType p_layered_type) override{};
 	virtual void texture_3d_placeholder_initialize(RID p_texture) override{};
 
 	virtual Ref<Image> texture_2d_get(RID p_texture) const override {
@@ -107,7 +105,6 @@ public:
 		ERR_FAIL_NULL_V(t, Ref<Image>());
 		return t->image;
 	};
-	virtual Ref<Image> texture_2d_layer_get(RID p_texture, int p_layer) const override { return Ref<Image>(); };
 	virtual Vector<Ref<Image>> texture_3d_get(RID p_texture) const override { return Vector<Ref<Image>>(); };
 
 	virtual void texture_replace(RID p_texture, RID p_by_texture) override { texture_free(p_by_texture); };
@@ -136,7 +133,7 @@ public:
 	virtual void render_target_free(RID p_rid) override {}
 	virtual void render_target_set_position(RID p_render_target, int p_x, int p_y) override {}
 	virtual Point2i render_target_get_position(RID p_render_target) const override { return Point2i(); }
-	virtual void render_target_set_size(RID p_render_target, int p_width, int p_height, uint32_t p_view_count) override {}
+	virtual void render_target_set_size(RID p_render_target, int p_width, int p_height) override {}
 	virtual Size2i render_target_get_size(RID p_render_target) const override { return Size2i(); }
 	virtual void render_target_set_transparent(RID p_render_target, bool p_is_transparent) override {}
 	virtual bool render_target_get_transparent(RID p_render_target) const override { return false; }

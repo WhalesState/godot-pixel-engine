@@ -363,11 +363,7 @@ void RasterizerGLES3::_blit_render_target_to_screen(RID p_render_target, Display
 	glGenFramebuffers(1, &read_fbo);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, read_fbo);
 
-	if (rt->view_count > 1) {
-		glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rt->color, 0, p_layer);
-	} else {
-		glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rt->color, 0);
-	}
+	glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, rt->color, 0);
 
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, GLES3::TextureStorage::system_fbo);

@@ -154,7 +154,6 @@ static Ref<ResourceFormatSaverText> resource_saver_text;
 static Ref<ResourceFormatLoaderText> resource_loader_text;
 
 static Ref<ResourceFormatLoaderCompressedTexture2D> resource_loader_stream_texture;
-static Ref<ResourceFormatLoaderCompressedTextureLayered> resource_loader_texture_layered;
 static Ref<ResourceFormatLoaderCompressedTexture3D> resource_loader_texture_3d;
 
 static Ref<ResourceFormatSaverShader> resource_saver_shader;
@@ -172,9 +171,6 @@ void register_scene_types() {
 
 	resource_loader_stream_texture.instantiate();
 	ResourceLoader::add_resource_format_loader(resource_loader_stream_texture);
-
-	resource_loader_texture_layered.instantiate();
-	ResourceLoader::add_resource_format_loader(resource_loader_texture_layered);
 
 	resource_loader_texture_3d.instantiate();
 	ResourceLoader::add_resource_format_loader(resource_loader_texture_3d);
@@ -390,21 +386,11 @@ void register_scene_types() {
 	GDREGISTER_CLASS(GradientTexture1D);
 	GDREGISTER_CLASS(GradientTexture2D);
 	GDREGISTER_CLASS(AnimatedTexture);
-	GDREGISTER_VIRTUAL_CLASS(TextureLayered);
-	GDREGISTER_ABSTRACT_CLASS(ImageTextureLayered);
 	GDREGISTER_VIRTUAL_CLASS(Texture3D);
 	GDREGISTER_CLASS(ImageTexture3D);
 	GDREGISTER_CLASS(CompressedTexture3D);
-	GDREGISTER_CLASS(Cubemap);
-	GDREGISTER_CLASS(Texture2DArray);
-	GDREGISTER_ABSTRACT_CLASS(CompressedTextureLayered);
-	GDREGISTER_CLASS(CompressedCubemap);
-	GDREGISTER_CLASS(CompressedTexture2DArray);
 	GDREGISTER_CLASS(PlaceholderTexture2D);
 	GDREGISTER_CLASS(PlaceholderTexture3D);
-	GDREGISTER_ABSTRACT_CLASS(PlaceholderTextureLayered);
-	GDREGISTER_CLASS(PlaceholderTexture2DArray);
-	GDREGISTER_CLASS(PlaceholderCubemap);
 
 	GDREGISTER_CLASS(Animation);
 	GDREGISTER_CLASS(AnimationLibrary);
@@ -468,9 +454,6 @@ void register_scene_types() {
 
 void unregister_scene_types() {
 	SceneDebugger::deinitialize();
-
-	ResourceLoader::remove_resource_format_loader(resource_loader_texture_layered);
-	resource_loader_texture_layered.unref();
 
 	ResourceLoader::remove_resource_format_loader(resource_loader_texture_3d);
 	resource_loader_texture_3d.unref();

@@ -78,8 +78,6 @@ public:
 	bool support_anisotropic_filter = false;
 	float anisotropic_level = 0.0f;
 
-	bool multiview_supported = false;
-
 	static Config *get_singleton() { return singleton; };
 
 	Config();

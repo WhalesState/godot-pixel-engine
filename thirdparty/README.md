@@ -525,10 +525,6 @@ Collection of single-file libraries used in Godot components.
   * Upstream: https://sourceforge.net/projects/polyclipping
   * Version: 6.4.2 (2017) + Godot changes (added optional exceptions handling)
   * License: BSL-1.0
-- `cubemap_coeffs.h`
-  * Upstream: https://research.activision.com/publications/archives/fast-filtering-of-reflection-probes
-    File coeffs_const_8.txt (retrieved April 2020)
-  * License: MIT
 - `fastlz.{c,h}`
   * Upstream: https://github.com/ariya/FastLZ
   * Version: 0.5.0 (4f20f54d46f5a6dd4fae4def134933369b7602d2, 2020)

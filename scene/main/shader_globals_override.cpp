@@ -184,20 +184,10 @@ void ShaderGlobalsOverride::_get_property_list(List<PropertyInfo> *p_list) const
 				pinfo.hint = PROPERTY_HINT_RESOURCE_TYPE;
 				pinfo.hint_string = "Texture2D";
 			} break;
-			case RS::GLOBAL_VAR_TYPE_SAMPLER2DARRAY: {
-				pinfo.type = Variant::OBJECT;
-				pinfo.hint = PROPERTY_HINT_RESOURCE_TYPE;
-				pinfo.hint_string = "Texture2DArray";
-			} break;
 			case RS::GLOBAL_VAR_TYPE_SAMPLER3D: {
 				pinfo.type = Variant::OBJECT;
 				pinfo.hint = PROPERTY_HINT_RESOURCE_TYPE;
 				pinfo.hint_string = "Texture3D";
-			} break;
-			case RS::GLOBAL_VAR_TYPE_SAMPLERCUBE: {
-				pinfo.type = Variant::OBJECT;
-				pinfo.hint = PROPERTY_HINT_RESOURCE_TYPE;
-				pinfo.hint_string = "Cubemap";
 			} break;
 			default: {
 			} break;

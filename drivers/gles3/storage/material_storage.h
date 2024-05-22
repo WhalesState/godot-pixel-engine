@@ -44,7 +44,6 @@
 #include "servers/rendering/storage/utilities.h"
 
 #include "drivers/gles3/shaders/canvas.glsl.gen.h"
-#include "drivers/gles3/shaders/cubemap_filter.glsl.gen.h"
 
 namespace GLES3 {
 
@@ -318,7 +317,6 @@ public:
 
 	struct Shaders {
 		CanvasShaderGLES3 canvas_shader;
-		CubemapFilterShaderGLES3 cubemap_filter_shader;
 
 		ShaderCompiler compiler_canvas;
 	} shaders;

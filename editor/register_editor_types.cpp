@@ -58,7 +58,6 @@
 #include "editor/import/resource_importer_dynamic_font.h"
 #include "editor/import/resource_importer_image.h"
 #include "editor/import/resource_importer_imagefont.h"
-#include "editor/import/resource_importer_layered_texture.h"
 #include "editor/import/resource_importer_texture.h"
 #include "editor/import/resource_importer_texture_atlas.h"
 #include "editor/import/resource_importer_wav.h"
@@ -86,7 +85,6 @@
 #include "editor/plugins/style_box_editor_plugin.h"
 #include "editor/plugins/sub_viewport_preview_editor_plugin.h"
 #include "editor/plugins/texture_editor_plugin.h"
-#include "editor/plugins/texture_layered_editor_plugin.h"
 #include "editor/plugins/texture_region_editor_plugin.h"
 #include "editor/plugins/theme_editor_plugin.h"
 #include "editor/plugins/version_control_editor_plugin.h"
@@ -149,7 +147,6 @@ void register_editor_types() {
 	GDREGISTER_CLASS(ResourceImporterDynamicFont);
 	GDREGISTER_CLASS(ResourceImporterImage);
 	GDREGISTER_CLASS(ResourceImporterImageFont);
-	GDREGISTER_CLASS(ResourceImporterLayeredTexture);
 	GDREGISTER_CLASS(ResourceImporterTexture);
 	GDREGISTER_CLASS(ResourceImporterTextureAtlas);
 	GDREGISTER_CLASS(ResourceImporterWAV);
@@ -173,7 +170,6 @@ void register_editor_types() {
 	EditorPlugins::add_by_type<StyleBoxEditorPlugin>();
 	EditorPlugins::add_by_type<SubViewportPreviewEditorPlugin>();
 	EditorPlugins::add_by_type<TextureEditorPlugin>();
-	EditorPlugins::add_by_type<TextureLayeredEditorPlugin>();
 	EditorPlugins::add_by_type<TextureRegionEditorPlugin>();
 	EditorPlugins::add_by_type<ThemeEditorPlugin>();
 

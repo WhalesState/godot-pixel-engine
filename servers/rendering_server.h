@@ -81,22 +81,7 @@ public:
 
 	/* TEXTURE API */
 
-	enum TextureLayeredType {
-		TEXTURE_LAYERED_2D_ARRAY,
-		TEXTURE_LAYERED_CUBEMAP,
-	};
-
-	enum CubeMapLayer {
-		CUBEMAP_LAYER_LEFT,
-		CUBEMAP_LAYER_RIGHT,
-		CUBEMAP_LAYER_BOTTOM,
-		CUBEMAP_LAYER_TOP,
-		CUBEMAP_LAYER_FRONT,
-		CUBEMAP_LAYER_BACK
-	};
-
 	virtual RID texture_2d_create(const Ref<Image> &p_image) = 0;
-	virtual RID texture_2d_layered_create(const Vector<Ref<Image>> &p_layers, TextureLayeredType p_layered_type) = 0;
 	virtual RID texture_3d_create(Image::Format, int p_width, int p_height, int p_depth, bool p_mipmaps, const Vector<Ref<Image>> &p_data) = 0; //all slices, then all the mipmaps, must be coherent
 	virtual RID texture_proxy_create(RID p_base) = 0;
 
@@ -106,11 +91,9 @@ public:
 
 	// These two APIs can be used together or in combination with the others.
 	virtual RID texture_2d_placeholder_create() = 0;
-	virtual RID texture_2d_layered_placeholder_create(TextureLayeredType p_layered_type) = 0;
 	virtual RID texture_3d_placeholder_create() = 0;
 
 	virtual Ref<Image> texture_2d_get(RID p_texture) const = 0;
-	virtual Ref<Image> texture_2d_layer_get(RID p_texture, int p_layer) const = 0;
 	virtual Vector<Ref<Image>> texture_3d_get(RID p_texture) const = 0;
 
 	virtual void texture_replace(RID p_texture, RID p_by_texture) = 0;
@@ -641,9 +624,7 @@ public:
 		GLOBAL_VAR_TYPE_TRANSFORM_2D,
 		GLOBAL_VAR_TYPE_TRANSFORM,
 		GLOBAL_VAR_TYPE_SAMPLER2D,
-		GLOBAL_VAR_TYPE_SAMPLER2DARRAY,
 		GLOBAL_VAR_TYPE_SAMPLER3D,
-		GLOBAL_VAR_TYPE_SAMPLERCUBE,
 		GLOBAL_VAR_TYPE_MAX
 	};
 
@@ -743,7 +724,6 @@ public:
 
 private:
 	// Binder helpers
-	RID _texture_2d_layered_create(const TypedArray<Image> &p_layers, TextureLayeredType p_layered_type);
 	RID _texture_3d_create(Image::Format p_format, int p_width, int p_height, int p_depth, bool p_mipmaps, const TypedArray<Image> &p_data);
 	void _texture_3d_update(RID p_texture, const TypedArray<Image> &p_data);
 	TypedArray<Image> _texture_3d_get(RID p_texture) const;
@@ -751,8 +731,6 @@ private:
 };
 
 // Make variant understand the enums.
-VARIANT_ENUM_CAST(RenderingServer::TextureLayeredType);
-VARIANT_ENUM_CAST(RenderingServer::CubeMapLayer);
 VARIANT_ENUM_CAST(RenderingServer::ShaderMode);
 VARIANT_ENUM_CAST(RenderingServer::ArrayType);
 VARIANT_BITFIELD_CAST(RenderingServer::ArrayFormat);
