@@ -191,17 +191,4 @@ public:
 	virtual Ref<Resource> create_placeholder() const;
 };
 
-class CubemapArray : public ImageTextureLayered {
-	GDCLASS(CubemapArray, ImageTextureLayered);
-
-protected:
-	static void _bind_methods();
-
-public:
-	CubemapArray() :
-			ImageTextureLayered(LAYERED_TYPE_CUBEMAP_ARRAY) {}
-
-	virtual Ref<Resource> create_placeholder() const;
-};
-
 #endif // IMAGE_TEXTURE_H

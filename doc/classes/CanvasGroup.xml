@@ -33,8 +33,10 @@
 		<member name="fit_margin" type="float" setter="set_fit_margin" getter="get_fit_margin" default="10.0">
 			Sets the size of a margin used to expand the drawable rect of this [CanvasGroup]. The size of the [CanvasGroup] is determined by fitting a rect around its children then expanding that rect by [member fit_margin]. This increases both the backbuffer area used and the area covered by the [CanvasGroup] both of which can reduce performance. This should be kept as small as possible and should only be expanded when an increased size is needed (e.g. for custom shader effects).
 		</member>
+		<member name="mouse_filter" type="int" setter="set_mouse_filter" getter="get_mouse_filter" overrides="Control" enum="Control.MouseFilter" default="2" />
 		<member name="use_mipmaps" type="bool" setter="set_use_mipmaps" getter="is_using_mipmaps" default="false">
 			If [code]true[/code], calculates mipmaps for the backbuffer before drawing the [CanvasGroup] so that mipmaps can be used in a custom [ShaderMaterial] attached to the [CanvasGroup]. Generating mipmaps has a performance cost so this should not be enabled unless required.
 		</member>
+		<member name="z_index" type="int" setter="set_z_index" getter="get_z_index" overrides="CanvasItem" default="1" />
 	</members>
 </class>

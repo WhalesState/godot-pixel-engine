@@ -396,18 +396,15 @@ void register_scene_types() {
 	GDREGISTER_CLASS(ImageTexture3D);
 	GDREGISTER_CLASS(CompressedTexture3D);
 	GDREGISTER_CLASS(Cubemap);
-	GDREGISTER_CLASS(CubemapArray);
 	GDREGISTER_CLASS(Texture2DArray);
 	GDREGISTER_ABSTRACT_CLASS(CompressedTextureLayered);
 	GDREGISTER_CLASS(CompressedCubemap);
-	GDREGISTER_CLASS(CompressedCubemapArray);
 	GDREGISTER_CLASS(CompressedTexture2DArray);
 	GDREGISTER_CLASS(PlaceholderTexture2D);
 	GDREGISTER_CLASS(PlaceholderTexture3D);
 	GDREGISTER_ABSTRACT_CLASS(PlaceholderTextureLayered);
 	GDREGISTER_CLASS(PlaceholderTexture2DArray);
 	GDREGISTER_CLASS(PlaceholderCubemap);
-	GDREGISTER_CLASS(PlaceholderCubemapArray);
 
 	GDREGISTER_CLASS(Animation);
 	GDREGISTER_CLASS(AnimationLibrary);

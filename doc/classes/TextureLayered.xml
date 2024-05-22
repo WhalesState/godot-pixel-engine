@@ -107,8 +107,5 @@
 		<constant name="LAYERED_TYPE_CUBEMAP" value="1" enum="LayeredType">
 			Texture is a [Cubemap], with each side in its own layer (6 in total).
 		</constant>
-		<constant name="LAYERED_TYPE_CUBEMAP_ARRAY" value="2" enum="LayeredType">
-			Texture is a [CubemapArray], with each cubemap being made of 6 layers.
-		</constant>
 	</constants>
 </class>

@@ -103,8 +103,7 @@ protected:
 public:
 	enum LayeredType {
 		LAYERED_TYPE_2D_ARRAY,
-		LAYERED_TYPE_CUBEMAP,
-		LAYERED_TYPE_CUBEMAP_ARRAY
+		LAYERED_TYPE_CUBEMAP
 	};
 
 	virtual Image::Format get_format() const;

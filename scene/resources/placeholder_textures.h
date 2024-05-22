@@ -123,11 +123,4 @@ public:
 			PlaceholderTextureLayered(LAYERED_TYPE_CUBEMAP) {}
 };
 
-class PlaceholderCubemapArray : public PlaceholderTextureLayered {
-	GDCLASS(PlaceholderCubemapArray, PlaceholderTextureLayered)
-public:
-	PlaceholderCubemapArray() :
-			PlaceholderTextureLayered(LAYERED_TYPE_CUBEMAP_ARRAY) {}
-};
-
 #endif // PLACEHOLDER_TEXTURES_H

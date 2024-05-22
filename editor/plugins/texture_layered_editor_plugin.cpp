@@ -94,8 +94,6 @@ void TextureLayeredEditor::_update_material() {
 		text = itos(texture->get_width()) + "x" + itos(texture->get_height()) + " (x " + itos(texture->get_layers()) + ")" + format;
 	} else if (texture->get_layered_type() == TextureLayered::LAYERED_TYPE_CUBEMAP) {
 		text = itos(texture->get_width()) + "x" + itos(texture->get_height()) + " " + format;
-	} else if (texture->get_layered_type() == TextureLayered::LAYERED_TYPE_CUBEMAP_ARRAY) {
-		text = itos(texture->get_width()) + "x" + itos(texture->get_height()) + " (x " + itos(texture->get_layers() / 6) + ")" + format;
 	}
 
 	info->set_text(text);
@@ -132,24 +130,7 @@ void fragment() {
 }
 )");
 
-	shaders[2].instantiate();
-	shaders[2]->set_code(R"(
-// TextureLayeredEditor preview shader (cubemap array).
-
-shader_type canvas_item;
-
-uniform samplerCubeArray tex;
-uniform vec3 normal;
-uniform mat3 rot;
-uniform float layer;
-
-void fragment() {
-	vec3 n = rot * normalize(vec3(normal.xy * (UV * 2.0 - 1.0), normal.z));
-	COLOR = textureLod(tex, vec4(n, layer), 0.0);
-}
-)");
-
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < 2; i++) {
 		materials[i].instantiate();
 		materials[i]->set_shader(shaders[i]);
 	}
@@ -198,10 +179,6 @@ void TextureLayeredEditor::edit(Ref<TextureLayered> p_texture) {
 		setting = true;
 		if (texture->get_layered_type() == TextureLayered::LAYERED_TYPE_2D_ARRAY) {
 			layer->set_max(texture->get_layers() - 1);
-			layer->set_value(0);
-			layer->show();
-		} else if (texture->get_layered_type() == TextureLayered::LAYERED_TYPE_CUBEMAP_ARRAY) {
-			layer->set_max(texture->get_layers() / 6 - 1);
 			layer->set_value(0);
 			layer->show();
 		} else {

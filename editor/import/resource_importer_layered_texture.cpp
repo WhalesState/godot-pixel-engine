@@ -51,9 +51,6 @@ String ResourceImporterLayeredTexture::get_importer_name() const {
 		case MODE_2D_ARRAY: {
 			return "2d_array_texture";
 		} break;
-		case MODE_CUBEMAP_ARRAY: {
-			return "cubemap_array_texture";
-		} break;
 		case MODE_3D: {
 			return "3d_texture";
 		} break;
@@ -69,9 +66,6 @@ String ResourceImporterLayeredTexture::get_visible_name() const {
 		} break;
 		case MODE_2D_ARRAY: {
 			return "Texture2DArray";
-		} break;
-		case MODE_CUBEMAP_ARRAY: {
-			return "CubemapArray";
 		} break;
 		case MODE_3D: {
 			return "Texture3D";
@@ -93,9 +87,6 @@ String ResourceImporterLayeredTexture::get_save_extension() const {
 		case MODE_2D_ARRAY: {
 			return "ctexarray";
 		} break;
-		case MODE_CUBEMAP_ARRAY: {
-			return "ccubearray";
-		} break;
 		case MODE_3D: {
 			return "ctex3d";
 		} break;
@@ -111,9 +102,6 @@ String ResourceImporterLayeredTexture::get_resource_type() const {
 		} break;
 		case MODE_2D_ARRAY: {
 			return "CompressedTexture2DArray";
-		} break;
-		case MODE_CUBEMAP_ARRAY: {
-			return "CompressedCubemapArray";
 		} break;
 		case MODE_3D: {
 			return "CompressedTexture3D";
@@ -152,12 +140,8 @@ void ResourceImporterLayeredTexture::get_import_options(const String &p_path, Li
 		r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "slices/horizontal", PROPERTY_HINT_RANGE, "1,256,1"), 8));
 		r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "slices/vertical", PROPERTY_HINT_RANGE, "1,256,1"), 8));
 	}
-	if (mode == MODE_CUBEMAP || mode == MODE_CUBEMAP_ARRAY) {
+	if (mode == MODE_CUBEMAP) {
 		r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "slices/arrangement", PROPERTY_HINT_ENUM, "1x6,2x3,3x2,6x1"), 1));
-		if (mode == MODE_CUBEMAP_ARRAY) {
-			r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "slices/layout", PROPERTY_HINT_ENUM, "Horizontal,Vertical"), 1));
-			r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "slices/amount", PROPERTY_HINT_RANGE, "1,1024,1,or_greater"), 1));
-		}
 	}
 }
 
@@ -298,7 +282,7 @@ Error ResourceImporterLayeredTexture::import(const String &p_source_file, const 
 	int layout = (p_options.has("slices/layout")) ? int(p_options["slices/layout"]) : 0;
 	int amount = (p_options.has("slices/amount")) ? int(p_options["slices/amount"]) : 0;
 
-	if (mode == MODE_CUBEMAP || mode == MODE_CUBEMAP_ARRAY) {
+	if (mode == MODE_CUBEMAP) {
 		switch (arrangement) {
 			case CUBEMAP_FORMAT_1X6: {
 				hslices = 1;
@@ -316,14 +300,6 @@ Error ResourceImporterLayeredTexture::import(const String &p_source_file, const 
 				hslices = 6;
 				vslices = 1;
 			} break;
-		}
-
-		if (mode == MODE_CUBEMAP_ARRAY) {
-			if (layout == 0) {
-				hslices *= amount;
-			} else {
-				vslices *= amount;
-			}
 		}
 	}
 

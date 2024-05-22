@@ -198,14 +198,6 @@ public:
 			CompressedTextureLayered(LAYERED_TYPE_CUBEMAP) {}
 };
 
-class CompressedCubemapArray : public CompressedTextureLayered {
-	GDCLASS(CompressedCubemapArray, CompressedTextureLayered);
-
-public:
-	CompressedCubemapArray() :
-			CompressedTextureLayered(LAYERED_TYPE_CUBEMAP_ARRAY) {}
-};
-
 class CompressedTexture3D : public Texture3D {
 	GDCLASS(CompressedTexture3D, Texture3D);
 

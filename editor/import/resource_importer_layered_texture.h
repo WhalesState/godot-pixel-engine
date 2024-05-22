@@ -64,7 +64,6 @@ public:
 	enum Mode {
 		MODE_2D_ARRAY,
 		MODE_CUBEMAP,
-		MODE_CUBEMAP_ARRAY,
 		MODE_3D,
 	};
 

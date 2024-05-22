@@ -297,9 +297,6 @@ Error ImageTextureLayered::create_from_images(Vector<Ref<Image>> p_images) {
 	if (layered_type == LAYERED_TYPE_CUBEMAP) {
 		ERR_FAIL_COND_V_MSG(new_layers != 6, ERR_INVALID_PARAMETER,
 				"Cubemaps require exactly 6 layers");
-	} else if (layered_type == LAYERED_TYPE_CUBEMAP_ARRAY) {
-		ERR_FAIL_COND_V_MSG((new_layers % 6) != 0, ERR_INVALID_PARAMETER,
-				"Cubemap array layers must be a multiple of 6");
 	}
 
 	ERR_FAIL_COND_V(p_images[0].is_null() || p_images[0]->is_empty(), ERR_INVALID_PARAMETER);
@@ -545,18 +542,6 @@ void Cubemap::_bind_methods() {
 
 Ref<Resource> Cubemap::create_placeholder() const {
 	Ref<PlaceholderCubemap> placeholder;
-	placeholder.instantiate();
-	placeholder->set_size(Size2i(get_width(), get_height()));
-	placeholder->set_layers(get_layers());
-	return placeholder;
-}
-
-void CubemapArray::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("create_placeholder"), &CubemapArray::create_placeholder);
-}
-
-Ref<Resource> CubemapArray::create_placeholder() const {
-	Ref<PlaceholderCubemapArray> placeholder;
 	placeholder.instantiate();
 	placeholder->set_size(Size2i(get_width(), get_height()));
 	placeholder->set_layers(get_layers());

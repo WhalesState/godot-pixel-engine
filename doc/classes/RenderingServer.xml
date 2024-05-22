@@ -1513,9 +1513,6 @@
 		<constant name="TEXTURE_LAYERED_CUBEMAP" value="1" enum="TextureLayeredType">
 			Cubemap texture (see [Cubemap]).
 		</constant>
-		<constant name="TEXTURE_LAYERED_CUBEMAP_ARRAY" value="2" enum="TextureLayeredType">
-			Array of cubemap textures (see [CubemapArray]).
-		</constant>
 		<constant name="CUBEMAP_LAYER_LEFT" value="0" enum="CubeMapLayer">
 			Left face of a [Cubemap].
 		</constant>

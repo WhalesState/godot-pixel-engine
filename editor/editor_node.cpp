@@ -6384,11 +6384,6 @@ EditorNode::EditorNode() {
 		import_array->set_mode(ResourceImporterLayeredTexture::MODE_2D_ARRAY);
 		ResourceFormatImporter::get_singleton()->add_importer(import_array);
 
-		Ref<ResourceImporterLayeredTexture> import_cubemap_array;
-		import_cubemap_array.instantiate();
-		import_cubemap_array->set_mode(ResourceImporterLayeredTexture::MODE_CUBEMAP_ARRAY);
-		ResourceFormatImporter::get_singleton()->add_importer(import_cubemap_array);
-
 		Ref<ResourceImporterImage> import_image;
 		import_image.instantiate();
 		ResourceFormatImporter::get_singleton()->add_importer(import_image);
