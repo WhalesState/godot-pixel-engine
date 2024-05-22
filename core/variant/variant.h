@@ -37,7 +37,6 @@
 #include "core/math/aabb.h"
 #include "core/math/basis.h"
 #include "core/math/color.h"
-#include "core/math/face3.h"
 #include "core/math/plane.h"
 #include "core/math/projection.h"
 #include "core/math/rect2.h"
@@ -410,7 +409,6 @@ public:
 	operator Vector<Vector3>() const;
 	operator Vector<Color>() const;
 	operator Vector<Plane>() const;
-	operator Vector<Face3>() const;
 
 	operator Vector<Variant>() const;
 	operator Vector<StringName>() const;
@@ -478,7 +476,6 @@ public:
 	Variant(const Vector<String> &p_string_array);
 	Variant(const Vector<Vector3> &p_vector3_array);
 	Variant(const Vector<Color> &p_color_array);
-	Variant(const Vector<Face3> &p_face_array);
 
 	Variant(const Vector<Variant> &p_array);
 	Variant(const Vector<StringName> &p_array);

@@ -2295,25 +2295,6 @@ Variant::operator Vector<Plane>() const {
 	return planes;
 }
 
-Variant::operator Vector<Face3>() const {
-	Vector<Vector3> va = operator Vector<Vector3>();
-	Vector<Face3> faces;
-	int va_size = va.size();
-	if (va_size == 0) {
-		return faces;
-	}
-
-	faces.resize(va_size / 3);
-	Face3 *w = faces.ptrw();
-	const Vector3 *r = va.ptr();
-
-	for (int i = 0; i < va_size; i++) {
-		w[i / 3].vertex[i % 3] = r[i];
-	}
-
-	return faces;
-}
-
 Variant::operator Vector<Variant>() const {
 	Array va = operator Array();
 	Vector<Variant> variants;
@@ -2655,27 +2636,6 @@ Variant::Variant(const Vector<Vector2> &p_vector2_array) {
 Variant::Variant(const Vector<Color> &p_color_array) {
 	type = PACKED_COLOR_ARRAY;
 	_data.packed_array = PackedArrayRef<Color>::create(p_color_array);
-}
-
-Variant::Variant(const Vector<Face3> &p_face_array) {
-	Vector<Vector3> vertices;
-	int face_count = p_face_array.size();
-	vertices.resize(face_count * 3);
-
-	if (face_count) {
-		const Face3 *r = p_face_array.ptr();
-		Vector3 *w = vertices.ptrw();
-
-		for (int i = 0; i < face_count; i++) {
-			for (int j = 0; j < 3; j++) {
-				w[i * 3 + j] = r[i].vertex[j];
-			}
-		}
-	}
-
-	type = NIL;
-
-	*this = vertices;
 }
 
 /* helpers */
