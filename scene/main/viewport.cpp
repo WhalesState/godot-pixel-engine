@@ -723,7 +723,16 @@ Transform2D Viewport::get_canvas_transform() const {
 	}
 #endif // TOOLS_ENABLED
 	SubViewportContainer *svc = Object::cast_to<SubViewportContainer>(get_parent());
-	return svc ? svc->get_transform() * canvas_transform : canvas_transform;
+	Transform2D xform = Transform2D();
+	if (svc) {
+		if (svc->is_stretch_enabled()) {
+			xform.scale(Vector2(svc->get_stretch_shrink(), svc->get_stretch_shrink()));
+		}
+		xform = svc->get_transform() * canvas_transform * xform;
+	} else {
+		xform = canvas_transform;
+	}
+	return xform;
 }
 
 void Viewport::_update_global_transform() {
@@ -747,7 +756,16 @@ Transform2D Viewport::get_global_canvas_transform() const {
 	}
 #endif // TOOLS_ENABLED
 	SubViewportContainer *svc = Object::cast_to<SubViewportContainer>(get_parent());
-	return svc ? svc->get_global_transform_with_canvas() * global_canvas_transform : global_canvas_transform;
+	Transform2D xform = Transform2D();
+	if (svc) {
+		if (svc->is_stretch_enabled()) {
+			xform.scale(Vector2(svc->get_stretch_shrink(), svc->get_stretch_shrink()));
+		}
+		xform = svc->get_global_transform_with_canvas() * global_canvas_transform * xform;
+	} else {
+		xform = global_canvas_transform;
+	}
+	return xform;
 }
 
 void Viewport::_camera_2d_set(Camera2D *p_camera_2d) {

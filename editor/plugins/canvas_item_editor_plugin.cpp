@@ -1677,13 +1677,6 @@ bool CanvasItemEditor::_gui_input_resize(const Ref<InputEvent> &p_event) {
 
 			Point2 from = drag_from;
 			Point2 to = drag_to;
-			if (drag_type == DRAG_LEFT || drag_type == DRAG_RIGHT || drag_type == DRAG_BOTTOM_LEFT) {
-				from.y = 0.0;
-				to.y = 0.0;
-			} else if (drag_type == DRAG_TOP || drag_type == DRAG_BOTTOM || drag_type == DRAG_TOP_RIGHT) {
-				from.x = 0.0;
-				to.x = 0.0;
-			}
 			if (drag_type == DRAG_LEFT || drag_type == DRAG_TOP_LEFT || drag_type == DRAG_TOP) {
 				drag_to_snapped_begin = snap_point(xform.xform(current_begin) + (to - from), SNAP_NODE_ANCHORS | SNAP_NODE_PARENT | SNAP_OTHER_NODES | SNAP_GRID | SNAP_PIXEL, 0, ci);
 				drag_to_snapped_end = xform.xform(current_end) + (drag_to - drag_from);
@@ -1701,15 +1694,8 @@ bool CanvasItemEditor::_gui_input_resize(const Ref<InputEvent> &p_event) {
 				snap_transform2 = snap_transform;
 				from = drag_from;
 				to = drag_to;
-				if (drag_type == DRAG_TOP_RIGHT) {
-					from.y = 0.0;
-					to.y = 0.0;
-					snap_target2[1] = snap_target[1];
-				} else {
-					from.x = 0.0;
-					to.x = 0.0;
-					snap_target2[0] = snap_target[0];
-				}
+				int idx = (drag_type == DRAG_TOP_RIGHT) ? 1 : 0;
+				snap_target2[idx] = snap_target[idx];
 				drag_to_snapped_end = snap_point(xform.xform(current_end) + (to - from), SNAP_NODE_ANCHORS | SNAP_NODE_PARENT | SNAP_OTHER_NODES | SNAP_GRID | SNAP_PIXEL, 0, ci);
 				snap_target[(drag_type == DRAG_TOP_RIGHT) ? 1 : 0] = SNAP_TARGET_NONE;
 			}
@@ -2447,51 +2433,6 @@ bool CanvasItemEditor::_gui_input_ruler_tool(const Ref<InputEvent> &p_event) {
 	return false;
 }
 
-// TODO: Enable if is needed!
-// bool CanvasItemEditor::_gui_input_hover(const Ref<InputEvent> &p_event) {
-// 	Ref<InputEventMouseMotion> m = p_event;
-// 	if (m.is_valid()) {
-// 		Point2 click = transform.affine_inverse().xform(m->get_position());
-// 		// Checks if the hovered items changed, redraw the viewport if so
-// 		Vector<_SelectResult> hovering_results_items;
-// 		_get_canvas_items_at_pos(click, hovering_results_items);
-// 		hovering_results_items.sort();
-// 		// Compute the nodes names and icon position
-// 		Vector<_HoverResult> hovering_results_tmp;
-// 		for (int i = 0; i < hovering_results_items.size(); i++) {
-// 			CanvasItem *ci = hovering_results_items[i].item;
-// 			if (ci->_edit_use_rect()) {
-// 				continue;
-// 			}
-// 			_HoverResult hover_result;
-// 			hover_result.position = ci->get_global_transform_with_canvas().get_origin();
-// 			hover_result.icon = EditorNode::get_singleton()->get_object_icon(ci);
-// 			hover_result.name = ci->get_name();
-// 			hovering_results_tmp.push_back(hover_result);
-// 		}
-// 		// Check if changed, if so, redraw.
-// 		bool changed = false;
-// 		if (hovering_results_tmp.size() == hovering_results.size()) {
-// 			for (int i = 0; i < hovering_results_tmp.size(); i++) {
-// 				_HoverResult a = hovering_results_tmp[i];
-// 				_HoverResult b = hovering_results[i];
-// 				if (a.icon != b.icon || a.name != b.name || a.position != b.position) {
-// 					changed = true;
-// 					break;
-// 				}
-// 			}
-// 		} else {
-// 			changed = true;
-// 		}
-// 		if (changed) {
-// 			hovering_results = hovering_results_tmp;
-// 			viewport->queue_redraw();
-// 		}
-// 		return true;
-// 	}
-// 	return false;
-// }
-
 void CanvasItemEditor::_gui_input_viewport(const Ref<InputEvent> &p_event) {
 	bool accepted = false;
 
@@ -2533,14 +2474,11 @@ void CanvasItemEditor::_gui_input_viewport(const Ref<InputEvent> &p_event) {
 		accept_event();
 	}
 
-	// TODO: Enable if is needed!
-	// Handles the mouse hovering
-	// _gui_input_hover(p_event);
-
 	// Grab focus
 	if (!viewport->has_focus() && (!get_viewport()->gui_get_focus_owner() || !get_viewport()->gui_get_focus_owner()->is_text_field())) {
 		viewport->call_deferred(SNAME("grab_focus"));
 	}
+
 	if (mb.is_valid() && mb->get_button_index() == MouseButton::LEFT) {
 		// Update the default cursor.
 		_update_cursor();
