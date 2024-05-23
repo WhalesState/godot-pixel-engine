@@ -434,7 +434,9 @@ private:
 	void _reset_drag();
 
 	SnapTarget snap_target[2];
+	SnapTarget snap_target2[2];
 	Transform2D snap_transform;
+	Transform2D snap_transform2;
 	void _snap_if_closer_float(
 			const real_t p_value,
 			real_t &r_current_snap, SnapTarget &r_current_snap_target,
