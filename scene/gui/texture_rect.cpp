@@ -165,7 +165,7 @@ void TextureRect::_notification(int p_what) {
 }
 
 Size2 TextureRect::get_minimum_size() const {
-	if (!texture.is_null()) {
+	if (texture.is_valid()) {
 		if (expand_mode == EXPAND_IGNORE_SIZE) {
 			return Size2();
 		} else if (expand_mode == EXPAND_FIT_WIDTH) {
@@ -272,6 +272,11 @@ void TextureRect::set_texture(const Ref<Texture2D> &p_tex) {
 
 	if (texture.is_valid()) {
 		texture->disconnect_changed(callable_mp(this, &TextureRect::_texture_changed));
+		if (texture->get_class() == "ViewportTexture" && stretch_mode == STRETCH_TILE) {
+			if (RenderingServer::get_singleton()->is_connected(SNAME("frame_post_draw"), callable_mp((CanvasItem *)this, &CanvasItem::queue_redraw))) {
+				RenderingServer::get_singleton()->disconnect(SNAME("frame_post_draw"), callable_mp((CanvasItem *)this, &CanvasItem::queue_redraw));
+			}
+		}
 	}
 
 	if (tiled_texture.is_valid()) {
@@ -284,6 +289,11 @@ void TextureRect::set_texture(const Ref<Texture2D> &p_tex) {
 
 	if (texture.is_valid()) {
 		texture->connect_changed(callable_mp(this, &TextureRect::_texture_changed));
+		if (texture->get_class() == "ViewportTexture" && stretch_mode == STRETCH_TILE) {
+			if (!RenderingServer::get_singleton()->is_connected(SNAME("frame_post_draw"), callable_mp((CanvasItem *)this, &CanvasItem::queue_redraw))) {
+				RenderingServer::get_singleton()->connect(SNAME("frame_post_draw"), callable_mp((CanvasItem *)this, &CanvasItem::queue_redraw));
+			}
+		}
 	}
 
 	queue_redraw();
@@ -320,8 +330,23 @@ void TextureRect::set_stretch_mode(StretchMode p_mode) {
 	if (stretch_mode == p_mode) {
 		return;
 	}
-
 	stretch_mode = p_mode;
+
+	if (texture.is_null()) {
+		return;
+	}
+
+	if (texture->get_class() == "ViewportTexture") {
+		if (stretch_mode == STRETCH_TILE) {
+			if (!RenderingServer::get_singleton()->is_connected(SNAME("frame_post_draw"), callable_mp((CanvasItem *)this, &CanvasItem::queue_redraw))) {
+				RenderingServer::get_singleton()->connect(SNAME("frame_post_draw"), callable_mp((CanvasItem *)this, &CanvasItem::queue_redraw));
+			}
+		} else {
+			if (RenderingServer::get_singleton()->is_connected(SNAME("frame_post_draw"), callable_mp((CanvasItem *)this, &CanvasItem::queue_redraw))) {
+				RenderingServer::get_singleton()->disconnect(SNAME("frame_post_draw"), callable_mp((CanvasItem *)this, &CanvasItem::queue_redraw));
+			}
+		}
+	}
 	queue_redraw();
 }
 
