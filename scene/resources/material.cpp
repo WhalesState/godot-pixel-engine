@@ -406,3 +406,209 @@ ShaderMaterial::ShaderMaterial() {
 
 ShaderMaterial::~ShaderMaterial() {
 }
+
+///////////////////////////////////
+
+Ref<Shader> CanvasGroupOutlineMaterial::default_shader;
+
+void CanvasGroupOutlineMaterial::init_shaders() {
+	default_shader.instantiate();
+	default_shader->set_code(R"(// CanvasGroupOutlineMaterial default shader.
+
+// Warning: Do not edit this shader. It is automatically generated.
+// Instead: Create a copy of this shader, edit it, and save it as a new resource.
+
+// Authors:
+// https://godotshaders.com/author/juulpower/
+// 	https://godotshaders.com/shader/2d-outline-inline/
+// https://godotshaders.com/author/sirlich/
+// 	https://godotshaders.com/shader/2d-outline-inline-configured-for-canvasgroup/
+
+shader_type canvas_item;
+render_mode unshaded;
+
+uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, repeat_disable, filter_nearest;
+uniform vec4 color : source_color = vec4(1.0); // Outline Color.
+uniform float alpha : hint_range(0.0, 1.0) = 1; // Global alpha (texture and outlines).
+uniform int pattern : hint_range(0, 2) = 0; // 0 = Diamond, 1 = Circle, 2 = Square.
+uniform float width : hint_range(0.0, 16.0, 1.0) = 0.0; // values greater than 8 (px) may affect performance.
+// Screen limit. Usefull to remove bottom outlines in top down sprites.
+uniform float screen_top_limit : hint_range(0.0, 1.0) = 0.0;
+uniform float screen_bottom_limit: hint_range(0.0, 1.0) = 1.0;
+uniform float screen_left_limit: hint_range(0.0, 1.0) = 0.0;
+uniform float screen_right_limit: hint_range(0.0, 1.0) = 1.0;
+
+void fragment() {
+	vec4 final_color = textureLod(SCREEN_TEXTURE, SCREEN_UV, 0.0);
+	if (final_color.a > 0.0001) {
+		final_color.rgb /= final_color.a;
+	}
+	vec4 mixed_color = COLOR * final_color;
+	if (width > 0.0 && alpha > 0.0) {
+		float outline = 0.0;
+		for (float i = -floor(width); i <= floor(width); i++) {
+			float x = abs(i) > floor(width) ? floor(width) * sign(i) : i;
+			float offset;
+			if (pattern == 0) {
+				offset = floor(width) - abs(x);
+			} else if (pattern == 1) {
+				offset = floor(sqrt(pow(floor(width) + 0.5, 2) - x * x));
+			} else if (pattern == 2) {
+				offset = floor(width);
+			}
+			for (float j = -ceil(offset); j <= ceil(offset); j++) {
+				float y = abs(j) > offset ? offset * sign(j) : j;
+				vec2 xy = SCREEN_UV + SCREEN_PIXEL_SIZE * vec2(x, y);
+				if ((xy != clamp(xy, vec2(0.0), vec2(1.0)) || texture(SCREEN_TEXTURE, xy).a <= 0.0) == false) {
+					outline += texture(SCREEN_TEXTURE, xy).a;
+				}
+			}
+		}
+		outline = min(outline, 1.0);
+		COLOR = mix(mixed_color, color, outline - final_color.a);
+		if (SCREEN_UV.y < screen_top_limit || SCREEN_UV.y > screen_bottom_limit || SCREEN_UV.x < screen_left_limit || SCREEN_UV.x > screen_right_limit) {
+			COLOR = mixed_color;
+		}
+	} else {
+		COLOR = mixed_color;
+	}
+	if (COLOR.a != 0.0) {
+		COLOR.a *= alpha;
+	}
+}
+)");
+}
+
+void CanvasGroupOutlineMaterial::finish_shaders() {
+	default_shader.unref();
+}
+
+CanvasGroupOutlineMaterial::CanvasGroupOutlineMaterial() {
+	set_shader(default_shader);
+}
+
+CanvasGroupOutlineMaterial::~CanvasGroupOutlineMaterial() {
+}
+
+///////////////////////////////////
+
+Ref<Shader> SpriteMaterial::default_shader;
+
+void SpriteMaterial::init_shaders() {
+	default_shader.instantiate();
+	default_shader->set_code(R"(// SpriteMaterial default shader.
+
+// Warning: Do not edit this shader. It is automatically generated.
+// Instead: Create a copy of this shader, edit it, and save it as a new resource.
+
+// Authors:
+// Hue shift -> https://github.com/vmedea
+//	https://gist.github.com/mairod/a75e7b44f68110e1576d77419d608786?permalink_comment_id=4438484#gistcomment-4438484
+// Dither -> https://godotshaders.com/author/whiteshampoo/
+//	https://godotshaders.com/shader/color-reduction-and-dither/
+// Color quantization -> https://gamedev.stackexchange.com/questions/111319/webgl-color-quantization
+
+shader_type canvas_item;
+render_mode unshaded;
+
+group_uniforms colors;
+uniform bool use_256_colors = false;
+uniform bool invert_colors = false;
+uniform float hue : hint_range(0.0, 359.0, 1.0) = 0.0;
+uniform float brightness = 1.0;
+uniform float contrast = 1.0;
+uniform float gamma = 1.0;
+uniform float alpha_limit : hint_range(0.0, 1.0) = 0.0;
+uniform float lock_alpha : hint_range(0.0, 1.0) = 0.0;
+
+group_uniforms posterize;
+uniform bool posterize = false;
+uniform float posterize_levels : hint_range(0.1, 5.0) = 1.0;
+uniform float dither : hint_range(0.0, 0.5) = 0.0;
+uniform bool invert_dither_x = true;
+uniform bool invert_dither_y = true;
+
+group_uniforms grayscale;
+uniform bool grayscale = false;
+uniform bool limit = false;
+uniform float limit_range : hint_range(1.0, 32.0) = 8.0;
+uniform bool use_levels = false;
+uniform sampler2D levels : hint_default_black;
+
+vec3 hue_shift(vec3 color, float dhue) {
+	float s = sin(dhue);
+	float c = cos(dhue);
+	return (color * c) + (color * s) * mat3(
+		vec3(0.167444, 0.329213, -0.496657),
+		vec3(-0.327948, 0.035669, 0.292279),
+		vec3(1.250268, -1.047561, -0.202707)
+	) + dot(vec3(0.299, 0.587, 0.114), color) * (1.0 - c);
+}
+
+void fragment() {
+	if (hue != 0.0) {
+		COLOR.rgb = hue_shift(COLOR.rgb, radians(hue));
+	}
+	if (brightness != 1.0) {
+		COLOR.rgb += brightness - 1.0;
+	}
+	if (contrast != 1.0) {
+		COLOR.rgb = ((COLOR.rgb - 0.5f) * max(contrast, 0)) + 0.5;
+	}
+	if (gamma != 1.0) {
+		COLOR.rgb = pow(COLOR.rgb, vec3(gamma));
+	}
+	if (alpha_limit > 0.0 && COLOR.a < 1.0 && COLOR.a < alpha_limit) {
+		COLOR.a = 0.0;
+	}
+	if (lock_alpha > 0.0 && COLOR.a > 0.0 && COLOR.a < lock_alpha) {
+		COLOR.a = 1.0;
+	}
+	if (posterize) {
+		float colors = 6.0;
+		float a = floor(mod(SCREEN_UV.x / SCREEN_PIXEL_SIZE.x, 2.0));
+		if (invert_dither_x) {
+			a = 1.0 - a;
+		}
+		float b = floor(mod(SCREEN_UV.y / SCREEN_PIXEL_SIZE.y, 2.0));
+		if (invert_dither_y) {
+			b = 1.0 - b;
+		}
+		float c = mod(a + b, 2.0);
+		vec3 col = COLOR.rgb;
+		vec3 res = vec3(8.0, 8.0, 4.0) * posterize_levels;
+		COLOR.rgb = (floor(col.rgb * (res - 1.0) + 0.5 + dither) / (res - 1.0)) * c;
+		c = 1.0 - c;
+		COLOR.rgb += (floor(col.rgb * (res - 1.0) + 0.5 - dither) / (res - 1.0)) * c;
+	}
+	if (use_256_colors) {
+		vec3 color_resolution = vec3(8.0, 8.0, 4.0);
+		vec3 color_bands = floor(COLOR.rgb * color_resolution) / (color_resolution - 1.0);
+		COLOR = vec4(min(color_bands, 1.0), COLOR.a);
+	}
+	if (grayscale) {
+		float input = dot(COLOR.rgb, vec3(0.299, 0.587, 0.114));
+		if (limit) {
+			float range = limit_range - 1.0;
+			input = floor(input * range) / range;
+		}
+		vec4 adjusted = use_levels ? texture(levels, vec2(input, 0.0)) : vec4(vec3(input), COLOR.a);
+		COLOR = mix(COLOR, adjusted, COLOR.a);
+	}
+	if (invert_colors) {
+		COLOR.rgb = 1.0 - COLOR.rgb;
+	}
+}
+)");
+}
+
+void SpriteMaterial::finish_shaders() {
+	default_shader.unref();
+}
+
+SpriteMaterial::SpriteMaterial() {
+	set_shader(default_shader);
+}
+
+SpriteMaterial::~SpriteMaterial() {
+}
