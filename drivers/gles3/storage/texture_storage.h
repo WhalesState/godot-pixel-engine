@@ -120,8 +120,6 @@ enum DefaultGLTexture {
 	DEFAULT_GL_TEXTURE_NORMAL,
 	DEFAULT_GL_TEXTURE_ANISO,
 	DEFAULT_GL_TEXTURE_DEPTH,
-	DEFAULT_GL_TEXTURE_3D_WHITE,
-	DEFAULT_GL_TEXTURE_3D_BLACK,
 	DEFAULT_GL_TEXTURE_2D_UINT,
 	DEFAULT_GL_TEXTURE_MAX
 };
@@ -492,21 +490,17 @@ public:
 	virtual void texture_free(RID p_rid) override;
 
 	virtual void texture_2d_initialize(RID p_texture, const Ref<Image> &p_image) override;
-	virtual void texture_3d_initialize(RID p_texture, Image::Format, int p_width, int p_height, int p_depth, bool p_mipmaps, const Vector<Ref<Image>> &p_data) override;
 	virtual void texture_proxy_initialize(RID p_texture, RID p_base) override; //all slices, then all the mipmaps, must be coherent
 
 	RID texture_create_external(Texture::Type p_type, Image::Format p_format, unsigned int p_image, int p_width, int p_height, int p_depth, int p_layers);
 
 	virtual void texture_2d_update(RID p_texture, const Ref<Image> &p_image, int p_layer = 0) override;
-	virtual void texture_3d_update(RID p_texture, const Vector<Ref<Image>> &p_data) override{};
 	virtual void texture_proxy_update(RID p_proxy, RID p_base) override;
 
 	//these two APIs can be used together or in combination with the others.
 	virtual void texture_2d_placeholder_initialize(RID p_texture) override;
-	virtual void texture_3d_placeholder_initialize(RID p_texture) override;
 
 	virtual Ref<Image> texture_2d_get(RID p_texture) const override;
-	virtual Vector<Ref<Image>> texture_3d_get(RID p_texture) const override { return Vector<Ref<Image>>(); };
 
 	virtual void texture_replace(RID p_texture, RID p_by_texture) override;
 	virtual void texture_set_size_override(RID p_texture, int p_width, int p_height) override;

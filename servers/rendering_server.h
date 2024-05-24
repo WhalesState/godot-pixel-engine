@@ -82,19 +82,15 @@ public:
 	/* TEXTURE API */
 
 	virtual RID texture_2d_create(const Ref<Image> &p_image) = 0;
-	virtual RID texture_3d_create(Image::Format, int p_width, int p_height, int p_depth, bool p_mipmaps, const Vector<Ref<Image>> &p_data) = 0; //all slices, then all the mipmaps, must be coherent
 	virtual RID texture_proxy_create(RID p_base) = 0;
 
 	virtual void texture_2d_update(RID p_texture, const Ref<Image> &p_image, int p_layer = 0) = 0;
-	virtual void texture_3d_update(RID p_texture, const Vector<Ref<Image>> &p_data) = 0;
 	virtual void texture_proxy_update(RID p_texture, RID p_proxy_to) = 0;
 
 	// These two APIs can be used together or in combination with the others.
 	virtual RID texture_2d_placeholder_create() = 0;
-	virtual RID texture_3d_placeholder_create() = 0;
 
 	virtual Ref<Image> texture_2d_get(RID p_texture) const = 0;
-	virtual Vector<Ref<Image>> texture_3d_get(RID p_texture) const = 0;
 
 	virtual void texture_replace(RID p_texture, RID p_by_texture) = 0;
 	virtual void texture_set_size_override(RID p_texture, int p_width, int p_height) = 0;
@@ -624,7 +620,6 @@ public:
 		GLOBAL_VAR_TYPE_TRANSFORM_2D,
 		GLOBAL_VAR_TYPE_TRANSFORM,
 		GLOBAL_VAR_TYPE_SAMPLER2D,
-		GLOBAL_VAR_TYPE_SAMPLER3D,
 		GLOBAL_VAR_TYPE_MAX
 	};
 
@@ -724,9 +719,6 @@ public:
 
 private:
 	// Binder helpers
-	RID _texture_3d_create(Image::Format p_format, int p_width, int p_height, int p_depth, bool p_mipmaps, const TypedArray<Image> &p_data);
-	void _texture_3d_update(RID p_texture, const TypedArray<Image> &p_data);
-	TypedArray<Image> _texture_3d_get(RID p_texture) const;
 	TypedArray<Dictionary> _shader_get_shader_parameter_list(RID p_shader) const;
 };
 

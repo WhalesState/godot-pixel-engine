@@ -87,42 +87,4 @@ public:
 	~ImageTexture();
 };
 
-class ImageTexture3D : public Texture3D {
-	GDCLASS(ImageTexture3D, Texture3D);
-
-	mutable RID texture;
-
-	Image::Format format = Image::FORMAT_L8;
-	int width = 1;
-	int height = 1;
-	int depth = 1;
-	bool mipmaps = false;
-
-	TypedArray<Image> _get_images() const;
-	void _set_images(const TypedArray<Image> &p_images);
-
-protected:
-	static void _bind_methods();
-
-	Error _create(Image::Format p_format, int p_width, int p_height, int p_depth, bool p_mipmaps, const TypedArray<Image> &p_data);
-	void _update(const TypedArray<Image> &p_data);
-
-public:
-	virtual Image::Format get_format() const override;
-	virtual int get_width() const override;
-	virtual int get_height() const override;
-	virtual int get_depth() const override;
-	virtual bool has_mipmaps() const override;
-
-	Error create(Image::Format p_format, int p_width, int p_height, int p_depth, bool p_mipmaps, const Vector<Ref<Image>> &p_data);
-	void update(const Vector<Ref<Image>> &p_data);
-	virtual Vector<Ref<Image>> get_data() const override;
-
-	virtual RID get_rid() const override;
-	virtual void set_path(const String &p_path, bool p_take_over = false) override;
-
-	ImageTexture3D();
-	~ImageTexture3D();
-};
-
 #endif // IMAGE_TEXTURE_H

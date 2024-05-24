@@ -61,17 +61,6 @@ Ref<Image> Noise::get_seamless_image(int p_width, int p_height, bool p_invert, b
 	return images[0];
 }
 
-TypedArray<Image> Noise::get_seamless_image_3d(int p_width, int p_height, int p_depth, bool p_invert, real_t p_blend_skirt, bool p_normalize) const {
-	Vector<Ref<Image>> images = _get_seamless_image(p_width, p_height, p_depth, p_invert, true, p_blend_skirt, p_normalize);
-
-	TypedArray<Image> ret;
-	ret.resize(images.size());
-	for (int i = 0; i < images.size(); i++) {
-		ret[i] = images[i];
-	}
-	return ret;
-}
-
 // Template specialization for faster grayscale blending.
 template <>
 uint8_t Noise::_alpha_blend<uint8_t>(uint8_t p_bg, uint8_t p_fg, int p_alpha) const {
@@ -173,17 +162,6 @@ Ref<Image> Noise::get_image(int p_width, int p_height, bool p_invert, bool p_in_
 	return images[0];
 }
 
-TypedArray<Image> Noise::get_image_3d(int p_width, int p_height, int p_depth, bool p_invert, bool p_normalize) const {
-	Vector<Ref<Image>> images = _get_image(p_width, p_height, p_depth, p_invert, true, p_normalize);
-
-	TypedArray<Image> ret;
-	ret.resize(images.size());
-	for (int i = 0; i < images.size(); i++) {
-		ret[i] = images[i];
-	}
-	return ret;
-}
-
 void Noise::_bind_methods() {
 	// Noise functions.
 	ClassDB::bind_method(D_METHOD("get_noise_1d", "x"), &Noise::get_noise_1d);
@@ -195,6 +173,4 @@ void Noise::_bind_methods() {
 	// Textures.
 	ClassDB::bind_method(D_METHOD("get_image", "width", "height", "invert", "in_3d_space", "normalize"), &Noise::get_image, DEFVAL(false), DEFVAL(false), DEFVAL(true));
 	ClassDB::bind_method(D_METHOD("get_seamless_image", "width", "height", "invert", "in_3d_space", "skirt", "normalize"), &Noise::get_seamless_image, DEFVAL(false), DEFVAL(false), DEFVAL(0.1), DEFVAL(true));
-	ClassDB::bind_method(D_METHOD("get_image_3d", "width", "height", "depth", "invert", "normalize"), &Noise::get_image_3d, DEFVAL(false), DEFVAL(true));
-	ClassDB::bind_method(D_METHOD("get_seamless_image_3d", "width", "height", "depth", "invert", "skirt", "normalize"), &Noise::get_seamless_image_3d, DEFVAL(false), DEFVAL(0.1), DEFVAL(true));
 }

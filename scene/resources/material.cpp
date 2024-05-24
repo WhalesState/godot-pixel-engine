@@ -240,7 +240,7 @@ void ShaderMaterial::_get_property_list(List<PropertyInfo> *p_list) const {
 				}
 
 				if (is_uniform_type_compatible && E->get().type == Variant::OBJECT && cached.get_type() == Variant::OBJECT) {
-					// Check if the Object class (hint string) changed, for example Texture2D sampler to Texture3D.
+					// Check if the Object class (hint string) changed, for example Texture 2D sampler to Texture 3D.
 					// Allow inheritance, Texture2D type sampler should also accept CompressedTexture2D.
 					Object *cached_obj = cached;
 					if (!cached_obj->is_class(E->get().hint_string)) {

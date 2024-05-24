@@ -178,20 +178,16 @@ public:
 
 	//these go pass-through, as they can be called from any thread
 	FUNCRIDTEX1(texture_2d, const Ref<Image> &)
-	FUNCRIDTEX6(texture_3d, Image::Format, int, int, int, bool, const Vector<Ref<Image>> &)
 	FUNCRIDTEX1(texture_proxy, RID)
 
 	//these go through command queue if they are in another thread
 	FUNC3(texture_2d_update, RID, const Ref<Image> &, int)
-	FUNC2(texture_3d_update, RID, const Vector<Ref<Image>> &)
 	FUNC2(texture_proxy_update, RID, RID)
 
 	//these also go pass-through
 	FUNCRIDTEX0(texture_2d_placeholder)
-	FUNCRIDTEX0(texture_3d_placeholder)
 
 	FUNC1RC(Ref<Image>, texture_2d_get, RID)
-	FUNC1RC(Vector<Ref<Image>>, texture_3d_get, RID)
 
 	FUNC2(texture_replace, RID, RID)
 

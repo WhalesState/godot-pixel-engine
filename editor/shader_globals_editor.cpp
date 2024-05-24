@@ -62,7 +62,6 @@ static const char *global_var_type_names[RS::GLOBAL_VAR_TYPE_MAX] = {
 	"transform_2d",
 	"transform",
 	"sampler2D",
-	"sampler3D",
 };
 
 class ShaderGlobalsEditorInterface : public Object {
@@ -216,11 +215,6 @@ protected:
 					pinfo.hint = PROPERTY_HINT_RESOURCE_TYPE;
 					pinfo.hint_string = "Texture2D";
 				} break;
-				case RS::GLOBAL_VAR_TYPE_SAMPLER3D: {
-					pinfo.type = Variant::OBJECT;
-					pinfo.hint = PROPERTY_HINT_RESOURCE_TYPE;
-					pinfo.hint_string = "Texture3D";
-				} break;
 				default: {
 				} break;
 			}
@@ -317,9 +311,6 @@ static Variant create_var(RS::GlobalShaderParameterType p_type) {
 			return Projection();
 		}
 		case RS::GLOBAL_VAR_TYPE_SAMPLER2D: {
-			return "";
-		}
-		case RS::GLOBAL_VAR_TYPE_SAMPLER3D: {
 			return "";
 		}
 		default: {

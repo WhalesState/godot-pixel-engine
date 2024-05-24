@@ -912,7 +912,7 @@
 				[gdscript]
 				"Node2D".to_snake_case()               # Returns "node_2d"
 				"2nd place".to_snake_case()            # Returns "2_nd_place"
-				"Texture3DAssetFolder".to_snake_case() # Returns "texture_3d_asset_folder"
+				"Texture2DAssetFolder".to_snake_case() # Returns "texture_2d_asset_folder"
 				[/gdscript]
 				[/codeblocks]
 			</description>

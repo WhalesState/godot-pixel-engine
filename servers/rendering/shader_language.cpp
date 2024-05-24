@@ -118,9 +118,6 @@ const char *ShaderLanguage::token_names[TK_MAX] = {
 	"TYPE_SAMPLER2D",
 	"TYPE_ISAMPLER2D",
 	"TYPE_USAMPLER2D",
-	"TYPE_SAMPLER3D",
-	"TYPE_ISAMPLER3D",
-	"TYPE_USAMPLER3D",
 	"INTERPOLATION_FLAT",
 	"INTERPOLATION_SMOOTH",
 	"CONST",
@@ -299,9 +296,6 @@ const ShaderLanguage::KeyWord ShaderLanguage::keyword_list[] = {
 	{ TK_TYPE_SAMPLER2D, "sampler2D", KCF_SAMPLER_DATATYPE, {}, {} },
 	{ TK_TYPE_ISAMPLER2D, "isampler2D", KCF_SAMPLER_DATATYPE, {}, {} },
 	{ TK_TYPE_USAMPLER2D, "usampler2D", KCF_SAMPLER_DATATYPE, {}, {} },
-	{ TK_TYPE_SAMPLER3D, "sampler3D", KCF_SAMPLER_DATATYPE, {}, {} },
-	{ TK_TYPE_ISAMPLER3D, "isampler3D", KCF_SAMPLER_DATATYPE, {}, {} },
-	{ TK_TYPE_USAMPLER3D, "usampler3D", KCF_SAMPLER_DATATYPE, {}, {} },
 
 	// interpolation qualifiers
 
@@ -951,10 +945,7 @@ bool ShaderLanguage::is_token_datatype(TokenType p_type) {
 			p_type == TK_TYPE_MAT4 ||
 			p_type == TK_TYPE_SAMPLER2D ||
 			p_type == TK_TYPE_ISAMPLER2D ||
-			p_type == TK_TYPE_USAMPLER2D ||
-			p_type == TK_TYPE_SAMPLER3D ||
-			p_type == TK_TYPE_ISAMPLER3D ||
-			p_type == TK_TYPE_USAMPLER3D);
+			p_type == TK_TYPE_USAMPLER2D);
 }
 
 ShaderLanguage::DataType ShaderLanguage::get_token_datatype(TokenType p_type) {
@@ -1073,12 +1064,6 @@ String ShaderLanguage::get_datatype_name(DataType p_type) {
 			return "isampler2D";
 		case TYPE_USAMPLER2D:
 			return "usampler2D";
-		case TYPE_SAMPLER3D:
-			return "sampler3D";
-		case TYPE_ISAMPLER3D:
-			return "isampler3D";
-		case TYPE_USAMPLER3D:
-			return "usampler3D";
 		case TYPE_STRUCT:
 			return "struct";
 		case TYPE_MAX:
@@ -2674,9 +2659,6 @@ const ShaderLanguage::BuiltinFuncDef ShaderLanguage::builtin_func_defs[] = {
 	{ "textureSize", TYPE_IVEC2, { TYPE_SAMPLER2D, TYPE_INT, TYPE_VOID }, { "sampler", "lod" }, TAG_GLOBAL, false },
 	{ "textureSize", TYPE_IVEC2, { TYPE_ISAMPLER2D, TYPE_INT, TYPE_VOID }, { "sampler", "lod" }, TAG_GLOBAL, false },
 	{ "textureSize", TYPE_IVEC2, { TYPE_USAMPLER2D, TYPE_INT, TYPE_VOID }, { "sampler", "lod" }, TAG_GLOBAL, false },
-	{ "textureSize", TYPE_IVEC3, { TYPE_SAMPLER3D, TYPE_INT, TYPE_VOID }, { "sampler", "lod" }, TAG_GLOBAL, false },
-	{ "textureSize", TYPE_IVEC3, { TYPE_ISAMPLER3D, TYPE_INT, TYPE_VOID }, { "sampler", "lod" }, TAG_GLOBAL, false },
-	{ "textureSize", TYPE_IVEC3, { TYPE_USAMPLER3D, TYPE_INT, TYPE_VOID }, { "sampler", "lod" }, TAG_GLOBAL, false },
 
 	// texture
 
@@ -2686,12 +2668,6 @@ const ShaderLanguage::BuiltinFuncDef ShaderLanguage::builtin_func_defs[] = {
 	{ "texture", TYPE_UVEC4, { TYPE_USAMPLER2D, TYPE_VEC2, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "bias" }, TAG_GLOBAL, false },
 	{ "texture", TYPE_IVEC4, { TYPE_ISAMPLER2D, TYPE_VEC2, TYPE_VOID }, { "sampler", "coords" }, TAG_GLOBAL, false },
 	{ "texture", TYPE_IVEC4, { TYPE_ISAMPLER2D, TYPE_VEC2, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "bias" }, TAG_GLOBAL, false },
-	{ "texture", TYPE_VEC4, { TYPE_SAMPLER3D, TYPE_VEC3, TYPE_VOID }, { "sampler", "coords" }, TAG_GLOBAL, false },
-	{ "texture", TYPE_VEC4, { TYPE_SAMPLER3D, TYPE_VEC3, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "bias" }, TAG_GLOBAL, false },
-	{ "texture", TYPE_UVEC4, { TYPE_USAMPLER3D, TYPE_VEC3, TYPE_VOID }, { "sampler", "coords" }, TAG_GLOBAL, false },
-	{ "texture", TYPE_UVEC4, { TYPE_USAMPLER3D, TYPE_VEC3, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "bias" }, TAG_GLOBAL, false },
-	{ "texture", TYPE_IVEC4, { TYPE_ISAMPLER3D, TYPE_VEC3, TYPE_VOID }, { "sampler", "coords" }, TAG_GLOBAL, false },
-	{ "texture", TYPE_IVEC4, { TYPE_ISAMPLER3D, TYPE_VEC3, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "bias" }, TAG_GLOBAL, false },
 
 	// textureProj
 
@@ -2707,30 +2683,18 @@ const ShaderLanguage::BuiltinFuncDef ShaderLanguage::builtin_func_defs[] = {
 	{ "textureProj", TYPE_UVEC4, { TYPE_USAMPLER2D, TYPE_VEC4, TYPE_VOID }, { "sampler", "coords" }, TAG_GLOBAL, false },
 	{ "textureProj", TYPE_UVEC4, { TYPE_USAMPLER2D, TYPE_VEC3, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "bias" }, TAG_GLOBAL, false },
 	{ "textureProj", TYPE_UVEC4, { TYPE_USAMPLER2D, TYPE_VEC4, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "bias" }, TAG_GLOBAL, false },
-	{ "textureProj", TYPE_VEC4, { TYPE_SAMPLER3D, TYPE_VEC4, TYPE_VOID }, { "sampler", "coords" }, TAG_GLOBAL, false },
-	{ "textureProj", TYPE_VEC4, { TYPE_SAMPLER3D, TYPE_VEC4, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "bias" }, TAG_GLOBAL, false },
-	{ "textureProj", TYPE_IVEC4, { TYPE_ISAMPLER3D, TYPE_VEC4, TYPE_VOID }, { "sampler", "coords" }, TAG_GLOBAL, false },
-	{ "textureProj", TYPE_IVEC4, { TYPE_ISAMPLER3D, TYPE_VEC4, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "bias" }, TAG_GLOBAL, false },
-	{ "textureProj", TYPE_UVEC4, { TYPE_USAMPLER3D, TYPE_VEC4, TYPE_VOID }, { "sampler", "coords" }, TAG_GLOBAL, false },
-	{ "textureProj", TYPE_UVEC4, { TYPE_USAMPLER3D, TYPE_VEC4, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "bias" }, TAG_GLOBAL, false },
 
 	// textureLod
 
 	{ "textureLod", TYPE_VEC4, { TYPE_SAMPLER2D, TYPE_VEC2, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
 	{ "textureLod", TYPE_IVEC4, { TYPE_ISAMPLER2D, TYPE_VEC2, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
 	{ "textureLod", TYPE_UVEC4, { TYPE_USAMPLER2D, TYPE_VEC2, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
-	{ "textureLod", TYPE_VEC4, { TYPE_SAMPLER3D, TYPE_VEC3, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
-	{ "textureLod", TYPE_IVEC4, { TYPE_ISAMPLER3D, TYPE_VEC3, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
-	{ "textureLod", TYPE_UVEC4, { TYPE_USAMPLER3D, TYPE_VEC3, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
 
 	// texelFetch
 
 	{ "texelFetch", TYPE_VEC4, { TYPE_SAMPLER2D, TYPE_IVEC2, TYPE_INT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
 	{ "texelFetch", TYPE_IVEC4, { TYPE_ISAMPLER2D, TYPE_IVEC2, TYPE_INT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
 	{ "texelFetch", TYPE_UVEC4, { TYPE_USAMPLER2D, TYPE_IVEC2, TYPE_INT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
-	{ "texelFetch", TYPE_VEC4, { TYPE_SAMPLER3D, TYPE_IVEC3, TYPE_INT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
-	{ "texelFetch", TYPE_IVEC4, { TYPE_ISAMPLER3D, TYPE_IVEC3, TYPE_INT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
-	{ "texelFetch", TYPE_UVEC4, { TYPE_USAMPLER3D, TYPE_IVEC3, TYPE_INT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
 
 	// textureProjLod
 
@@ -2740,18 +2704,12 @@ const ShaderLanguage::BuiltinFuncDef ShaderLanguage::builtin_func_defs[] = {
 	{ "textureProjLod", TYPE_IVEC4, { TYPE_ISAMPLER2D, TYPE_VEC4, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
 	{ "textureProjLod", TYPE_UVEC4, { TYPE_USAMPLER2D, TYPE_VEC3, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
 	{ "textureProjLod", TYPE_UVEC4, { TYPE_USAMPLER2D, TYPE_VEC4, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
-	{ "textureProjLod", TYPE_VEC4, { TYPE_SAMPLER3D, TYPE_VEC4, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
-	{ "textureProjLod", TYPE_IVEC4, { TYPE_ISAMPLER3D, TYPE_VEC4, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
-	{ "textureProjLod", TYPE_UVEC4, { TYPE_USAMPLER3D, TYPE_VEC4, TYPE_FLOAT, TYPE_VOID }, { "sampler", "coords", "lod" }, TAG_GLOBAL, false },
 
 	// textureGrad
 
 	{ "textureGrad", TYPE_VEC4, { TYPE_SAMPLER2D, TYPE_VEC2, TYPE_VEC2, TYPE_VEC2, TYPE_VOID }, { "sampler", "coords", "dPdx", "dPdy" }, TAG_GLOBAL, false },
 	{ "textureGrad", TYPE_IVEC4, { TYPE_ISAMPLER2D, TYPE_VEC2, TYPE_VEC2, TYPE_VEC2, TYPE_VOID }, { "sampler", "coords", "dPdx", "dPdy" }, TAG_GLOBAL, false },
 	{ "textureGrad", TYPE_UVEC4, { TYPE_USAMPLER2D, TYPE_VEC2, TYPE_VEC2, TYPE_VEC2, TYPE_VOID }, { "sampler", "coords", "dPdx", "dPdy" }, TAG_GLOBAL, false },
-	{ "textureGrad", TYPE_VEC4, { TYPE_SAMPLER3D, TYPE_VEC3, TYPE_VEC3, TYPE_VEC3, TYPE_VOID }, { "sampler", "coords", "dPdx", "dPdy" }, TAG_GLOBAL, false },
-	{ "textureGrad", TYPE_IVEC4, { TYPE_ISAMPLER3D, TYPE_VEC3, TYPE_VEC3, TYPE_VEC3, TYPE_VOID }, { "sampler", "coords", "dPdx", "dPdy" }, TAG_GLOBAL, false },
-	{ "textureGrad", TYPE_UVEC4, { TYPE_USAMPLER3D, TYPE_VEC3, TYPE_VEC3, TYPE_VEC3, TYPE_VOID }, { "sampler", "coords", "dPdx", "dPdy" }, TAG_GLOBAL, false },
 
 	// textureProjGrad
 
@@ -2761,9 +2719,6 @@ const ShaderLanguage::BuiltinFuncDef ShaderLanguage::builtin_func_defs[] = {
 	{ "textureProjGrad", TYPE_IVEC4, { TYPE_ISAMPLER2D, TYPE_VEC4, TYPE_VEC2, TYPE_VEC2, TYPE_VOID }, { "sampler", "coords", "dPdx", "dPdy" }, TAG_GLOBAL, false },
 	{ "textureProjGrad", TYPE_UVEC4, { TYPE_USAMPLER2D, TYPE_VEC3, TYPE_VEC2, TYPE_VEC2, TYPE_VOID }, { "sampler", "coords", "dPdx", "dPdy" }, TAG_GLOBAL, false },
 	{ "textureProjGrad", TYPE_UVEC4, { TYPE_USAMPLER2D, TYPE_VEC4, TYPE_VEC2, TYPE_VEC2, TYPE_VOID }, { "sampler", "coords", "dPdx", "dPdy" }, TAG_GLOBAL, false },
-	{ "textureProjGrad", TYPE_VEC4, { TYPE_SAMPLER3D, TYPE_VEC4, TYPE_VEC3, TYPE_VEC3, TYPE_VOID }, { "sampler", "coords", "dPdx", "dPdy" }, TAG_GLOBAL, false },
-	{ "textureProjGrad", TYPE_IVEC4, { TYPE_ISAMPLER3D, TYPE_VEC4, TYPE_VEC3, TYPE_VEC3, TYPE_VOID }, { "sampler", "coords", "dPdx", "dPdy" }, TAG_GLOBAL, false },
-	{ "textureProjGrad", TYPE_UVEC4, { TYPE_USAMPLER3D, TYPE_VEC4, TYPE_VEC3, TYPE_VEC3, TYPE_VOID }, { "sampler", "coords", "dPdx", "dPdy" }, TAG_GLOBAL, false },
 
 	// textureGather
 
@@ -2779,18 +2734,12 @@ const ShaderLanguage::BuiltinFuncDef ShaderLanguage::builtin_func_defs[] = {
 	{ "textureQueryLod", TYPE_VEC2, { TYPE_SAMPLER2D, TYPE_VEC2 }, { "sampler", "coords" }, TAG_GLOBAL, true },
 	{ "textureQueryLod", TYPE_VEC2, { TYPE_ISAMPLER2D, TYPE_VEC2 }, { "sampler", "coords" }, TAG_GLOBAL, true },
 	{ "textureQueryLod", TYPE_VEC2, { TYPE_USAMPLER2D, TYPE_VEC2 }, { "sampler", "coords" }, TAG_GLOBAL, true },
-	{ "textureQueryLod", TYPE_VEC2, { TYPE_SAMPLER3D, TYPE_VEC3 }, { "sampler", "coords" }, TAG_GLOBAL, true },
-	{ "textureQueryLod", TYPE_VEC2, { TYPE_ISAMPLER3D, TYPE_VEC3 }, { "sampler", "coords" }, TAG_GLOBAL, true },
-	{ "textureQueryLod", TYPE_VEC2, { TYPE_USAMPLER3D, TYPE_VEC3 }, { "sampler", "coords" }, TAG_GLOBAL, true },
 
 	// textureQueryLevels
 
 	{ "textureQueryLevels", TYPE_INT, { TYPE_SAMPLER2D }, { "sampler" }, TAG_GLOBAL, true },
 	{ "textureQueryLevels", TYPE_INT, { TYPE_ISAMPLER2D }, { "sampler" }, TAG_GLOBAL, true },
 	{ "textureQueryLevels", TYPE_INT, { TYPE_USAMPLER2D }, { "sampler" }, TAG_GLOBAL, true },
-	{ "textureQueryLevels", TYPE_INT, { TYPE_SAMPLER3D }, { "sampler" }, TAG_GLOBAL, true },
-	{ "textureQueryLevels", TYPE_INT, { TYPE_ISAMPLER3D }, { "sampler" }, TAG_GLOBAL, true },
-	{ "textureQueryLevels", TYPE_INT, { TYPE_USAMPLER3D }, { "sampler" }, TAG_GLOBAL, true },
 
 	// dFdx
 
@@ -3662,8 +3611,7 @@ bool ShaderLanguage::is_float_type(DataType p_type) {
 		case TYPE_MAT2:
 		case TYPE_MAT3:
 		case TYPE_MAT4:
-		case TYPE_SAMPLER2D:
-		case TYPE_SAMPLER3D: {
+		case TYPE_SAMPLER2D: {
 			return true;
 		}
 		default: {
@@ -3971,11 +3919,8 @@ Variant ShaderLanguage::constant_value_to_variant(const Vector<ShaderLanguage::C
 				break;
 			}
 			case ShaderLanguage::TYPE_ISAMPLER2D:
-			case ShaderLanguage::TYPE_ISAMPLER3D:
 			case ShaderLanguage::TYPE_SAMPLER2D:
-			case ShaderLanguage::TYPE_SAMPLER3D:
-			case ShaderLanguage::TYPE_USAMPLER2D:
-			case ShaderLanguage::TYPE_USAMPLER3D: {
+			case ShaderLanguage::TYPE_USAMPLER2D: {
 				// Texture types, likely not relevant here.
 				break;
 			}
@@ -4151,19 +4096,6 @@ PropertyInfo ShaderLanguage::uniform_to_property_info(const ShaderNode::Uniform 
 				pi.hint_string = "Texture2D";
 			}
 		} break;
-		case ShaderLanguage::TYPE_SAMPLER3D:
-		case ShaderLanguage::TYPE_ISAMPLER3D:
-		case ShaderLanguage::TYPE_USAMPLER3D: {
-			if (p_uniform.array_size > 0) {
-				pi.type = Variant::ARRAY;
-				pi.hint = PROPERTY_HINT_ARRAY_TYPE;
-				pi.hint_string = MAKE_RESOURCE_TYPE_HINT("Texture3D");
-			} else {
-				pi.type = Variant::OBJECT;
-				pi.hint = PROPERTY_HINT_RESOURCE_TYPE;
-				pi.hint_string = "Texture3D";
-			}
-		} break;
 		case ShaderLanguage::TYPE_STRUCT: {
 			// FIXME: Implement this.
 		} break;
@@ -4220,12 +4152,6 @@ uint32_t ShaderLanguage::get_datatype_size(ShaderLanguage::DataType p_type) {
 		case TYPE_ISAMPLER2D:
 			return 16;
 		case TYPE_USAMPLER2D:
-			return 16;
-		case TYPE_SAMPLER3D:
-			return 16;
-		case TYPE_ISAMPLER3D:
-			return 16;
-		case TYPE_USAMPLER3D:
 			return 16;
 		case TYPE_STRUCT:
 			return 0;
@@ -4314,9 +4240,6 @@ ShaderLanguage::DataType ShaderLanguage::get_scalar_type(DataType p_type) {
 		TYPE_FLOAT, // TYPE_SAMPLER2D
 		TYPE_INT, // TYPE_ISAMPLER2D
 		TYPE_UINT, // TYPE_USAMPLER2D
-		TYPE_FLOAT, // TYPE_SAMPLER3D
-		TYPE_INT, // TYPE_ISAMPLER3D
-		TYPE_UINT, // TYPE_USAMPLER3D
 		TYPE_VOID, // TYPE_STRUCT
 	};
 
@@ -4350,9 +4273,6 @@ int ShaderLanguage::get_cardinality(DataType p_type) {
 		1, // TYPE_SAMPLER2D
 		1, // TYPE_ISAMPLER2D
 		1, // TYPE_USAMPLER2D
-		1, // TYPE_SAMPLER3D
-		1, // TYPE_ISAMPLER3D
-		1, // TYPE_USAMPLER3D
 		1, // TYPE_STRUCT
 	};
 

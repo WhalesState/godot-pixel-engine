@@ -70,13 +70,6 @@ TextureStorage::TextureStorage() {
 
 			Vector<Ref<Image>> images;
 			images.push_back(image);
-
-			default_gl_textures[DEFAULT_GL_TEXTURE_3D_WHITE] = texture_allocate();
-			texture_3d_initialize(default_gl_textures[DEFAULT_GL_TEXTURE_3D_WHITE], image->get_format(), 4, 4, 4, false, images);
-
-			for (int i = 0; i < 2; i++) {
-				images.push_back(image);
-			}
 		}
 
 		{ // black
@@ -90,13 +83,6 @@ TextureStorage::TextureStorage() {
 			Vector<Ref<Image>> images;
 
 			for (int i = 0; i < 4; i++) {
-				images.push_back(image);
-			}
-
-			default_gl_textures[DEFAULT_GL_TEXTURE_3D_BLACK] = texture_allocate();
-			texture_3d_initialize(default_gl_textures[DEFAULT_GL_TEXTURE_3D_BLACK], image->get_format(), 4, 4, 4, false, images);
-
-			for (int i = 0; i < 2; i++) {
 				images.push_back(image);
 			}
 		}
@@ -712,10 +698,6 @@ void TextureStorage::texture_2d_initialize(RID p_texture, const Ref<Image> &p_im
 	texture_set_data(p_texture, p_image);
 }
 
-void TextureStorage::texture_3d_initialize(RID p_texture, Image::Format, int p_width, int p_height, int p_depth, bool p_mipmaps, const Vector<Ref<Image>> &p_data) {
-	texture_owner.initialize_rid(p_texture, Texture());
-}
-
 // Called internally when texture_proxy_create(p_base) is called.
 // Note: p_base is the root and p_texture is the proxy.
 void TextureStorage::texture_proxy_initialize(RID p_texture, RID p_base) {
@@ -737,13 +719,8 @@ RID TextureStorage::texture_create_external(GLES3::Texture::Type p_type, Image::
 	texture.is_external = true;
 	texture.type = p_type;
 
-	switch (p_type) {
-		case Texture::TYPE_2D: {
-			texture.target = GL_TEXTURE_2D;
-		} break;
-		case Texture::TYPE_3D: {
-			texture.target = GL_TEXTURE_3D;
-		} break;
+	if (p_type == Texture::TYPE_2D) {
+		texture.target = GL_TEXTURE_2D;
 	}
 
 	texture.real_format = texture.format = p_format;
@@ -800,21 +777,6 @@ void TextureStorage::texture_2d_placeholder_initialize(RID p_texture) {
 	image->fill(Color(1, 0, 1, 1));
 
 	texture_2d_initialize(p_texture, image);
-}
-
-void TextureStorage::texture_3d_placeholder_initialize(RID p_texture) {
-	//this could be better optimized to reuse an existing image , done this way
-	//for now to get it working
-	Ref<Image> image = Image::create_empty(4, 4, false, Image::FORMAT_RGBA8);
-	image->fill(Color(1, 0, 1, 1));
-
-	Vector<Ref<Image>> images;
-	//cube
-	for (int i = 0; i < 4; i++) {
-		images.push_back(image);
-	}
-
-	texture_3d_initialize(p_texture, Image::FORMAT_RGBA8, 4, 4, 4, false, images);
 }
 
 Ref<Image> TextureStorage::texture_2d_get(RID p_texture) const {
@@ -1092,10 +1054,6 @@ void TextureStorage::_texture_set_data(RID p_texture, const Ref<Image> &p_image,
 	Texture *texture = texture_owner.get_or_null(p_texture);
 
 	ERR_FAIL_NULL(texture);
-	if (texture->target == GL_TEXTURE_3D) {
-		// Target is set to a 3D texture or array texture, exit early to avoid spamming errors
-		return;
-	}
 	ERR_FAIL_COND(!texture->active);
 	ERR_FAIL_COND(texture->is_render_target);
 	ERR_FAIL_COND(p_image.is_null());

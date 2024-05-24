@@ -1079,42 +1079,6 @@
 				[b]Note:[/b] The [param image] must have the same width, height and format as the current [param texture] data. Otherwise, an error will be printed and the original texture won't be modified. If you need to use different width, height or format, use [method texture_replace] instead.
 			</description>
 		</method>
-		<method name="texture_3d_create">
-			<return type="RID" />
-			<param index="0" name="format" type="int" enum="Image.Format" />
-			<param index="1" name="width" type="int" />
-			<param index="2" name="height" type="int" />
-			<param index="3" name="depth" type="int" />
-			<param index="4" name="mipmaps" type="bool" />
-			<param index="5" name="data" type="Image[]" />
-			<description>
-				[b]Note:[/b] The equivalent resource is [Texture3D].
-			</description>
-		</method>
-		<method name="texture_3d_get" qualifiers="const">
-			<return type="Image[]" />
-			<param index="0" name="texture" type="RID" />
-			<description>
-				Returns 3D texture data as an array of [Image]s for the specified texture [RID].
-			</description>
-		</method>
-		<method name="texture_3d_placeholder_create">
-			<return type="RID" />
-			<description>
-				Creates a placeholder for a 3-dimensional texture and adds it to the RenderingServer. It can be accessed with the RID that is returned. This RID will be used in all [code]texture_3d_*[/code] RenderingServer functions, although it does nothing when used.
-				Once finished with your RID, you will want to free the RID using the RenderingServer's [method free_rid] method.
-				[b]Note:[/b] The equivalent resource is [PlaceholderTexture3D].
-			</description>
-		</method>
-		<method name="texture_3d_update">
-			<return type="void" />
-			<param index="0" name="texture" type="RID" />
-			<param index="1" name="data" type="Image[]" />
-			<description>
-				Updates the texture specified by the [param texture] [RID]'s data with the data in [param data]. All the texture's layers must be replaced at once.
-				[b]Note:[/b] The [param texture] must have the same width, height, depth and format as the current texture data. Otherwise, an error will be printed and the original texture won't be modified. If you need to use different width, height, depth or format, use [method texture_replace] instead.
-			</description>
-		</method>
 		<method name="texture_get_format" qualifiers="const">
 			<return type="int" enum="Image.Format" />
 			<param index="0" name="texture" type="RID" />
@@ -1941,9 +1905,6 @@
 		</constant>
 		<constant name="GLOBAL_VAR_TYPE_SAMPLER2D" value="24" enum="GlobalShaderParameterType">
 			2D sampler global shader parameter ([code]global uniform sampler2D ...[/code]). Exposed as a [Texture2D] in the editor UI.
-		</constant>
-		<constant name="GLOBAL_VAR_TYPE_SAMPLER3D" value="25" enum="GlobalShaderParameterType">
-			3D sampler global shader parameter ([code]global uniform sampler3D ...[/code]). Exposed as a [Texture3D] in the editor UI.
 		</constant>
 		<constant name="GLOBAL_VAR_TYPE_MAX" value="26" enum="GlobalShaderParameterType">
 			Represents the size of the [enum GlobalShaderParameterType] enum.

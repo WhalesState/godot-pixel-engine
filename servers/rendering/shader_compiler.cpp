@@ -98,12 +98,6 @@ static int _get_datatype_alignment(SL::DataType p_type) {
 			return 16;
 		case SL::TYPE_USAMPLER2D:
 			return 16;
-		case SL::TYPE_SAMPLER3D:
-			return 16;
-		case SL::TYPE_ISAMPLER3D:
-			return 16;
-		case SL::TYPE_USAMPLER3D:
-			return 16;
 		case SL::TYPE_STRUCT:
 			return 0;
 		case SL::TYPE_MAX: {
