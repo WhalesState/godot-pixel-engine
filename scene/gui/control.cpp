@@ -3528,7 +3528,12 @@ void Control::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "grow_horizontal", PROPERTY_HINT_ENUM, "Left,Right,Both"), "set_h_grow_direction", "get_h_grow_direction");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "grow_vertical", PROPERTY_HINT_ENUM, "Top,Bottom,Both"), "set_v_grow_direction", "get_v_grow_direction");
 
-	ADD_SUBGROUP("Transform", "");
+	ADD_SUBGROUP("Container Sizing", "size_flags_");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "size_flags_horizontal", PROPERTY_HINT_FLAGS, "Fill:1,Expand:2,Shrink Center:4,Shrink End:8"), "set_h_size_flags", "get_h_size_flags");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "size_flags_vertical", PROPERTY_HINT_FLAGS, "Fill:1,Expand:2,Shrink Center:4,Shrink End:8"), "set_v_size_flags", "get_v_size_flags");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "size_flags_stretch_ratio", PROPERTY_HINT_RANGE, "0,20,0.01,or_greater"), "set_stretch_ratio", "get_stretch_ratio");
+
+	ADD_GROUP("Transform", "");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "size", PROPERTY_HINT_NONE, "suffix:px", PROPERTY_USAGE_EDITOR), "_set_size", "get_size");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "position", PROPERTY_HINT_NONE, "suffix:px", PROPERTY_USAGE_EDITOR), "_set_position", "get_position");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "global_position", PROPERTY_HINT_NONE, "suffix:px", PROPERTY_USAGE_NONE), "_set_global_position", "get_global_position");
@@ -3536,11 +3541,6 @@ void Control::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "rotation_degrees", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NONE), "set_rotation_degrees", "get_rotation_degrees");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "scale"), "set_scale", "get_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "pivot_offset", PROPERTY_HINT_NONE, "suffix:px"), "set_pivot_offset", "get_pivot_offset");
-
-	ADD_SUBGROUP("Container Sizing", "size_flags_");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "size_flags_horizontal", PROPERTY_HINT_FLAGS, "Fill:1,Expand:2,Shrink Center:4,Shrink End:8"), "set_h_size_flags", "get_h_size_flags");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "size_flags_vertical", PROPERTY_HINT_FLAGS, "Fill:1,Expand:2,Shrink Center:4,Shrink End:8"), "set_v_size_flags", "get_v_size_flags");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "size_flags_stretch_ratio", PROPERTY_HINT_RANGE, "0,20,0.01,or_greater"), "set_stretch_ratio", "get_stretch_ratio");
 
 	ADD_GROUP("Localization", "");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "auto_translate"), "set_auto_translate", "is_auto_translating");

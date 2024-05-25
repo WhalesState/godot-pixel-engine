@@ -57,6 +57,7 @@ class ColorModeRGB;
 class ColorModeHSV;
 class ColorModeRAW;
 class ColorModeOKHSL;
+class FoldableContainer;
 
 class ColorPresetButton : public BaseButton {
 	GDCLASS(ColorPresetButton, BaseButton);
@@ -143,12 +144,12 @@ private:
 	Control *wheel_uv = nullptr;
 	TextureRect *sample = nullptr;
 	ScrollContainer *preset_scroll = nullptr;
-	HFlowContainer *preset_container = nullptr;
-	HFlowContainer *recent_preset_hbc = nullptr;
+	HFlowContainer *preset_flow_container = nullptr;
+	HFlowContainer *recent_flow_container = nullptr;
 	Button *btn_add_preset = nullptr;
 	Button *btn_pick = nullptr;
-	Button *btn_preset = nullptr;
-	Button *btn_recent_preset = nullptr;
+	FoldableContainer *preset_container = nullptr;
+	FoldableContainer *recent_container = nullptr;
 	PopupMenu *shape_popup = nullptr;
 	PopupMenu *mode_popup = nullptr;
 	MenuButton *btn_shape = nullptr;
@@ -276,9 +277,6 @@ private:
 	void _add_preset_button(const Color &p_color);
 	void _add_recent_preset_button(const Color &p_color);
 
-	void _show_hide_preset(const bool &p_is_btn_pressed, Button *p_btn_preset, Container *p_preset_container);
-	void _update_drop_down_arrow(const bool &p_is_btn_pressed, Button *p_btn_preset);
-
 	void _set_mode_popup_value(ColorModeType p_mode);
 
 	Variant _get_drag_data_fw(const Point2 &p_point, Control *p_from_control);
@@ -377,6 +375,8 @@ class ColorPickerButton : public Button {
 	ColorPicker *picker = nullptr;
 	Color color;
 	bool edit_alpha = true;
+	static ColorPicker::ColorModeType color_mode;
+	static ColorPicker::PickerShapeType picker_shape;
 
 	struct ThemeCache {
 		Ref<StyleBox> normal_style;

@@ -37,6 +37,7 @@
 #include "core/os/keyboard.h"
 #include "core/os/os.h"
 #include "scene/gui/color_mode.h"
+#include "scene/gui/foldable_container.h"
 #include "scene/resources/image_texture.h"
 #include "scene/resources/style_box_flat.h"
 #include "scene/resources/style_box_texture.h"
@@ -60,16 +61,14 @@ void ColorPicker::_notification(int p_what) {
 			if (btn_pick) {
 				btn_pick->set_icon(theme_cache.screen_picker);
 			}
-			_update_drop_down_arrow(btn_preset->is_pressed(), btn_preset);
-			_update_drop_down_arrow(btn_recent_preset->is_pressed(), btn_recent_preset);
 			btn_add_preset->set_icon(theme_cache.add_preset);
 			Size2 preset_size = theme_cache.add_preset->get_size() + btn_add_preset->get_theme_stylebox("normal")->get_minimum_size();
 			btn_add_preset->set_custom_minimum_size(preset_size);
-			for (int i = 1; i < preset_container->get_child_count(); i++) {
-				ColorPresetButton *cpb = Object::cast_to<ColorPresetButton>(preset_container->get_child(i));
+			for (int i = 1; i < preset_flow_container->get_child_count(); i++) {
+				ColorPresetButton *cpb = Object::cast_to<ColorPresetButton>(preset_flow_container->get_child(i));
 				cpb->set_custom_minimum_size(preset_size);
 			}
-			preset_scroll->set_custom_minimum_size((preset_size + Point2(preset_container->get_theme_constant("h_separation"), preset_container->get_theme_constant("v_separation"))) * 2);
+			preset_scroll->set_custom_minimum_size((preset_size + Point2(preset_flow_container->get_theme_constant("h_separation"), preset_flow_container->get_theme_constant("v_separation"))) * 2);
 
 			uv_edit->set_custom_minimum_size(Size2(theme_cache.sv_width, theme_cache.sv_height));
 			w_edit->set_custom_minimum_size(Size2(theme_cache.h_width, 0));
@@ -488,8 +487,8 @@ void ColorPicker::_select_from_preset_container(const Color &p_color) {
 		preset_group->get_pressed_button()->set_pressed(false);
 	}
 
-	for (int i = 1; i < preset_container->get_child_count(); i++) {
-		ColorPresetButton *current_btn = Object::cast_to<ColorPresetButton>(preset_container->get_child(i));
+	for (int i = 1; i < preset_flow_container->get_child_count(); i++) {
+		ColorPresetButton *current_btn = Object::cast_to<ColorPresetButton>(preset_flow_container->get_child(i));
 		if (current_btn && p_color == current_btn->get_preset_color()) {
 			current_btn->set_pressed(true);
 			break;
@@ -498,8 +497,8 @@ void ColorPicker::_select_from_preset_container(const Color &p_color) {
 }
 
 bool ColorPicker::_select_from_recent_preset_hbc(const Color &p_color) {
-	for (int i = 0; i < recent_preset_hbc->get_child_count(); i++) {
-		ColorPresetButton *current_btn = Object::cast_to<ColorPresetButton>(recent_preset_hbc->get_child(i));
+	for (int i = 0; i < recent_flow_container->get_child_count(); i++) {
+		ColorPresetButton *current_btn = Object::cast_to<ColorPresetButton>(recent_flow_container->get_child(i));
 		if (current_btn && p_color == current_btn->get_preset_color()) {
 			current_btn->set_pressed(true);
 			return true;
@@ -593,8 +592,8 @@ void ColorPicker::_update_color(bool p_update_sliders) {
 void ColorPicker::_update_presets() {
 	if (editor_settings) {
 		// Rebuild swatch color buttons, keeping the add-preset button in the first position.
-		for (int i = 1; i < preset_container->get_child_count(); i++) {
-			preset_container->get_child(i)->queue_free();
+		for (int i = 1; i < preset_flow_container->get_child_count(); i++) {
+			preset_flow_container->get_child(i)->queue_free();
 		}
 		for (int i = 0; i < preset_cache.size(); i++) {
 			_add_preset_button(preset_cache[i]);
@@ -602,14 +601,12 @@ void ColorPicker::_update_presets() {
 		_notification(NOTIFICATION_VISIBILITY_CHANGED);
 	}
 }
-#endif
 
-#ifdef TOOLS_ENABLED
 void ColorPicker::_update_recent_presets() {
 	if (editor_settings) {
-		int recent_preset_count = recent_preset_hbc->get_child_count();
+		int recent_preset_count = recent_flow_container->get_child_count();
 		for (int i = 0; i < recent_preset_count; i++) {
-			memdelete(recent_preset_hbc->get_child(0));
+			memdelete(recent_flow_container->get_child(0));
 		}
 
 		recent_presets.clear();
@@ -624,7 +621,7 @@ void ColorPicker::_update_recent_presets() {
 		_notification(NOTIFICATION_VISIBILITY_CHANGED);
 	}
 }
-#endif
+#endif // TOOLS_ENABLED
 
 void ColorPicker::_text_type_toggled() {
 	text_is_constructor = !text_is_constructor;
@@ -674,8 +671,8 @@ void ColorPicker::_add_preset_button(const Color &p_color) {
 	SET_DRAG_FORWARDING_GCDU(btn_preset_new, ColorPicker);
 	btn_preset_new->set_button_group(preset_group);
 	btn_preset_new->set_custom_minimum_size(btn_add_preset->get_size());
-	preset_container->add_child(btn_preset_new);
-	preset_container->move_child(btn_preset_new, 1);
+	preset_flow_container->add_child(btn_preset_new);
+	preset_flow_container->move_child(btn_preset_new, 1);
 	btn_preset_new->set_pressed(true);
 	btn_preset_new->connect("gui_input", callable_mp(this, &ColorPicker::_preset_input).bind(p_color));
 }
@@ -685,27 +682,10 @@ void ColorPicker::_add_recent_preset_button(const Color &p_color) {
 	btn_preset_new->set_tooltip_text(vformat(RTR("Color: #%s\nLMB: Apply color"), p_color.to_html(p_color.a < 1)));
 	btn_preset_new->set_button_group(recent_preset_group);
 	btn_preset_new->set_custom_minimum_size(btn_add_preset->get_size());
-	recent_preset_hbc->add_child(btn_preset_new);
-	recent_preset_hbc->move_child(btn_preset_new, 0);
+	recent_flow_container->add_child(btn_preset_new);
+	recent_flow_container->move_child(btn_preset_new, 0);
 	btn_preset_new->set_pressed(true);
 	btn_preset_new->connect("toggled", callable_mp(this, &ColorPicker::_recent_preset_pressed).bind(btn_preset_new));
-}
-
-void ColorPicker::_show_hide_preset(const bool &p_is_btn_pressed, Button *p_btn_preset, Container *p_preset_container) {
-	if (p_is_btn_pressed) {
-		p_preset_container->show();
-	} else {
-		p_preset_container->hide();
-	}
-	_update_drop_down_arrow(p_is_btn_pressed, p_btn_preset);
-}
-
-void ColorPicker::_update_drop_down_arrow(const bool &p_is_btn_pressed, Button *p_btn_preset) {
-	if (p_is_btn_pressed) {
-		p_btn_preset->set_icon(theme_cache.expanded_arrow);
-	} else {
-		p_btn_preset->set_icon(theme_cache.folded_arrow);
-	}
 }
 
 void ColorPicker::_set_mode_popup_value(ColorModeType p_mode) {
@@ -757,7 +737,7 @@ void ColorPicker::_drop_data_fw(const Point2 &p_point, const Variant &p_data, Co
 		if (preset_from_id == hover_now || hover_now == -1) {
 			return;
 		}
-		preset_container->move_child(preset_container->get_child(preset_from_id), hover_now);
+		preset_flow_container->move_child(preset_flow_container->get_child(preset_from_id), hover_now);
 	}
 }
 
@@ -768,7 +748,7 @@ void ColorPicker::add_preset(const Color &p_color) {
 #ifdef TOOLS_ENABLED
 		preset_cache.move_to_back(preset_cache.find(p_color));
 #endif
-		preset_container->move_child(preset_group->get_pressed_button(), 1);
+		preset_flow_container->move_child(preset_group->get_pressed_button(), 1);
 	} else {
 		presets.push_back(p_color);
 #ifdef TOOLS_ENABLED
@@ -787,12 +767,12 @@ void ColorPicker::add_preset(const Color &p_color) {
 
 void ColorPicker::add_recent_preset(const Color &p_color) {
 	if (!_select_from_recent_preset_hbc(p_color)) {
-		if (recent_preset_hbc->get_child_count() >= 8) {
+		if (recent_flow_container->get_child_count() >= 8) {
 #ifdef TOOLS_ENABLED
 			recent_preset_cache.pop_front();
 #endif
 			recent_presets.pop_front();
-			recent_preset_hbc->get_child(7)->queue_free();
+			recent_flow_container->get_child(7)->queue_free();
 		}
 		recent_presets.push_back(p_color);
 #ifdef TOOLS_ENABLED
@@ -818,8 +798,8 @@ void ColorPicker::erase_preset(const Color &p_color) {
 		preset_cache.erase(preset_cache.find(p_color));
 #endif
 		// Find preset button to remove.
-		for (int i = 1; i < preset_container->get_child_count(); i++) {
-			ColorPresetButton *current_btn = Object::cast_to<ColorPresetButton>(preset_container->get_child(i));
+		for (int i = 1; i < preset_flow_container->get_child_count(); i++) {
+			ColorPresetButton *current_btn = Object::cast_to<ColorPresetButton>(preset_flow_container->get_child(i));
 			if (current_btn && p_color == current_btn->get_preset_color()) {
 				current_btn->queue_free();
 				break;
@@ -843,8 +823,8 @@ void ColorPicker::erase_recent_preset(const Color &p_color) {
 		recent_preset_cache.erase(recent_preset_cache.find(p_color));
 #endif
 		// Find recent preset button to remove.
-		for (int i = 1; i < recent_preset_hbc->get_child_count(); i++) {
-			ColorPresetButton *current_btn = Object::cast_to<ColorPresetButton>(recent_preset_hbc->get_child(i));
+		for (int i = 1; i < recent_flow_container->get_child_count(); i++) {
+			ColorPresetButton *current_btn = Object::cast_to<ColorPresetButton>(recent_flow_container->get_child(i));
 			if (current_btn && p_color == current_btn->get_preset_color()) {
 				current_btn->queue_free();
 				break;
@@ -1363,7 +1343,7 @@ void ColorPicker::_recent_preset_pressed(const bool p_pressed, ColorPresetButton
 	}
 #endif
 
-	recent_preset_hbc->move_child(p_preset, 0);
+	recent_flow_container->move_child(p_preset, 0);
 	emit_signal(SNAME("color_changed"), p_preset->get_preset_color());
 }
 
@@ -1456,8 +1436,9 @@ void ColorPicker::set_presets_visible(bool p_visible) {
 		return;
 	}
 	presets_visible = p_visible;
-	btn_preset->set_visible(p_visible);
-	btn_recent_preset->set_visible(p_visible);
+
+	preset_container->set_visible(p_visible);
+	recent_container->set_visible(p_visible);
 }
 
 bool ColorPicker::are_presets_visible() const {
@@ -1608,6 +1589,7 @@ ColorPicker::ColorPicker() {
 
 	if (DisplayServer::get_singleton()->has_feature(DisplayServer::FEATURE_SCREEN_CAPTURE)) {
 		btn_pick = memnew(Button);
+		btn_pick->set_focus_mode(FOCUS_NONE);
 		sample_hbc->add_child(btn_pick);
 		btn_pick->set_tooltip_text(RTR("Pick a color from the screen."));
 		btn_pick->connect(SNAME("pressed"), callable_mp(this, &ColorPicker::_pick_button_pressed));
@@ -1734,46 +1716,46 @@ ColorPicker::ColorPicker() {
 
 	preset_scroll = memnew(ScrollContainer);
 	preset_scroll->set_h_size_flags(SIZE_EXPAND_FILL);
+	preset_scroll->set_v_size_flags(SIZE_EXPAND_FILL);
 	preset_scroll->set_horizontal_scroll_mode(ScrollContainer::SCROLL_MODE_DISABLED);
-	preset_scroll->hide();
-	preset_container = memnew(HFlowContainer);
-	preset_container->set_h_size_flags(SIZE_EXPAND_FILL);
-	preset_scroll->add_child(preset_container);
+	preset_flow_container = memnew(HFlowContainer);
+	preset_flow_container->set_h_size_flags(SIZE_EXPAND_FILL);
+	preset_flow_container->set_v_size_flags(SIZE_EXPAND_FILL);
+	preset_scroll->add_child(preset_flow_container);
 
 	preset_group.instantiate();
 
-	btn_preset = memnew(Button);
-	btn_preset->set_text("Swatches");
-	btn_preset->set_flat(true);
-	btn_preset->set_toggle_mode(true);
-	btn_preset->set_focus_mode(FOCUS_NONE);
-	btn_preset->set_text_alignment(HORIZONTAL_ALIGNMENT_LEFT);
-	btn_preset->connect("toggled", callable_mp(this, &ColorPicker::_show_hide_preset).bind(btn_preset, preset_scroll));
-	real_vbox->add_child(btn_preset);
+	Ref<StyleBoxEmpty> empty_style(memnew(StyleBoxEmpty));
+	empty_style->set_content_margin_all(4);
 
-	real_vbox->add_child(preset_scroll);
+	preset_container = memnew(FoldableContainer("Swatches"));
+	preset_container->add_theme_style_override("panel", empty_style);
+	preset_container->set_focus_mode(FOCUS_NONE);
+	preset_container->set_expanded(false);
+	real_vbox->add_child(preset_container);
+
+	preset_container->add_child(preset_scroll);
 
 	btn_add_preset = memnew(Button);
+	btn_add_preset->set_focus_mode(FOCUS_NONE);
 	btn_add_preset->set_icon_alignment(HORIZONTAL_ALIGNMENT_CENTER);
 	btn_add_preset->set_tooltip_text(RTR("Add current color as a preset."));
 	btn_add_preset->connect("pressed", callable_mp(this, &ColorPicker::_add_preset_pressed));
-	preset_container->add_child(btn_add_preset);
+	preset_flow_container->add_child(btn_add_preset);
 
-	recent_preset_hbc = memnew(HFlowContainer);
-	recent_preset_hbc->set_v_size_flags(SIZE_SHRINK_BEGIN);
-	recent_preset_hbc->hide();
+	recent_flow_container = memnew(HFlowContainer);
+	recent_flow_container->set_v_size_flags(SIZE_SHRINK_BEGIN);
 
 	recent_preset_group.instantiate();
 
-	btn_recent_preset = memnew(Button);
-	btn_recent_preset->set_text("Recent Colors");
-	btn_recent_preset->set_flat(true);
-	btn_recent_preset->set_toggle_mode(true);
-	btn_recent_preset->set_focus_mode(FOCUS_NONE);
-	btn_recent_preset->set_text_alignment(HORIZONTAL_ALIGNMENT_LEFT);
-	btn_recent_preset->connect("toggled", callable_mp(this, &ColorPicker::_show_hide_preset).bind(btn_recent_preset, recent_preset_hbc));
-	real_vbox->add_child(btn_recent_preset);
-	real_vbox->add_child(recent_preset_hbc);
+	recent_container = memnew(FoldableContainer("Recent Colors"));
+	recent_container->add_theme_style_override("panel", empty_style);
+	recent_container->set_focus_mode(FOCUS_NONE);
+	recent_container->set_expanded(false);
+	recent_container->set_h_size_flags(SIZE_EXPAND_FILL);
+	recent_container->set_v_size_flags(SIZE_EXPAND_FILL);
+	real_vbox->add_child(recent_container);
+	recent_container->add_child(recent_flow_container);
 
 	set_pick_color(Color(1, 1, 1));
 }
@@ -1786,10 +1768,15 @@ ColorPicker::~ColorPicker() {
 
 /////////////////
 
+ColorPicker::ColorModeType ColorPickerButton::color_mode = ColorPicker::MODE_HSV;
+ColorPicker::PickerShapeType ColorPickerButton::picker_shape = ColorPicker::SHAPE_HSV_RECTANGLE;
+
 void ColorPickerButton::_about_to_popup() {
 	set_pressed(true);
 	if (picker) {
 		picker->set_old_color(color);
+		picker->set_color_mode(color_mode);
+		picker->set_picker_shape(picker_shape);
 	}
 }
 
@@ -1802,6 +1789,10 @@ void ColorPickerButton::_color_changed(const Color &p_color) {
 void ColorPickerButton::_modal_closed() {
 	emit_signal(SNAME("popup_closed"));
 	set_pressed(false);
+	if (picker) {
+		color_mode = picker->get_color_mode();
+		picker_shape = picker->get_picker_shape();
+	}
 }
 
 void ColorPickerButton::pressed() {
