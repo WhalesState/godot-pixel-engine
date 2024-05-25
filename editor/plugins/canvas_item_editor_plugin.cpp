@@ -4323,9 +4323,9 @@ void CanvasItemEditor::_focus_selection(int p_op) {
 			item_rect = Rect2();
 		}
 
-		Vector2 pos = ci->get_global_transform_with_canvas().get_origin();
-		Vector2 scale = ci->get_global_transform_with_canvas().get_scale();
-		real_t angle = ci->get_global_transform_with_canvas().get_rotation();
+		Vector2 pos = ci->get_global_transform().get_origin();
+		Vector2 scale = ci->get_global_transform().get_scale();
+		real_t angle = ci->get_global_transform().get_rotation();
 
 		Transform2D t(angle, Vector2(0.f, 0.f));
 		item_rect = t.xform(item_rect);
@@ -4664,7 +4664,7 @@ void CanvasItemEditor::focus_selection() {
 }
 
 void CanvasItemEditor::center_at(const Point2 &p_pos) {
-	Vector2 offset = viewport->get_size() / 2 - EditorNode::get_singleton()->get_scene_root()->get_canvas_transform().xform(p_pos);
+	Vector2 offset = viewport->get_size() / 2 - EditorNode::get_singleton()->get_scene_root()->get_global_canvas_transform().xform(p_pos);
 	view_offset -= (offset / zoom).floor();
 	update_viewport();
 }
