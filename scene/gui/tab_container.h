@@ -40,6 +40,7 @@ class TabContainer : public Container {
 	GDCLASS(TabContainer, Container);
 
 	TabBar *tab_bar = nullptr;
+	bool bottom_tabs = false;
 	bool tabs_visible = true;
 	bool all_tabs_in_front = false;
 	bool menu_hovered = false;
@@ -133,6 +134,9 @@ public:
 
 	void set_tabs_visible(bool p_visible);
 	bool are_tabs_visible() const;
+
+	void set_bottom_tabs(bool p_bottom_tabs);
+	bool is_bottom_tabs() const;
 
 	void set_all_tabs_in_front(bool p_is_front);
 	bool is_all_tabs_in_front() const;
