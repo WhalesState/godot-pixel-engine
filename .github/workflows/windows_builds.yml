@@ -23,12 +23,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - name: Editor
-          #   cache-name: windows-editor
-          #   target: editor
-          #   tests: false
-          #   sconsflags: optimize=speed_trace
-          #   # bin: "./bin/godot.windows.editor.x86_64.exe"
+          - name: Editor
+            cache-name: windows-editor
+            target: editor
+            tests: false
+            sconsflags: optimize=speed_trace
+            # bin: "./bin/godot.windows.editor.x86_64.exe"
 
           - name: Release Template
             cache-name: windows-release-template

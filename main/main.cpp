@@ -2644,7 +2644,7 @@ bool Main::start() {
 #endif
 
 	MainLoop *main_loop = nullptr;
-	if (editor) {
+	if (editor || !game_path.is_empty()) {
 		main_loop = memnew(SceneTree);
 	}
 	if (main_loop_type.is_empty()) {
@@ -2682,7 +2682,7 @@ bool Main::start() {
 			return false;
 		}
 	} else { // Not based on script path.
-		if (!editor && !ClassDB::class_exists(main_loop_type) && ScriptServer::is_global_class(main_loop_type)) {
+		if (!editor && game_path.is_empty() && !ClassDB::class_exists(main_loop_type) && ScriptServer::is_global_class(main_loop_type)) {
 			String script_path = ScriptServer::get_global_class_path(main_loop_type);
 			Ref<Script> script_res = ResourceLoader::load(script_path);
 			if (script_res.is_null()) {
@@ -2750,7 +2750,7 @@ bool Main::start() {
 		ResourceLoader::add_custom_loaders();
 		ResourceSaver::add_custom_savers();
 
-		if (!project_manager && !editor) { // game
+		if (!project_manager && !editor && game_path.is_empty()) { // game
 			//autoload
 			OS::get_singleton()->benchmark_begin_measure("load_autoloads");
 			HashMap<StringName, ProjectSettings::AutoloadInfo> autoloads = ProjectSettings::get_singleton()->get_autoload_list();

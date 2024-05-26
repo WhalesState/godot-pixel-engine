@@ -4036,20 +4036,21 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 	script_icon->hide();
 	script_name_label->hide();
 
-	site_search = memnew(Button);
-	site_search->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
-	site_search->set_flat(true);
-	site_search->set_text(TTR("Online Docs"));
-	site_search->connect("pressed", callable_mp(this, &ScriptEditor::_menu_option).bind(SEARCH_WEBSITE));
-	menu_hb->add_child(site_search);
-	site_search->set_tooltip_text(TTR("Open Godot online documentation."));
-
 	help_search = memnew(Button);
+	help_search->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
 	help_search->set_flat(true);
 	help_search->set_text(TTR("Search Help"));
 	help_search->connect("pressed", callable_mp(this, &ScriptEditor::_menu_option).bind(SEARCH_HELP));
 	menu_hb->add_child(help_search);
 	help_search->set_tooltip_text(TTR("Search the reference documentation."));
+
+	site_search = memnew(Button);
+	site_search->set_flat(true);
+	site_search->set_text(TTR("Online Godot Docs"));
+	site_search->connect("pressed", callable_mp(this, &ScriptEditor::_menu_option).bind(SEARCH_WEBSITE));
+	menu_hb->add_child(site_search);
+	site_search->set_tooltip_text(TTR("Open Godot online documentation."));
+	site_search->hide();
 
 	menu_hb->add_child(memnew(VSeparator));
 
