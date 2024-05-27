@@ -172,6 +172,7 @@ public:
 	GDVIRTUAL1(_custom_draw, Control *);
 
 	ControlViewport();
+	~ControlViewport();
 };
 
 #endif // CONTROL_VIEWPORT_H

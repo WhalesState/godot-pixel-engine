@@ -447,7 +447,7 @@ void ConnectDialog::_notification(int p_what) {
 				type_list->set_item_icon(i, get_editor_theme_icon(type_name));
 			}
 
-			Ref<StyleBox> style = get_theme_stylebox("normal", "LineEdit")->duplicate();
+			Ref<StyleBox> style = get_theme_stylebox(SNAME("normal"), SNAME("LineEdit"))->duplicate();
 			if (style.is_valid()) {
 				style->set_content_margin(SIDE_TOP, style->get_content_margin(SIDE_TOP) + 1.0);
 				from_signal->add_theme_style_override("normal", style);

@@ -2187,7 +2187,7 @@ Error Main::setup2() {
 
 	MAIN_PRINT("Main: Load Boot Image");
 
-	Color clear = GLOBAL_DEF_BASIC("rendering/environment/defaults/default_clear_color", Color(0.122, 0.114, 0.145));
+	Color clear = GLOBAL_DEF_RST_BASIC("rendering/viewport/default_clear_color", Color(0.122, 0.114, 0.145));
 	RenderingServer::get_singleton()->set_default_clear_color(clear);
 
 	if (show_logo) { //boot logo!
@@ -2252,7 +2252,7 @@ Error Main::setup2() {
 
 	MAIN_PRINT("Main: DCC");
 	RenderingServer::get_singleton()->set_default_clear_color(
-			GLOBAL_GET("rendering/environment/defaults/default_clear_color"));
+			GLOBAL_GET("rendering/viewport/default_clear_color"));
 
 	GLOBAL_DEF_BASIC(PropertyInfo(Variant::STRING, "application/config/icon", PROPERTY_HINT_FILE, "*.png,*.webp,*.svg"), String());
 	GLOBAL_DEF(PropertyInfo(Variant::STRING, "application/config/macos_native_icon", PROPERTY_HINT_FILE, "*.icns"), String());

@@ -1619,7 +1619,7 @@ void EditorFileSystem::_update_script_classes() {
 
 	ScriptServer::save_global_classes();
 	EditorNode::get_editor_data().script_class_save_icon_paths();
-	emit_signal("script_classes_updated");
+	emit_signal(SNAME("script_classes_updated"));
 
 	// Rescan custom loaders and savers.
 	// Doing the following here because the `filesystem_changed` signal fires multiple times and isn't always followed by script classes update.

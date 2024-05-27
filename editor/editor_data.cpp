@@ -641,7 +641,7 @@ void EditorData::remove_scene(int p_idx) {
 	}
 
 	if (!edited_scene[p_idx].path.is_empty()) {
-		EditorNode::get_singleton()->emit_signal("scene_closed", edited_scene[p_idx].path);
+		EditorNode::get_singleton()->emit_signal(SNAME("scene_closed"), edited_scene[p_idx].path);
 	}
 
 	undo_redo_manager->discard_history(edited_scene[p_idx].history_id);

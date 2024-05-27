@@ -582,6 +582,9 @@ void SceneTree::finalize() {
 
 	if (root) {
 		root->_set_tree(nullptr);
+		if (root->get_script_instance()) {
+			root->set_script(Variant());
+		}
 		root->_propagate_after_exit_tree();
 		memdelete(root); //delete root
 		root = nullptr;
@@ -1458,6 +1461,9 @@ SceneTree::SceneTree() {
 	const bool transparent_background = GLOBAL_DEF("rendering/viewport/transparent_background", false);
 	root->set_transparent_background(transparent_background);
 
+	const Color clear_color = GLOBAL_GET("rendering/viewport/default_clear_color");
+	root->set_clear_color(clear_color);
+
 	bool snap_2d_transforms = GLOBAL_DEF("rendering/2d/snap/snap_2d_transforms_to_pixel", true);
 	root->set_snap_2d_transforms_to_pixel(snap_2d_transforms);
 
@@ -1490,6 +1496,9 @@ SceneTree::~SceneTree() {
 	}
 	if (root) {
 		root->_set_tree(nullptr);
+		if (root->get_script_instance()) {
+			root->set_script(Variant());
+		}
 		root->_propagate_after_exit_tree();
 		memdelete(root);
 	}

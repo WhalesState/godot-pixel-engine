@@ -107,6 +107,7 @@ public:
 	virtual Point2i render_target_get_position(RID p_render_target) const = 0;
 	virtual void render_target_set_size(RID p_render_target, int p_width, int p_height) = 0; // Q change input to const Size2i &p_size ?
 	virtual Size2i render_target_get_size(RID p_render_target) const = 0;
+	virtual void render_target_set_clear_color(RID p_render_target, const Color &p_clear_color) = 0;
 	virtual void render_target_set_transparent(RID p_render_target, bool p_is_transparent) = 0;
 	virtual bool render_target_get_transparent(RID p_render_target) const = 0;
 	virtual void render_target_set_direct_to_screen(RID p_render_target, bool p_direct_to_screen) = 0;

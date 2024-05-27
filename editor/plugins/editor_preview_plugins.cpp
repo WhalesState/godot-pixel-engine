@@ -547,7 +547,7 @@ Ref<Texture2D> EditorFontPreviewPlugin::generate_from_path(const String &p_path,
 	pos.x = 64 - size.x / 2;
 	pos.y = 80;
 
-	const Color c = GLOBAL_GET("rendering/environment/defaults/default_clear_color");
+	const Color c = GLOBAL_GET("rendering/viewport/default_clear_color");
 	const float fg = c.get_luminance() < 0.5 ? 1.0 : 0.0;
 	sampled_font->draw_string(canvas_item, pos, sample, HORIZONTAL_ALIGNMENT_LEFT, -1.f, 50, Color(fg, fg, fg));
 

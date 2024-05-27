@@ -564,6 +564,7 @@ public:
 	virtual Point2i render_target_get_position(RID p_render_target) const override;
 	virtual void render_target_set_size(RID p_render_target, int p_width, int p_height) override;
 	virtual Size2i render_target_get_size(RID p_render_target) const override;
+	virtual void render_target_set_clear_color(RID p_render_target, const Color &p_color) override;
 	virtual void render_target_set_transparent(RID p_render_target, bool p_is_transparent) override;
 	virtual bool render_target_get_transparent(RID p_render_target) const override;
 	virtual void render_target_set_direct_to_screen(RID p_render_target, bool p_direct_to_screen) override;

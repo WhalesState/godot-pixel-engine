@@ -730,7 +730,7 @@ void AnimationLibraryEditor::show_dialog() {
 }
 
 void AnimationLibraryEditor::_update_editor(Object *p_mixer) {
-	emit_signal("update_editor", p_mixer);
+	emit_signal(SNAME("update_editor"), p_mixer);
 }
 
 void AnimationLibraryEditor::_bind_methods() {

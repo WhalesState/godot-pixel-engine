@@ -253,7 +253,7 @@ void GDExtensionManager::reload_extensions() {
 	}
 
 	if (reloaded) {
-		emit_signal("extensions_reloaded");
+		emit_signal(SNAME("extensions_reloaded"));
 
 		// Reload all scripts to clear out old references.
 		callable_mp_static(&GDExtensionManager::_reload_all_scripts).call_deferred();

@@ -2819,7 +2819,7 @@ void EditorPropertyResource::_resource_selected(const Ref<Resource> &p_resource,
 			if (extensions.find(parent.get_extension()) && (!EditorNode::get_singleton()->get_edited_scene() || EditorNode::get_singleton()->get_edited_scene()->get_scene_file_path() != parent)) {
 				// If the resource belongs to another (non-imported) scene, edit it in that scene instead.
 				if (!FileAccess::exists(parent + ".import")) {
-					EditorNode::get_singleton()->call_deferred("edit_foreign_resource", p_resource);
+					EditorNode::get_singleton()->call_deferred(SNAME("edit_foreign_resource"), p_resource);
 					return;
 				}
 			}

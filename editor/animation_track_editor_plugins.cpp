@@ -60,7 +60,7 @@ bool AnimationTrackEditBool::is_key_selectable_by_distance() const {
 
 void AnimationTrackEditBool::draw_key(int p_index, float p_pixels_sec, int p_x, bool p_selected, int p_clip_left, int p_clip_right) {
 	bool checked = get_animation()->track_get_key_value(get_track(), p_index);
-	Ref<Texture2D> icon = get_theme_icon(checked ? "checked" : "unchecked", "CheckBox");
+	Ref<Texture2D> icon = get_theme_icon(checked ? SNAME("checked") : SNAME("unchecked"), SNAME("CheckBox"));
 
 	Vector2 ofs(p_x - icon->get_width() / 2, int(get_size().height - icon->get_height()) / 2);
 

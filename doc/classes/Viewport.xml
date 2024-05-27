@@ -199,6 +199,8 @@
 		<member name="canvas_transform" type="Transform2D" setter="set_canvas_transform" getter="get_canvas_transform">
 			The canvas transform of the viewport, useful for changing the on-screen positions of all child [CanvasItem]s. This is relative to the global canvas transform of the viewport.
 		</member>
+		<member name="clear_color" type="Color" setter="set_clear_color" getter="get_clear_color" default="Color(0.122, 0.114, 0.145, 1)">
+		</member>
 		<member name="global_canvas_transform" type="Transform2D" setter="set_global_canvas_transform" getter="get_global_canvas_transform">
 			The global canvas transform of the viewport. The canvas transform is relative to this.
 		</member>

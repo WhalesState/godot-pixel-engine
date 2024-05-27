@@ -199,7 +199,7 @@ void AnimatedSprite2D::_notification(int p_what) {
 						if (frame >= last_frame) {
 							if (frames->get_animation_loop(animation)) {
 								frame = 0;
-								emit_signal("animation_looped");
+								emit_signal(SNAME("animation_looped"));
 							} else {
 								frame = last_frame;
 								pause();
@@ -223,7 +223,7 @@ void AnimatedSprite2D::_notification(int p_what) {
 						if (frame <= 0) {
 							if (frames->get_animation_loop(animation)) {
 								frame = last_frame;
-								emit_signal("animation_looped");
+								emit_signal(SNAME("animation_looped"));
 							} else {
 								frame = 0;
 								pause();
@@ -316,7 +316,7 @@ void AnimatedSprite2D::set_sprite_frames(const Ref<SpriteFrames> &p_frames) {
 	notify_property_list_changed();
 	queue_redraw();
 	update_configuration_warnings();
-	emit_signal("sprite_frames_changed");
+	emit_signal(SNAME("sprite_frames_changed"));
 }
 
 Ref<SpriteFrames> AnimatedSprite2D::get_sprite_frames() const {
@@ -466,7 +466,7 @@ void AnimatedSprite2D::play(const StringName &p_name, float p_custom_scale, bool
 		} else {
 			set_frame_and_progress(0, 0.0);
 		}
-		emit_signal("animation_changed");
+		emit_signal(SNAME("animation_changed"));
 	} else {
 		bool is_backward = signbit(speed_scale * custom_speed_scale);
 		if (p_from_end && is_backward && frame == 0 && frame_progress <= 0.0) {
@@ -521,7 +521,7 @@ void AnimatedSprite2D::set_animation(const StringName &p_name) {
 
 	animation = p_name;
 
-	emit_signal("animation_changed");
+	emit_signal(SNAME("animation_changed"));
 
 	if (frames == nullptr) {
 		animation = StringName();

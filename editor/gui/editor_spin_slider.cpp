@@ -74,7 +74,7 @@ void EditorSpinSlider::gui_input(const Ref<InputEvent> &p_event) {
 					pre_grab_value = get_value();
 					grabbing_spinner = false;
 					grabbing_spinner_mouse_pos = get_global_mouse_position();
-					emit_signal("grabbed");
+					emit_signal(SNAME("grabbed"));
 				}
 			} else {
 				if (grabbing_spinner_attempt) {
@@ -82,7 +82,7 @@ void EditorSpinSlider::gui_input(const Ref<InputEvent> &p_event) {
 						Input::get_singleton()->set_mouse_mode(Input::MOUSE_MODE_VISIBLE);
 						Input::get_singleton()->warp_mouse(grabbing_spinner_mouse_pos);
 						queue_redraw();
-						emit_signal("ungrabbed");
+						emit_signal(SNAME("ungrabbed"));
 					} else {
 						_focus_entered();
 					}
@@ -178,11 +178,11 @@ void EditorSpinSlider::_grabber_gui_input(const Ref<InputEvent> &p_event) {
 				grabbing_ratio = get_as_ratio();
 				grabbing_from = grabber->get_transform().xform(mb->get_position()).x;
 			}
-			emit_signal("grabbed");
+			emit_signal(SNAME("grabbed"));
 		} else {
 			grabbing_grabber = false;
 			mousewheel_over_grabber = false;
-			emit_signal("ungrabbed");
+			emit_signal(SNAME("ungrabbed"));
 		}
 	}
 
@@ -595,7 +595,7 @@ void EditorSpinSlider::_value_focus_exited() {
 		grab_focus();
 	}
 
-	emit_signal("value_focus_exited");
+	emit_signal(SNAME("value_focus_exited"));
 }
 
 void EditorSpinSlider::_grabber_mouse_entered() {
@@ -642,7 +642,7 @@ void EditorSpinSlider::_focus_entered() {
 	value_input->call_deferred(SNAME("edit"), true);
 	value_input->set_focus_next(find_next_valid_focus()->get_path());
 	value_input->set_focus_previous(find_prev_valid_focus()->get_path());
-	emit_signal("value_focus_entered");
+	emit_signal(SNAME("value_focus_entered"));
 }
 
 void EditorSpinSlider::_bind_methods() {

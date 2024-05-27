@@ -166,7 +166,7 @@ void EventListenerLineEdit::gui_input(const Ref<InputEvent> &p_event) {
 
 	event = p_event;
 	set_text(get_event_text(event, false));
-	emit_signal("event_changed", event);
+	emit_signal(SNAME("event_changed"), event);
 }
 
 void EventListenerLineEdit::_on_text_changed(const String &p_text) {
@@ -192,7 +192,7 @@ void EventListenerLineEdit::clear_event() {
 	if (event.is_valid()) {
 		event = Ref<InputEvent>();
 		set_text("");
-		emit_signal("event_changed", event);
+		emit_signal(SNAME("event_changed"), event);
 	}
 }
 

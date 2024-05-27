@@ -45,6 +45,20 @@
 				Returns the 2D noise value at the given position.
 			</description>
 		</method>
+		<method name="get_noise_3d" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="x" type="float" />
+			<param index="1" name="y" type="float" />
+			<param index="2" name="z" type="float" />
+			<description>
+			</description>
+		</method>
+		<method name="get_noise_3dv" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="v" type="Vector3" />
+			<description>
+			</description>
+		</method>
 		<method name="get_seamless_image" qualifiers="const">
 			<return type="Image" />
 			<param index="0" name="width" type="int" />

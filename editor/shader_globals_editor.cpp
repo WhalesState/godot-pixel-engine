@@ -115,7 +115,7 @@ protected:
 			return false;
 		}
 
-		call_deferred("_set_var", p_name, p_value, existing);
+		call_deferred(SNAME("_set_var"), p_name, p_value, existing);
 
 		return true;
 	}

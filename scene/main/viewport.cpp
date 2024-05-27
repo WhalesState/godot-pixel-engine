@@ -768,6 +768,17 @@ void Viewport::_canvas_layer_remove(CanvasLayer *p_canvas_layer) {
 	canvas_layers.erase(p_canvas_layer);
 }
 
+void Viewport::set_clear_color(const Color &p_color) {
+	ERR_MAIN_THREAD_GUARD;
+	clear_color = p_color;
+	RS::get_singleton()->viewport_set_clear_color(viewport, p_color);
+}
+
+Color Viewport::get_clear_color() const {
+	ERR_READ_THREAD_GUARD_V(Color());
+	return clear_color;
+}
+
 void Viewport::set_transparent_background(bool p_enable) {
 	ERR_MAIN_THREAD_GUARD;
 	transparent_bg = p_enable;
@@ -3235,6 +3246,10 @@ void Viewport::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_screen_transform"), &Viewport::get_screen_transform);
 
 	ClassDB::bind_method(D_METHOD("get_visible_rect"), &Viewport::get_visible_rect);
+
+	ClassDB::bind_method(D_METHOD("set_clear_color", "color"), &Viewport::set_clear_color);
+	ClassDB::bind_method(D_METHOD("get_clear_color"), &Viewport::get_clear_color);
+
 	ClassDB::bind_method(D_METHOD("set_transparent_background", "enable"), &Viewport::set_transparent_background);
 	ClassDB::bind_method(D_METHOD("has_transparent_background"), &Viewport::has_transparent_background);
 
@@ -3306,6 +3321,7 @@ void Viewport::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_sdf_scale"), &Viewport::get_sdf_scale);
 
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "world_2d", PROPERTY_HINT_RESOURCE_TYPE, "World2D", PROPERTY_USAGE_NONE), "set_world_2d", "get_world_2d");
+	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "clear_color"), "set_clear_color", "get_clear_color");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "transparent_bg"), "set_transparent_background", "has_transparent_background");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "handle_input_locally"), "set_handle_input_locally", "is_handling_input_locally");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "snap_2d_transforms_to_pixel"), "set_snap_2d_transforms_to_pixel", "is_snap_2d_transforms_to_pixel_enabled");
@@ -3380,6 +3396,10 @@ Viewport::Viewport() {
 
 	viewport = RenderingServer::get_singleton()->viewport_create();
 	texture_rid = RenderingServer::get_singleton()->viewport_get_texture(viewport);
+
+	clear_color = GLOBAL_GET("rendering/viewport/default_clear_color");
+	ADD_PROPERTY_DEFAULT("clear_color", clear_color);
+	RenderingServer::get_singleton()->viewport_set_clear_color(viewport, clear_color);
 
 	default_texture.instantiate();
 	default_texture->vp = const_cast<Viewport *>(this);

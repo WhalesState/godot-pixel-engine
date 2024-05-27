@@ -1616,7 +1616,7 @@ void EditorInspectorArray::_add_button_pressed() {
 }
 
 void EditorInspectorArray::_paginator_page_changed(int p_page) {
-	emit_signal("page_change_request", p_page);
+	emit_signal(SNAME("page_change_request"), p_page);
 }
 
 void EditorInspectorArray::_rmb_popup_id_pressed(int p_id) {
@@ -2390,11 +2390,11 @@ EditorInspectorArray::EditorInspectorArray(bool p_read_only) {
 ////////////////////////////////////////////////
 
 void EditorPaginator::_first_page_button_pressed() {
-	emit_signal("page_changed", 0);
+	emit_signal(SNAME("page_changed"), 0);
 }
 
 void EditorPaginator::_prev_page_button_pressed() {
-	emit_signal("page_changed", MAX(0, page - 1));
+	emit_signal(SNAME("page_changed"), MAX(0, page - 1));
 }
 
 void EditorPaginator::_page_line_edit_text_submitted(String p_text) {
@@ -2402,18 +2402,18 @@ void EditorPaginator::_page_line_edit_text_submitted(String p_text) {
 		int new_page = p_text.to_int() - 1;
 		new_page = MIN(MAX(0, new_page), max_page);
 		page_line_edit->set_text(Variant(new_page));
-		emit_signal("page_changed", new_page);
+		emit_signal(SNAME("page_changed"), new_page);
 	} else {
 		page_line_edit->set_text(Variant(page));
 	}
 }
 
 void EditorPaginator::_next_page_button_pressed() {
-	emit_signal("page_changed", MIN(max_page, page + 1));
+	emit_signal(SNAME("page_changed"), MIN(max_page, page + 1));
 }
 
 void EditorPaginator::_last_page_button_pressed() {
-	emit_signal("page_changed", max_page);
+	emit_signal(SNAME("page_changed"), max_page);
 }
 
 void EditorPaginator::update(int p_page, int p_max_page) {

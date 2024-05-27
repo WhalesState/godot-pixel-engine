@@ -488,6 +488,7 @@ CanvasGroupOutlineMaterial::CanvasGroupOutlineMaterial() {
 }
 
 CanvasGroupOutlineMaterial::~CanvasGroupOutlineMaterial() {
+	RS::get_singleton()->material_set_shader(_get_material(), RID());
 }
 
 ///////////////////////////////////
@@ -611,4 +612,5 @@ SpriteMaterial::SpriteMaterial() {
 }
 
 SpriteMaterial::~SpriteMaterial() {
+	RS::get_singleton()->material_set_shader(_get_material(), RID());
 }

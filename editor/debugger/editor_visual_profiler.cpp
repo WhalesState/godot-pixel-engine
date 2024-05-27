@@ -160,7 +160,7 @@ void EditorVisualProfiler::_update_plot() {
 	}
 
 	uint8_t *wr = graph_image.ptrw();
-	const Color background_color = get_theme_color("dark_color_2", EditorStringName(Editor));
+	const Color background_color = get_theme_color(SNAME("dark_color_2"), EditorStringName(Editor));
 
 	// Clear the previous frame and set the background color.
 	for (int i = 0; i < desired_len; i += 4) {

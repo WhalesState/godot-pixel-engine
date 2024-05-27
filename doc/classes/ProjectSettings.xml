@@ -1331,9 +1331,6 @@
 			The thread model to use for rendering. Rendering on a thread may improve performance, but synchronizing to the main thread can cause a bit more jitter.
 			[b]Note:[/b] The [b]Multi-Threaded[/b] option is experimental, and has several known bugs which can lead to crashing, especially when using particles or resizing the window. Not recommended for use in production at this stage.
 		</member>
-		<member name="rendering/environment/defaults/default_clear_color" type="Color" setter="" getter="" default="Color(0.122, 0.114, 0.145, 1)">
-			Default background clear color. To change this default color programmatically, use [method RenderingServer.set_default_clear_color].
-		</member>
 		<member name="rendering/gl_compatibility/driver" type="String" setter="" getter="">
 			Sets the driver to be used by the renderer when using the Compatibility renderer. This property can not be edited directly, instead, set the driver using the platform-specific overrides.
 		</member>
@@ -1451,6 +1448,9 @@
 		</member>
 		<member name="rendering/textures/webp_compression/lossless_compression_factor" type="float" setter="" getter="" default="25">
 			The default compression factor for lossless WebP. Decompression speed is mostly unaffected by the compression factor. Supported values are 0 to 100.
+		</member>
+		<member name="rendering/viewport/default_clear_color" type="Color" setter="" getter="" default="Color(0.122, 0.114, 0.145, 1)">
+			Default background clear color. To change this default color programmatically, use [method RenderingServer.set_default_clear_color].
 		</member>
 		<member name="rendering/viewport/transparent_background" type="bool" setter="" getter="" default="false">
 			If [code]true[/code], enables [member Viewport.transparent_bg] on the root viewport. This allows per-pixel transparency to be effective after also enabling [member display/window/size/transparent] and [member display/window/per_pixel_transparency/allowed].

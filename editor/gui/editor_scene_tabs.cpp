@@ -70,7 +70,7 @@ void EditorSceneTabs::_notification(int p_what) {
 void EditorSceneTabs::_scene_tab_changed(int p_tab) {
 	tab_preview_panel->hide();
 
-	emit_signal("tab_changed", p_tab);
+	emit_signal(SNAME("tab_changed"), p_tab);
 }
 
 void EditorSceneTabs::_scene_tab_script_edited(int p_tab) {
@@ -81,7 +81,7 @@ void EditorSceneTabs::_scene_tab_script_edited(int p_tab) {
 }
 
 void EditorSceneTabs::_scene_tab_closed(int p_tab) {
-	emit_signal("tab_closed", p_tab);
+	emit_signal(SNAME("tab_closed"), p_tab);
 }
 
 void EditorSceneTabs::_scene_tab_hovered(int p_tab) {

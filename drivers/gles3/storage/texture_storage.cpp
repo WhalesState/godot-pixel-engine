@@ -1879,6 +1879,18 @@ RID TextureStorage::render_target_get_texture(RID p_render_target) {
 	return rt->texture;
 }
 
+void TextureStorage::render_target_set_clear_color(RID p_render_target, const Color &p_color) {
+	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
+	ERR_FAIL_NULL(rt);
+
+	rt->clear_color = p_color;
+
+	if (rt->overridden.color.is_null() && !rt->is_transparent) {
+		_clear_render_target(rt);
+		_update_render_target(rt);
+	}
+}
+
 void TextureStorage::render_target_set_transparent(RID p_render_target, bool p_transparent) {
 	RenderTarget *rt = render_target_owner.get_or_null(p_render_target);
 	ERR_FAIL_NULL(rt);

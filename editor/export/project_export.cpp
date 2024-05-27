@@ -59,7 +59,7 @@ void ProjectExportTextureFormatError::_on_fix_texture_format_pressed() {
 	ProjectSettings::get_singleton()->set_setting(setting_identifier, true);
 	ProjectSettings::get_singleton()->save();
 	EditorFileSystem::get_singleton()->scan_changes();
-	emit_signal("texture_format_enabled");
+	emit_signal(SNAME("texture_format_enabled"));
 }
 
 void ProjectExportTextureFormatError::_bind_methods() {

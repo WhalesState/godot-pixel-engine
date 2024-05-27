@@ -3741,7 +3741,7 @@ void Tree::gui_input(const Ref<InputEvent> &p_event) {
 			if (cache.click_type == Cache::CLICK_BUTTON && cache.click_item != nullptr) {
 				// make sure in case of wrong reference after reconstructing whole TreeItems
 				cache.click_item = get_item_at_position(cache.click_pos);
-				emit_signal("button_clicked", cache.click_item, cache.click_column, cache.click_id, mb->get_button_index());
+				emit_signal(SNAME("button_clicked"), cache.click_item, cache.click_column, cache.click_id, mb->get_button_index());
 			}
 
 			cache.click_type = Cache::CLICK_NONE;

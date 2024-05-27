@@ -62,13 +62,13 @@ void ColorPicker::_notification(int p_what) {
 				btn_pick->set_icon(theme_cache.screen_picker);
 			}
 			btn_add_preset->set_icon(theme_cache.add_preset);
-			Size2 preset_size = theme_cache.add_preset->get_size() + btn_add_preset->get_theme_stylebox("normal")->get_minimum_size();
+			Size2 preset_size = theme_cache.add_preset->get_size() + btn_add_preset->get_theme_stylebox(SNAME("normal"))->get_minimum_size();
 			btn_add_preset->set_custom_minimum_size(preset_size);
 			for (int i = 1; i < preset_flow_container->get_child_count(); i++) {
 				ColorPresetButton *cpb = Object::cast_to<ColorPresetButton>(preset_flow_container->get_child(i));
 				cpb->set_custom_minimum_size(preset_size);
 			}
-			preset_scroll->set_custom_minimum_size((preset_size + Point2(preset_flow_container->get_theme_constant("h_separation"), preset_flow_container->get_theme_constant("v_separation"))) * 2);
+			preset_scroll->set_custom_minimum_size((preset_size + Point2(preset_flow_container->get_theme_constant(SNAME("h_separation")), preset_flow_container->get_theme_constant(SNAME("v_separation")))) * 2);
 
 			uv_edit->set_custom_minimum_size(Size2(theme_cache.sv_width, theme_cache.sv_height));
 			w_edit->set_custom_minimum_size(Size2(theme_cache.h_width, 0));

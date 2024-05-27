@@ -178,6 +178,7 @@ private:
 
 	Rect2 last_vp_rect;
 
+	Color clear_color = Color(0.0, 0.0, 0.0, 1.0);
 	bool transparent_bg = false;
 	bool gen_mipmaps = false;
 
@@ -411,6 +412,9 @@ public:
 	void assign_next_enabled_camera_2d(const StringName &p_camera_group);
 
 	void gui_set_root_order_dirty();
+
+	void set_clear_color(const Color &p_color);
+	Color get_clear_color() const;
 
 	void set_transparent_background(bool p_enable);
 	bool has_transparent_background() const;

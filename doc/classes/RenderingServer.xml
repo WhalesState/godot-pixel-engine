@@ -1286,6 +1286,13 @@
 				Sets the transformation of a viewport's canvas.
 			</description>
 		</method>
+		<method name="viewport_set_clear_color">
+			<return type="void" />
+			<param index="0" name="viewport" type="RID" />
+			<param index="1" name="color" type="Color" />
+			<description>
+			</description>
+		</method>
 		<method name="viewport_set_clear_mode">
 			<return type="void" />
 			<param index="0" name="viewport" type="RID" />
@@ -1906,7 +1913,7 @@
 		<constant name="GLOBAL_VAR_TYPE_SAMPLER2D" value="24" enum="GlobalShaderParameterType">
 			2D sampler global shader parameter ([code]global uniform sampler2D ...[/code]). Exposed as a [Texture2D] in the editor UI.
 		</constant>
-		<constant name="GLOBAL_VAR_TYPE_MAX" value="26" enum="GlobalShaderParameterType">
+		<constant name="GLOBAL_VAR_TYPE_MAX" value="25" enum="GlobalShaderParameterType">
 			Represents the size of the [enum GlobalShaderParameterType] enum.
 		</constant>
 		<constant name="RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME" value="0" enum="RenderingInfo">

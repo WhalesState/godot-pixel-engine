@@ -90,7 +90,7 @@ void FoldableContainer::set_expanded(bool p_expanded) {
 	}
 	update_minimum_size();
 	queue_redraw();
-	emit_signal("folding_changed", !expanded);
+	emit_signal(SNAME("folding_changed"), !expanded);
 }
 
 bool FoldableContainer::is_expanded() const {

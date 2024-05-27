@@ -973,3 +973,7 @@ ControlViewport::ControlViewport() {
 		view_offset = Point2(-theme_cache.ruler_width, -theme_cache.ruler_width);
 	}
 }
+
+ControlViewport::~ControlViewport() {
+	panner.unref();
+}

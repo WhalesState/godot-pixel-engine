@@ -336,7 +336,7 @@ void AnimationPlayerEditor::_animation_selected(int p_which) {
 	AnimationPlayerEditor::get_singleton()->get_track_editor()->update_keying();
 	_animation_key_editor_seek(timeline_position);
 
-	emit_signal("animation_selected", current);
+	emit_signal(SNAME("animation_selected"), current);
 }
 
 void AnimationPlayerEditor::_animation_new() {
@@ -1559,7 +1559,7 @@ void AnimationPlayerEditor::_prepare_onion_layers_2_prolog() {
 	// Render every past/future step with the capture shader.
 
 	RS::get_singleton()->canvas_item_set_material(onion.capture.canvas_item, onion.capture.material->get_rid());
-	onion.capture.material->set_shader_parameter("bkg_color", GLOBAL_GET("rendering/environment/defaults/default_clear_color"));
+	onion.capture.material->set_shader_parameter("bkg_color", GLOBAL_GET("rendering/viewport/default_clear_color"));
 	onion.capture.material->set_shader_parameter("differences_only", onion.differences_only);
 	onion.capture.material->set_shader_parameter("present", onion.differences_only ? RS::get_singleton()->viewport_get_texture(present_rid) : RID());
 	onion.capture.material->set_shader_parameter("dir_color", onion.force_white_modulate ? Color(1, 1, 1) : Color(EDITOR_GET("editors/animation/onion_layers_past_color")));
@@ -2046,7 +2046,7 @@ void AnimationPlayerEditorPlugin::_clear_dummy_player() {
 	}
 	Node *parent = dummy_player->get_parent();
 	if (parent) {
-		parent->call_deferred("remove_child", dummy_player);
+		parent->call_deferred(SNAME("remove_child"), dummy_player);
 	}
 	dummy_player->queue_free();
 	dummy_player = nullptr;

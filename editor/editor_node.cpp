@@ -330,6 +330,9 @@ void EditorNode::_update_from_settings() {
 
 	RS::get_singleton()->canvas_set_shadow_texture_size(GLOBAL_GET("rendering/2d/shadow_atlas/size"));
 
+	Color clear_color = GLOBAL_GET("rendering/viewport/default_clear_color");
+	scene_root->set_clear_color(clear_color);
+	RS::get_singleton()->set_default_clear_color(clear_color);
 	bool snap_2d_transforms = GLOBAL_GET("rendering/2d/snap/snap_2d_transforms_to_pixel");
 	scene_root->set_snap_2d_transforms_to_pixel(snap_2d_transforms);
 	bool snap_2d_vertices = GLOBAL_GET("rendering/2d/snap/snap_2d_vertices_to_pixel");
@@ -599,7 +602,8 @@ void EditorNode::_notification(int p_what) {
 				}
 			}
 
-			RenderingServer::get_singleton()->viewport_set_disable_2d(get_scene_root()->get_viewport_rid(), true);
+			RenderingServer::get_singleton()->viewport_set_disable_2d(scene_root->get_viewport_rid(), true);
+			scene_root->set_clear_color(GLOBAL_GET("rendering/viewport/default_clear_color"));
 
 			feature_profile_manager->notify_changed();
 
@@ -3771,7 +3775,7 @@ bool EditorNode::has_previous_scenes() const {
 
 void EditorNode::edit_foreign_resource(Ref<Resource> p_resource) {
 	load_scene(p_resource->get_path().get_slice("::", 0));
-	InspectorDock::get_singleton()->call_deferred("edit_resource", p_resource);
+	InspectorDock::get_singleton()->call_deferred(SNAME("edit_resource"), p_resource);
 }
 
 bool EditorNode::is_resource_read_only(Ref<Resource> p_resource, bool p_foreign_resources_are_writable) {
@@ -4869,7 +4873,7 @@ void EditorNode::_load_docks_from_config(Ref<ConfigFile> p_layout, const String 
 
 		int selected_tab_idx = p_layout->get_value(p_section, "dock_" + itos(i + 1) + "_selected_tab_idx");
 		if (selected_tab_idx >= 0 && selected_tab_idx < dock_slot[i]->get_tab_count()) {
-			dock_slot[i]->call_deferred("set_current_tab", selected_tab_idx);
+			dock_slot[i]->call_deferred(SNAME("set_current_tab"), selected_tab_idx);
 		}
 	}
 

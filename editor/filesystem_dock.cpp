@@ -586,7 +586,7 @@ void FileSystemDock::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_THEME_CHANGED: {
-			overwrite_dialog_scroll->add_theme_style_override("panel", get_theme_stylebox("panel", "Tree"));
+			overwrite_dialog_scroll->add_theme_style_override(SNAME("panel"), get_theme_stylebox("panel", "Tree"));
 
 			if (is_visible_in_tree()) {
 				_update_display_mode(true);

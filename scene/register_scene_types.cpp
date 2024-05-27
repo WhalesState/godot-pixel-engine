@@ -476,6 +476,9 @@ void unregister_scene_types() {
 	ColorPicker::finish_shaders();
 	CanvasGroupOutlineMaterial::finish_shaders();
 	SpriteMaterial::finish_shaders();
+
+	OS::get_singleton()->yield(); // may take some time to free shaders.
+
 	SceneStringNames::free();
 }
 

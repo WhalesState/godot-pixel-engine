@@ -497,7 +497,7 @@ void ControlEditorPopupButton::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE:
 		case NOTIFICATION_THEME_CHANGED: {
-			arrow_icon = get_theme_icon("select_arrow", "Tree");
+			arrow_icon = get_theme_icon(SNAME("select_arrow"), "Tree");
 		} break;
 
 		case NOTIFICATION_DRAW: {

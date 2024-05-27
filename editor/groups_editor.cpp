@@ -145,10 +145,10 @@ void GroupDialog::_add_pressed() {
 		selected = nodes_to_add->get_next_selected(selected);
 	}
 
-	undo_redo->add_do_method(this, "_group_selected");
-	undo_redo->add_undo_method(this, "_group_selected");
-	undo_redo->add_do_method(this, "emit_signal", "group_edited");
-	undo_redo->add_undo_method(this, "emit_signal", "group_edited");
+	undo_redo->add_do_method(this, SNAME("_group_selected"));
+	undo_redo->add_undo_method(this, SNAME("_group_selected"));
+	undo_redo->add_do_method(this, "emit_signal", SNAME("group_edited"));
+	undo_redo->add_undo_method(this, "emit_signal", SNAME("group_edited"));
 
 	// To force redraw of scene tree.
 	undo_redo->add_do_method(SceneTreeDock::get_singleton()->get_tree_editor(), "update_tree");

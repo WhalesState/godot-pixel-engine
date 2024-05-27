@@ -4186,8 +4186,8 @@ void CanvasItemEditor::_popup_callback(int p_op) {
 
 				undo_redo->add_do_method(ci, "set_meta", "_edit_lock_", true);
 				undo_redo->add_undo_method(ci, "remove_meta", "_edit_lock_");
-				undo_redo->add_do_method(this, "emit_signal", "item_lock_status_changed");
-				undo_redo->add_undo_method(this, "emit_signal", "item_lock_status_changed");
+				undo_redo->add_do_method(this, "emit_signal", SNAME("item_lock_status_changed"));
+				undo_redo->add_undo_method(this, "emit_signal", SNAME("item_lock_status_changed"));
 			}
 			undo_redo->add_do_method(viewport, "queue_redraw");
 			undo_redo->add_undo_method(viewport, "queue_redraw");
@@ -4205,8 +4205,8 @@ void CanvasItemEditor::_popup_callback(int p_op) {
 
 				undo_redo->add_do_method(ci, "remove_meta", "_edit_lock_");
 				undo_redo->add_undo_method(ci, "set_meta", "_edit_lock_", true);
-				undo_redo->add_do_method(this, "emit_signal", "item_lock_status_changed");
-				undo_redo->add_undo_method(this, "emit_signal", "item_lock_status_changed");
+				undo_redo->add_do_method(this, "emit_signal", SNAME("item_lock_status_changed"));
+				undo_redo->add_undo_method(this, "emit_signal", SNAME("item_lock_status_changed"));
 			}
 			undo_redo->add_do_method(viewport, "queue_redraw");
 			undo_redo->add_undo_method(viewport, "queue_redraw");
@@ -4224,8 +4224,8 @@ void CanvasItemEditor::_popup_callback(int p_op) {
 
 				undo_redo->add_do_method(ci, "set_meta", "_edit_group_", true);
 				undo_redo->add_undo_method(ci, "remove_meta", "_edit_group_");
-				undo_redo->add_do_method(this, "emit_signal", "item_group_status_changed");
-				undo_redo->add_undo_method(this, "emit_signal", "item_group_status_changed");
+				undo_redo->add_do_method(this, "emit_signal", SNAME("item_group_status_changed"));
+				undo_redo->add_undo_method(this, "emit_signal", SNAME("item_group_status_changed"));
 			}
 			undo_redo->add_do_method(viewport, "queue_redraw");
 			undo_redo->add_undo_method(viewport, "queue_redraw");
@@ -4243,8 +4243,8 @@ void CanvasItemEditor::_popup_callback(int p_op) {
 
 				undo_redo->add_do_method(ci, "remove_meta", "_edit_group_");
 				undo_redo->add_undo_method(ci, "set_meta", "_edit_group_", true);
-				undo_redo->add_do_method(this, "emit_signal", "item_group_status_changed");
-				undo_redo->add_undo_method(this, "emit_signal", "item_group_status_changed");
+				undo_redo->add_do_method(this, "emit_signal", SNAME("item_group_status_changed"));
+				undo_redo->add_undo_method(this, "emit_signal", SNAME("item_group_status_changed"));
 			}
 			undo_redo->add_do_method(viewport, "queue_redraw");
 			undo_redo->add_undo_method(viewport, "queue_redraw");

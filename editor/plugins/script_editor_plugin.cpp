@@ -3398,7 +3398,7 @@ void ScriptEditor::_help_class_goto(const String &p_desc) {
 	_update_script_names();
 	_save_layout();
 
-	call_deferred("_help_tab_goto", cname, p_desc);
+	call_deferred(SNAME("_help_tab_goto"), cname, p_desc);
 }
 
 bool ScriptEditor::_help_tab_goto(const String &p_name, const String &p_desc) {
@@ -4183,9 +4183,9 @@ void ScriptEditorPlugin::_save_last_editor(String p_editor) {
 void ScriptEditorPlugin::_window_visibility_changed(bool p_visible) {
 	_focus_another_editor();
 	if (p_visible) {
-		script_editor->add_theme_style_override("panel", script_editor->get_theme_stylebox("ScriptEditorPanelFloating", EditorStringName(EditorStyles)));
+		script_editor->add_theme_style_override("panel", script_editor->get_theme_stylebox(SNAME("ScriptEditorPanelFloating"), EditorStringName(EditorStyles)));
 	} else {
-		script_editor->add_theme_style_override("panel", script_editor->get_theme_stylebox("ScriptEditorPanel", EditorStringName(EditorStyles)));
+		script_editor->add_theme_style_override("panel", script_editor->get_theme_stylebox(SNAME("ScriptEditorPanel"), EditorStringName(EditorStyles)));
 	}
 }
 
