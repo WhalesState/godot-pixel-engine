@@ -87,6 +87,9 @@ class LightOccluder2D : public Node2D {
 	bool sdf_collision = false;
 	void _poly_changed();
 
+private:
+	bool draw_in_editor = true;
+
 protected:
 	void _notification(int p_what);
 	static void _bind_methods();
@@ -105,6 +108,9 @@ public:
 
 	void set_as_sdf_collision(bool p_enable);
 	bool is_set_as_sdf_collision() const;
+
+	void set_draw_in_editor(bool p_enable);
+	bool is_draw_in_editor() const;
 
 	PackedStringArray get_configuration_warnings() const override;
 

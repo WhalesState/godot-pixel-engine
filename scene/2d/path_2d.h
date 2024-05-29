@@ -44,6 +44,9 @@ class Path2D : public Node2D {
 
 	void _curve_changed();
 
+private:
+	bool draw_in_editor = true;
+
 protected:
 	void _notification(int p_what);
 	static void _bind_methods();
@@ -54,6 +57,9 @@ public:
 	virtual bool _edit_use_rect() const override;
 	virtual bool _edit_is_selected_on_click(const Point2 &p_point, double p_tolerance) const override;
 #endif
+
+	void set_draw_in_editor(bool p_enable);
+	bool is_draw_in_editor() const;
 
 	void set_curve(const Ref<Curve2D> &p_curve);
 	Ref<Curve2D> get_curve() const;

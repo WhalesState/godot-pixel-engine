@@ -168,13 +168,13 @@ void LightOccluder2D::_notification(int p_what) {
 		case NOTIFICATION_VISIBILITY_CHANGED: {
 			RS::get_singleton()->canvas_light_occluder_set_enabled(occluder, is_visible_in_tree());
 		} break;
-#ifdef TOOLS_ENABLED
 		case NOTIFICATION_DRAW: {
-			if (!Engine::get_singleton()->is_editor_hint() && !get_tree()->is_debugging_paths_hint()) {
+			if (!occluder_polygon.is_valid() || occluder_polygon->get_polygon().size() < 3 || !occluder_polygon->is_closed()) {
 				return;
 			}
 
-			if (!occluder_polygon.is_valid() || occluder_polygon->get_polygon().size() < 3 || !occluder_polygon->is_closed()) {
+			bool in_editor = Engine::get_singleton()->is_editor_hint();
+			if ((!in_editor && !get_tree()->is_debugging_paths_hint()) || (in_editor && !draw_in_editor)) {
 				return;
 			}
 
@@ -182,7 +182,6 @@ void LightOccluder2D::_notification(int p_what) {
 			color.push_back(Color(0, 0, 0, 0.6));
 			draw_polygon(Variant(occluder_polygon->get_polygon()), color);
 		} break;
-#endif
 		case NOTIFICATION_EXIT_CANVAS: {
 			RS::get_singleton()->canvas_light_occluder_attach_to_canvas(occluder, RID());
 		} break;
@@ -260,6 +259,20 @@ bool LightOccluder2D::is_set_as_sdf_collision() const {
 	return sdf_collision;
 }
 
+void LightOccluder2D::set_draw_in_editor(bool p_enable) {
+	if (draw_in_editor == p_enable) {
+		return;
+	}
+	draw_in_editor = p_enable;
+#ifdef TOOLS_ENABLED
+	queue_redraw();
+#endif // TOOLS_ENABLED
+}
+
+bool LightOccluder2D::is_draw_in_editor() const {
+	return draw_in_editor;
+}
+
 void LightOccluder2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_occluder_polygon", "polygon"), &LightOccluder2D::set_occluder_polygon);
 	ClassDB::bind_method(D_METHOD("get_occluder_polygon"), &LightOccluder2D::get_occluder_polygon);
@@ -270,8 +283,12 @@ void LightOccluder2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_as_sdf_collision", "enable"), &LightOccluder2D::set_as_sdf_collision);
 	ClassDB::bind_method(D_METHOD("is_set_as_sdf_collision"), &LightOccluder2D::is_set_as_sdf_collision);
 
+	ClassDB::bind_method(D_METHOD("set_draw_in_editor", "enable"), &LightOccluder2D::set_draw_in_editor);
+	ClassDB::bind_method(D_METHOD("is_draw_in_editor"), &LightOccluder2D::is_draw_in_editor);
+
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "occluder", PROPERTY_HINT_RESOURCE_TYPE, "OccluderPolygon2D"), "set_occluder_polygon", "get_occluder_polygon");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "sdf_collision"), "set_as_sdf_collision", "is_set_as_sdf_collision");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "draw_in_editor"), "set_draw_in_editor", "is_draw_in_editor");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "occluder_light_mask", PROPERTY_HINT_LAYERS_2D_RENDER), "set_occluder_light_mask", "get_occluder_light_mask");
 }
 

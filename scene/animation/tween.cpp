@@ -55,11 +55,11 @@ Tween::interpolater Tween::interpolaters[Tween::TRANS_MAX][Tween::EASE_MAX] = {
 };
 
 void Tweener::set_tween(const Ref<Tween> &p_tween) {
-	tween = p_tween;
+	tween_id = p_tween->get_instance_id();
 }
 
-void Tweener::clear_tween() {
-	tween.unref();
+Ref<Tween> Tweener::_get_tween() {
+	return Ref<Tween>(ObjectDB::get_instance(tween_id));
 }
 
 void Tweener::_bind_methods() {
@@ -194,11 +194,6 @@ bool Tween::is_valid() {
 void Tween::clear() {
 	valid = false;
 
-	for (List<Ref<Tweener>> &step : tweeners) {
-		for (Ref<Tweener> &tweener : step) {
-			tweener->clear_tween();
-		}
-	}
 	tweeners.clear();
 }
 
@@ -505,6 +500,7 @@ Tween::Tween(bool p_valid) {
 }
 
 Ref<PropertyTweener> PropertyTweener::from(const Variant &p_value) {
+	Ref<Tween> tween = _get_tween();
 	ERR_FAIL_COND_V(tween.is_null(), nullptr);
 
 	Variant from_value = p_value;
@@ -588,6 +584,8 @@ bool PropertyTweener::step(double &r_delta) {
 		do_continue_delayed = false;
 	}
 
+	Ref<Tween> tween = _get_tween();
+
 	double time = MIN(elapsed_time - delay, duration);
 	if (time < duration) {
 		target_instance->set_indexed(property, tween->interpolate_variant(initial_val, delta_val, time, duration, trans_type, ease_type));
@@ -603,12 +601,12 @@ bool PropertyTweener::step(double &r_delta) {
 }
 
 void PropertyTweener::set_tween(const Ref<Tween> &p_tween) {
-	tween = p_tween;
+	Tweener::set_tween(p_tween);
 	if (trans_type == Tween::TRANS_MAX) {
-		trans_type = tween->get_trans();
+		trans_type = p_tween->get_trans();
 	}
 	if (ease_type == Tween::EASE_MAX) {
-		ease_type = tween->get_ease();
+		ease_type = p_tween->get_ease();
 	}
 }
 
@@ -760,6 +758,8 @@ bool MethodTweener::step(double &r_delta) {
 		return true;
 	}
 
+	Ref<Tween> tween = _get_tween();
+
 	Variant current_val;
 	double time = MIN(elapsed_time - delay, duration);
 	if (time < duration) {
@@ -789,12 +789,12 @@ bool MethodTweener::step(double &r_delta) {
 }
 
 void MethodTweener::set_tween(const Ref<Tween> &p_tween) {
-	tween = p_tween;
+	Tweener::set_tween(p_tween);
 	if (trans_type == Tween::TRANS_MAX) {
-		trans_type = tween->get_trans();
+		trans_type = p_tween->get_trans();
 	}
 	if (ease_type == Tween::EASE_MAX) {
-		ease_type = tween->get_ease();
+		ease_type = p_tween->get_ease();
 	}
 }
 

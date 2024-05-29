@@ -89,17 +89,13 @@ bool Path2D::_edit_is_selected_on_click(const Point2 &p_point, double p_toleranc
 
 void Path2D::_notification(int p_what) {
 	switch (p_what) {
-		// Draw the curve if path debugging is enabled.
 		case NOTIFICATION_DRAW: {
-			if (!curve.is_valid()) {
-				break;
-			}
-
-			if (!Engine::get_singleton()->is_editor_hint() && !get_tree()->is_debugging_paths_hint()) {
+			if (!curve.is_valid() || curve->get_point_count() < 2) {
 				return;
 			}
 
-			if (curve->get_point_count() < 2) {
+			bool in_editor = Engine::get_singleton()->is_editor_hint();
+			if ((!in_editor && !get_tree()->is_debugging_paths_hint()) || (in_editor && !draw_in_editor)) {
 				return;
 			}
 
@@ -199,11 +195,30 @@ Ref<Curve2D> Path2D::get_curve() const {
 	return curve;
 }
 
+void Path2D::set_draw_in_editor(bool p_enable) {
+	if (draw_in_editor == p_enable) {
+		return;
+	}
+
+	draw_in_editor = p_enable;
+#ifdef TOOLS_ENABLED
+	queue_redraw();
+#endif // TOOLS_ENABLED
+}
+
+bool Path2D::is_draw_in_editor() const {
+	return draw_in_editor;
+}
+
 void Path2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_curve", "curve"), &Path2D::set_curve);
 	ClassDB::bind_method(D_METHOD("get_curve"), &Path2D::get_curve);
 
+	ClassDB::bind_method(D_METHOD("set_draw_in_editor", "enable"), &Path2D::set_draw_in_editor);
+	ClassDB::bind_method(D_METHOD("is_draw_in_editor"), &Path2D::is_draw_in_editor);
+
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "curve", PROPERTY_HINT_RESOURCE_TYPE, "Curve2D", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_EDITOR_INSTANTIATE_OBJECT), "set_curve", "get_curve");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "draw_in_editor"), "set_draw_in_editor", "is_draw_in_editor");
 }
 
 /////////////////////////////////////////////////////////////////////////////////
