@@ -556,15 +556,11 @@ void RasterizerCanvasGLES3::_render_items(RID p_to_render_target, int p_item_cou
 
 		RID material = ci->material_owner == nullptr ? ci->material : ci->material_owner->material;
 		if (ci->use_canvas_group) {
-			if (ci->canvas_group->mode == RS::CANVAS_GROUP_MODE_CLIP_AND_DRAW) {
+			if (ci->canvas_group->mode == RS::CANVAS_GROUP_MODE_CLIP_AND_DRAW || ci->canvas_group->mode == RS::CANVAS_GROUP_MODE_CLIP_ONLY) {
 				material = default_clip_children_material;
 			} else {
 				if (material.is_null()) {
-					if (ci->canvas_group->mode == RS::CANVAS_GROUP_MODE_CLIP_ONLY) {
-						material = default_clip_children_material;
-					} else {
-						material = default_canvas_group_material;
-					}
+					material = default_canvas_group_material;
 				}
 			}
 		}

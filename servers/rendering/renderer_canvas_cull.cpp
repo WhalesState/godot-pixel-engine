@@ -1484,11 +1484,6 @@ void RendererCanvasCull::canvas_item_clear(RID p_item) {
 	ERR_FAIL_NULL(canvas_item);
 
 	canvas_item->clear();
-#ifdef DEBUG_ENABLED
-	if (debug_redraw) {
-		canvas_item->debug_redraw_time = debug_redraw_time;
-	}
-#endif
 }
 
 void RendererCanvasCull::canvas_item_set_draw_index(RID p_item, int p_index) {
@@ -1542,15 +1537,6 @@ void RendererCanvasCull::canvas_item_set_visibility_notifier(RID p_item, bool p_
 			canvas_item->visibility_notifier = nullptr;
 		}
 	}
-}
-
-void RendererCanvasCull::canvas_item_set_debug_redraw(bool p_enabled) {
-	debug_redraw = p_enabled;
-	RSG::canvas_render->set_debug_redraw(p_enabled, debug_redraw_time, debug_redraw_color);
-}
-
-bool RendererCanvasCull::canvas_item_get_debug_redraw() const {
-	return debug_redraw;
 }
 
 void RendererCanvasCull::canvas_item_set_canvas_group_mode(RID p_item, RS::CanvasGroupMode p_mode, float p_clear_margin, bool p_fit_empty, float p_fit_margin, bool p_blur_mipmaps) {
@@ -2122,9 +2108,6 @@ RendererCanvasCull::RendererCanvasCull() {
 	z_last_list = (RendererCanvasRender::Item **)memalloc(z_range * sizeof(RendererCanvasRender::Item *));
 
 	disable_scale = false;
-
-	debug_redraw_time = GLOBAL_DEF("debug/canvas_items/debug_redraw_time", 1.0);
-	debug_redraw_color = GLOBAL_DEF("debug/canvas_items/debug_redraw_color", Color(1.0, 0.2, 0.2, 0.5));
 }
 
 RendererCanvasCull::~RendererCanvasCull() {

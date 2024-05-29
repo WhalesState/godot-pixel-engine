@@ -3209,10 +3209,8 @@ Color Image::get_pixel_v(const Point2i &p_point) const {
 }
 
 Color Image::get_pixel(int p_x, int p_y) const {
-#ifdef DEBUG_ENABLED
 	ERR_FAIL_INDEX_V(p_x, width, Color());
 	ERR_FAIL_INDEX_V(p_y, height, Color());
-#endif
 
 	uint32_t ofs = p_y * width + p_x;
 	return _get_color_at_ofs(data.ptr(), ofs);

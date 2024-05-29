@@ -56,8 +56,6 @@ public:
 	bool free(RID p_rid) override { return true; }
 	void update() override {}
 
-	virtual void set_debug_redraw(bool p_enabled, double p_time, const Color &p_color) override {}
-
 	RasterizerCanvasDummy() {}
 	~RasterizerCanvasDummy() {}
 };

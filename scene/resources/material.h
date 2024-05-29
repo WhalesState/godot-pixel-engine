@@ -108,32 +108,6 @@ public:
 	~ShaderMaterial();
 };
 
-class CanvasGroupOutlineMaterial : public ShaderMaterial {
-	GDCLASS(CanvasGroupOutlineMaterial, ShaderMaterial);
-
-	static Ref<Shader> default_shader;
-
-public:
-	static void init_shaders();
-	static void finish_shaders();
-
-	CanvasGroupOutlineMaterial();
-	~CanvasGroupOutlineMaterial();
-};
-
-class SpriteMaterial : public ShaderMaterial {
-	GDCLASS(SpriteMaterial, ShaderMaterial);
-
-	static Ref<Shader> default_shader;
-
-public:
-	static void init_shaders();
-	static void finish_shaders();
-
-	SpriteMaterial();
-	~SpriteMaterial();
-};
-
 class PlaceholderMaterial : public Material {
 	GDCLASS(PlaceholderMaterial, Material)
 public:

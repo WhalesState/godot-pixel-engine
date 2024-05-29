@@ -373,7 +373,6 @@ private:
 	EditorFeatureProfileManager *feature_profile_manager = nullptr;
 	EditorBuildProfileManager *build_profile_manager = nullptr;
 	EditorFileDialog *file_templates = nullptr;
-	EditorFileDialog *file_export_lib = nullptr;
 	EditorFileDialog *file_script = nullptr;
 	CheckBox *file_export_lib_merge = nullptr;
 	String current_path;

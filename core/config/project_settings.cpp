@@ -92,7 +92,6 @@ const PackedStringArray ProjectSettings::_get_supported_features() {
 	features.append(VERSION_BRANCH "." _MKSTR(VERSION_PATCH));
 	features.append(VERSION_FULL_CONFIG);
 	features.append(VERSION_FULL_BUILD);
-	features.append("GL Compatibility");
 	return features;
 }
 

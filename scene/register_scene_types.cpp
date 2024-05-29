@@ -335,8 +335,6 @@ void register_scene_types() {
 	GDREGISTER_VIRTUAL_CLASS(Material);
 	GDREGISTER_CLASS(PlaceholderMaterial);
 	GDREGISTER_CLASS(ShaderMaterial);
-	GDREGISTER_CLASS(CanvasGroupOutlineMaterial);
-	GDREGISTER_CLASS(SpriteMaterial);
 	GDREGISTER_ABSTRACT_CLASS(CanvasItem);
 	GDREGISTER_CLASS(CanvasTexture);
 	GDREGISTER_CLASS(CanvasItemMaterial);
@@ -441,8 +439,6 @@ void register_scene_types() {
 
 	if (RenderingServer::get_singleton()) {
 		ColorPicker::init_shaders(); // RenderingServer needs to exist for this to succeed.
-		CanvasGroupOutlineMaterial::init_shaders();
-		SpriteMaterial::init_shaders();
 	}
 
 	SceneDebugger::initialize();
@@ -474,10 +470,6 @@ void unregister_scene_types() {
 
 	CanvasItemMaterial::finish_shaders();
 	ColorPicker::finish_shaders();
-	CanvasGroupOutlineMaterial::finish_shaders();
-	SpriteMaterial::finish_shaders();
-
-	OS::get_singleton()->yield(); // may take some time to free shaders.
 
 	SceneStringNames::free();
 }

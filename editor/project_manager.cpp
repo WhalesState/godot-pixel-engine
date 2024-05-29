@@ -450,16 +450,7 @@ void ProjectDialog::ok_pressed() {
 				}
 				PackedStringArray project_features = ProjectSettings::get_required_features();
 				ProjectSettings::CustomMap initial_settings;
-
-				// Be sure to change this code if/when renderers are changed.
-				// Default values are "forward_plus" for the main setting, "mobile" for the mobile override,
-				// and "gl_compatibility" for the web override.
-				String renderer_type = "gl_compatibility";
-
-				EditorSettings::get_singleton()->set("project_manager/default_renderer", renderer_type);
 				EditorSettings::get_singleton()->save();
-
-				project_features.push_back("GL Compatibility");
 
 				project_features.sort();
 				initial_settings["application/config/features"] = project_features;

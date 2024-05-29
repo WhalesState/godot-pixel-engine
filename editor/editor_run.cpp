@@ -108,13 +108,9 @@ Error EditorRun::run(const String &p_scene) {
 	args.push_back(itos(OS::get_singleton()->get_process_id()));
 
 	bool debug_paths = EditorSettings::get_singleton()->get_project_metadata("debug_options", "run_debug_paths", false);
-	bool debug_canvas_redraw = EditorSettings::get_singleton()->get_project_metadata("debug_options", "run_debug_canvas_redraw", false);
 
 	if (debug_paths) {
 		args.push_back("--debug-paths");
-	}
-	if (debug_canvas_redraw) {
-		args.push_back("--debug-canvas-item-redraw");
 	}
 
 	int screen = EDITOR_GET("run/window_placement/screen");

@@ -46,30 +46,17 @@ TextureStorage *TextureStorage::get_singleton() {
 	return singleton;
 }
 
-static const GLenum _cube_side_enum[6] = {
-	GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
-	GL_TEXTURE_CUBE_MAP_POSITIVE_X,
-	GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
-	GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
-	GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
-	GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
-};
-
 TextureStorage::TextureStorage() {
 	singleton = this;
 
 	{ //create default textures
 		{ // White Textures
-
 			Ref<Image> image = Image::create_empty(4, 4, true, Image::FORMAT_RGBA8);
 			image->fill(Color(1, 1, 1, 1));
 			image->generate_mipmaps();
 
 			default_gl_textures[DEFAULT_GL_TEXTURE_WHITE] = texture_allocate();
 			texture_2d_initialize(default_gl_textures[DEFAULT_GL_TEXTURE_WHITE], image);
-
-			Vector<Ref<Image>> images;
-			images.push_back(image);
 		}
 
 		{ // black
@@ -79,12 +66,6 @@ TextureStorage::TextureStorage() {
 
 			default_gl_textures[DEFAULT_GL_TEXTURE_BLACK] = texture_allocate();
 			texture_2d_initialize(default_gl_textures[DEFAULT_GL_TEXTURE_BLACK], image);
-
-			Vector<Ref<Image>> images;
-
-			for (int i = 0; i < 4; i++) {
-				images.push_back(image);
-			}
 		}
 
 		{ // transparent black
@@ -112,54 +93,6 @@ TextureStorage::TextureStorage() {
 
 			default_gl_textures[DEFAULT_GL_TEXTURE_ANISO] = texture_allocate();
 			texture_2d_initialize(default_gl_textures[DEFAULT_GL_TEXTURE_ANISO], image);
-		}
-
-		{
-			unsigned char pixel_data[4 * 4 * 4];
-			for (int i = 0; i < 16; i++) {
-				pixel_data[i * 4 + 0] = 0;
-				pixel_data[i * 4 + 1] = 0;
-				pixel_data[i * 4 + 2] = 0;
-				pixel_data[i * 4 + 3] = 0;
-			}
-
-			default_gl_textures[DEFAULT_GL_TEXTURE_2D_UINT] = texture_allocate();
-			Texture texture;
-			texture.width = 4;
-			texture.height = 4;
-			texture.format = Image::FORMAT_RGBA8;
-			texture.type = Texture::TYPE_2D;
-			texture.target = GL_TEXTURE_2D;
-			texture.active = true;
-			glGenTextures(1, &texture.tex_id);
-			texture_owner.initialize_rid(default_gl_textures[DEFAULT_GL_TEXTURE_2D_UINT], texture);
-
-			glBindTexture(GL_TEXTURE_2D, texture.tex_id);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8UI, 4, 4, 0, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE, pixel_data);
-			GLES3::Utilities::get_singleton()->texture_allocated_data(texture.tex_id, 4 * 4 * 4, "Default uint texture");
-			texture.gl_set_filter(RS::CANVAS_ITEM_TEXTURE_FILTER_NEAREST);
-		}
-		{
-			uint16_t pixel_data[4 * 4];
-			for (int i = 0; i < 16; i++) {
-				pixel_data[i] = Math::make_half_float(1.0f);
-			}
-
-			default_gl_textures[DEFAULT_GL_TEXTURE_DEPTH] = texture_allocate();
-			Texture texture;
-			texture.width = 4;
-			texture.height = 4;
-			texture.format = Image::FORMAT_RGBA8;
-			texture.type = Texture::TYPE_2D;
-			texture.target = GL_TEXTURE_2D;
-			texture.active = true;
-			glGenTextures(1, &texture.tex_id);
-			texture_owner.initialize_rid(default_gl_textures[DEFAULT_GL_TEXTURE_DEPTH], texture);
-
-			glBindTexture(GL_TEXTURE_2D, texture.tex_id);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 4, 4, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, pixel_data);
-			GLES3::Utilities::get_singleton()->texture_allocated_data(texture.tex_id, 4 * 4 * 2, "Default depth texture");
-			texture.gl_set_filter(RS::CANVAS_ITEM_TEXTURE_FILTER_NEAREST);
 		}
 	}
 
@@ -588,7 +521,7 @@ Ref<Image> TextureStorage::_get_gl_image_and_format(const Ref<Image> &p_image, I
 			}
 		} break;
 		default: {
-			ERR_FAIL_V_MSG(Ref<Image>(), "The image format " + itos(p_format) + " is not supported by the GL Compatibility rendering backend.");
+			ERR_FAIL_V_MSG(Ref<Image>(), "The image format " + itos(p_format) + " is not supported by the rendering backend.");
 		}
 	}
 
@@ -1081,7 +1014,7 @@ void TextureStorage::_texture_set_data(RID p_texture, const Ref<Image> &p_image,
 		img->resize_to_po2(false);
 	}
 
-	GLenum blit_target = (texture->target == GL_TEXTURE_CUBE_MAP) ? _cube_side_enum[p_layer] : texture->target;
+	GLenum blit_target = texture->target;
 
 	Vector<uint8_t> read = img->get_data();
 
@@ -1162,8 +1095,6 @@ void TextureStorage::_texture_set_data(RID p_texture, const Ref<Image> &p_image,
 	}
 
 	texture->total_data_size = tsize;
-
-	texture->stored_cube_sides |= (1 << p_layer);
 
 	texture->mipmaps = mipmaps;
 }

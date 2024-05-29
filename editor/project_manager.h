@@ -77,10 +77,7 @@ private:
 	Container *path_container = nullptr;
 	Container *install_path_container = nullptr;
 
-	Container *renderer_container = nullptr;
-	Label *renderer_info = nullptr;
 	HBoxContainer *default_files_container = nullptr;
-	Ref<ButtonGroup> renderer_button_group;
 
 	Label *msg = nullptr;
 	LineEdit *project_path = nullptr;

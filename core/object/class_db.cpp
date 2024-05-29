@@ -1741,10 +1741,7 @@ Variant ClassDB::class_get_default_property_value(const StringName &p_class, con
 	if (var.get_type() == Variant::OBJECT) {
 		Object *obj = var.get_validated_object();
 		if (obj) {
-			// CanvasGroupOutlineMaterial and SpriteMaterial uses a shader object as default values for shader property.
-			if (p_class != "CanvasGroupOutlineMaterial" && p_class != "SpriteMaterial") {
-				WARN_PRINT(vformat("Instantiated %s used as default value for %s's \"%s\" property.", obj->get_class(), p_class, p_property));
-			}
+			WARN_PRINT(vformat("Instantiated %s used as default value for %s's \"%s\" property.", obj->get_class(), p_class, p_property));
 		}
 	}
 #endif

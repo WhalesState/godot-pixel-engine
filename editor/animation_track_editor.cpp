@@ -5826,7 +5826,6 @@ void AnimationTrackEditor::_edit_menu_pressed(int p_option) {
 			undo_redo->create_action(TTR("Bake Animation as Linear Keys"));
 
 			int track_len = animation->get_track_count();
-			bool b_trs = bake_trs->is_pressed();
 			bool b_bs = bake_blendshape->is_pressed();
 			bool b_v = bake_value->is_pressed();
 
@@ -6516,8 +6515,6 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	GridContainer *bake_grid = memnew(GridContainer);
 	bake_grid->set_columns(2);
 	bake_dialog->add_child(bake_grid);
-	bake_trs = memnew(CheckBox);
-	bake_trs->set_pressed(true);
 	bake_blendshape = memnew(CheckBox);
 	bake_blendshape->set_pressed(true);
 	bake_value = memnew(CheckBox);

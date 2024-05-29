@@ -111,16 +111,12 @@ namespace GLES3 {
 
 #define _GL_TEXTURE_EXTERNAL_OES 0x8D65
 
-#define _EXT_TEXTURE_CUBE_MAP_SEAMLESS 0x884F
-
 enum DefaultGLTexture {
 	DEFAULT_GL_TEXTURE_WHITE,
 	DEFAULT_GL_TEXTURE_BLACK,
 	DEFAULT_GL_TEXTURE_TRANSPARENT,
 	DEFAULT_GL_TEXTURE_NORMAL,
 	DEFAULT_GL_TEXTURE_ANISO,
-	DEFAULT_GL_TEXTURE_DEPTH,
-	DEFAULT_GL_TEXTURE_2D_UINT,
 	DEFAULT_GL_TEXTURE_MAX
 };
 
@@ -179,8 +175,6 @@ struct Texture {
 	bool active = false;
 	GLuint tex_id = 0;
 
-	uint16_t stored_cube_sides = 0;
-
 	RenderTarget *render_target = nullptr;
 
 	Ref<Image> image_cache_2d;
@@ -215,7 +209,6 @@ struct Texture {
 		resize_to_po2 = o.resize_to_po2;
 		active = o.active;
 		tex_id = o.tex_id;
-		stored_cube_sides = o.stored_cube_sides;
 		render_target = o.render_target;
 		is_render_target = o.is_render_target;
 		redraw_if_visible = o.redraw_if_visible;
