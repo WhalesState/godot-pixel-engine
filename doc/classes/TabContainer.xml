@@ -179,6 +179,7 @@
 			If [code]true[/code], all tabs are drawn in front of the panel. If [code]false[/code], inactive tabs are drawn behind the panel.
 		</member>
 		<member name="bottom_tabs" type="bool" setter="set_bottom_tabs" getter="is_bottom_tabs" default="false">
+			Allows the [TabBar] to draw at the bottom.
 		</member>
 		<member name="clip_contents" type="bool" setter="set_clip_contents" getter="is_clipping_contents" overrides="Control" default="true" />
 		<member name="clip_tabs" type="bool" setter="set_clip_tabs" getter="get_clip_tabs" default="true">

@@ -712,8 +712,10 @@
 			[b]Note:[/b] In GDScript, unlike Python, multiline strings are not considered to be comments, and will use the string highlighting color instead.
 		</member>
 		<member name="text_editor/theme/highlighting/comment_question" type="Color" setter="" getter="">
+			Color for comment lines which starts with [code]#?[/code].
 		</member>
 		<member name="text_editor/theme/highlighting/comment_warning" type="Color" setter="" getter="">
+			Color for comment lines which starts with [code]#![/code].
 		</member>
 		<member name="text_editor/theme/highlighting/completion_background_color" type="Color" setter="" getter="">
 			The script editor's autocompletion box background color.

@@ -14,6 +14,7 @@
 			A [Curve2D] describing the path.
 		</member>
 		<member name="draw_in_editor" type="bool" setter="set_draw_in_editor" getter="is_draw_in_editor" default="true">
+			if [code]false[/code], the path lines will not draw in editor (has no effect in game).
 		</member>
 	</members>
 </class>

@@ -7,17 +7,18 @@
 		A control that displays a texture, for example an icon inside a GUI. The texture's placement can be controlled with the [member stretch_mode] property. It can scale, tile, or stay centered inside its bounding rectangle.
 	</description>
 	<tutorials>
-		<link title="3D Voxel Demo">https://godotengine.org/asset-library/asset/676</link>
 	</tutorials>
 	<methods>
 		<method name="get_max_frames" qualifiers="const">
 			<return type="int" />
 			<description>
+				Returns vertical frames multiplied by horizontal frames.
 			</description>
 		</method>
 		<method name="get_texture_size" qualifiers="const">
 			<return type="Vector2" />
 			<description>
+				Returns the current texture size, respecting [member hframes] and [member vframes].
 			</description>
 		</method>
 	</methods>
@@ -33,12 +34,16 @@
 			If [code]true[/code], texture is flipped vertically.
 		</member>
 		<member name="frame" type="int" setter="set_frame" getter="get_frame" default="0">
+			Current frame to display from sprite sheet. [member hframes] or [member vframes] must be greater than 1. This property is automatically adjusted when [member hframes] or [member vframes] are changed to keep pointing to the same visual frame (same column and row). If that's impossible, this value is reset to [code]0[/code].
 		</member>
 		<member name="frame_coords" type="Vector2i" setter="set_frame_coords" getter="get_frame_coords" default="Vector2i(0, 0)">
+			Coordinates of the frame to display from sprite sheet. This is as an alias for the [member frame] property. [member hframes] or [member vframes] must be greater than 1.
 		</member>
 		<member name="grow" type="Vector2" setter="set_grow_size" getter="get_grow_size" default="Vector2(0, 0)">
+			Allows the texture to grow outside it's size rect, or to shrink inside when using negative values.
 		</member>
 		<member name="hframes" type="int" setter="set_hframes" getter="get_hframes" default="1">
+			The number of columns in the sprite sheet. When this property is changed, [member frame] is adjusted so that the same visual frame is maintained (same row and column). If that's impossible, [member frame] is reset to [code]0[/code].
 		</member>
 		<member name="mouse_filter" type="int" setter="set_mouse_filter" getter="get_mouse_filter" overrides="Control" enum="Control.MouseFilter" default="1" />
 		<member name="stretch_mode" type="int" setter="set_stretch_mode" getter="get_stretch_mode" enum="TextureRect.StretchMode" default="0">
@@ -48,17 +53,21 @@
 			The node's [Texture2D] resource.
 		</member>
 		<member name="use_fixed_grow" type="bool" setter="set_use_fixed_grow" getter="is_using_fixed_grow" default="false">
+			Preserve the grow size when the texture is resized, (has no effect when using negative grow values).
 		</member>
 		<member name="vframes" type="int" setter="set_vframes" getter="get_vframes" default="1">
+			The number of rows in the sprite sheet. When this property is changed, [member frame] is adjusted so that the same visual frame is maintained (same row and column). If that's impossible, [member frame] is reset to [code]0[/code].
 		</member>
 	</members>
 	<signals>
 		<signal name="frame_changed">
 			<description>
+				Emitted when the [member frame] changes.
 			</description>
 		</signal>
 		<signal name="texture_changed">
 			<description>
+				Emitted when the [member texture] changes.
 			</description>
 		</signal>
 	</signals>
