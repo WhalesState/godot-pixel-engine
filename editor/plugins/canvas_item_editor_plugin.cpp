@@ -541,12 +541,14 @@ void CanvasItemEditor::_expand_encompassing_rect_using_children(Rect2 &r_rect, c
 		if (ci && !ci->is_set_as_top_level()) {
 			_expand_encompassing_rect_using_children(r_rect, p_node->get_child(i), r_first, p_parent_xform * ci->get_transform(), p_canvas_xform);
 		} else {
-			const CanvasLayer *cl = Object::cast_to<CanvasLayer>(p_node);
-			if (cl) {
+			if (const CanvasLayer *cl = Object::cast_to<CanvasLayer>(p_node)) {
 				_expand_encompassing_rect_using_children(r_rect, p_node->get_child(i), r_first, Transform2D(), cl->get_transform());
+			} else if (const SubViewport *sv = Object::cast_to<SubViewport>(p_node)) {
+				_expand_encompassing_rect_using_children(r_rect, p_node->get_child(i), r_first, Transform2D(), sv->get_canvas_transform());
+			} else if (const Window *w = Object::cast_to<Window>(p_node)) {
+				_expand_encompassing_rect_using_children(r_rect, p_node->get_child(i), r_first, Transform2D(), Transform2D(0, w->get_position()));
 			} else {
-				const SubViewport *sv = Object::cast_to<SubViewport>(p_node);
-				_expand_encompassing_rect_using_children(r_rect, p_node->get_child(i), r_first, Transform2D(), sv ? sv->get_canvas_transform() : p_canvas_xform);
+				_expand_encompassing_rect_using_children(r_rect, p_node->get_child(i), r_first, Transform2D(), p_canvas_xform);
 			}
 		}
 	}
@@ -593,12 +595,14 @@ void CanvasItemEditor::_find_canvas_items_at_pos(const Point2 &p_pos, Node *p_no
 				_find_canvas_items_at_pos(p_pos, p_node->get_child(i), r_items, ci->get_transform(), p_canvas_xform);
 			}
 		} else {
-			CanvasLayer *cl = Object::cast_to<CanvasLayer>(p_node);
-			if (cl) {
+			if (const CanvasLayer *cl = Object::cast_to<CanvasLayer>(p_node)) {
 				_find_canvas_items_at_pos(p_pos, p_node->get_child(i), r_items, Transform2D(), cl->get_transform());
+			} else if (const SubViewport *sv = Object::cast_to<SubViewport>(p_node)) {
+				_find_canvas_items_at_pos(p_pos, p_node->get_child(i), r_items, Transform2D(), sv->get_canvas_transform());
+			} else if (const Window *w = Object::cast_to<Window>(p_node)) {
+				_find_canvas_items_at_pos(p_pos, p_node->get_child(i), r_items, Transform2D(), Transform2D(0, w->get_position()));
 			} else {
-				SubViewport *sv = Object::cast_to<SubViewport>(p_node);
-				_find_canvas_items_at_pos(p_pos, p_node->get_child(i), r_items, Transform2D(), sv ? sv->get_canvas_transform() : p_canvas_xform);
+				_find_canvas_items_at_pos(p_pos, p_node->get_child(i), r_items, Transform2D(), p_canvas_xform);
 			}
 		}
 	}
@@ -692,12 +696,14 @@ void CanvasItemEditor::_find_canvas_items_in_rect(const Rect2 &p_rect, Node *p_n
 					_find_canvas_items_in_rect(p_rect, p_node->get_child(i), r_items, ci->get_transform(), p_canvas_xform);
 				}
 			} else {
-				CanvasLayer *cl = Object::cast_to<CanvasLayer>(p_node);
-				if (cl) {
+				if (const CanvasLayer *cl = Object::cast_to<CanvasLayer>(p_node)) {
 					_find_canvas_items_in_rect(p_rect, p_node->get_child(i), r_items, Transform2D(), cl->get_transform());
+				} else if (const SubViewport *sv = Object::cast_to<SubViewport>(p_node)) {
+					_find_canvas_items_in_rect(p_rect, p_node->get_child(i), r_items, Transform2D(), sv->get_canvas_transform());
+				} else if (const Window *w = Object::cast_to<Window>(p_node)) {
+					_find_canvas_items_in_rect(p_rect, p_node->get_child(i), r_items, Transform2D(), Transform2D(0, w->get_position()));
 				} else {
-					SubViewport *sv = Object::cast_to<SubViewport>(p_node);
-					_find_canvas_items_in_rect(p_rect, p_node->get_child(i), r_items, Transform2D(), sv ? sv->get_canvas_transform() : p_canvas_xform);
+					_find_canvas_items_in_rect(p_rect, p_node->get_child(i), r_items, Transform2D(), p_canvas_xform);
 				}
 			}
 		}
@@ -3504,9 +3510,12 @@ void CanvasItemEditor::_draw_invisible_nodes_positions(Node *p_node, const Trans
 		CanvasLayer *cl = Object::cast_to<CanvasLayer>(p_node);
 		if (cl) {
 			canvas_xform = cl->get_transform();
+		} else if (const SubViewport *sv = Object::cast_to<SubViewport>(p_node)) {;
+			canvas_xform = sv->get_canvas_transform();
+		} else if (const Window *w = Object::cast_to<Window>(p_node)) {
+			canvas_xform = Transform2D(0, w->get_position());
 		} else {
-			const SubViewport *sv = Object::cast_to<SubViewport>(p_node);
-			canvas_xform = sv ? sv->get_canvas_transform() : p_canvas_xform;
+			canvas_xform = p_canvas_xform;
 		}
 	}
 
