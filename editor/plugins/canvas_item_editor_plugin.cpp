@@ -1131,6 +1131,9 @@ bool CanvasItemEditor::_gui_input_rulers_and_guides(const Ref<InputEvent> &p_eve
 			Transform2D xform = viewport_scrollable->get_transform() * transform;
 			drag_to = xform.affine_inverse().xform(m->get_position());
 			dragged_guide_pos = xform.xform(snap_point(drag_to, SNAP_GRID | SNAP_PIXEL | SNAP_OTHER_NODES));
+			if (drag_type != DRAG_DOUBLE_GUIDE) {
+				snap_target[(drag_type == DRAG_H_GUIDE) ? 0 : 1] = SNAP_TARGET_NONE;
+			}
 			viewport->queue_redraw();
 			return true;
 		}
