@@ -98,6 +98,15 @@ int MarginContainer::get_margin_size(Side p_side) const {
 	return 0;
 }
 
+void MarginContainer::set_margin_all(int p_margin) {
+	begin_bulk_theme_override();
+	add_theme_constant_override("margin_top", p_margin);
+	add_theme_constant_override("margin_right", p_margin);
+	add_theme_constant_override("margin_bottom", p_margin);
+	add_theme_constant_override("margin_left", p_margin);
+	end_bulk_theme_override();
+}
+
 void MarginContainer::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_SORT_CHILDREN: {
@@ -125,6 +134,8 @@ void MarginContainer::_notification(int p_what) {
 }
 
 void MarginContainer::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_margin_all", "margin"), &MarginContainer::set_margin_all);
+
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, MarginContainer, margin_left);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, MarginContainer, margin_top);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, MarginContainer, margin_right);
