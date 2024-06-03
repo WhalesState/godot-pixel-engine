@@ -3634,6 +3634,7 @@ void SubViewport::_validate_property(PropertyInfo &p_property) const {
 }
 
 SubViewport::SubViewport() {
+	set_transparent_background(true);
 	RS::get_singleton()->viewport_set_size(get_viewport_rid(), get_size().width, get_size().height);
 }
 
