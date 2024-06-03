@@ -4335,9 +4335,10 @@ void CanvasItemEditor::_focus_selection(int p_op) {
 			item_rect = Rect2();
 		}
 
-		Vector2 pos = ci->get_global_transform().get_origin();
-		Vector2 scale = ci->get_global_transform().get_scale();
-		real_t angle = ci->get_global_transform().get_rotation();
+		const Transform2D xform = ci->get_global_transform_with_canvas();
+		Vector2 pos = xform.get_origin();
+		Vector2 scale = xform.get_scale();
+		real_t angle = xform.get_rotation();
 
 		Transform2D t(angle, Vector2(0.f, 0.f));
 		item_rect = t.xform(item_rect);
