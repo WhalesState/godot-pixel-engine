@@ -470,7 +470,7 @@ void CanvasItemEditor::shortcut_input(const Ref<InputEvent> &p_ev) {
 	Ref<InputEventKey> k = p_ev;
 	if (k.is_valid()) {
 		// Used to show/hide scale gizmo when using select tool and pressing ctrl+alt
-		if (k->get_keycode() == Key::CTRL || k->get_keycode() == Key::ALT || k->get_keycode() == Key::SHIFT) {
+		if (!k->is_echo() && (k->get_keycode() == Key::CTRL || k->get_keycode() == Key::ALT || k->get_keycode() == Key::SHIFT)) {
 			viewport->queue_redraw();
 		}
 
@@ -546,7 +546,7 @@ void CanvasItemEditor::_expand_encompassing_rect_using_children(Rect2 &r_rect, c
 			} else if (const SubViewport *sv = Object::cast_to<SubViewport>(p_node)) {
 				_expand_encompassing_rect_using_children(r_rect, p_node->get_child(i), r_first, Transform2D(), sv->get_canvas_transform());
 			} else if (const Window *w = Object::cast_to<Window>(p_node)) {
-				_expand_encompassing_rect_using_children(r_rect, p_node->get_child(i), r_first, Transform2D(), Transform2D(0, w->get_position()));
+				_expand_encompassing_rect_using_children(r_rect, p_node->get_child(i), r_first, Transform2D(), w->get_canvas_transform());
 			} else {
 				_expand_encompassing_rect_using_children(r_rect, p_node->get_child(i), r_first, Transform2D(), p_canvas_xform);
 			}
@@ -600,7 +600,7 @@ void CanvasItemEditor::_find_canvas_items_at_pos(const Point2 &p_pos, Node *p_no
 			} else if (const SubViewport *sv = Object::cast_to<SubViewport>(p_node)) {
 				_find_canvas_items_at_pos(p_pos, p_node->get_child(i), r_items, Transform2D(), sv->get_canvas_transform());
 			} else if (const Window *w = Object::cast_to<Window>(p_node)) {
-				_find_canvas_items_at_pos(p_pos, p_node->get_child(i), r_items, Transform2D(), Transform2D(0, w->get_position()));
+				_find_canvas_items_at_pos(p_pos, p_node->get_child(i), r_items, Transform2D(), w->get_canvas_transform());
 			} else {
 				_find_canvas_items_at_pos(p_pos, p_node->get_child(i), r_items, Transform2D(), p_canvas_xform);
 			}
@@ -701,7 +701,7 @@ void CanvasItemEditor::_find_canvas_items_in_rect(const Rect2 &p_rect, Node *p_n
 				} else if (const SubViewport *sv = Object::cast_to<SubViewport>(p_node)) {
 					_find_canvas_items_in_rect(p_rect, p_node->get_child(i), r_items, Transform2D(), sv->get_canvas_transform());
 				} else if (const Window *w = Object::cast_to<Window>(p_node)) {
-					_find_canvas_items_in_rect(p_rect, p_node->get_child(i), r_items, Transform2D(), Transform2D(0, w->get_position()));
+					_find_canvas_items_in_rect(p_rect, p_node->get_child(i), r_items, Transform2D(), w->get_canvas_transform());
 				} else {
 					_find_canvas_items_in_rect(p_rect, p_node->get_child(i), r_items, Transform2D(), p_canvas_xform);
 				}
@@ -3510,10 +3510,10 @@ void CanvasItemEditor::_draw_invisible_nodes_positions(Node *p_node, const Trans
 		CanvasLayer *cl = Object::cast_to<CanvasLayer>(p_node);
 		if (cl) {
 			canvas_xform = cl->get_transform();
-		} else if (const SubViewport *sv = Object::cast_to<SubViewport>(p_node)) {;
+		} else if (const SubViewport *sv = Object::cast_to<SubViewport>(p_node)) {
 			canvas_xform = sv->get_canvas_transform();
 		} else if (const Window *w = Object::cast_to<Window>(p_node)) {
-			canvas_xform = Transform2D(0, w->get_position());
+			canvas_xform = w->get_canvas_transform();
 		} else {
 			canvas_xform = p_canvas_xform;
 		}

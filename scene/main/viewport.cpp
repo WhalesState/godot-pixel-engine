@@ -709,19 +709,18 @@ Transform2D Viewport::get_canvas_transform() const {
 	if (Engine::get_singleton()->is_editor_hint() && is_inside_tree() && get_tree()->get_edited_scene_root()) {
 		const Window *w = Object::cast_to<Window>(this);
 		if (get_tree()->get_edited_scene_root()->get_viewport() == this) {
-			return w ? Transform2D(0, w->get_position()) : canvas_transform;
+			return w ? Transform2D(0, w->get_position()) * canvas_transform : canvas_transform;
 		} else if (w && get_tree()->get_edited_scene_root()->is_ancestor_of(this)) {
-			return Transform2D(0, w->get_position());
+			return Transform2D(0, w->get_position()) * canvas_transform;
 		}
 	}
 #endif // TOOLS_ENABLED
-	SubViewportContainer *svc = Object::cast_to<SubViewportContainer>(get_parent());
 	Transform2D xform = Transform2D();
-	if (svc) {
+	if (const SubViewportContainer *svc = Object::cast_to<SubViewportContainer>(get_parent())) {
 		if (svc->is_stretch_enabled()) {
 			xform.scale(Vector2(svc->get_stretch_shrink(), svc->get_stretch_shrink()));
 		}
-		xform = svc->get_transform() * canvas_transform * xform;
+		xform = svc->get_global_transform_with_canvas() * canvas_transform * xform;
 	} else {
 		xform = canvas_transform;
 	}
@@ -747,15 +746,14 @@ Transform2D Viewport::get_global_canvas_transform() const {
 	if (Engine::get_singleton()->is_editor_hint() && is_inside_tree() && get_tree()->get_edited_scene_root()) {
 		const Window *w = Object::cast_to<Window>(this);
 		if (get_tree()->get_edited_scene_root()->get_viewport() == this) {
-			return w ? Transform2D(0, w->get_position()) : global_canvas_transform;
+			return w ? Transform2D(0, w->get_position()) * global_canvas_transform : global_canvas_transform;
 		} else if (w && get_tree()->get_edited_scene_root()->is_ancestor_of(this)) {
-			return Transform2D(0, w->get_position());
+			return Transform2D(0, w->get_position()) * global_canvas_transform;
 		}
 	}
 #endif // TOOLS_ENABLED
-	SubViewportContainer *svc = Object::cast_to<SubViewportContainer>(get_parent());
 	Transform2D xform = Transform2D();
-	if (svc) {
+	if (const SubViewportContainer *svc = Object::cast_to<SubViewportContainer>(get_parent())) {
 		if (svc->is_stretch_enabled()) {
 			xform.scale(Vector2(svc->get_stretch_shrink(), svc->get_stretch_shrink()));
 		}
