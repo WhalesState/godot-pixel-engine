@@ -2775,11 +2775,11 @@ void EditorNode::_request_screenshot() {
 }
 
 void EditorNode::_screenshot(bool p_use_utc) {
-	String name = "editor_screenshot_" + Time::get_singleton()->get_datetime_string_from_system(p_use_utc).replace(":", "") + ".png";
-	NodePath path = String("user://") + name;
+	String name = "screenshot_" + Time::get_singleton()->get_datetime_string_from_system(p_use_utc).replace(":", "") + ".png";
+	NodePath path = EditorPaths::get_singleton()->get_screenshots_dir().path_join(name);
 	_save_screenshot(path);
 	if (EDITOR_GET("interface/editor/automatically_open_screenshots")) {
-		OS::get_singleton()->shell_show_in_file_manager(ProjectSettings::get_singleton()->globalize_path(path), true);
+		OS::get_singleton()->shell_show_in_file_manager(path, true);
 	}
 }
 
