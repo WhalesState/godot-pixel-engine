@@ -1464,10 +1464,10 @@ SceneTree::SceneTree() {
 	const Color clear_color = GLOBAL_GET("rendering/viewport/default_clear_color");
 	root->set_clear_color(clear_color);
 
-	bool snap_2d_transforms = GLOBAL_DEF("rendering/2d/snap/snap_2d_transforms_to_pixel", true);
+	bool snap_2d_transforms = GLOBAL_DEF("rendering/2d/snap/snap_2d_transforms_to_pixel", false);
 	root->set_snap_2d_transforms_to_pixel(snap_2d_transforms);
 
-	bool snap_2d_vertices = GLOBAL_DEF("rendering/2d/snap/snap_2d_vertices_to_pixel", true);
+	bool snap_2d_vertices = GLOBAL_DEF("rendering/2d/snap/snap_2d_vertices_to_pixel", false);
 	root->set_snap_2d_vertices_to_pixel(snap_2d_vertices);
 
 	Viewport::SDFOversize sdf_oversize = Viewport::SDFOversize(int(GLOBAL_DEF(PropertyInfo(Variant::INT, "rendering/2d/sdf/oversize", PROPERTY_HINT_ENUM, "100%,120%,150%,200%"), 1)));
