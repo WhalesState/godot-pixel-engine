@@ -2734,9 +2734,6 @@ void EditorNode::_menu_option_confirm(int p_option, bool p_confirmed) {
 				DisplayServer::get_singleton()->window_set_mode(DisplayServer::WINDOW_MODE_FULLSCREEN);
 			}
 		} break;
-		case EDITOR_SCREENSHOT: {
-			screenshot_timer->start();
-		} break;
 		case HELP_SEARCH: {
 			emit_signal(SNAME("request_help_search"), "");
 		} break;
@@ -2768,32 +2765,6 @@ String EditorNode::adjust_scene_name_casing(const String &root_name) {
 			return root_name.replace("-", "_").to_snake_case();
 	}
 	return root_name;
-}
-
-void EditorNode::_request_screenshot() {
-	_screenshot();
-}
-
-void EditorNode::_screenshot(bool p_use_utc) {
-	String name = "screenshot_" + Time::get_singleton()->get_datetime_string_from_system(p_use_utc).replace(":", "") + ".png";
-	NodePath path = EditorPaths::get_singleton()->get_screenshots_dir().path_join(name);
-	_save_screenshot(path);
-	if (EDITOR_GET("interface/editor/automatically_open_screenshots")) {
-		OS::get_singleton()->shell_show_in_file_manager(path, true);
-	}
-}
-
-void EditorNode::_save_screenshot(NodePath p_path) {
-	Control *editor_main_screen = EditorInterface::get_singleton()->get_editor_main_screen();
-	ERR_FAIL_NULL_MSG(editor_main_screen, "Cannot get the editor main screen control.");
-	Viewport *viewport = editor_main_screen->get_viewport();
-	ERR_FAIL_NULL_MSG(viewport, "Cannot get a viewport from the editor main screen.");
-	Ref<ViewportTexture> texture = viewport->get_texture();
-	ERR_FAIL_COND_MSG(texture.is_null(), "Cannot get a viewport texture from the editor main screen.");
-	Ref<Image> img = texture->get_image();
-	ERR_FAIL_COND_MSG(img.is_null(), "Cannot get an image from a viewport texture of the editor main screen.");
-	Error error = img->save_png(p_path);
-	ERR_FAIL_COND_MSG(error != OK, "Cannot save screenshot to file '" + p_path + "'.");
 }
 
 void EditorNode::_tool_menu_option(int p_idx) {
@@ -6855,12 +6826,6 @@ EditorNode::EditorNode() {
 	settings_menu->add_submenu_item(TTR("Editor Layout"), "Layouts");
 	settings_menu->add_separator();
 
-	ED_SHORTCUT_AND_COMMAND("editor/take_screenshot", TTR("Take Screenshot"), KeyModifierMask::CTRL | Key::F12);
-	ED_SHORTCUT_OVERRIDE("editor/take_screenshot", "macos", KeyModifierMask::META | Key::F12);
-	settings_menu->add_shortcut(ED_GET_SHORTCUT("editor/take_screenshot"), EDITOR_SCREENSHOT);
-
-	settings_menu->set_item_tooltip(-1, TTR("Screenshots are stored in the Editor Data/Settings Folder."));
-
 	ED_SHORTCUT_AND_COMMAND("editor/fullscreen_mode", TTR("Toggle Fullscreen"), KeyModifierMask::SHIFT | Key::F11);
 	ED_SHORTCUT_OVERRIDE("editor/fullscreen_mode", "macos", KeyModifierMask::META | KeyModifierMask::CTRL | Key::F);
 	settings_menu->add_shortcut(ED_GET_SHORTCUT("editor/fullscreen_mode"), SETTINGS_TOGGLE_FULLSCREEN);
@@ -7297,13 +7262,6 @@ EditorNode::EditorNode() {
 
 	ED_SHORTCUT_AND_COMMAND("editor/editor_next", TTR("Open the next Editor"));
 	ED_SHORTCUT_AND_COMMAND("editor/editor_prev", TTR("Open the previous Editor"));
-
-	screenshot_timer = memnew(Timer);
-	screenshot_timer->set_one_shot(true);
-	screenshot_timer->set_wait_time(settings_menu->get_submenu_popup_delay() + 0.1f);
-	screenshot_timer->connect("timeout", callable_mp(this, &EditorNode::_request_screenshot));
-	add_child(screenshot_timer);
-	screenshot_timer->set_owner(get_owner());
 
 	// Adjust spacers to center 2D / Script buttons.
 	int max_w = MAX(project_run_bar->get_minimum_size().x + right_menu_hb->get_minimum_size().x, main_menu->get_minimum_size().x);

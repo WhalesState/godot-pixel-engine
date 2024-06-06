@@ -91,10 +91,6 @@ String EditorPaths::get_feature_profiles_dir() const {
 	return get_config_dir().path_join(feature_profiles_folder);
 }
 
-String EditorPaths::get_screenshots_dir() const {
-	return get_config_dir().path_join(screenshots_folder);
-}
-
 void EditorPaths::create() {
 	memnew(EditorPaths);
 }
@@ -213,9 +209,6 @@ EditorPaths::EditorPaths() {
 		}
 		if (!dir->dir_exists(feature_profiles_folder)) {
 			dir->make_dir(feature_profiles_folder);
-		}
-		if (!dir->dir_exists(screenshots_folder)) {
-			dir->make_dir(screenshots_folder);
 		}
 	}
 

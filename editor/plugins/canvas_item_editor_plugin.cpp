@@ -1753,8 +1753,6 @@ bool CanvasItemEditor::_gui_input_resize(const Ref<InputEvent> &p_event) {
 						snap_target2[0] = SNAP_TARGET_NONE;
 					}
 				}
-				if (drag_type == DRAG_TOP || drag_type == DRAG_BOTTOM) {
-				}
 			}
 
 			// Symmetric resize

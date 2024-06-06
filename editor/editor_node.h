@@ -213,9 +213,6 @@ private:
 
 		SCENE_TAB_CLOSE,
 
-		EDITOR_SCREENSHOT,
-		EDITOR_OPEN_SCREENSHOT,
-
 		HELP_SEARCH,
 		HELP_COMMAND_PALETTE,
 		HELP_REPORT_A_BUG,
@@ -331,8 +328,6 @@ private:
 	Button *export_button = nullptr;
 	Button *search_button = nullptr;
 	TextureProgressBar *audio_vu = nullptr;
-
-	Timer *screenshot_timer = nullptr;
 
 	uint64_t started_timestamp = 0;
 
@@ -512,10 +507,6 @@ private:
 	void _menu_option(int p_option);
 	void _menu_confirm_current();
 	void _menu_option_confirm(int p_option, bool p_confirmed);
-
-	void _request_screenshot();
-	void _screenshot(bool p_use_utc = false);
-	void _save_screenshot(NodePath p_path);
 
 	void _tool_menu_option(int p_idx);
 	void _update_file_menu_opened();

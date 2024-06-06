@@ -699,7 +699,7 @@
 			[b]"integer"[/b]: The scale factor will be floored to an integer value, which means that the screen size will always be an integer multiple of the base viewport size. This provides a crisp pixel art appearance.
 			[b]Note:[/b] When using integer scaling with a stretch mode, resizing the window to be smaller than the base viewport size will clip the contents. Consider preventing that by setting [member Window.min_size] to the same value as the base viewport size defined in [member display/window/size/viewport_width] and [member display/window/size/viewport_height].
 		</member>
-		<member name="display/window/subwindows/embed_subwindows" type="bool" setter="" getter="" default="true">
+		<member name="display/window/subwindows/embed_subwindows" type="bool" setter="" getter="" default="false">
 			If [code]true[/code] subwindows are embedded in the main window.
 		</member>
 		<member name="display/window/vsync/vsync_mode" type="int" setter="" getter="" default="1">
@@ -1291,12 +1291,12 @@
 			The size of the 2D shadow atlas in pixels. Higher values result in more precise [Light2D] shadows, at the cost of performance and video memory usage. The specified value is rounded up to the nearest power of 2.
 			[b]Note:[/b] This property is only read when the project starts. To change the 2D shadow atlas size at runtime, use [method RenderingServer.canvas_set_shadow_texture_size] instead.
 		</member>
-		<member name="rendering/2d/snap/snap_2d_transforms_to_pixel" type="bool" setter="" getter="" default="true">
+		<member name="rendering/2d/snap/snap_2d_transforms_to_pixel" type="bool" setter="" getter="" default="false">
 			If [code]true[/code], [CanvasItem] nodes will internally snap to full pixels. Their position can still be sub-pixel, but the decimals will not have effect. This can lead to a crisper appearance at the cost of less smooth movement, especially when [Camera2D] smoothing is enabled.
 			[b]Note:[/b] This property is only read when the project starts. To toggle 2D transform snapping at runtime, use [method RenderingServer.viewport_set_snap_2d_transforms_to_pixel] on the root [Viewport] instead.
 			[b]Note:[/b] [Control] nodes are snapped to the nearest pixel by default. This is controlled by [member gui/common/snap_controls_to_pixels].
 		</member>
-		<member name="rendering/2d/snap/snap_2d_vertices_to_pixel" type="bool" setter="" getter="" default="true">
+		<member name="rendering/2d/snap/snap_2d_vertices_to_pixel" type="bool" setter="" getter="" default="false">
 			If [code]true[/code], vertices of [CanvasItem] nodes will snap to full pixels. Only affects the final vertex positions, not the transforms. This can lead to a crisper appearance at the cost of less smooth movement, especially when [Camera2D] smoothing is enabled.
 			[b]Note:[/b] This property is only read when the project starts. To toggle 2D vertex snapping at runtime, use [method RenderingServer.viewport_set_snap_2d_vertices_to_pixel] on the root [Viewport] instead.
 			[b]Note:[/b] [Control] nodes are snapped to the nearest pixel by default. This is controlled by [member gui/common/snap_controls_to_pixels].

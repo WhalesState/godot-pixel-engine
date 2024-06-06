@@ -298,9 +298,6 @@
 			- [b]Cancel First[/b] forces the ordering Cancel/OK.
 			- [b]OK First[/b] forces the ordering OK/Cancel.
 		</member>
-		<member name="interface/editor/automatically_open_screenshots" type="bool" setter="" getter="">
-			If [code]true[/code], automatically opens screenshots with the default program associated to [code].png[/code] files after a screenshot is taken using the [b]Editor &gt; Take Screenshot[/b] action.
-		</member>
 		<member name="interface/editor/code_font" type="String" setter="" getter="">
 			The font to use for the script editor. Must be a resource of a [Font] type such as a [code].ttf[/code] or [code].otf[/code] font file.
 		</member>

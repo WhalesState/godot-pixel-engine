@@ -230,7 +230,7 @@
 		</member>
 		<member name="snap_2d_vertices_to_pixel" type="bool" setter="set_snap_2d_vertices_to_pixel" getter="is_snap_2d_vertices_to_pixel_enabled" default="false">
 		</member>
-		<member name="transparent_bg" type="bool" setter="set_transparent_background" getter="has_transparent_background" default="false">
+		<member name="transparent_bg" type="bool" setter="set_transparent_background" getter="has_transparent_background" default="true">
 			If [code]true[/code], the viewport should render its background as transparent.
 		</member>
 		<member name="world_2d" type="World2D" setter="set_world_2d" getter="get_world_2d">
