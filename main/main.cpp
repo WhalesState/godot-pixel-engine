@@ -1787,9 +1787,16 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 	// list from the display driver for the editor UI.
 	OS::get_singleton()->set_display_driver_id(display_driver_idx);
 
-	GLOBAL_DEF_RST_NOVAL("audio/driver/driver", AudioDriverManager::get_driver(0)->get_name());
-	if (audio_driver.is_empty()) { // Specified in project.godot.
-		audio_driver = GLOBAL_GET("audio/driver/driver");
+	// If not overridden by `--audio-driver`:
+	if (audio_driver == "") {
+		if (project_manager) {
+			// The project manager doesn't need to play sound.
+			// Disable audio output so it doesn't appear in the list of applications outputting sound in the OS.
+			// This should also slightly speed up the project manager startup.
+			audio_driver = "Dummy";
+		} else {
+			audio_driver = GLOBAL_DEF_RST_NOVAL("audio/driver/driver", AudioDriverManager::get_driver(0)->get_name());
+		}
 	}
 
 	// Make sure that dummy is the last one, which it is assumed to be by design.
