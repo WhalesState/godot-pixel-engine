@@ -191,9 +191,28 @@ Transform2D ControlViewport::get_custom_transform() const {
 	return xform;
 }
 
+void ControlViewport::set_vguides(const PackedInt32Array &p_vguides) {
+	vguides = p_vguides;
+	viewport->queue_redraw();
+}
+
+PackedInt32Array ControlViewport::get_vguides() const {
+	return vguides;
+}
+
+void ControlViewport::set_hguides(const PackedInt32Array &p_hguides) {
+	hguides = p_hguides;
+	viewport->queue_redraw();
+}
+
+PackedInt32Array ControlViewport::get_hguides() const {
+	return hguides;
+}
+
 void ControlViewport::clear_guides() {
-	vguides = Array();
-	hguides = Array();
+	vguides = PackedInt32Array();
+	hguides = PackedInt32Array();
+	emit_signal(SNAME("guides_changed"));
 	viewport->queue_redraw();
 }
 
@@ -341,15 +360,19 @@ bool ControlViewport::_gui_input_rulers_and_guides(const Ref<InputEvent> &p_even
 						// Adds a new vertical guide
 						if (dragged_guide_index >= 0) {
 							// Move Vertical Guide
-							vguides[dragged_guide_index] = edited.x;
+							vguides.remove_at(dragged_guide_index);
+							vguides.push_back(Math::fast_ftoi(floor(edited.x)));
+							emit_signal(SNAME("guides_changed"));
 						} else {
 							// Create Vertical Guide
-							vguides.push_back(edited.x);
+							vguides.push_back(Math::fast_ftoi(floor(edited.x)));
+							emit_signal(SNAME("guides_changed"));
 						}
 					} else {
 						if (dragged_guide_index >= 0) {
 							// Remove Vertical Guide
 							vguides.remove_at(dragged_guide_index);
+							emit_signal(SNAME("guides_changed"));
 						}
 					}
 				} else if (drag_type == DRAG_H_GUIDE) {
@@ -357,22 +380,27 @@ bool ControlViewport::_gui_input_rulers_and_guides(const Ref<InputEvent> &p_even
 						// Adds a new horizontal guide
 						if (dragged_guide_index >= 0) {
 							// Move Horizontal Guide
-							hguides[dragged_guide_index] = edited.y;
+							hguides.remove_at(dragged_guide_index);
+							hguides.push_back(Math::fast_ftoi(floor(edited.y)));
+							emit_signal(SNAME("guides_changed"));
 						} else {
 							// Create Horizontal Guide
-							hguides.push_back(edited.y);
+							hguides.push_back(Math::fast_ftoi(floor(edited.y)));
+							emit_signal(SNAME("guides_changed"));
 						}
 					} else {
 						if (dragged_guide_index >= 0) {
 							// Remove Horizontal Guide
 							hguides.remove_at(dragged_guide_index);
+							emit_signal(SNAME("guides_changed"));
 						}
 					}
 				} else if (drag_type == DRAG_DOUBLE_GUIDE) {
 					if (b->get_position().x > theme_cache.ruler_width && b->get_position().y > theme_cache.ruler_width) {
 						// Create Horizontal and Vertical Guides
-						vguides.push_back(edited.x);
-						hguides.push_back(edited.y);
+						vguides.push_back(Math::fast_ftoi(floor(edited.x)));
+						hguides.push_back(Math::fast_ftoi(floor(edited.y)));
+						emit_signal(SNAME("guides_changed"));
 					}
 				}
 			}
@@ -482,7 +510,7 @@ void ControlViewport::_draw_rulers() {
 	Point2 last = (transform * ruler_transform * major_subdivide * minor_subdivide).affine_inverse().xform(viewport->get_size());
 	// Draw top ruler
 	viewport->draw_rect(Rect2(Point2(ruler_width, 0), Size2(viewport->get_size().x, ruler_width)), bg_color);
-	for (int i = Math::ceil(first.x); i < last.x; i++) {
+	for (int i = ceil(first.x); i < last.x; i++) {
 		Point2 position = (transform * ruler_transform * major_subdivide * minor_subdivide).xform(Point2(i, 0)).floor();
 		if (i % (major_subdivision * minor_subdivision) == 0) {
 			viewport->draw_line(Point2(position.x, 0), Point2(position.x, ruler_width), graduation_color, 1.0);
@@ -498,7 +526,7 @@ void ControlViewport::_draw_rulers() {
 	}
 	// Draw left ruler
 	viewport->draw_rect(Rect2(Point2(0, ruler_width), Size2(ruler_width, viewport->get_size().y)), bg_color);
-	for (int i = Math::ceil(first.y); i < last.y; i++) {
+	for (int i = ceil(first.y); i < last.y; i++) {
 		Point2 position = (transform * ruler_transform * major_subdivide * minor_subdivide).xform(Point2(0, i)).floor();
 		if (i % (major_subdivision * minor_subdivision) == 0) {
 			viewport->draw_line(Point2(0, position.y), Point2(ruler_width, position.y), graduation_color, 1.0);
@@ -534,7 +562,7 @@ void ControlViewport::_draw_grid() {
 	if (grid_step.x != 0) {
 		for (int i = 0; i < viewport_size.width; i++) {
 			const int cell =
-					Math::fast_ftoi(Math::floor((xform.xform(Vector2(i, 0)).x - grid_offset.x) / (grid_step.x * Math::pow(2.0, grid_step_multiplier))));
+					Math::fast_ftoi(floor((xform.xform(Vector2(i, 0)).x - grid_offset.x) / (grid_step.x * Math::pow(2.0, grid_step_multiplier))));
 			if (i == 0) {
 				last_cell = cell;
 			}
@@ -553,7 +581,7 @@ void ControlViewport::_draw_grid() {
 	if (grid_step.y != 0) {
 		for (int i = 0; i < viewport_size.height; i++) {
 			const int cell =
-					Math::fast_ftoi(Math::floor((xform.xform(Vector2(0, i)).y - grid_offset.y) / (grid_step.y * Math::pow(2.0, grid_step_multiplier))));
+					Math::fast_ftoi(floor((xform.xform(Vector2(0, i)).y - grid_offset.y) / (grid_step.y * Math::pow(2.0, grid_step_multiplier))));
 			if (i == 0) {
 				last_cell = cell;
 			}
@@ -594,7 +622,7 @@ void ControlViewport::_draw_guides() {
 	Color outline_color = text_color.inverted();
 	const float outline_size = 2;
 	if (drag_type == DRAG_DOUBLE_GUIDE || drag_type == DRAG_V_GUIDE) {
-		String str = TS->format_number(vformat("%d px", Math::floor(xform.affine_inverse().xform(dragged_guide_pos).x)));
+		String str = TS->format_number(vformat("%d px", floor(xform.affine_inverse().xform(dragged_guide_pos).x)));
 		Ref<Font> font = theme_cache.ruler_font;
 		int font_size = 16;
 		Size2 text_size = font->get_string_size(str, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size);
@@ -603,7 +631,7 @@ void ControlViewport::_draw_guides() {
 		viewport->draw_line(Point2(dragged_guide_pos.x, 0), Point2(dragged_guide_pos.x, viewport->get_size().y), guide_color, 1.0);
 	}
 	if (drag_type == DRAG_DOUBLE_GUIDE || drag_type == DRAG_H_GUIDE) {
-		String str = TS->format_number(vformat("%d px", Math::floor(xform.affine_inverse().xform(dragged_guide_pos).y)));
+		String str = TS->format_number(vformat("%d px", floor(xform.affine_inverse().xform(dragged_guide_pos).y)));
 		Ref<Font> font = theme_cache.ruler_font;
 		int font_size = 16;
 		Size2 text_size = font->get_string_size(str, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size);
@@ -750,6 +778,7 @@ void ControlViewport::_is_hovering_guide(Point2 p_pos, bool p_is_pressed, bool p
 				// Remove Vertical Guide
 				vguides.remove_at(hovered_guide_index);
 			}
+			emit_signal(SNAME("guides_changed"));
 		} else {
 			dragged_guide_index = hovered_guide_index;
 			if (hovered_guide_index >= 0) {
@@ -837,7 +866,7 @@ void ControlViewport::_zoom_on_position(real_t p_zoom, Point2 p_position) {
 	// of small details (texts, lines).
 	// This correction adds a jitter movement when zooming, so we correct only when the
 	// zoom factor is an integer. (in the other cases, all pixels won't be aligned anyway)
-	const real_t closest_zoom_factor = Math::round(zoom);
+	const real_t closest_zoom_factor = round(zoom);
 	if (Math::is_zero_approx(zoom - closest_zoom_factor)) {
 		// Make sure scene pixel at view_offset is aligned on a screen pixel.
 		Vector2 view_offset_int = view_offset.floor();
@@ -881,6 +910,10 @@ void ControlViewport::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_primary_grid_step", "step"), &ControlViewport::set_primary_grid_step);
 	ClassDB::bind_method(D_METHOD("get_primary_grid_step"), &ControlViewport::get_primary_grid_step);
 	ClassDB::bind_method(D_METHOD("get_custom_transform"), &ControlViewport::get_custom_transform);
+	ClassDB::bind_method(D_METHOD("set_vguides", "vguides"), &ControlViewport::set_vguides);
+	ClassDB::bind_method(D_METHOD("get_vguides"), &ControlViewport::get_vguides);
+	ClassDB::bind_method(D_METHOD("set_hguides", "hguides"), &ControlViewport::set_hguides);
+	ClassDB::bind_method(D_METHOD("get_hguides"), &ControlViewport::get_hguides);
 	ClassDB::bind_method(D_METHOD("clear_guides"), &ControlViewport::clear_guides);
 	ClassDB::bind_method(D_METHOD("center_view"), &ControlViewport::center_view);
 	ClassDB::bind_method(D_METHOD("get_control_viewport"), &ControlViewport::get_control_viewport);
@@ -898,8 +931,11 @@ void ControlViewport::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "grid_offset"), "set_grid_offset", "get_grid_offset");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "grid_step"), "set_grid_step", "get_grid_step");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "primary_grid_step"), "set_primary_grid_step", "get_primary_grid_step");
+	ADD_PROPERTY(PropertyInfo(Variant::PACKED_INT64_ARRAY, "vguides", PROPERTY_HINT_ARRAY_TYPE), "set_vguides", "get_vguides");
+	ADD_PROPERTY(PropertyInfo(Variant::PACKED_INT64_ARRAY, "hguides", PROPERTY_HINT_ARRAY_TYPE), "set_hguides", "get_hguides");
 
 	ADD_SIGNAL(MethodInfo("view_transform_changed", PropertyInfo(Variant::TRANSFORM2D, "transform")));
+	ADD_SIGNAL(MethodInfo("guides_changed"));
 
 	BIND_THEME_ITEM(Theme::DATA_TYPE_STYLEBOX, ControlViewport, focus_style);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_FONT, ControlViewport, ruler_font);

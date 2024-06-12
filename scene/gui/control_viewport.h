@@ -72,8 +72,8 @@ private:
 	bool show_zoom_widget = true;
 
 	Size2 view_size = Size2(64, 64);
-	Array vguides = Array();
-	Array hguides = Array();
+	PackedInt32Array vguides = PackedInt32Array();
+	PackedInt32Array hguides = PackedInt32Array();
 
 	real_t zoom = 1.0;
 	Point2 view_offset;
@@ -163,10 +163,10 @@ public:
 	Point2 get_view_offset() const;
 	Size2 get_view_size() const;
 	Transform2D get_custom_transform() const;
-	void set_vguides(const Array &p_vguides);
-	Array get_vguides() const;
-	void set_hguides(const Array &p_hguides);
-	Array get_hguides() const;
+	void set_vguides(const PackedInt32Array &p_vguides);
+	PackedInt32Array get_vguides() const;
+	void set_hguides(const PackedInt32Array &p_hguides);
+	PackedInt32Array get_hguides() const;
 	void clear_guides();
 	void center_view();
 

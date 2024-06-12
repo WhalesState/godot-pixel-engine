@@ -1376,8 +1376,6 @@ void TextureStorage::_update_render_target(RenderTarget *rt) {
 		return;
 	}
 
-	Config *config = Config::get_singleton();
-
 	rt->color_internal_format = rt->is_transparent ? GL_RGBA8 : GL_RGB10_A2;
 	rt->color_format = GL_RGBA;
 	rt->color_type = rt->is_transparent ? GL_UNSIGNED_BYTE : GL_UNSIGNED_INT_2_10_10_10_REV;
@@ -1548,7 +1546,6 @@ void GLES3::TextureStorage::copy_scene_to_backbuffer(RenderTarget *rt, const boo
 		return;
 	}
 
-	Config *config = Config::get_singleton();
 	GLenum texture_target = GL_TEXTURE_2D;
 	if (rt->backbuffer_fbo == 0) {
 		glGenFramebuffers(1, &rt->backbuffer_fbo);

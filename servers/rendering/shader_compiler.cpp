@@ -1242,8 +1242,6 @@ String ShaderCompiler::_dump_node_code(const SL::Node *p_node, int p_level, Gene
 							if (correct_texture_uniform && !RS::get_singleton()->is_low_end()) {
 								// Need to map from texture to sampler in order to sample when using Vulkan GLSL.
 								String sampler_name;
-								bool is_depth_texture = false;
-								bool is_normal_roughness_texture = false;
 
 								if (actions.custom_samplers.has(texture_uniform)) {
 									sampler_name = actions.custom_samplers[texture_uniform];
@@ -1252,10 +1250,6 @@ String ShaderCompiler::_dump_node_code(const SL::Node *p_node, int p_level, Gene
 										const ShaderLanguage::ShaderNode::Uniform &u = shader->uniforms[texture_uniform];
 										if (u.hint == ShaderLanguage::ShaderNode::Uniform::HINT_SCREEN_TEXTURE) {
 											is_screen_texture = true;
-										} else if (u.hint == ShaderLanguage::ShaderNode::Uniform::HINT_DEPTH_TEXTURE) {
-											is_depth_texture = true;
-										} else if (u.hint == ShaderLanguage::ShaderNode::Uniform::HINT_NORMAL_ROUGHNESS_TEXTURE) {
-											is_normal_roughness_texture = true;
 										}
 										sampler_name = _get_sampler_name(u.filter, u.repeat);
 									} else {
