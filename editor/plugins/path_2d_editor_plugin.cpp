@@ -438,14 +438,14 @@ void Path2DEditor::edit(Node *p_path2d) {
 
 	if (p_path2d) {
 		node = Object::cast_to<Path2D>(p_path2d);
-		if (!node->is_connected("visibility_changed", callable_mp(this, &Path2DEditor::_node_visibility_changed))) {
-			node->connect("visibility_changed", callable_mp(this, &Path2DEditor::_node_visibility_changed));
+		if (!node->is_connected(SceneStringName(visibility_changed), callable_mp(this, &Path2DEditor::_node_visibility_changed))) {
+			node->connect(SceneStringName(visibility_changed), callable_mp(this, &Path2DEditor::_node_visibility_changed));
 		}
 
 	} else {
 		// node may have been deleted at this point
-		if (node && node->is_connected("visibility_changed", callable_mp(this, &Path2DEditor::_node_visibility_changed))) {
-			node->disconnect("visibility_changed", callable_mp(this, &Path2DEditor::_node_visibility_changed));
+		if (node && node->is_connected(SceneStringName(visibility_changed), callable_mp(this, &Path2DEditor::_node_visibility_changed))) {
+			node->disconnect(SceneStringName(visibility_changed), callable_mp(this, &Path2DEditor::_node_visibility_changed));
 		}
 		node = nullptr;
 	}
@@ -539,7 +539,7 @@ Path2DEditor::Path2DEditor() {
 	curve_edit->set_pressed(true);
 	curve_edit->set_focus_mode(Control::FOCUS_NONE);
 	curve_edit->set_tooltip_text(TTR("Select Points") + "\n" + TTR("Shift+Drag: Select Control Points") + "\n" + keycode_get_string((Key)KeyModifierMask::CMD_OR_CTRL) + TTR("Click: Add Point") + "\n" + TTR("Left Click: Split Segment (in curve)") + "\n" + TTR("Right Click: Delete Point"));
-	curve_edit->connect("pressed", callable_mp(this, &Path2DEditor::_mode_selected).bind(MODE_EDIT));
+	curve_edit->connect(SceneStringName(pressed), callable_mp(this, &Path2DEditor::_mode_selected).bind(MODE_EDIT));
 	add_child(curve_edit);
 
 	curve_edit_curve = memnew(Button);
@@ -547,7 +547,7 @@ Path2DEditor::Path2DEditor() {
 	curve_edit_curve->set_toggle_mode(true);
 	curve_edit_curve->set_focus_mode(Control::FOCUS_NONE);
 	curve_edit_curve->set_tooltip_text(TTR("Select Control Points (Shift+Drag)"));
-	curve_edit_curve->connect("pressed", callable_mp(this, &Path2DEditor::_mode_selected).bind(MODE_EDIT_CURVE));
+	curve_edit_curve->connect(SceneStringName(pressed), callable_mp(this, &Path2DEditor::_mode_selected).bind(MODE_EDIT_CURVE));
 	add_child(curve_edit_curve);
 
 	curve_create = memnew(Button);
@@ -555,7 +555,7 @@ Path2DEditor::Path2DEditor() {
 	curve_create->set_toggle_mode(true);
 	curve_create->set_focus_mode(Control::FOCUS_NONE);
 	curve_create->set_tooltip_text(TTR("Add Point (in empty space)"));
-	curve_create->connect("pressed", callable_mp(this, &Path2DEditor::_mode_selected).bind(MODE_CREATE));
+	curve_create->connect(SceneStringName(pressed), callable_mp(this, &Path2DEditor::_mode_selected).bind(MODE_CREATE));
 	add_child(curve_create);
 
 	curve_del = memnew(Button);
@@ -563,14 +563,14 @@ Path2DEditor::Path2DEditor() {
 	curve_del->set_toggle_mode(true);
 	curve_del->set_focus_mode(Control::FOCUS_NONE);
 	curve_del->set_tooltip_text(TTR("Delete Point"));
-	curve_del->connect("pressed", callable_mp(this, &Path2DEditor::_mode_selected).bind(MODE_DELETE));
+	curve_del->connect(SceneStringName(pressed), callable_mp(this, &Path2DEditor::_mode_selected).bind(MODE_DELETE));
 	add_child(curve_del);
 
 	curve_close = memnew(Button);
 	curve_close->set_theme_type_variation("FlatButton");
 	curve_close->set_focus_mode(Control::FOCUS_NONE);
 	curve_close->set_tooltip_text(TTR("Close Curve"));
-	curve_close->connect("pressed", callable_mp(this, &Path2DEditor::_mode_selected).bind(ACTION_CLOSE));
+	curve_close->connect(SceneStringName(pressed), callable_mp(this, &Path2DEditor::_mode_selected).bind(ACTION_CLOSE));
 	add_child(curve_close);
 
 	PopupMenu *menu;
@@ -586,7 +586,7 @@ Path2DEditor::Path2DEditor() {
 	menu->set_item_checked(HANDLE_OPTION_ANGLE, mirror_handle_angle);
 	menu->add_check_item(TTR("Mirror Handle Lengths"));
 	menu->set_item_checked(HANDLE_OPTION_LENGTH, mirror_handle_length);
-	menu->connect("id_pressed", callable_mp(this, &Path2DEditor::_handle_option_pressed));
+	menu->connect(SceneStringName(id_pressed), callable_mp(this, &Path2DEditor::_handle_option_pressed));
 }
 
 void Path2DEditorPlugin::edit(Object *p_object) {

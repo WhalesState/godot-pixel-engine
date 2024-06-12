@@ -29,6 +29,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
+
 #include "editor_string_names.h"
 
 EditorStringNames *EditorStringNames::singleton = nullptr;

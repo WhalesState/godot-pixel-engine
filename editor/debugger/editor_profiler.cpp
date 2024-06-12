@@ -604,12 +604,12 @@ EditorProfiler::EditorProfiler() {
 	activate->set_toggle_mode(true);
 	activate->set_disabled(true);
 	activate->set_text(TTR("Start"));
-	activate->connect("pressed", callable_mp(this, &EditorProfiler::_activate_pressed));
+	activate->connect(SceneStringName(pressed), callable_mp(this, &EditorProfiler::_activate_pressed));
 	hb->add_child(activate);
 
 	clear_button = memnew(Button);
 	clear_button->set_text(TTR("Clear"));
-	clear_button->connect("pressed", callable_mp(this, &EditorProfiler::_clear_pressed));
+	clear_button->connect(SceneStringName(pressed), callable_mp(this, &EditorProfiler::_clear_pressed));
 	clear_button->set_disabled(true);
 	hb->add_child(clear_button);
 
@@ -677,9 +677,9 @@ EditorProfiler::EditorProfiler() {
 	graph = memnew(TextureRect);
 	graph->set_expand_mode(TextureRect::EXPAND_IGNORE_SIZE);
 	graph->set_mouse_filter(MOUSE_FILTER_STOP);
-	graph->connect("draw", callable_mp(this, &EditorProfiler::_graph_tex_draw));
-	graph->connect("gui_input", callable_mp(this, &EditorProfiler::_graph_tex_input));
-	graph->connect("mouse_exited", callable_mp(this, &EditorProfiler::_graph_tex_mouse_exit));
+	graph->connect(SceneStringName(draw), callable_mp(this, &EditorProfiler::_graph_tex_draw));
+	graph->connect(SceneStringName(gui_input), callable_mp(this, &EditorProfiler::_graph_tex_input));
+	graph->connect(SceneStringName(mouse_exited), callable_mp(this, &EditorProfiler::_graph_tex_mouse_exit));
 
 	h_split->add_child(graph);
 	graph->set_h_size_flags(SIZE_EXPAND_FILL);

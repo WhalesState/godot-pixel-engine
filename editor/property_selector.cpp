@@ -555,7 +555,7 @@ PropertySelector::PropertySelector() {
 	search_box = memnew(LineEdit);
 	vbc->add_margin_child(TTR("Search:"), search_box);
 	search_box->connect("text_changed", callable_mp(this, &PropertySelector::_text_changed));
-	search_box->connect("gui_input", callable_mp(this, &PropertySelector::_sbox_input));
+	search_box->connect(SceneStringName(gui_input), callable_mp(this, &PropertySelector::_sbox_input));
 	search_options = memnew(Tree);
 	vbc->add_margin_child(TTR("Matches:"), search_options, true);
 	set_ok_button_text(TTR("Open"));

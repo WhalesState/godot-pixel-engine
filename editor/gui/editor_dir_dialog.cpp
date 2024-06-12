@@ -213,7 +213,7 @@ EditorDirDialog::EditorDirDialog() {
 	copy->connect("toggled", callable_mp(this, &EditorDirDialog::_copy_toggled));
 
 	makedir = add_button(TTR("Create Folder"), DisplayServer::get_singleton()->get_swap_cancel_ok(), "makedir");
-	makedir->connect("pressed", callable_mp(this, &EditorDirDialog::_make_dir));
+	makedir->connect(SceneStringName(pressed), callable_mp(this, &EditorDirDialog::_make_dir));
 
 	makedialog = memnew(ConfirmationDialog);
 	makedialog->set_title(TTR("Create Folder"));

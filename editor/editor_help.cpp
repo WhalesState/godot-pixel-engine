@@ -132,7 +132,7 @@ void EditorHelp::_update_theme_item_cache() {
 	class_desc->add_theme_font_size_override("normal_font_size", theme_cache.doc_font_size);
 
 	class_desc->add_theme_color_override("selection_color", get_theme_color(SNAME("selection_color"), SNAME("EditorHelp")));
-	class_desc->add_theme_constant_override("line_separation", get_theme_constant(SNAME("line_separation"), SNAME("EditorHelp")));
+	class_desc->add_theme_constant_override(SceneStringName(line_separation), get_theme_constant(SceneStringName(line_separation), SNAME("EditorHelp")));
 	class_desc->add_theme_constant_override("table_h_separation", get_theme_constant(SNAME("table_h_separation"), SNAME("EditorHelp")));
 	class_desc->add_theme_constant_override("table_v_separation", get_theme_constant(SNAME("table_v_separation"), SNAME("EditorHelp")));
 	class_desc->add_theme_constant_override("text_highlight_h_padding", get_theme_constant(SNAME("text_highlight_h_padding"), SNAME("EditorHelp")));
@@ -2479,10 +2479,10 @@ EditorHelp::EditorHelp() {
 	class_desc->set_threaded(true);
 	class_desc->set_v_size_flags(SIZE_EXPAND_FILL);
 
-	class_desc->connect("finished", callable_mp(this, &EditorHelp::_class_desc_finished));
+	class_desc->connect(SceneStringName(finished), callable_mp(this, &EditorHelp::_class_desc_finished));
 	class_desc->connect("meta_clicked", callable_mp(this, &EditorHelp::_class_desc_select));
-	class_desc->connect("gui_input", callable_mp(this, &EditorHelp::_class_desc_input));
-	class_desc->connect("resized", callable_mp(this, &EditorHelp::_class_desc_resized).bind(false));
+	class_desc->connect(SceneStringName(gui_input), callable_mp(this, &EditorHelp::_class_desc_input));
+	class_desc->connect(SceneStringName(resized), callable_mp(this, &EditorHelp::_class_desc_resized).bind(false));
 
 	// Added second so it opens at the bottom so it won't offset the entire widget.
 	find_bar = memnew(FindBar);
@@ -2497,7 +2497,7 @@ EditorHelp::EditorHelp() {
 
 	toggle_scripts_button = memnew(Button);
 	toggle_scripts_button->set_flat(true);
-	toggle_scripts_button->connect("pressed", callable_mp(this, &EditorHelp::_toggle_scripts_pressed));
+	toggle_scripts_button->connect(SceneStringName(pressed), callable_mp(this, &EditorHelp::_toggle_scripts_pressed));
 	status_bar->add_child(toggle_scripts_button);
 
 	class_desc->set_selection_enabled(true);
@@ -2839,13 +2839,13 @@ FindBar::FindBar() {
 	find_prev->set_flat(true);
 	add_child(find_prev);
 	find_prev->set_focus_mode(FOCUS_NONE);
-	find_prev->connect("pressed", callable_mp(this, &FindBar::search_prev));
+	find_prev->connect(SceneStringName(pressed), callable_mp(this, &FindBar::search_prev));
 
 	find_next = memnew(Button);
 	find_next->set_flat(true);
 	add_child(find_next);
 	find_next->set_focus_mode(FOCUS_NONE);
-	find_next->connect("pressed", callable_mp(this, &FindBar::search_next));
+	find_next->connect(SceneStringName(pressed), callable_mp(this, &FindBar::search_next));
 
 	Control *space = memnew(Control);
 	add_child(space);
@@ -2856,7 +2856,7 @@ FindBar::FindBar() {
 	hide_button->set_focus_mode(FOCUS_NONE);
 	hide_button->set_ignore_texture_size(true);
 	hide_button->set_stretch_mode(TextureButton::STRETCH_KEEP_CENTERED);
-	hide_button->connect("pressed", callable_mp(this, &FindBar::_hide_bar));
+	hide_button->connect(SceneStringName(pressed), callable_mp(this, &FindBar::_hide_bar));
 }
 
 void FindBar::popup_search() {

@@ -266,7 +266,7 @@ DependencyEditor::DependencyEditor() {
 	fixdeps = memnew(Button(TTR("Fix Broken")));
 	fixdeps->set_h_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_END);
 	hbc->add_child(fixdeps);
-	fixdeps->connect("pressed", callable_mp(this, &DependencyEditor::_fix_all));
+	fixdeps->connect(SceneStringName(pressed), callable_mp(this, &DependencyEditor::_fix_all));
 
 	vb->add_child(hbc);
 
@@ -396,7 +396,7 @@ void DependencyEditorOwners::show(const String &p_path) {
 DependencyEditorOwners::DependencyEditorOwners() {
 	file_options = memnew(PopupMenu);
 	add_child(file_options);
-	file_options->connect("id_pressed", callable_mp(this, &DependencyEditorOwners::_file_option));
+	file_options->connect(SceneStringName(id_pressed), callable_mp(this, &DependencyEditorOwners::_file_option));
 
 	owners = memnew(ItemList);
 	owners->set_select_mode(ItemList::SELECT_MULTI);

@@ -353,7 +353,7 @@ bool Tween::step(double p_delta) {
 				if (loops_done == loops) {
 					running = false;
 					dead = true;
-					emit_signal(SNAME("finished"));
+					emit_signal(SceneStringName(finished));
 					break;
 				} else {
 					emit_signal(SNAME("loop_finished"), loops_done);
@@ -595,7 +595,7 @@ bool PropertyTweener::step(double &r_delta) {
 		target_instance->set_indexed(property, final_val);
 		finished = true;
 		r_delta = elapsed_time - delay - duration;
-		emit_signal(SNAME("finished"));
+		emit_signal(SceneStringName(finished));
 		return false;
 	}
 }
@@ -654,7 +654,7 @@ bool IntervalTweener::step(double &r_delta) {
 	} else {
 		finished = true;
 		r_delta = elapsed_time - duration;
-		emit_signal(SNAME("finished"));
+		emit_signal(SceneStringName(finished));
 		return false;
 	}
 }
@@ -697,7 +697,7 @@ bool CallbackTweener::step(double &r_delta) {
 
 		finished = true;
 		r_delta = elapsed_time - delay;
-		emit_signal(SNAME("finished"));
+		emit_signal(SceneStringName(finished));
 		return false;
 	}
 
@@ -783,7 +783,7 @@ bool MethodTweener::step(double &r_delta) {
 	} else {
 		finished = true;
 		r_delta = elapsed_time - delay - duration;
-		emit_signal(SNAME("finished"));
+		emit_signal(SceneStringName(finished));
 		return false;
 	}
 }

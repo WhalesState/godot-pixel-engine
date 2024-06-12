@@ -49,6 +49,7 @@
 #include "scene/property_utils.h"
 #include "scene/resources/packed_scene.h"
 #include "scene/resources/style_box_flat.h"
+#include "scene/scene_string_names.h"
 
 bool EditorInspector::_property_path_matches(const String &p_property_path, const String &p_filter, EditorPropertyNameProcessor::Style p_style) {
 	if (p_property_path.findn(p_filter) != -1) {
@@ -596,7 +597,7 @@ void EditorProperty::_focusable_focused(int p_index) {
 }
 
 void EditorProperty::add_focusable(Control *p_control) {
-	p_control->connect("focus_entered", callable_mp(this, &EditorProperty::_focusable_focused).bind(focusables.size()));
+	p_control->connect(SceneStringName(focus_entered), callable_mp(this, &EditorProperty::_focusable_focused).bind(focusables.size()));
 	focusables.push_back(p_control);
 }
 
@@ -1029,7 +1030,7 @@ void EditorProperty::_update_popup() {
 	} else {
 		menu = memnew(PopupMenu);
 		add_child(menu);
-		menu->connect("id_pressed", callable_mp(this, &EditorProperty::menu_option));
+		menu->connect(SceneStringName(id_pressed), callable_mp(this, &EditorProperty::menu_option));
 	}
 	menu->add_icon_shortcut(get_editor_theme_icon(SNAME("ActionCopy")), ED_GET_SHORTCUT("property_editor/copy_value"), MENU_COPY_VALUE);
 	menu->add_icon_shortcut(get_editor_theme_icon(SNAME("ActionPaste")), ED_GET_SHORTCUT("property_editor/paste_value"), MENU_PASTE_VALUE);
@@ -1207,7 +1208,7 @@ void EditorInspectorCategory::gui_input(const Ref<InputEvent> &p_event) {
 
 EditorInspectorCategory::EditorInspectorCategory() {
 	menu = memnew(PopupMenu);
-	menu->connect("id_pressed", callable_mp(this, &EditorInspectorCategory::_handle_menu_option));
+	menu->connect(SceneStringName(id_pressed), callable_mp(this, &EditorInspectorCategory::_handle_menu_option));
 	menu->add_item(TTR("Open Documentation"), MENU_OPEN_DOCS);
 	add_child(menu);
 }
@@ -2093,10 +2094,10 @@ void EditorInspectorArray::_setup() {
 		int element_position = begin_array_index + i;
 		ae.panel->set_meta("index", element_position);
 		ae.panel->set_tooltip_text(vformat(TTR("Element %d: %s%d*"), element_position, array_element_prefix, element_position));
-		ae.panel->connect("focus_entered", callable_mp((CanvasItem *)ae.panel, &PanelContainer::queue_redraw));
-		ae.panel->connect("focus_exited", callable_mp((CanvasItem *)ae.panel, &PanelContainer::queue_redraw));
-		ae.panel->connect("draw", callable_mp(this, &EditorInspectorArray::_panel_draw).bind(i));
-		ae.panel->connect("gui_input", callable_mp(this, &EditorInspectorArray::_panel_gui_input).bind(i));
+		ae.panel->connect(SceneStringName(focus_entered), callable_mp((CanvasItem *)ae.panel, &PanelContainer::queue_redraw));
+		ae.panel->connect(SceneStringName(focus_exited), callable_mp((CanvasItem *)ae.panel, &PanelContainer::queue_redraw));
+		ae.panel->connect(SceneStringName(draw), callable_mp(this, &EditorInspectorArray::_panel_draw).bind(i));
+		ae.panel->connect(SceneStringName(gui_input), callable_mp(this, &EditorInspectorArray::_panel_gui_input).bind(i));
 		ae.panel->add_theme_style_override(SNAME("panel"), i % 2 ? odd_style : even_style);
 		elements_vbox->add_child(ae.panel);
 
@@ -2128,7 +2129,7 @@ void EditorInspectorArray::_setup() {
 			if (element_position > 0) {
 				ae.move_up = memnew(Button);
 				ae.move_up->set_icon(get_editor_theme_icon(SNAME("MoveUp")));
-				ae.move_up->connect("pressed", callable_mp(this, &EditorInspectorArray::_move_element).bind(element_position, element_position - 1));
+				ae.move_up->connect(SceneStringName(pressed), callable_mp(this, &EditorInspectorArray::_move_element).bind(element_position, element_position - 1));
 				move_vbox->add_child(ae.move_up);
 			}
 
@@ -2144,7 +2145,7 @@ void EditorInspectorArray::_setup() {
 			if (element_position < _get_array_count() - 1) {
 				ae.move_down = memnew(Button);
 				ae.move_down->set_icon(get_editor_theme_icon(SNAME("MoveDown")));
-				ae.move_down->connect("pressed", callable_mp(this, &EditorInspectorArray::_move_element).bind(element_position, element_position + 2));
+				ae.move_down->connect(SceneStringName(pressed), callable_mp(this, &EditorInspectorArray::_move_element).bind(element_position, element_position + 2));
 				move_vbox->add_child(ae.move_down);
 			}
 		}
@@ -2168,7 +2169,7 @@ void EditorInspectorArray::_setup() {
 		ae.erase = memnew(Button);
 		ae.erase->set_icon(get_editor_theme_icon(SNAME("Remove")));
 		ae.erase->set_v_size_flags(SIZE_SHRINK_CENTER);
-		ae.erase->connect("pressed", callable_mp(this, &EditorInspectorArray::_remove_item).bind(element_position));
+		ae.erase->connect(SceneStringName(pressed), callable_mp(this, &EditorInspectorArray::_remove_item).bind(element_position));
 		ae.hbox->add_child(ae.erase);
 	}
 
@@ -2350,7 +2351,7 @@ EditorInspectorArray::EditorInspectorArray(bool p_read_only) {
 	rmb_popup->add_separator();
 	rmb_popup->add_item(TTR("Clear Array"), OPTION_CLEAR_ARRAY);
 	rmb_popup->add_item(TTR("Resize Array..."), OPTION_RESIZE_ARRAY);
-	rmb_popup->connect("id_pressed", callable_mp(this, &EditorInspectorArray::_rmb_popup_id_pressed));
+	rmb_popup->connect(SceneStringName(id_pressed), callable_mp(this, &EditorInspectorArray::_rmb_popup_id_pressed));
 	add_child(rmb_popup);
 
 	elements_vbox = memnew(VBoxContainer);
@@ -2358,12 +2359,12 @@ EditorInspectorArray::EditorInspectorArray(bool p_read_only) {
 	vbox->add_child(elements_vbox);
 
 	add_button = EditorInspector::create_inspector_action_button(TTR("Add Element"));
-	add_button->connect("pressed", callable_mp(this, &EditorInspectorArray::_add_button_pressed));
+	add_button->connect(SceneStringName(pressed), callable_mp(this, &EditorInspectorArray::_add_button_pressed));
 	add_button->set_disabled(read_only);
 	vbox->add_child(add_button);
 
 	control_dropping = memnew(Control);
-	control_dropping->connect("draw", callable_mp(this, &EditorInspectorArray::_control_dropping_draw));
+	control_dropping->connect(SceneStringName(draw), callable_mp(this, &EditorInspectorArray::_control_dropping_draw));
 	control_dropping->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);
 	add_child(control_dropping);
 
@@ -2383,7 +2384,7 @@ EditorInspectorArray::EditorInspectorArray(bool p_read_only) {
 	new_size_spin_box->set_editable(!read_only);
 	resize_dialog_vbox->add_margin_child(TTRC("New Size:"), new_size_spin_box);
 
-	vbox->connect("visibility_changed", callable_mp(this, &EditorInspectorArray::_vbox_visibility_changed));
+	vbox->connect(SceneStringName(visibility_changed), callable_mp(this, &EditorInspectorArray::_vbox_visibility_changed));
 }
 
 ////////////////////////////////////////////////
@@ -2453,12 +2454,12 @@ EditorPaginator::EditorPaginator() {
 
 	first_page_button = memnew(Button);
 	first_page_button->set_flat(true);
-	first_page_button->connect("pressed", callable_mp(this, &EditorPaginator::_first_page_button_pressed));
+	first_page_button->connect(SceneStringName(pressed), callable_mp(this, &EditorPaginator::_first_page_button_pressed));
 	add_child(first_page_button);
 
 	prev_page_button = memnew(Button);
 	prev_page_button->set_flat(true);
-	prev_page_button->connect("pressed", callable_mp(this, &EditorPaginator::_prev_page_button_pressed));
+	prev_page_button->connect(SceneStringName(pressed), callable_mp(this, &EditorPaginator::_prev_page_button_pressed));
 	add_child(prev_page_button);
 
 	page_line_edit = memnew(LineEdit);
@@ -2471,12 +2472,12 @@ EditorPaginator::EditorPaginator() {
 
 	next_page_button = memnew(Button);
 	next_page_button->set_flat(true);
-	next_page_button->connect("pressed", callable_mp(this, &EditorPaginator::_next_page_button_pressed));
+	next_page_button->connect(SceneStringName(pressed), callable_mp(this, &EditorPaginator::_next_page_button_pressed));
 	add_child(next_page_button);
 
 	last_page_button = memnew(Button);
 	last_page_button->set_flat(true);
-	last_page_button->connect("pressed", callable_mp(this, &EditorPaginator::_last_page_button_pressed));
+	last_page_button->connect(SceneStringName(pressed), callable_mp(this, &EditorPaginator::_last_page_button_pressed));
 	add_child(last_page_button);
 }
 
@@ -3360,7 +3361,7 @@ void EditorInspector::update_tree() {
 
 		Button *add_md = EditorInspector::create_inspector_action_button(TTR("Add Metadata"));
 		add_md->set_icon(get_editor_theme_icon(SNAME("Add")));
-		add_md->connect(SNAME("pressed"), callable_mp(this, &EditorInspector::_show_add_meta_dialog));
+		add_md->connect(SceneStringName(pressed), callable_mp(this, &EditorInspector::_show_add_meta_dialog));
 		main_vbox->add_child(add_md);
 		if (all_read_only) {
 			add_md->set_disabled(true);

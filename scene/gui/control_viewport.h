@@ -163,6 +163,10 @@ public:
 	Point2 get_view_offset() const;
 	Size2 get_view_size() const;
 	Transform2D get_custom_transform() const;
+	void set_vguides(const Array &p_vguides);
+	Array get_vguides() const;
+	void set_hguides(const Array &p_hguides);
+	Array get_hguides() const;
 	void clear_guides();
 	void center_view();
 

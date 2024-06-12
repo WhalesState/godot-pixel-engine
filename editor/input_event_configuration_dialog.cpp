@@ -629,8 +629,8 @@ InputEventConfigurationDialog::InputEventConfigurationDialog() {
 	event_listener->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	event_listener->set_stretch_ratio(0.75);
 	event_listener->connect("event_changed", callable_mp(this, &InputEventConfigurationDialog::_on_listen_input_changed));
-	event_listener->connect("focus_entered", callable_mp(this, &InputEventConfigurationDialog::_on_listen_focus_changed));
-	event_listener->connect("focus_exited", callable_mp(this, &InputEventConfigurationDialog::_on_listen_focus_changed));
+	event_listener->connect(SceneStringName(focus_entered), callable_mp(this, &InputEventConfigurationDialog::_on_listen_focus_changed));
+	event_listener->connect(SceneStringName(focus_exited), callable_mp(this, &InputEventConfigurationDialog::_on_listen_focus_changed));
 	main_vbox->add_child(event_listener);
 
 	main_vbox->add_child(memnew(HSeparator));

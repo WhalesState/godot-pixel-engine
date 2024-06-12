@@ -685,10 +685,10 @@ void EditorSpinSlider::_ensure_input_popup() {
 	value_input->set_focus_mode(FOCUS_CLICK);
 	value_input_popup->add_child(value_input);
 	value_input->set_anchors_and_offsets_preset(PRESET_FULL_RECT);
-	value_input_popup->connect("hidden", callable_mp(this, &EditorSpinSlider::_value_input_closed));
+	value_input_popup->connect(SceneStringName(hidden), callable_mp(this, &EditorSpinSlider::_value_input_closed));
 	value_input->connect("text_submitted", callable_mp(this, &EditorSpinSlider::_value_input_submitted));
-	value_input->connect("focus_exited", callable_mp(this, &EditorSpinSlider::_value_focus_exited));
-	value_input->connect("gui_input", callable_mp(this, &EditorSpinSlider::_value_input_gui_input));
+	value_input->connect(SceneStringName(focus_exited), callable_mp(this, &EditorSpinSlider::_value_focus_exited));
+	value_input->connect(SceneStringName(gui_input), callable_mp(this, &EditorSpinSlider::_value_input_gui_input));
 
 	if (is_inside_tree()) {
 		_update_value_input_stylebox();
@@ -702,7 +702,7 @@ EditorSpinSlider::EditorSpinSlider() {
 	grabber->hide();
 	grabber->set_as_top_level(true);
 	grabber->set_mouse_filter(MOUSE_FILTER_STOP);
-	grabber->connect("mouse_entered", callable_mp(this, &EditorSpinSlider::_grabber_mouse_entered));
-	grabber->connect("mouse_exited", callable_mp(this, &EditorSpinSlider::_grabber_mouse_exited));
-	grabber->connect("gui_input", callable_mp(this, &EditorSpinSlider::_grabber_gui_input));
+	grabber->connect(SceneStringName(mouse_entered), callable_mp(this, &EditorSpinSlider::_grabber_mouse_entered));
+	grabber->connect(SceneStringName(mouse_exited), callable_mp(this, &EditorSpinSlider::_grabber_mouse_exited));
+	grabber->connect(SceneStringName(gui_input), callable_mp(this, &EditorSpinSlider::_grabber_gui_input));
 }

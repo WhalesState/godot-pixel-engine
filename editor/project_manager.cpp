@@ -442,7 +442,7 @@ void ProjectDialog::ok_pressed() {
 					ConfirmationDialog *cd = memnew(ConfirmationDialog);
 					cd->set_title(TTR("Warning: This folder is not empty"));
 					cd->set_text(TTR("You are about to create a Godot project in a non-empty folder.\nThe entire contents of this folder will be imported as project resources!\n\nAre you sure you wish to continue?"));
-					cd->get_ok_button()->connect("pressed", callable_mp(this, &ProjectDialog::_nonempty_confirmation_ok_pressed));
+					cd->get_ok_button()->connect(SceneStringName(pressed), callable_mp(this, &ProjectDialog::_nonempty_confirmation_ok_pressed));
 					get_parent()->add_child(cd);
 					cd->popup_centered();
 					cd->grab_focus();
@@ -750,7 +750,7 @@ ProjectDialog::ProjectDialog() {
 	create_dir = memnew(Button);
 	pnhb->add_child(create_dir);
 	create_dir->set_text(TTR("Create Folder"));
-	create_dir->connect("pressed", callable_mp(this, &ProjectDialog::_create_folder));
+	create_dir->connect(SceneStringName(pressed), callable_mp(this, &ProjectDialog::_create_folder));
 
 	path_container = memnew(VBoxContainer);
 	vb->add_child(path_container);
@@ -789,7 +789,7 @@ ProjectDialog::ProjectDialog() {
 
 	browse = memnew(Button);
 	browse->set_text(TTR("Browse"));
-	browse->connect("pressed", callable_mp(this, &ProjectDialog::_browse_path));
+	browse->connect(SceneStringName(pressed), callable_mp(this, &ProjectDialog::_browse_path));
 	pphb->add_child(browse);
 
 	// install status icon
@@ -799,7 +799,7 @@ ProjectDialog::ProjectDialog() {
 
 	install_browse = memnew(Button);
 	install_browse->set_text(TTR("Browse"));
-	install_browse->connect("pressed", callable_mp(this, &ProjectDialog::_browse_install_path));
+	install_browse->connect(SceneStringName(pressed), callable_mp(this, &ProjectDialog::_browse_install_path));
 	iphb->add_child(install_browse);
 
 	msg = memnew(Label);
@@ -1015,7 +1015,7 @@ ProjectListItemControl::ProjectListItemControl() {
 	// This makes the project's "hover" style display correctly when hovering the favorite icon.
 	favorite_button->set_mouse_filter(MOUSE_FILTER_PASS);
 	favorite_box->add_child(favorite_button);
-	favorite_button->connect("pressed", callable_mp(this, &ProjectListItemControl::_favorite_button_pressed));
+	favorite_button->connect(SceneStringName(pressed), callable_mp(this, &ProjectListItemControl::_favorite_button_pressed));
 
 	project_icon = memnew(TextureRect);
 	project_icon->set_name("ProjectIcon");
@@ -1061,7 +1061,7 @@ ProjectListItemControl::ProjectListItemControl() {
 		explore_button->set_name("ExploreButton");
 		explore_button->set_flat(true);
 		path_hb->add_child(explore_button);
-		explore_button->connect("pressed", callable_mp(this, &ProjectListItemControl::_explore_button_pressed));
+		explore_button->connect(SceneStringName(pressed), callable_mp(this, &ProjectListItemControl::_explore_button_pressed));
 
 		project_path = memnew(Label);
 		project_path->set_name("ProjectPath");
@@ -1349,7 +1349,7 @@ void ProjectList::_create_project_item_control(int p_index) {
 	hb->set_is_missing(item.missing);
 	hb->set_is_grayed(item.grayed);
 
-	hb->connect("gui_input", callable_mp(this, &ProjectList::_panel_input).bind(hb));
+	hb->connect(SceneStringName(gui_input), callable_mp(this, &ProjectList::_panel_input).bind(hb));
 	hb->connect("favorite_pressed", callable_mp(this, &ProjectList::_favorite_pressed).bind(hb));
 	hb->connect("explore_pressed", callable_mp(this, &ProjectList::_show_project).bind(item.path));
 
@@ -2668,19 +2668,19 @@ ProjectManager::ProjectManager() {
 		create_btn = memnew(Button);
 		create_btn->set_text(TTR("New"));
 		create_btn->set_shortcut(ED_SHORTCUT("project_manager/new_project", TTR("New Project"), KeyModifierMask::CMD_OR_CTRL | Key::N));
-		create_btn->connect("pressed", callable_mp(this, &ProjectManager::_new_project));
+		create_btn->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_new_project));
 		hb->add_child(create_btn);
 
 		import_btn = memnew(Button);
 		import_btn->set_text(TTR("Import"));
 		import_btn->set_shortcut(ED_SHORTCUT("project_manager/import_project", TTR("Import Project"), KeyModifierMask::CMD_OR_CTRL | Key::I));
-		import_btn->connect("pressed", callable_mp(this, &ProjectManager::_import_project));
+		import_btn->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_import_project));
 		hb->add_child(import_btn);
 
 		scan_btn = memnew(Button);
 		scan_btn->set_text(TTR("Scan"));
 		scan_btn->set_shortcut(ED_SHORTCUT("project_manager/scan_projects", TTR("Scan Projects"), KeyModifierMask::CMD_OR_CTRL | Key::S));
-		scan_btn->connect("pressed", callable_mp(this, &ProjectManager::_scan_projects));
+		scan_btn->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_scan_projects));
 		hb->add_child(scan_btn);
 
 		loading_label = memnew(Label(TTR("Loading, please wait...")));
@@ -2747,20 +2747,20 @@ ProjectManager::ProjectManager() {
 		open_btn = memnew(Button);
 		open_btn->set_text(TTR("Edit"));
 		open_btn->set_shortcut(ED_SHORTCUT("project_manager/edit_project", TTR("Edit Project"), KeyModifierMask::CMD_OR_CTRL | Key::E));
-		open_btn->connect("pressed", callable_mp(this, &ProjectManager::_open_selected_projects_ask));
+		open_btn->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_open_selected_projects_ask));
 		tree_vb->add_child(open_btn);
 
 		run_btn = memnew(Button);
 		run_btn->set_text(TTR("Run"));
 		run_btn->set_shortcut(ED_SHORTCUT("project_manager/run_project", TTR("Run Project"), KeyModifierMask::CMD_OR_CTRL | Key::R));
-		run_btn->connect("pressed", callable_mp(this, &ProjectManager::_run_project));
+		run_btn->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_run_project));
 		tree_vb->add_child(run_btn);
 
 		rename_btn = memnew(Button);
 		rename_btn->set_text(TTR("Rename"));
 		// The F2 shortcut isn't overridden with Enter on macOS as Enter is already used to edit a project.
 		rename_btn->set_shortcut(ED_SHORTCUT("project_manager/rename_project", TTR("Rename Project"), Key::F2));
-		rename_btn->connect("pressed", callable_mp(this, &ProjectManager::_rename_project));
+		rename_btn->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_rename_project));
 		tree_vb->add_child(rename_btn);
 
 		manage_tags_btn = memnew(Button);
@@ -2770,18 +2770,18 @@ ProjectManager::ProjectManager() {
 		erase_btn = memnew(Button);
 		erase_btn->set_text(TTR("Remove"));
 		erase_btn->set_shortcut(ED_SHORTCUT("project_manager/remove_project", TTR("Remove Project"), Key::KEY_DELETE));
-		erase_btn->connect("pressed", callable_mp(this, &ProjectManager::_erase_project));
+		erase_btn->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_erase_project));
 		tree_vb->add_child(erase_btn);
 
 		erase_missing_btn = memnew(Button);
 		erase_missing_btn->set_text(TTR("Remove Missing"));
-		erase_missing_btn->connect("pressed", callable_mp(this, &ProjectManager::_erase_missing_projects));
+		erase_missing_btn->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_erase_missing_projects));
 		tree_vb->add_child(erase_missing_btn);
 
 		about_btn = memnew(Button);
 		about_btn->set_v_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_END);
 		about_btn->set_text(TTR("About"));
-		about_btn->connect("pressed", callable_mp(this, &ProjectManager::_show_about));
+		about_btn->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_show_about));
 		tree_vb->add_child(about_btn);
 	}
 
@@ -2804,7 +2804,7 @@ ProjectManager::ProjectManager() {
 		version_btn->set_self_modulate(Color(1, 1, 1, 0.6));
 		version_btn->set_underline_mode(LinkButton::UNDERLINE_MODE_ON_HOVER);
 		version_btn->set_tooltip_text(TTR("Click to copy."));
-		version_btn->connect("pressed", callable_mp(this, &ProjectManager::_version_button_pressed));
+		version_btn->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_version_button_pressed));
 		settings_hb->add_child(version_btn);
 
 		language_btn = memnew(OptionButton);
@@ -2847,7 +2847,7 @@ ProjectManager::ProjectManager() {
 		// Dialogs
 		language_restart_ask = memnew(ConfirmationDialog);
 		language_restart_ask->set_ok_button_text(TTR("Restart Now"));
-		language_restart_ask->get_ok_button()->connect("pressed", callable_mp(this, &ProjectManager::_restart_confirm));
+		language_restart_ask->get_ok_button()->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_restart_confirm));
 		language_restart_ask->set_cancel_button_text(TTR("Continue"));
 		add_child(language_restart_ask);
 
@@ -2862,12 +2862,12 @@ ProjectManager::ProjectManager() {
 
 		erase_missing_ask = memnew(ConfirmationDialog);
 		erase_missing_ask->set_ok_button_text(TTR("Remove All"));
-		erase_missing_ask->get_ok_button()->connect("pressed", callable_mp(this, &ProjectManager::_erase_missing_projects_confirm));
+		erase_missing_ask->get_ok_button()->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_erase_missing_projects_confirm));
 		add_child(erase_missing_ask);
 
 		erase_ask = memnew(ConfirmationDialog);
 		erase_ask->set_ok_button_text(TTR("Remove"));
-		erase_ask->get_ok_button()->connect("pressed", callable_mp(this, &ProjectManager::_erase_project_confirm));
+		erase_ask->get_ok_button()->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_erase_project_confirm));
 		add_child(erase_ask);
 
 		VBoxContainer *erase_ask_vb = memnew(VBoxContainer);
@@ -2884,17 +2884,17 @@ ProjectManager::ProjectManager() {
 
 		multi_open_ask = memnew(ConfirmationDialog);
 		multi_open_ask->set_ok_button_text(TTR("Edit"));
-		multi_open_ask->get_ok_button()->connect("pressed", callable_mp(this, &ProjectManager::_open_selected_projects));
+		multi_open_ask->get_ok_button()->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_open_selected_projects));
 		add_child(multi_open_ask);
 
 		multi_run_ask = memnew(ConfirmationDialog);
 		multi_run_ask->set_ok_button_text(TTR("Run"));
-		multi_run_ask->get_ok_button()->connect("pressed", callable_mp(this, &ProjectManager::_run_project_confirm));
+		multi_run_ask->get_ok_button()->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_run_project_confirm));
 		add_child(multi_run_ask);
 
 		ask_update_settings = memnew(ConfirmationDialog);
 		ask_update_settings->set_autowrap(true);
-		ask_update_settings->get_ok_button()->connect("pressed", callable_mp(this, &ProjectManager::_confirm_update_settings));
+		ask_update_settings->get_ok_button()->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_confirm_update_settings));
 		add_child(ask_update_settings);
 
 		npdialog = memnew(ProjectDialog);
@@ -2920,8 +2920,8 @@ ProjectManager::ProjectManager() {
 		tag_manage_dialog = memnew(ConfirmationDialog);
 		add_child(tag_manage_dialog);
 		tag_manage_dialog->set_title(TTR("Manage Project Tags"));
-		tag_manage_dialog->get_ok_button()->connect("pressed", callable_mp(this, &ProjectManager::_apply_project_tags));
-		manage_tags_btn->connect("pressed", callable_mp(this, &ProjectManager::_manage_project_tags));
+		tag_manage_dialog->get_ok_button()->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_apply_project_tags));
+		manage_tags_btn->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_manage_project_tags));
 
 		VBoxContainer *tag_vb = memnew(VBoxContainer);
 		tag_manage_dialog->add_child(tag_vb);
@@ -2961,7 +2961,7 @@ ProjectManager::ProjectManager() {
 		create_tag_dialog = memnew(ConfirmationDialog);
 		tag_manage_dialog->add_child(create_tag_dialog);
 		create_tag_dialog->set_title(TTR("Create New Tag"));
-		create_tag_dialog->get_ok_button()->connect("pressed", callable_mp(this, &ProjectManager::_create_new_tag));
+		create_tag_dialog->get_ok_button()->connect(SceneStringName(pressed), callable_mp(this, &ProjectManager::_create_new_tag));
 
 		tag_vb = memnew(VBoxContainer);
 		create_tag_dialog->add_child(tag_vb);
@@ -2981,7 +2981,7 @@ ProjectManager::ProjectManager() {
 
 		create_tag_btn = memnew(Button);
 		all_tags->add_child(create_tag_btn);
-		create_tag_btn->connect("pressed", callable_mp((Window *)create_tag_dialog, &Window::popup_centered).bind(Vector2i(500, 0) * EDSCALE));
+		create_tag_btn->connect(SceneStringName(pressed), callable_mp((Window *)create_tag_dialog, &Window::popup_centered).bind(Vector2i(500, 0) * EDSCALE));
 	}
 
 	// Initialize project list.
@@ -3065,7 +3065,7 @@ ProjectTag::ProjectTag(const String &p_text, bool p_display_close) {
 }
 
 void ProjectTag::connect_button_to(const Callable &p_callable) {
-	button->connect(SNAME("pressed"), p_callable, CONNECT_DEFERRED);
+	button->connect(SceneStringName(pressed), p_callable, CONNECT_DEFERRED);
 }
 
 const String ProjectTag::get_tag() const {

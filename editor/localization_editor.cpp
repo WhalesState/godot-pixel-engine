@@ -621,7 +621,7 @@ LocalizationEditor::LocalizationEditor() {
 
 		Button *addtr = memnew(Button(TTR("Add...")));
 		addtr->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
-		addtr->connect("pressed", callable_mp(this, &LocalizationEditor::_translation_file_open));
+		addtr->connect(SceneStringName(pressed), callable_mp(this, &LocalizationEditor::_translation_file_open));
 		thb->add_child(addtr);
 
 		VBoxContainer *tmc = memnew(VBoxContainer);
@@ -655,7 +655,7 @@ LocalizationEditor::LocalizationEditor() {
 
 		Button *addtr = memnew(Button(TTR("Add...")));
 		addtr->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
-		addtr->connect("pressed", callable_mp(this, &LocalizationEditor::_translation_res_file_open));
+		addtr->connect(SceneStringName(pressed), callable_mp(this, &LocalizationEditor::_translation_res_file_open));
 		thb->add_child(addtr);
 
 		VBoxContainer *tmc = memnew(VBoxContainer);
@@ -681,7 +681,7 @@ LocalizationEditor::LocalizationEditor() {
 
 		addtr = memnew(Button(TTR("Add...")));
 		addtr->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
-		addtr->connect("pressed", callable_mp(this, &LocalizationEditor::_translation_res_option_file_open));
+		addtr->connect(SceneStringName(pressed), callable_mp(this, &LocalizationEditor::_translation_res_option_file_open));
 		translation_res_option_add_button = addtr;
 		thb->add_child(addtr);
 
@@ -724,11 +724,11 @@ LocalizationEditor::LocalizationEditor() {
 
 		Button *addtr = memnew(Button(TTR("Add...")));
 		addtr->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
-		addtr->connect("pressed", callable_mp(this, &LocalizationEditor::_pot_file_open));
+		addtr->connect(SceneStringName(pressed), callable_mp(this, &LocalizationEditor::_pot_file_open));
 		thb->add_child(addtr);
 
 		pot_generate_button = memnew(Button(TTR("Generate POT")));
-		pot_generate_button->connect("pressed", callable_mp(this, &LocalizationEditor::_pot_generate_open));
+		pot_generate_button->connect(SceneStringName(pressed), callable_mp(this, &LocalizationEditor::_pot_generate_open));
 		thb->add_child(pot_generate_button);
 
 		VBoxContainer *tmc = memnew(VBoxContainer);

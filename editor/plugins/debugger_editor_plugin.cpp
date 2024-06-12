@@ -96,7 +96,7 @@ DebuggerEditorPlugin::DebuggerEditorPlugin(PopupMenu *p_debug_menu) {
 	}
 	instances_menu->set_item_checked(0, true);
 	instances_menu->connect("index_pressed", callable_mp(this, &DebuggerEditorPlugin::_select_run_count));
-	debug_menu->connect("id_pressed", callable_mp(this, &DebuggerEditorPlugin::_menu_option));
+	debug_menu->connect(SceneStringName(id_pressed), callable_mp(this, &DebuggerEditorPlugin::_menu_option));
 }
 
 DebuggerEditorPlugin::~DebuggerEditorPlugin() {

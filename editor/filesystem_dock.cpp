@@ -510,11 +510,11 @@ void FileSystemDock::_notification(int p_what) {
 			EditorResourcePreview::get_singleton()->connect("preview_invalidated", callable_mp(this, &FileSystemDock::_preview_invalidated));
 
 			button_reload->set_icon(get_editor_theme_icon(SNAME("Reload")));
-			button_file_list_display_mode->connect("pressed", callable_mp(this, &FileSystemDock::_toggle_file_display));
+			button_file_list_display_mode->connect(SceneStringName(pressed), callable_mp(this, &FileSystemDock::_toggle_file_display));
 
 			files->connect("item_activated", callable_mp(this, &FileSystemDock::_file_list_activate_file));
-			button_hist_next->connect("pressed", callable_mp(this, &FileSystemDock::_fw_history));
-			button_hist_prev->connect("pressed", callable_mp(this, &FileSystemDock::_bw_history));
+			button_hist_next->connect(SceneStringName(pressed), callable_mp(this, &FileSystemDock::_fw_history));
+			button_hist_prev->connect(SceneStringName(pressed), callable_mp(this, &FileSystemDock::_bw_history));
 
 			tree_search_box->set_right_icon(get_editor_theme_icon(SNAME("Search")));
 			tree_search_box->set_clear_button_enabled(true);
@@ -531,8 +531,8 @@ void FileSystemDock::_notification(int p_what) {
 				button_hist_next->set_icon(get_editor_theme_icon(SNAME("Forward")));
 				button_hist_prev->set_icon(get_editor_theme_icon(SNAME("Back")));
 			}
-			file_list_popup->connect("id_pressed", callable_mp(this, &FileSystemDock::_file_list_rmb_option));
-			tree_popup->connect("id_pressed", callable_mp(this, &FileSystemDock::_tree_rmb_option));
+			file_list_popup->connect(SceneStringName(id_pressed), callable_mp(this, &FileSystemDock::_file_list_rmb_option));
+			tree_popup->connect(SceneStringName(id_pressed), callable_mp(this, &FileSystemDock::_tree_rmb_option));
 
 			current_path_line_edit->connect("text_submitted", callable_mp(this, &FileSystemDock::_navigate_to_path).bind(false));
 
@@ -2892,7 +2892,7 @@ void FileSystemDock::_file_and_folders_fill_popup(PopupMenu *p_popup, Vector<Str
 	if (p_paths.size() == 1 && p_display_path_dependent_options) {
 		PopupMenu *new_menu = memnew(PopupMenu);
 		new_menu->set_name("New");
-		new_menu->connect("id_pressed", callable_mp(this, &FileSystemDock::_tree_rmb_option));
+		new_menu->connect(SceneStringName(id_pressed), callable_mp(this, &FileSystemDock::_tree_rmb_option));
 
 		p_popup->add_child(new_menu);
 		p_popup->add_submenu_item(TTR("Create New"), "New", FILE_NEW);
@@ -2919,7 +2919,7 @@ void FileSystemDock::_file_and_folders_fill_popup(PopupMenu *p_popup, Vector<Str
 		if (p_paths[0] != "res://") {
 			PopupMenu *folder_colors_menu = memnew(PopupMenu);
 			folder_colors_menu->set_name("FolderColor");
-			folder_colors_menu->connect("id_pressed", callable_mp(this, &FileSystemDock::_folder_color_index_pressed).bind(folder_colors_menu));
+			folder_colors_menu->connect(SceneStringName(id_pressed), callable_mp(this, &FileSystemDock::_folder_color_index_pressed).bind(folder_colors_menu));
 
 			p_popup->add_child(folder_colors_menu);
 			p_popup->add_submenu_item(TTR("Set Folder Color..."), "FolderColor");
@@ -3428,7 +3428,7 @@ MenuButton *FileSystemDock::_create_file_menu_button() {
 	button->set_tooltip_text(TTR("Sort Files"));
 
 	PopupMenu *p = button->get_popup();
-	p->connect("id_pressed", callable_mp(this, &FileSystemDock::_file_sort_popup));
+	p->connect(SceneStringName(id_pressed), callable_mp(this, &FileSystemDock::_file_sort_popup));
 	p->add_radio_check_item(TTR("Sort by Name (Ascending)"), FILE_SORT_NAME);
 	p->add_radio_check_item(TTR("Sort by Name (Descending)"), FILE_SORT_NAME_REVERSE);
 	p->add_radio_check_item(TTR("Sort by Type (Ascending)"), FILE_SORT_TYPE);
@@ -3526,14 +3526,14 @@ FileSystemDock::FileSystemDock() {
 	toolbar_hbc->add_child(current_path_line_edit);
 
 	button_reload = memnew(Button);
-	button_reload->connect("pressed", callable_mp(this, &FileSystemDock::_rescan));
+	button_reload->connect(SceneStringName(pressed), callable_mp(this, &FileSystemDock::_rescan));
 	button_reload->set_focus_mode(FOCUS_NONE);
 	button_reload->set_tooltip_text(TTR("Re-Scan Filesystem"));
 	button_reload->hide();
 	toolbar_hbc->add_child(button_reload);
 
 	button_toggle_display_mode = memnew(Button);
-	button_toggle_display_mode->connect("pressed", callable_mp(this, &FileSystemDock::_change_split_mode));
+	button_toggle_display_mode->connect(SceneStringName(pressed), callable_mp(this, &FileSystemDock::_change_split_mode));
 	button_toggle_display_mode->set_focus_mode(FOCUS_NONE);
 	button_toggle_display_mode->set_tooltip_text(TTR("Change Split Mode"));
 	button_toggle_display_mode->set_flat(true);
@@ -3579,8 +3579,8 @@ FileSystemDock::FileSystemDock() {
 	tree->connect("item_mouse_selected", callable_mp(this, &FileSystemDock::_tree_rmb_select));
 	tree->connect("empty_clicked", callable_mp(this, &FileSystemDock::_tree_empty_click));
 	tree->connect("nothing_selected", callable_mp(this, &FileSystemDock::_tree_empty_selected));
-	tree->connect("gui_input", callable_mp(this, &FileSystemDock::_tree_gui_input));
-	tree->connect("mouse_exited", callable_mp(this, &FileSystemDock::_tree_mouse_exited));
+	tree->connect(SceneStringName(gui_input), callable_mp(this, &FileSystemDock::_tree_gui_input));
+	tree->connect(SceneStringName(mouse_exited), callable_mp(this, &FileSystemDock::_tree_mouse_exited));
 	tree->connect("item_edited", callable_mp(this, &FileSystemDock::_rename_operation_confirm));
 
 	file_list_vb = memnew(VBoxContainer);
@@ -3608,7 +3608,7 @@ FileSystemDock::FileSystemDock() {
 	files->set_select_mode(ItemList::SELECT_MULTI);
 	SET_DRAG_FORWARDING_GCD(files, FileSystemDock);
 	files->connect("item_clicked", callable_mp(this, &FileSystemDock::_file_list_item_clicked));
-	files->connect("gui_input", callable_mp(this, &FileSystemDock::_file_list_gui_input));
+	files->connect(SceneStringName(gui_input), callable_mp(this, &FileSystemDock::_file_list_gui_input));
 	files->connect("multi_selected", callable_mp(this, &FileSystemDock::_file_multi_selected));
 	files->connect("empty_clicked", callable_mp(this, &FileSystemDock::_file_list_empty_clicked));
 	files->connect("item_edited", callable_mp(this, &FileSystemDock::_rename_operation_confirm));
@@ -3647,7 +3647,7 @@ FileSystemDock::FileSystemDock() {
 	overwrite_dialog = memnew(ConfirmationDialog);
 	add_child(overwrite_dialog);
 	overwrite_dialog->set_ok_button_text(TTR("Overwrite"));
-	overwrite_dialog->add_button(TTR("Keep Both"), true)->connect("pressed", callable_mp(this, &FileSystemDock::_overwrite_dialog_action).bind(false));
+	overwrite_dialog->add_button(TTR("Keep Both"), true)->connect(SceneStringName(pressed), callable_mp(this, &FileSystemDock::_overwrite_dialog_action).bind(false));
 	overwrite_dialog->connect("confirmed", callable_mp(this, &FileSystemDock::_overwrite_dialog_action).bind(true));
 
 	VBoxContainer *overwrite_dialog_vb = memnew(VBoxContainer);

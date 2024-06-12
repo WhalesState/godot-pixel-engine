@@ -36,7 +36,6 @@
 #include "core/error/error_macros.h"
 #include "core/version.h"
 #include "scene/main/scene_tree.h"
-#include "scene/scene_string_names.h"
 
 RID Material::get_rid() const {
 	return material;

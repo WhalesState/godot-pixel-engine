@@ -2535,12 +2535,12 @@ void LineEdit::_generate_context_menu() {
 	menu->add_check_item(RTR("Display Control Characters"), MENU_DISPLAY_UCC);
 	menu->add_submenu_item(RTR("Insert Control Character"), "CTLMenu", MENU_SUBMENU_INSERT_UCC);
 
-	menu->connect("id_pressed", callable_mp(this, &LineEdit::menu_option));
-	menu_dir->connect("id_pressed", callable_mp(this, &LineEdit::menu_option));
-	menu_ctl->connect("id_pressed", callable_mp(this, &LineEdit::menu_option));
+	menu->connect(SceneStringName(id_pressed), callable_mp(this, &LineEdit::menu_option));
+	menu_dir->connect(SceneStringName(id_pressed), callable_mp(this, &LineEdit::menu_option));
+	menu_ctl->connect(SceneStringName(id_pressed), callable_mp(this, &LineEdit::menu_option));
 
-	menu->connect(SNAME("focus_entered"), callable_mp(this, &LineEdit::_validate_caret_can_draw));
-	menu->connect(SNAME("focus_exited"), callable_mp(this, &LineEdit::_validate_caret_can_draw));
+	menu->connect(SceneStringName(focus_entered), callable_mp(this, &LineEdit::_validate_caret_can_draw));
+	menu->connect(SceneStringName(focus_exited), callable_mp(this, &LineEdit::_validate_caret_can_draw));
 }
 
 void LineEdit::_update_context_menu() {

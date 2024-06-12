@@ -433,7 +433,7 @@ EditorLog::EditorLog() {
 	clear_button->set_focus_mode(FOCUS_NONE);
 	clear_button->set_shortcut(ED_SHORTCUT("editor/clear_output", TTR("Clear Output"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::K));
 	clear_button->set_shortcut_context(this);
-	clear_button->connect("pressed", callable_mp(this, &EditorLog::_clear_request));
+	clear_button->connect(SceneStringName(pressed), callable_mp(this, &EditorLog::_clear_request));
 	hb_tools->add_child(clear_button);
 
 	// Copy.
@@ -442,7 +442,7 @@ EditorLog::EditorLog() {
 	copy_button->set_focus_mode(FOCUS_NONE);
 	copy_button->set_shortcut(ED_SHORTCUT("editor/copy_output", TTR("Copy Selection"), KeyModifierMask::CMD_OR_CTRL | Key::C));
 	copy_button->set_shortcut_context(this);
-	copy_button->connect("pressed", callable_mp(this, &EditorLog::_copy_request));
+	copy_button->connect(SceneStringName(pressed), callable_mp(this, &EditorLog::_copy_request));
 	hb_tools->add_child(copy_button);
 
 	// Separate toggle buttons from normal buttons.

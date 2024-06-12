@@ -743,7 +743,7 @@ ImportDock::ImportDock() {
 	import->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_CENTER);
 	import->set_text(TTR("Reimport"));
 	import->set_disabled(true);
-	import->connect("pressed", callable_mp(this, &ImportDock::_reimport_attempt));
+	import->connect(SceneStringName(pressed), callable_mp(this, &ImportDock::_reimport_attempt));
 	if (!DisplayServer::get_singleton()->get_swap_cancel_ok()) {
 		advanced = memnew(Button);
 		advanced->set_text(TTR("Advanced..."));
@@ -759,7 +759,7 @@ ImportDock::ImportDock() {
 	}
 
 	advanced->hide();
-	advanced->connect("pressed", callable_mp(this, &ImportDock::_advanced_options));
+	advanced->connect(SceneStringName(pressed), callable_mp(this, &ImportDock::_advanced_options));
 
 	reimport_confirm = memnew(ConfirmationDialog);
 	content->add_child(reimport_confirm);

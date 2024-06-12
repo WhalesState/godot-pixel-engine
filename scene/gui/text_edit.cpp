@@ -6896,9 +6896,9 @@ void TextEdit::_generate_context_menu() {
 	menu->add_check_item(RTR("Display Control Characters"), MENU_DISPLAY_UCC);
 	menu->add_submenu_item(RTR("Insert Control Character"), "CTLMenu", MENU_SUBMENU_INSERT_UCC);
 
-	menu->connect("id_pressed", callable_mp(this, &TextEdit::menu_option));
-	menu_dir->connect("id_pressed", callable_mp(this, &TextEdit::menu_option));
-	menu_ctl->connect("id_pressed", callable_mp(this, &TextEdit::menu_option));
+	menu->connect(SceneStringName(id_pressed), callable_mp(this, &TextEdit::menu_option));
+	menu_dir->connect(SceneStringName(id_pressed), callable_mp(this, &TextEdit::menu_option));
+	menu_ctl->connect(SceneStringName(id_pressed), callable_mp(this, &TextEdit::menu_option));
 }
 
 void TextEdit::_update_context_menu() {

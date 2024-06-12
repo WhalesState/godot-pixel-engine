@@ -363,20 +363,20 @@ EditorSceneTabs::EditorSceneTabs() {
 	scene_tabs->connect("tab_button_pressed", callable_mp(this, &EditorSceneTabs::_scene_tab_script_edited));
 	scene_tabs->connect("tab_close_pressed", callable_mp(this, &EditorSceneTabs::_scene_tab_closed));
 	scene_tabs->connect("tab_hovered", callable_mp(this, &EditorSceneTabs::_scene_tab_hovered));
-	scene_tabs->connect("mouse_exited", callable_mp(this, &EditorSceneTabs::_scene_tab_exit));
-	scene_tabs->connect("gui_input", callable_mp(this, &EditorSceneTabs::_scene_tab_input));
+	scene_tabs->connect(SceneStringName(mouse_exited), callable_mp(this, &EditorSceneTabs::_scene_tab_exit));
+	scene_tabs->connect(SceneStringName(gui_input), callable_mp(this, &EditorSceneTabs::_scene_tab_input));
 	scene_tabs->connect("active_tab_rearranged", callable_mp(this, &EditorSceneTabs::_reposition_active_tab));
-	scene_tabs->connect("resized", callable_mp(this, &EditorSceneTabs::update_scene_tabs));
+	scene_tabs->connect(SceneStringName(resized), callable_mp(this, &EditorSceneTabs::update_scene_tabs));
 
 	scene_tabs_context_menu = memnew(PopupMenu);
 	tabbar_container->add_child(scene_tabs_context_menu);
-	scene_tabs_context_menu->connect("id_pressed", callable_mp(EditorNode::get_singleton(), &EditorNode::trigger_menu_option).bind(false));
+	scene_tabs_context_menu->connect(SceneStringName(id_pressed), callable_mp(EditorNode::get_singleton(), &EditorNode::trigger_menu_option).bind(false));
 
 	scene_tab_add = memnew(Button);
 	scene_tab_add->set_flat(true);
 	scene_tab_add->set_tooltip_text(TTR("Add a new scene."));
 	scene_tabs->add_child(scene_tab_add);
-	scene_tab_add->connect("pressed", callable_mp(EditorNode::get_singleton(), &EditorNode::trigger_menu_option).bind(EditorNode::FILE_NEW_SCENE, false));
+	scene_tab_add->connect(SceneStringName(pressed), callable_mp(EditorNode::get_singleton(), &EditorNode::trigger_menu_option).bind(EditorNode::FILE_NEW_SCENE, false));
 
 	scene_tab_add_ph = memnew(Control);
 	scene_tab_add_ph->set_mouse_filter(Control::MOUSE_FILTER_IGNORE);

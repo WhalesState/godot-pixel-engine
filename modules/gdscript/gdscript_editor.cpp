@@ -829,7 +829,7 @@ static void _find_annotation_arguments(const GDScriptParser::AnnotationNode *p_a
 		r_result.insert(node.display, node);
 
 		List<StringName> native_classes;
-		ClassDB::get_inheriters_from_class("Node", &native_classes);
+		ClassDB::get_inheriters_from_class(SNAME("Node"), &native_classes);
 		for (const StringName &E : native_classes) {
 			if (!ClassDB::is_class_exposed(E)) {
 				continue;
@@ -842,7 +842,7 @@ static void _find_annotation_arguments(const GDScriptParser::AnnotationNode *p_a
 		List<StringName> global_script_classes;
 		ScriptServer::get_global_class_list(&global_script_classes);
 		for (const StringName &E : global_script_classes) {
-			if (!ClassDB::is_parent_class(ScriptServer::get_global_class_native_base(E), "Node")) {
+			if (!ClassDB::is_parent_class(ScriptServer::get_global_class_native_base(E), SNAME("Node"))) {
 				continue;
 			}
 			ScriptLanguage::CodeCompletionOption option(E, ScriptLanguage::CODE_COMPLETION_KIND_CLASS);

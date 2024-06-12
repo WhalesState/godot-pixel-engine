@@ -389,17 +389,17 @@ void ColorPicker::create_slider(GridContainer *gc, int idx) {
 
 	LineEdit *vle = val->get_line_edit();
 	vle->connect("text_changed", callable_mp(this, &ColorPicker::_text_changed));
-	vle->connect("gui_input", callable_mp(this, &ColorPicker::_line_edit_input));
+	vle->connect(SceneStringName(gui_input), callable_mp(this, &ColorPicker::_line_edit_input));
 
-	val->connect("gui_input", callable_mp(this, &ColorPicker::_slider_or_spin_input));
+	val->connect(SceneStringName(gui_input), callable_mp(this, &ColorPicker::_slider_or_spin_input));
 
 	slider->set_h_size_flags(SIZE_EXPAND_FILL);
 
 	slider->connect("drag_started", callable_mp(this, &ColorPicker::_slider_drag_started));
 	slider->connect("value_changed", callable_mp(this, &ColorPicker::_slider_value_changed).unbind(1));
 	slider->connect("drag_ended", callable_mp(this, &ColorPicker::_slider_drag_ended).unbind(1));
-	slider->connect("draw", callable_mp(this, &ColorPicker::_slider_draw).bind(idx));
-	slider->connect("gui_input", callable_mp(this, &ColorPicker::_slider_or_spin_input));
+	slider->connect(SceneStringName(draw), callable_mp(this, &ColorPicker::_slider_draw).bind(idx));
+	slider->connect(SceneStringName(gui_input), callable_mp(this, &ColorPicker::_slider_or_spin_input));
 
 	if (idx < SLIDER_COUNT) {
 		sliders[idx] = slider;
@@ -674,7 +674,7 @@ void ColorPicker::_add_preset_button(const Color &p_color) {
 	preset_flow_container->add_child(btn_preset_new);
 	preset_flow_container->move_child(btn_preset_new, 1);
 	btn_preset_new->set_pressed(true);
-	btn_preset_new->connect("gui_input", callable_mp(this, &ColorPicker::_preset_input).bind(p_color));
+	btn_preset_new->connect(SceneStringName(gui_input), callable_mp(this, &ColorPicker::_preset_input).bind(p_color));
 }
 
 void ColorPicker::_add_recent_preset_button(const Color &p_color) {
@@ -1363,7 +1363,7 @@ void ColorPicker::_pick_button_pressed() {
 	if (!picker_window) {
 		picker_window = memnew(Popup);
 		picker_window->set_size(Size2i(1, 1));
-		picker_window->connect("visibility_changed", callable_mp(this, &ColorPicker::_pick_finished));
+		picker_window->connect(SceneStringName(visibility_changed), callable_mp(this, &ColorPicker::_pick_finished));
 		add_child(picker_window, false, INTERNAL_MODE_FRONT);
 		is_embedding_subwindows = picker_window->is_embedded();
 		if (!is_embedding_subwindows) {
@@ -1578,11 +1578,11 @@ ColorPicker::ColorPicker() {
 
 	uv_edit = memnew(Control);
 	wheel_hbc->add_child(uv_edit);
-	uv_edit->connect("gui_input", callable_mp(this, &ColorPicker::_uv_input).bind(uv_edit));
+	uv_edit->connect(SceneStringName(gui_input), callable_mp(this, &ColorPicker::_uv_input).bind(uv_edit));
 	uv_edit->set_mouse_filter(MOUSE_FILTER_PASS);
 	uv_edit->set_h_size_flags(SIZE_EXPAND_FILL);
 	uv_edit->set_v_size_flags(SIZE_EXPAND_FILL);
-	uv_edit->connect("draw", callable_mp(this, &ColorPicker::_hsv_draw).bind(0, uv_edit));
+	uv_edit->connect(SceneStringName(draw), callable_mp(this, &ColorPicker::_hsv_draw).bind(0, uv_edit));
 
 	sample_hbc = memnew(HBoxContainer);
 	real_vbox->add_child(sample_hbc);
@@ -1592,14 +1592,14 @@ ColorPicker::ColorPicker() {
 		btn_pick->set_focus_mode(FOCUS_NONE);
 		sample_hbc->add_child(btn_pick);
 		btn_pick->set_tooltip_text(RTR("Pick a color from the screen."));
-		btn_pick->connect(SNAME("pressed"), callable_mp(this, &ColorPicker::_pick_button_pressed));
+		btn_pick->connect(SceneStringName(pressed), callable_mp(this, &ColorPicker::_pick_button_pressed));
 	}
 
 	sample = memnew(TextureRect);
 	sample_hbc->add_child(sample);
 	sample->set_h_size_flags(SIZE_EXPAND_FILL);
-	sample->connect("gui_input", callable_mp(this, &ColorPicker::_sample_input));
-	sample->connect("draw", callable_mp(this, &ColorPicker::_sample_draw));
+	sample->connect(SceneStringName(gui_input), callable_mp(this, &ColorPicker::_sample_input));
+	sample->connect(SceneStringName(draw), callable_mp(this, &ColorPicker::_sample_draw));
 
 	btn_shape = memnew(MenuButton);
 	btn_shape->set_flat(false);
@@ -1617,7 +1617,7 @@ ColorPicker::ColorPicker() {
 	shape_popup->add_radio_check_item("VHS Circle", SHAPE_VHS_CIRCLE);
 	shape_popup->add_radio_check_item("OKHSL Circle", SHAPE_OKHSL_CIRCLE);
 	shape_popup->set_item_checked(current_shape, true);
-	shape_popup->connect("id_pressed", callable_mp(this, &ColorPicker::set_picker_shape));
+	shape_popup->connect(SceneStringName(id_pressed), callable_mp(this, &ColorPicker::set_picker_shape));
 
 	add_mode(new ColorModeRGB(this));
 	add_mode(new ColorModeHSV(this));
@@ -1642,7 +1642,7 @@ ColorPicker::ColorPicker() {
 	mode_popup->add_check_item("Colorized Sliders", MODE_MAX);
 	mode_popup->set_item_checked(current_mode, true);
 	mode_popup->set_item_checked(MODE_MAX + 1, true);
-	mode_popup->connect("id_pressed", callable_mp(this, &ColorPicker::_set_mode_popup_value));
+	mode_popup->connect(SceneStringName(id_pressed), callable_mp(this, &ColorPicker::_set_mode_popup_value));
 
 	slider_gc = memnew(GridContainer);
 
@@ -1665,7 +1665,7 @@ ColorPicker::ColorPicker() {
 	text_type->set_text("#");
 	text_type->set_tooltip_text(RTR("Switch between hexadecimal and code values."));
 	if (Engine::get_singleton()->is_editor_hint()) {
-		text_type->connect("pressed", callable_mp(this, &ColorPicker::_text_type_toggled));
+		text_type->connect(SceneStringName(pressed), callable_mp(this, &ColorPicker::_text_type_toggled));
 	} else {
 		text_type->set_flat(true);
 		text_type->set_mouse_filter(MOUSE_FILTER_IGNORE);
@@ -1678,7 +1678,7 @@ ColorPicker::ColorPicker() {
 	c_text->set_placeholder(RTR("Hex code or named color"));
 	c_text->connect("text_submitted", callable_mp(this, &ColorPicker::_html_submitted));
 	c_text->connect("text_changed", callable_mp(this, &ColorPicker::_text_changed));
-	c_text->connect("focus_exited", callable_mp(this, &ColorPicker::_html_focus_exit));
+	c_text->connect(SceneStringName(focus_exited), callable_mp(this, &ColorPicker::_html_focus_exit));
 
 	wheel_edit = memnew(AspectRatioContainer);
 	wheel_edit->set_h_size_flags(SIZE_EXPAND_FILL);
@@ -1697,19 +1697,19 @@ ColorPicker::ColorPicker() {
 	wheel = memnew(Control);
 	wheel_margin->add_child(wheel);
 	wheel->set_mouse_filter(MOUSE_FILTER_PASS);
-	wheel->connect("draw", callable_mp(this, &ColorPicker::_hsv_draw).bind(2, wheel));
+	wheel->connect(SceneStringName(draw), callable_mp(this, &ColorPicker::_hsv_draw).bind(2, wheel));
 
 	wheel_uv = memnew(Control);
 	wheel_margin->add_child(wheel_uv);
-	wheel_uv->connect("gui_input", callable_mp(this, &ColorPicker::_uv_input).bind(wheel_uv));
-	wheel_uv->connect("draw", callable_mp(this, &ColorPicker::_hsv_draw).bind(0, wheel_uv));
+	wheel_uv->connect(SceneStringName(gui_input), callable_mp(this, &ColorPicker::_uv_input).bind(wheel_uv));
+	wheel_uv->connect(SceneStringName(draw), callable_mp(this, &ColorPicker::_hsv_draw).bind(0, wheel_uv));
 
 	w_edit = memnew(Control);
 	wheel_hbc->add_child(w_edit);
 	w_edit->set_h_size_flags(SIZE_FILL);
 	w_edit->set_v_size_flags(SIZE_EXPAND_FILL);
-	w_edit->connect("gui_input", callable_mp(this, &ColorPicker::_w_input));
-	w_edit->connect("draw", callable_mp(this, &ColorPicker::_hsv_draw).bind(1, w_edit));
+	w_edit->connect(SceneStringName(gui_input), callable_mp(this, &ColorPicker::_w_input));
+	w_edit->connect(SceneStringName(draw), callable_mp(this, &ColorPicker::_hsv_draw).bind(1, w_edit));
 
 	_update_controls();
 	updating = false;
@@ -1740,7 +1740,7 @@ ColorPicker::ColorPicker() {
 	btn_add_preset->set_focus_mode(FOCUS_NONE);
 	btn_add_preset->set_icon_alignment(HORIZONTAL_ALIGNMENT_CENTER);
 	btn_add_preset->set_tooltip_text(RTR("Add current color as a preset."));
-	btn_add_preset->connect("pressed", callable_mp(this, &ColorPicker::_add_preset_pressed));
+	btn_add_preset->connect(SceneStringName(pressed), callable_mp(this, &ColorPicker::_add_preset_pressed));
 	preset_flow_container->add_child(btn_add_preset);
 
 	recent_flow_container = memnew(HFlowContainer);
@@ -1898,7 +1898,7 @@ void ColorPickerButton::_update_picker() {
 		picker->connect("color_changed", callable_mp(this, &ColorPickerButton::_color_changed));
 		popup->connect("about_to_popup", callable_mp(this, &ColorPickerButton::_about_to_popup));
 		popup->connect("popup_hide", callable_mp(this, &ColorPickerButton::_modal_closed));
-		picker->connect("minimum_size_changed", callable_mp((Window *)popup, &Window::reset_size));
+		picker->connect(SceneStringName(minimum_size_changed), callable_mp((Window *)popup, &Window::reset_size));
 		picker->set_pick_color(color);
 		picker->set_edit_alpha(edit_alpha);
 		picker->set_display_old_color(true);

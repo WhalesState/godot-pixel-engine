@@ -1771,9 +1771,9 @@ EditorFileDialog::EditorFileDialog() {
 	pathhb->add_child(dir_next);
 	pathhb->add_child(dir_up);
 
-	dir_prev->connect("pressed", callable_mp(this, &EditorFileDialog::_go_back));
-	dir_next->connect("pressed", callable_mp(this, &EditorFileDialog::_go_forward));
-	dir_up->connect("pressed", callable_mp(this, &EditorFileDialog::_go_up));
+	dir_prev->connect(SceneStringName(pressed), callable_mp(this, &EditorFileDialog::_go_back));
+	dir_next->connect(SceneStringName(pressed), callable_mp(this, &EditorFileDialog::_go_forward));
+	dir_up->connect(SceneStringName(pressed), callable_mp(this, &EditorFileDialog::_go_up));
 
 	Label *l = memnew(Label(TTR("Path:")));
 	l->set_theme_type_variation("HeaderSmall");
@@ -1790,14 +1790,14 @@ EditorFileDialog::EditorFileDialog() {
 	refresh = memnew(Button);
 	refresh->set_theme_type_variation("FlatButton");
 	refresh->set_tooltip_text(TTR("Refresh files."));
-	refresh->connect("pressed", callable_mp(this, &EditorFileDialog::update_file_list));
+	refresh->connect(SceneStringName(pressed), callable_mp(this, &EditorFileDialog::update_file_list));
 	pathhb->add_child(refresh);
 
 	favorite = memnew(Button);
 	favorite->set_theme_type_variation("FlatButton");
 	favorite->set_toggle_mode(true);
 	favorite->set_tooltip_text(TTR("(Un)favorite current folder."));
-	favorite->connect("pressed", callable_mp(this, &EditorFileDialog::_favorite_pressed));
+	favorite->connect(SceneStringName(pressed), callable_mp(this, &EditorFileDialog::_favorite_pressed));
 	pathhb->add_child(favorite);
 
 	show_hidden = memnew(Button);
@@ -1815,7 +1815,7 @@ EditorFileDialog::EditorFileDialog() {
 
 	mode_thumbnails = memnew(Button);
 	mode_thumbnails->set_theme_type_variation("FlatButton");
-	mode_thumbnails->connect("pressed", callable_mp(this, &EditorFileDialog::set_display_mode).bind(DISPLAY_THUMBNAILS));
+	mode_thumbnails->connect(SceneStringName(pressed), callable_mp(this, &EditorFileDialog::set_display_mode).bind(DISPLAY_THUMBNAILS));
 	mode_thumbnails->set_toggle_mode(true);
 	mode_thumbnails->set_pressed(display_mode == DISPLAY_THUMBNAILS);
 	mode_thumbnails->set_button_group(view_mode_group);
@@ -1824,7 +1824,7 @@ EditorFileDialog::EditorFileDialog() {
 
 	mode_list = memnew(Button);
 	mode_list->set_theme_type_variation("FlatButton");
-	mode_list->connect("pressed", callable_mp(this, &EditorFileDialog::set_display_mode).bind(DISPLAY_LIST));
+	mode_list->connect(SceneStringName(pressed), callable_mp(this, &EditorFileDialog::set_display_mode).bind(DISPLAY_LIST));
 	mode_list->set_toggle_mode(true);
 	mode_list->set_pressed(display_mode == DISPLAY_LIST);
 	mode_list->set_button_group(view_mode_group);
@@ -1840,7 +1840,7 @@ EditorFileDialog::EditorFileDialog() {
 
 	makedir = memnew(Button);
 	makedir->set_text(TTR("Create Folder"));
-	makedir->connect("pressed", callable_mp(this, &EditorFileDialog::_make_dir));
+	makedir->connect(SceneStringName(pressed), callable_mp(this, &EditorFileDialog::_make_dir));
 	pathhb->add_child(makedir);
 
 	body_hsplit = memnew(HSplitContainer);
@@ -1869,11 +1869,11 @@ EditorFileDialog::EditorFileDialog() {
 	fav_up->set_h_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_END);
 	fav_up->set_theme_type_variation("FlatButton");
 	fav_hb->add_child(fav_up);
-	fav_up->connect("pressed", callable_mp(this, &EditorFileDialog::_favorite_move_up));
+	fav_up->connect(SceneStringName(pressed), callable_mp(this, &EditorFileDialog::_favorite_move_up));
 	fav_down = memnew(Button);
 	fav_down->set_theme_type_variation("FlatButton");
 	fav_hb->add_child(fav_down);
-	fav_down->connect("pressed", callable_mp(this, &EditorFileDialog::_favorite_move_down));
+	fav_down->connect(SceneStringName(pressed), callable_mp(this, &EditorFileDialog::_favorite_move_down));
 
 	favorites = memnew(ItemList);
 	fav_vb->add_child(favorites);
@@ -1916,7 +1916,7 @@ EditorFileDialog::EditorFileDialog() {
 	list_vb->add_child(item_list);
 
 	item_menu = memnew(PopupMenu);
-	item_menu->connect("id_pressed", callable_mp(this, &EditorFileDialog::_item_menu_id_pressed));
+	item_menu->connect(SceneStringName(id_pressed), callable_mp(this, &EditorFileDialog::_item_menu_id_pressed));
 	add_child(item_menu);
 
 	// Other stuff.

@@ -2954,7 +2954,7 @@ void EditorNode::add_editor_plugin(EditorPlugin *p_editor, bool p_config_changed
 		Button *tb = memnew(Button);
 		tb->set_flat(true);
 		tb->set_toggle_mode(true);
-		tb->connect("pressed", callable_mp(singleton, &EditorNode::editor_select).bind(singleton->main_editor_buttons.size()));
+		tb->connect(SceneStringName(pressed), callable_mp(singleton, &EditorNode::editor_select).bind(singleton->main_editor_buttons.size()));
 		tb->set_name(p_editor->get_name());
 		tb->set_text(p_editor->get_name());
 
@@ -2998,8 +2998,8 @@ void EditorNode::remove_editor_plugin(EditorPlugin *p_editor, bool p_config_chan
 
 				break;
 			} else {
-				singleton->main_editor_buttons[i]->disconnect("pressed", callable_mp(singleton, &EditorNode::editor_select));
-				singleton->main_editor_buttons[i]->connect("pressed", callable_mp(singleton, &EditorNode::editor_select).bind(i - 1));
+				singleton->main_editor_buttons[i]->disconnect(SceneStringName(pressed), callable_mp(singleton, &EditorNode::editor_select));
+				singleton->main_editor_buttons[i]->connect(SceneStringName(pressed), callable_mp(singleton, &EditorNode::editor_select).bind(i - 1));
 			}
 		}
 
@@ -4056,9 +4056,9 @@ Ref<Texture2D> EditorNode::_get_class_or_script_icon(const String &p_class, cons
 		if (ClassDB::class_exists(p_class)) {
 			bool instantiable = !ClassDB::is_virtual(p_class) && ClassDB::can_instantiate(p_class);
 			if (ClassDB::is_parent_class(p_class, SNAME("Node"))) {
-				return theme->get_icon(instantiable ? "Node" : "NodeDisabled", EditorStringName(EditorIcons));
+				return theme->get_icon(instantiable ? SNAME("Node") : SNAME("NodeDisabled"), EditorStringName(EditorIcons));
 			} else {
-				return theme->get_icon(instantiable ? "Object" : "ObjectDisabled", EditorStringName(EditorIcons));
+				return theme->get_icon(instantiable ? SNAME("Object") : SNAME("ObjectDisabled"), EditorStringName(EditorIcons));
 			}
 		}
 	}
@@ -6539,7 +6539,7 @@ EditorNode::EditorNode() {
 	dock_tab_move_left = memnew(Button);
 	dock_tab_move_left->set_flat(true);
 	dock_tab_move_left->set_focus_mode(Control::FOCUS_NONE);
-	dock_tab_move_left->connect("pressed", callable_mp(this, &EditorNode::_dock_move_left));
+	dock_tab_move_left->connect(SceneStringName(pressed), callable_mp(this, &EditorNode::_dock_move_left));
 	dock_hb->add_child(dock_tab_move_left);
 
 	Label *dock_label = memnew(Label);
@@ -6551,16 +6551,16 @@ EditorNode::EditorNode() {
 	dock_tab_move_right = memnew(Button);
 	dock_tab_move_right->set_flat(true);
 	dock_tab_move_right->set_focus_mode(Control::FOCUS_NONE);
-	dock_tab_move_right->connect("pressed", callable_mp(this, &EditorNode::_dock_move_right));
+	dock_tab_move_right->connect(SceneStringName(pressed), callable_mp(this, &EditorNode::_dock_move_right));
 
 	dock_hb->add_child(dock_tab_move_right);
 	dock_vb->add_child(dock_hb);
 
 	dock_select = memnew(Control);
 	dock_select->set_custom_minimum_size(Size2(128, 64) * EDSCALE);
-	dock_select->connect("gui_input", callable_mp(this, &EditorNode::_dock_select_input));
-	dock_select->connect("draw", callable_mp(this, &EditorNode::_dock_select_draw));
-	dock_select->connect("mouse_exited", callable_mp(this, &EditorNode::_dock_popup_exit));
+	dock_select->connect(SceneStringName(gui_input), callable_mp(this, &EditorNode::_dock_select_input));
+	dock_select->connect(SceneStringName(draw), callable_mp(this, &EditorNode::_dock_select_draw));
+	dock_select->connect(SceneStringName(mouse_exited), callable_mp(this, &EditorNode::_dock_popup_exit));
 	dock_select->set_v_size_flags(Control::SIZE_EXPAND_FILL);
 	dock_vb->add_child(dock_select);
 
@@ -6570,7 +6570,7 @@ EditorNode::EditorNode() {
 		dock_float->set_text(TTR("Make Floating"));
 		dock_float->set_focus_mode(Control::FOCUS_NONE);
 		dock_float->set_h_size_flags(Control::SIZE_SHRINK_CENTER);
-		dock_float->connect("pressed", callable_mp(this, &EditorNode::_dock_make_selected_float));
+		dock_float->connect(SceneStringName(pressed), callable_mp(this, &EditorNode::_dock_make_selected_float));
 
 		dock_vb->add_child(dock_float);
 	}
@@ -6617,7 +6617,7 @@ EditorNode::EditorNode() {
 	distraction_free->set_tooltip_text(TTR("Toggle distraction-free mode."));
 	distraction_free->set_toggle_mode(true);
 	scene_tabs->add_extra_button(distraction_free);
-	distraction_free->connect("pressed", callable_mp(this, &EditorNode::_toggle_distraction_free_mode));
+	distraction_free->connect(SceneStringName(pressed), callable_mp(this, &EditorNode::_toggle_distraction_free_mode));
 
 	scene_root_parent = memnew(PanelContainer);
 	scene_root_parent->set_custom_minimum_size(Size2(0, 80) * EDSCALE);
@@ -6743,7 +6743,7 @@ EditorNode::EditorNode() {
 	recent_scenes = memnew(PopupMenu);
 	recent_scenes->set_name("RecentScenes");
 	file_menu->add_child(recent_scenes);
-	recent_scenes->connect("id_pressed", callable_mp(this, &EditorNode::_open_recent_scene));
+	recent_scenes->connect(SceneStringName(id_pressed), callable_mp(this, &EditorNode::_open_recent_scene));
 
 	if (!global_menu || !OS::get_singleton()->has_feature("macos")) {
 		// On macOS  "Quit" and "About" options are in the "app" menu.
@@ -6756,7 +6756,7 @@ EditorNode::EditorNode() {
 	main_menu->add_child(project_menu);
 
 	project_menu->add_shortcut(ED_SHORTCUT_AND_COMMAND("editor/project_settings", TTR("Project Settings..."), Key::NONE, TTR("Project Settings")), RUN_SETTINGS);
-	project_menu->connect("id_pressed", callable_mp(this, &EditorNode::_menu_option));
+	project_menu->connect(SceneStringName(id_pressed), callable_mp(this, &EditorNode::_menu_option));
 
 	project_menu->add_separator();
 	project_menu->add_item(TTR("Version Control"), VCS_MENU);
@@ -6822,7 +6822,7 @@ EditorNode::EditorNode() {
 	editor_layouts->set_name("Layouts");
 	editor_layouts->set_auto_translate(false);
 	settings_menu->add_child(editor_layouts);
-	editor_layouts->connect("id_pressed", callable_mp(this, &EditorNode::_layout_menu_option));
+	editor_layouts->connect(SceneStringName(id_pressed), callable_mp(this, &EditorNode::_layout_menu_option));
 	settings_menu->add_submenu_item(TTR("Editor Layout"), "Layouts");
 	settings_menu->add_separator();
 
@@ -6848,7 +6848,7 @@ EditorNode::EditorNode() {
 	help_menu->set_name(TTR("Help"));
 	main_menu->add_child(help_menu);
 
-	help_menu->connect("id_pressed", callable_mp(this, &EditorNode::_menu_option));
+	help_menu->connect(SceneStringName(id_pressed), callable_mp(this, &EditorNode::_menu_option));
 
 	ED_SHORTCUT_AND_COMMAND("editor/editor_help", TTR("Search Help"), Key::F1);
 	ED_SHORTCUT_OVERRIDE("editor/editor_help", "macos", KeyModifierMask::ALT | Key::SPACE);
@@ -6897,7 +6897,7 @@ EditorNode::EditorNode() {
 	update_spinner = memnew(MenuButton);
 	right_menu_hb->add_child(update_spinner);
 	update_spinner->set_icon(theme->get_icon(SNAME("Progress1"), EditorStringName(EditorIcons)));
-	update_spinner->get_popup()->connect("id_pressed", callable_mp(this, &EditorNode::_menu_option));
+	update_spinner->get_popup()->connect(SceneStringName(id_pressed), callable_mp(this, &EditorNode::_menu_option));
 	PopupMenu *p = update_spinner->get_popup();
 	p->add_radio_check_item(TTR("Update Continuously"), SETTINGS_UPDATE_CONTINUOUSLY);
 	p->add_radio_check_item(TTR("Update When Changed"), SETTINGS_UPDATE_WHEN_CHANGED);
@@ -7017,7 +7017,7 @@ EditorNode::EditorNode() {
 	version_btn->set_self_modulate(Color(1, 1, 1, 0.65));
 	version_btn->set_underline_mode(LinkButton::UNDERLINE_MODE_ON_HOVER);
 	version_btn->set_tooltip_text(TTR("Click to copy."));
-	version_btn->connect("pressed", callable_mp(this, &EditorNode::_version_button_pressed));
+	version_btn->connect(SceneStringName(pressed), callable_mp(this, &EditorNode::_version_button_pressed));
 	version_info_vbc->add_child(version_btn);
 
 	// Add a dummy control node for horizontal spacing.
@@ -7036,7 +7036,7 @@ EditorNode::EditorNode() {
 	Button *output_button = add_bottom_panel_item(TTR("Output"), log);
 	log->set_tool_button(output_button);
 
-	center_split->connect("resized", callable_mp(this, &EditorNode::_vp_resized));
+	center_split->connect(SceneStringName(resized), callable_mp(this, &EditorNode::_vp_resized));
 
 	native_shader_source_visualizer = memnew(EditorNativeShaderSourceVisualizer);
 	gui_base->add_child(native_shader_source_visualizer);
@@ -7080,11 +7080,11 @@ EditorNode::EditorNode() {
 	gui_base->add_child(file_script);
 	file_script->connect("file_selected", callable_mp(this, &EditorNode::_dialog_action));
 
-	file_menu->connect("id_pressed", callable_mp(this, &EditorNode::_menu_option));
+	file_menu->connect(SceneStringName(id_pressed), callable_mp(this, &EditorNode::_menu_option));
 	file_menu->connect("about_to_popup", callable_mp(this, &EditorNode::_update_file_menu_opened));
 	file_menu->connect("popup_hide", callable_mp(this, &EditorNode::_update_file_menu_closed));
 
-	settings_menu->connect("id_pressed", callable_mp(this, &EditorNode::_menu_option));
+	settings_menu->connect(SceneStringName(id_pressed), callable_mp(this, &EditorNode::_menu_option));
 
 	file->connect("file_selected", callable_mp(this, &EditorNode::_dialog_action));
 	file_templates->connect("file_selected", callable_mp(this, &EditorNode::_dialog_action));

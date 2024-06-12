@@ -762,10 +762,10 @@ AnimationLibraryEditor::AnimationLibraryEditor() {
 	HBoxContainer *hb = memnew(HBoxContainer);
 	Button *b = memnew(Button(TTR("Add Library")));
 	b->set_h_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_END);
-	b->connect("pressed", callable_mp(this, &AnimationLibraryEditor::_add_library));
+	b->connect(SceneStringName(pressed), callable_mp(this, &AnimationLibraryEditor::_add_library));
 	hb->add_child(b);
 	b = memnew(Button(TTR("Load Library")));
-	b->connect("pressed", callable_mp(this, &AnimationLibraryEditor::_load_library));
+	b->connect(SceneStringName(pressed), callable_mp(this, &AnimationLibraryEditor::_load_library));
 	hb->add_child(b);
 	vb->add_child(hb);
 	tree = memnew(Tree);
@@ -787,7 +787,7 @@ AnimationLibraryEditor::AnimationLibraryEditor() {
 
 	file_popup = memnew(PopupMenu);
 	add_child(file_popup);
-	file_popup->connect("id_pressed", callable_mp(this, &AnimationLibraryEditor::_file_popup_selected));
+	file_popup->connect(SceneStringName(id_pressed), callable_mp(this, &AnimationLibraryEditor::_file_popup_selected));
 
 	add_child(vb);
 

@@ -429,8 +429,8 @@ void SceneTreeEditor::_add_nodes(Node *p_node, TreeItem *p_parent) {
 				item->add_button(0, get_editor_theme_icon(SNAME("GuiVisibilityHidden")), BUTTON_VISIBILITY, false, TTR("Toggle Visibility"));
 			}
 
-			if (!p_node->is_connected("visibility_changed", callable_mp(this, &SceneTreeEditor::_node_visibility_changed))) {
-				p_node->connect("visibility_changed", callable_mp(this, &SceneTreeEditor::_node_visibility_changed).bind(p_node));
+			if (!p_node->is_connected(SceneStringName(visibility_changed), callable_mp(this, &SceneTreeEditor::_node_visibility_changed))) {
+				p_node->connect(SceneStringName(visibility_changed), callable_mp(this, &SceneTreeEditor::_node_visibility_changed).bind(p_node));
 			}
 
 			_update_visibility_color(p_node, item);
@@ -442,8 +442,8 @@ void SceneTreeEditor::_add_nodes(Node *p_node, TreeItem *p_parent) {
 				item->add_button(0, get_editor_theme_icon(SNAME("GuiVisibilityHidden")), BUTTON_VISIBILITY, false, TTR("Toggle Visibility"));
 			}
 
-			if (!p_node->is_connected("visibility_changed", callable_mp(this, &SceneTreeEditor::_node_visibility_changed))) {
-				p_node->connect("visibility_changed", callable_mp(this, &SceneTreeEditor::_node_visibility_changed).bind(p_node));
+			if (!p_node->is_connected(SceneStringName(visibility_changed), callable_mp(this, &SceneTreeEditor::_node_visibility_changed))) {
+				p_node->connect(SceneStringName(visibility_changed), callable_mp(this, &SceneTreeEditor::_node_visibility_changed).bind(p_node));
 			}
 		} else if (p_node->is_class("AnimationMixer")) {
 			bool is_pinned = AnimationPlayerEditor::get_singleton()->get_editing_node() == p_node && AnimationPlayerEditor::get_singleton()->is_pinned();
@@ -554,8 +554,8 @@ void SceneTreeEditor::_node_removed(Node *p_node) {
 	}
 
 	if (p_node->is_class("CanvasItem") || p_node->is_class("CanvasLayer") || p_node->is_class("Window")) {
-		if (p_node->is_connected("visibility_changed", callable_mp(this, &SceneTreeEditor::_node_visibility_changed))) {
-			p_node->disconnect("visibility_changed", callable_mp(this, &SceneTreeEditor::_node_visibility_changed));
+		if (p_node->is_connected(SceneStringName(visibility_changed), callable_mp(this, &SceneTreeEditor::_node_visibility_changed))) {
+			p_node->disconnect(SceneStringName(visibility_changed), callable_mp(this, &SceneTreeEditor::_node_visibility_changed));
 		}
 	}
 
@@ -868,7 +868,7 @@ void SceneTreeEditor::_notification(int p_what) {
 			get_tree()->connect("tree_process_mode_changed", callable_mp(this, &SceneTreeEditor::_tree_process_mode_changed));
 			get_tree()->connect("node_removed", callable_mp(this, &SceneTreeEditor::_node_removed));
 			get_tree()->connect("node_renamed", callable_mp(this, &SceneTreeEditor::_node_renamed));
-			get_tree()->connect("node_configuration_warning_changed", callable_mp(this, &SceneTreeEditor::_warning_changed));
+			get_tree()->connect(SceneStringName(node_configuration_warning_changed), callable_mp(this, &SceneTreeEditor::_warning_changed));
 
 			tree->connect("item_collapsed", callable_mp(this, &SceneTreeEditor::_cell_collapsed));
 
@@ -881,7 +881,7 @@ void SceneTreeEditor::_notification(int p_what) {
 			get_tree()->disconnect("node_removed", callable_mp(this, &SceneTreeEditor::_node_removed));
 			get_tree()->disconnect("node_renamed", callable_mp(this, &SceneTreeEditor::_node_renamed));
 			tree->disconnect("item_collapsed", callable_mp(this, &SceneTreeEditor::_cell_collapsed));
-			get_tree()->disconnect("node_configuration_warning_changed", callable_mp(this, &SceneTreeEditor::_warning_changed));
+			get_tree()->disconnect(SceneStringName(node_configuration_warning_changed), callable_mp(this, &SceneTreeEditor::_warning_changed));
 		} break;
 
 		case NOTIFICATION_THEME_CHANGED: {

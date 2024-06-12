@@ -32,7 +32,6 @@
 #include "texture_rect.h"
 
 #include "scene/resources/atlas_texture.h"
-#include "scene/scene_string_names.h"
 #include "servers/rendering_server.h"
 
 void TextureRect::_notification(int p_what) {
@@ -298,7 +297,7 @@ void TextureRect::set_texture(const Ref<Texture2D> &p_tex) {
 
 	queue_redraw();
 	update_minimum_size();
-	emit_signal(SceneStringNames::get_singleton()->texture_changed);
+	emit_signal(SceneStringName(texture_changed));
 }
 
 Ref<Texture2D> TextureRect::get_texture() const {
@@ -415,7 +414,7 @@ void TextureRect::set_frame(int p_frame) {
 
 	frame = p_frame;
 	queue_redraw();
-	emit_signal(SceneStringNames::get_singleton()->frame_changed);
+	emit_signal(SceneStringName(frame_changed));
 }
 
 int TextureRect::get_frame() const {

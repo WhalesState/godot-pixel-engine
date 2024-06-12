@@ -32,7 +32,6 @@
 #include "sprite_2d.h"
 
 #include "scene/main/window.h"
-#include "scene/scene_string_names.h"
 
 #ifdef TOOLS_ENABLED
 Dictionary Sprite2D::_edit_get_state() const {
@@ -147,7 +146,7 @@ void Sprite2D::set_texture(const Ref<Texture2D> &p_texture) {
 	}
 
 	queue_redraw();
-	emit_signal(SceneStringNames::get_singleton()->texture_changed);
+	emit_signal(SceneStringName(texture_changed));
 	item_rect_changed();
 }
 
@@ -241,7 +240,7 @@ void Sprite2D::set_frame(int p_frame) {
 
 	frame = p_frame;
 
-	emit_signal(SceneStringNames::get_singleton()->frame_changed);
+	emit_signal(SceneStringName(frame_changed));
 }
 
 int Sprite2D::get_frame() const {

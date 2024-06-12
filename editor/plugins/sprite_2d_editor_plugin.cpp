@@ -343,7 +343,7 @@ Sprite2DEditor::Sprite2DEditor() {
 	options->get_popup()->add_item(TTR("Create LightOccluder2D Sibling"), MENU_OPTION_CREATE_LIGHT_OCCLUDER_2D);
 	options->set_switch_on_hover(true);
 
-	options->get_popup()->connect("id_pressed", callable_mp(this, &Sprite2DEditor::_menu_option));
+	options->get_popup()->connect(SceneStringName(id_pressed), callable_mp(this, &Sprite2DEditor::_menu_option));
 
 	err_dialog = memnew(AcceptDialog);
 	add_child(err_dialog);
@@ -355,7 +355,7 @@ Sprite2DEditor::Sprite2DEditor() {
 	scroll->set_custom_minimum_size(Size2(800, 500) * EDSCALE);
 	vb->add_margin_child(TTR("Preview:"), scroll, true);
 	debug_uv = memnew(Control);
-	debug_uv->connect("draw", callable_mp(this, &Sprite2DEditor::_debug_uv_draw));
+	debug_uv->connect(SceneStringName(draw), callable_mp(this, &Sprite2DEditor::_debug_uv_draw));
 	scroll->add_child(debug_uv);
 	debug_uv_dialog->connect("confirmed", callable_mp(this, &Sprite2DEditor::_create_node));
 
@@ -386,7 +386,7 @@ Sprite2DEditor::Sprite2DEditor() {
 	hb->add_child(grow_pixels);
 	update_preview = memnew(Button);
 	update_preview->set_text(TTR("Update Preview"));
-	update_preview->connect("pressed", callable_mp(this, &Sprite2DEditor::_update_mesh_data));
+	update_preview->connect(SceneStringName(pressed), callable_mp(this, &Sprite2DEditor::_update_mesh_data));
 	hb->add_child(update_preview);
 	vb->add_margin_child(TTR("Settings:"), hb);
 

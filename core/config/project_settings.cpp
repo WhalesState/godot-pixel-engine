@@ -272,7 +272,7 @@ bool ProjectSettings::_set(const StringName &p_name, const Variant &p_value) {
 			}
 		}
 	} else {
-		if (p_name == CoreStringNames::get_singleton()->_custom_features) {
+		if (p_name == CoreStringName(_custom_features)) {
 			Vector<String> custom_feature_array = String(p_value).split(",");
 			for (int i = 0; i < custom_feature_array.size(); i++) {
 				custom_features.insert(custom_feature_array[i]);
@@ -444,7 +444,7 @@ void ProjectSettings::_emit_changed() {
 		return;
 	}
 	is_changed = false;
-	emit_signal(SNAME("settings_changed"));
+	emit_signal("settings_changed");
 }
 
 bool ProjectSettings::_load_resource_pack(const String &p_pack, bool p_replace_files, int p_offset) {
@@ -843,7 +843,7 @@ Error ProjectSettings::_save_settings_binary(const String &p_file, const RBMap<S
 	if (!p_custom_features.is_empty()) {
 		// Store how many properties are saved, add one for custom features, which must always go first.
 		file->store_32(count + 1);
-		String key = CoreStringNames::get_singleton()->_custom_features;
+		String key = CoreStringName(_custom_features);
 		file->store_pascal_string(key);
 
 		int len;

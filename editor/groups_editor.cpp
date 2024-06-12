@@ -483,7 +483,7 @@ GroupDialog::GroupDialog() {
 	add_group_button = memnew(Button);
 	add_group_button->set_text(TTR("Add"));
 	chbc->add_child(add_group_button);
-	add_group_button->connect("pressed", callable_mp(this, &GroupDialog::_add_group_pressed).bind(String()));
+	add_group_button->connect(SceneStringName(pressed), callable_mp(this, &GroupDialog::_add_group_pressed).bind(String()));
 
 	VBoxContainer *vbc_add = memnew(VBoxContainer);
 	hbc->add_child(vbc_add);
@@ -522,14 +522,14 @@ GroupDialog::GroupDialog() {
 	add_button = memnew(Button);
 	add_button->set_flat(true);
 	add_button->set_text(TTR("Add"));
-	add_button->connect("pressed", callable_mp(this, &GroupDialog::_add_pressed));
+	add_button->connect(SceneStringName(pressed), callable_mp(this, &GroupDialog::_add_pressed));
 
 	vbc_buttons->add_child(add_button);
 
 	remove_button = memnew(Button);
 	remove_button->set_flat(true);
 	remove_button->set_text(TTR("Remove"));
-	remove_button->connect("pressed", callable_mp(this, &GroupDialog::_removed_pressed));
+	remove_button->connect(SceneStringName(pressed), callable_mp(this, &GroupDialog::_removed_pressed));
 
 	vbc_buttons->add_child(remove_button);
 
@@ -794,7 +794,7 @@ GroupsEditor::GroupsEditor() {
 	Button *group_dialog_button = memnew(Button);
 	group_dialog_button->set_text(TTR("Manage Groups"));
 	vbc->add_child(group_dialog_button);
-	group_dialog_button->connect("pressed", callable_mp(this, &GroupsEditor::_show_group_dialog));
+	group_dialog_button->connect(SceneStringName(pressed), callable_mp(this, &GroupsEditor::_show_group_dialog));
 
 	HBoxContainer *hbc = memnew(HBoxContainer);
 	vbc->add_child(hbc);
@@ -808,7 +808,7 @@ GroupsEditor::GroupsEditor() {
 	add = memnew(Button);
 	add->set_text(TTR("Add"));
 	hbc->add_child(add);
-	add->connect("pressed", callable_mp(this, &GroupsEditor::_add_group).bind(String()));
+	add->connect(SceneStringName(pressed), callable_mp(this, &GroupsEditor::_add_group).bind(String()));
 
 	tree = memnew(Tree);
 	vbc->add_child(tree);

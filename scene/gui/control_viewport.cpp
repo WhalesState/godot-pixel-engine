@@ -337,7 +337,6 @@ bool ControlViewport::_gui_input_rulers_and_guides(const Ref<InputEvent> &p_even
 
 				Point2 edited = xform.affine_inverse().xform(b->get_position()).snapped(Vector2(1, 1));
 				if (drag_type == DRAG_V_GUIDE) {
-					Array prev_vguides = vguides.duplicate();
 					if (b->get_position().x > theme_cache.ruler_width) {
 						// Adds a new vertical guide
 						if (dragged_guide_index >= 0) {
@@ -354,7 +353,6 @@ bool ControlViewport::_gui_input_rulers_and_guides(const Ref<InputEvent> &p_even
 						}
 					}
 				} else if (drag_type == DRAG_H_GUIDE) {
-					Array prev_hguides = hguides.duplicate();
 					if (b->get_position().y > theme_cache.ruler_width) {
 						// Adds a new horizontal guide
 						if (dragged_guide_index >= 0) {
@@ -921,7 +919,7 @@ ControlViewport::ControlViewport() {
 	set_clip_contents(true);
 	set_h_size_flags(SIZE_EXPAND_FILL);
 	set_v_size_flags(SIZE_EXPAND_FILL);
-	connect("draw", callable_mp(this, &ControlViewport::_update_scrollbars));
+	connect(SceneStringName(draw), callable_mp(this, &ControlViewport::_update_scrollbars));
 
 	panner.instantiate();
 	panner->set_callbacks(callable_mp(this, &ControlViewport::_pan_callback), callable_mp(this, &ControlViewport::_zoom_callback));
@@ -932,9 +930,9 @@ ControlViewport::ControlViewport() {
 	viewport->set_anchors_and_offsets_preset(PRESET_FULL_RECT);
 	viewport->set_clip_contents(true);
 	viewport->set_focus_mode(FOCUS_ALL);
-	viewport->connect("draw", callable_mp(this, &ControlViewport::_draw_viewport));
-	viewport->connect("gui_input", callable_mp(this, &ControlViewport::_gui_input_viewport));
-	viewport->connect("focus_exited", callable_mp(panner.ptr(), &ViewPanner::release_pan_key));
+	viewport->connect(SceneStringName(draw), callable_mp(this, &ControlViewport::_draw_viewport));
+	viewport->connect(SceneStringName(gui_input), callable_mp(this, &ControlViewport::_gui_input_viewport));
+	viewport->connect(SceneStringName(focus_exited), callable_mp(panner.ptr(), &ViewPanner::release_pan_key));
 
 	h_scroll = memnew(HScrollBar);
 	viewport->add_child(h_scroll);

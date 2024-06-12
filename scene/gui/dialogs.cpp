@@ -67,11 +67,11 @@ void AcceptDialog::_notification(int p_what) {
 
 				parent_visible = get_parent_visible_window();
 				if (parent_visible) {
-					parent_visible->connect("focus_entered", callable_mp(this, &AcceptDialog::_parent_focused));
+					parent_visible->connect(SceneStringName(focus_entered), callable_mp(this, &AcceptDialog::_parent_focused));
 				}
 			} else {
 				if (parent_visible) {
-					parent_visible->disconnect("focus_entered", callable_mp(this, &AcceptDialog::_parent_focused));
+					parent_visible->disconnect(SceneStringName(focus_entered), callable_mp(this, &AcceptDialog::_parent_focused));
 					parent_visible = nullptr;
 				}
 			}
@@ -88,7 +88,7 @@ void AcceptDialog::_notification(int p_what) {
 
 		case NOTIFICATION_EXIT_TREE: {
 			if (parent_visible) {
-				parent_visible->disconnect("focus_entered", callable_mp(this, &AcceptDialog::_parent_focused));
+				parent_visible->disconnect(SceneStringName(focus_entered), callable_mp(this, &AcceptDialog::_parent_focused));
 				parent_visible = nullptr;
 			}
 		} break;
@@ -125,7 +125,7 @@ void AcceptDialog::_ok_pressed() {
 void AcceptDialog::_cancel_pressed() {
 	Window *parent_window = parent_visible;
 	if (parent_visible) {
-		parent_visible->disconnect("focus_entered", callable_mp(this, &AcceptDialog::_parent_focused));
+		parent_visible->disconnect(SceneStringName(focus_entered), callable_mp(this, &AcceptDialog::_parent_focused));
 		parent_visible = nullptr;
 	}
 
@@ -302,7 +302,7 @@ Button *AcceptDialog::add_button(const String &p_text, bool p_right, const Strin
 	}
 	button->set_meta("__right_spacer", right_spacer);
 
-	button->connect("visibility_changed", callable_mp(this, &AcceptDialog::_custom_button_visibility_changed).bind(button));
+	button->connect(SceneStringName(visibility_changed), callable_mp(this, &AcceptDialog::_custom_button_visibility_changed).bind(button));
 
 	child_controls_changed();
 	if (is_visible()) {
@@ -310,7 +310,7 @@ Button *AcceptDialog::add_button(const String &p_text, bool p_right, const Strin
 	}
 
 	if (!p_action.is_empty()) {
-		button->connect("pressed", callable_mp(this, &AcceptDialog::_custom_action).bind(p_action));
+		button->connect(SceneStringName(pressed), callable_mp(this, &AcceptDialog::_custom_action).bind(p_action));
 	}
 
 	return button;
@@ -324,7 +324,7 @@ Button *AcceptDialog::add_cancel_button(const String &p_cancel) {
 
 	Button *b = swap_cancel_ok ? add_button(c, true) : add_button(c);
 
-	b->connect("pressed", callable_mp(this, &AcceptDialog::_cancel_pressed));
+	b->connect(SceneStringName(pressed), callable_mp(this, &AcceptDialog::_cancel_pressed));
 
 	return b;
 }
@@ -340,12 +340,12 @@ void AcceptDialog::remove_button(Control *p_button) {
 		ERR_FAIL_COND_MSG(right_spacer->get_parent() != buttons_hbox, vformat("Cannot remove button %s as its associated spacer does not belong to this dialog.", button->get_name()));
 	}
 
-	button->disconnect("visibility_changed", callable_mp(this, &AcceptDialog::_custom_button_visibility_changed));
-	if (button->is_connected("pressed", callable_mp(this, &AcceptDialog::_custom_action))) {
-		button->disconnect("pressed", callable_mp(this, &AcceptDialog::_custom_action));
+	button->disconnect(SceneStringName(visibility_changed), callable_mp(this, &AcceptDialog::_custom_button_visibility_changed));
+	if (button->is_connected(SceneStringName(pressed), callable_mp(this, &AcceptDialog::_custom_action))) {
+		button->disconnect(SceneStringName(pressed), callable_mp(this, &AcceptDialog::_custom_action));
 	}
-	if (button->is_connected("pressed", callable_mp(this, &AcceptDialog::_cancel_pressed))) {
-		button->disconnect("pressed", callable_mp(this, &AcceptDialog::_cancel_pressed));
+	if (button->is_connected(SceneStringName(pressed), callable_mp(this, &AcceptDialog::_cancel_pressed))) {
+		button->disconnect(SceneStringName(pressed), callable_mp(this, &AcceptDialog::_cancel_pressed));
 	}
 
 	if (right_spacer) {
@@ -426,11 +426,11 @@ AcceptDialog::AcceptDialog() {
 	buttons_hbox->add_child(ok_button);
 	buttons_hbox->add_spacer();
 
-	ok_button->connect("pressed", callable_mp(this, &AcceptDialog::_ok_pressed));
+	ok_button->connect(SceneStringName(pressed), callable_mp(this, &AcceptDialog::_ok_pressed));
 
 	set_title(TTRC("Alert!"));
 
-	connect("window_input", callable_mp(this, &AcceptDialog::_input_from_window));
+	connect(SceneStringName(window_input), callable_mp(this, &AcceptDialog::_input_from_window));
 }
 
 AcceptDialog::~AcceptDialog() {

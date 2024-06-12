@@ -249,5 +249,5 @@ void SpriteFrames::_bind_methods() {
 }
 
 SpriteFrames::SpriteFrames() {
-	add_animation(SceneStringNames::get_singleton()->_default);
+	add_animation(SceneStringName(default_));
 }

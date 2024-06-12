@@ -1028,5 +1028,5 @@ TabContainer::TabContainer() {
 	tab_bar->connect("tab_button_pressed", callable_mp(this, &TabContainer::_on_tab_button_pressed));
 	tab_bar->connect("active_tab_rearranged", callable_mp(this, &TabContainer::_on_active_tab_rearranged));
 
-	connect("mouse_exited", callable_mp(this, &TabContainer::_on_mouse_exited));
+	connect(SceneStringName(mouse_exited), callable_mp(this, &TabContainer::_on_mouse_exited));
 }

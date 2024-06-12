@@ -34,7 +34,6 @@
 #include "editor/editor_node.h"
 #include "scene/gui/button.h"
 #include "scene/resources/packed_scene.h"
-#include "scene/scene_string_names.h"
 
 void PackedSceneEditor::_on_open_scene_pressed() {
 	// Using deferred call because changing scene updates the Inspector and thus destroys this plugin.
@@ -54,7 +53,7 @@ PackedSceneEditor::PackedSceneEditor(Ref<PackedScene> &p_packed_scene) {
 	packed_scene = p_packed_scene;
 
 	open_scene_button = EditorInspector::create_inspector_action_button(TTR("Open Scene"));
-	open_scene_button->connect(SNAME("pressed"), callable_mp(this, &PackedSceneEditor::_on_open_scene_pressed));
+	open_scene_button->connect(SceneStringName(pressed), callable_mp(this, &PackedSceneEditor::_on_open_scene_pressed));
 	open_scene_button->set_disabled(!packed_scene->get_path().get_file().is_valid_filename());
 	add_child(open_scene_button);
 

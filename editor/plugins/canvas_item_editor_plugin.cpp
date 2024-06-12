@@ -4607,7 +4607,7 @@ void CanvasItemEditor::add_control_to_menu_panel(Control *p_control) {
 	context_toolbar_hbox->add_child(p_control);
 	context_toolbar_separators[p_control] = sep;
 
-	p_control->connect("visibility_changed", callable_mp(this, &CanvasItemEditor::_update_context_toolbar));
+	p_control->connect(SceneStringName(visibility_changed), callable_mp(this, &CanvasItemEditor::_update_context_toolbar));
 
 	_update_context_toolbar();
 }
@@ -4616,7 +4616,7 @@ void CanvasItemEditor::remove_control_from_menu_panel(Control *p_control) {
 	ERR_FAIL_NULL(p_control);
 	ERR_FAIL_COND(p_control->get_parent() != context_toolbar_hbox);
 
-	p_control->disconnect("visibility_changed", callable_mp(this, &CanvasItemEditor::_update_context_toolbar));
+	p_control->disconnect(SceneStringName(visibility_changed), callable_mp(this, &CanvasItemEditor::_update_context_toolbar));
 
 	VSeparator *sep = context_toolbar_separators[p_control];
 	context_toolbar_hbox->remove_child(sep);
@@ -4732,7 +4732,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	viewport_scrollable->set_clip_contents(true);
 	viewport_scrollable->set_v_size_flags(Control::SIZE_EXPAND_FILL);
 	viewport_scrollable->set_h_size_flags(Control::SIZE_EXPAND_FILL);
-	viewport_scrollable->connect("draw", callable_mp(this, &CanvasItemEditor::_update_scrollbars));
+	viewport_scrollable->connect(SceneStringName(draw), callable_mp(this, &CanvasItemEditor::_update_scrollbars));
 
 	SubViewportContainer *scene_tree = memnew(SubViewportContainer);
 	viewport_scrollable->add_child(scene_tree);
@@ -4782,13 +4782,13 @@ CanvasItemEditor::CanvasItemEditor() {
 	button_center_view = memnew(Button);
 	controls_hb->add_child(button_center_view);
 	button_center_view->set_flat(true);
-	button_center_view->connect("pressed", callable_mp(this, &CanvasItemEditor::_popup_callback).bind(VIEW_CENTER_TO_SELECTION));
+	button_center_view->connect(SceneStringName(pressed), callable_mp(this, &CanvasItemEditor::_popup_callback).bind(VIEW_CENTER_TO_SELECTION));
 	button_center_view->set_shortcut(ED_SHORTCUT("canvas_item_editor/center_selection", TTR("Center Selection"), Key::F));
 
 	button_frame_view = memnew(Button);
 	controls_hb->add_child(button_frame_view);
 	button_frame_view->set_flat(true);
-	button_frame_view->connect("pressed", callable_mp(this, &CanvasItemEditor::_popup_callback).bind(VIEW_FRAME_TO_SELECTION));
+	button_frame_view->connect(SceneStringName(pressed), callable_mp(this, &CanvasItemEditor::_popup_callback).bind(VIEW_FRAME_TO_SELECTION));
 	button_frame_view->set_shortcut(ED_SHORTCUT("canvas_item_editor/frame_selection", TTR("Frame Selection"), KeyModifierMask::SHIFT | Key::F));
 
 	zoom_widget = memnew(ZoomWidget);
@@ -4810,9 +4810,9 @@ CanvasItemEditor::CanvasItemEditor() {
 	viewport->set_anchors_and_offsets_preset(Control::PRESET_FULL_RECT);
 	viewport->set_clip_contents(true);
 	viewport->set_focus_mode(FOCUS_ALL);
-	viewport->connect("draw", callable_mp(this, &CanvasItemEditor::_draw_viewport));
-	viewport->connect("gui_input", callable_mp(this, &CanvasItemEditor::_gui_input_viewport));
-	viewport->connect("focus_exited", callable_mp(panner.ptr(), &ViewPanner::release_pan_key));
+	viewport->connect(SceneStringName(draw), callable_mp(this, &CanvasItemEditor::_draw_viewport));
+	viewport->connect(SceneStringName(gui_input), callable_mp(this, &CanvasItemEditor::_gui_input_viewport));
+	viewport->connect(SceneStringName(focus_exited), callable_mp(panner.ptr(), &ViewPanner::release_pan_key));
 
 	h_scroll = memnew(HScrollBar);
 	viewport->add_child(h_scroll);
@@ -4895,7 +4895,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	snap_config_menu->set_switch_on_hover(true);
 
 	PopupMenu *p = snap_config_menu->get_popup();
-	p->connect("id_pressed", callable_mp(this, &CanvasItemEditor::_popup_callback));
+	p->connect(SceneStringName(id_pressed), callable_mp(this, &CanvasItemEditor::_popup_callback));
 	p->set_hide_on_checkable_item_selection(false);
 	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/use_rotation_snap", TTR("Use Rotation Snap")), SNAP_USE_ROTATION);
 	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/use_scale_snap", TTR("Use Scale Snap")), SNAP_USE_SCALE);
@@ -4909,7 +4909,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	smartsnap_config_popup = memnew(PopupMenu);
 	p->add_child(smartsnap_config_popup);
 	smartsnap_config_popup->set_name("SmartSnapping");
-	smartsnap_config_popup->connect("id_pressed", callable_mp(this, &CanvasItemEditor::_popup_callback));
+	smartsnap_config_popup->connect(SceneStringName(id_pressed), callable_mp(this, &CanvasItemEditor::_popup_callback));
 	smartsnap_config_popup->set_hide_on_checkable_item_selection(false);
 	smartsnap_config_popup->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/snap_node_parent", TTR("Snap to Parent")), SNAP_USE_NODE_PARENT);
 	smartsnap_config_popup->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/snap_node_anchors", TTR("Snap to Node Anchor")), SNAP_USE_NODE_ANCHORS);
@@ -4922,7 +4922,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	lock_button->set_theme_type_variation("FlatButton");
 	main_menu_hbox->add_child(lock_button);
 
-	lock_button->connect("pressed", callable_mp(this, &CanvasItemEditor::_popup_callback).bind(LOCK_SELECTED));
+	lock_button->connect(SceneStringName(pressed), callable_mp(this, &CanvasItemEditor::_popup_callback).bind(LOCK_SELECTED));
 	lock_button->set_tooltip_text(TTR("Lock selected node, preventing selection and movement."));
 	// Define the shortcut globally (without a context) so that it works if the Scene tree dock is currently focused.
 	lock_button->set_shortcut(ED_SHORTCUT("editor/lock_selected_nodes", TTR("Lock Selected Node(s)"), KeyModifierMask::CMD_OR_CTRL | Key::L));
@@ -4930,7 +4930,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	unlock_button = memnew(Button);
 	unlock_button->set_theme_type_variation("FlatButton");
 	main_menu_hbox->add_child(unlock_button);
-	unlock_button->connect("pressed", callable_mp(this, &CanvasItemEditor::_popup_callback).bind(UNLOCK_SELECTED));
+	unlock_button->connect(SceneStringName(pressed), callable_mp(this, &CanvasItemEditor::_popup_callback).bind(UNLOCK_SELECTED));
 	unlock_button->set_tooltip_text(TTR("Unlock selected node, allowing selection and movement."));
 	// Define the shortcut globally (without a context) so that it works if the Scene tree dock is currently focused.
 	unlock_button->set_shortcut(ED_SHORTCUT("editor/unlock_selected_nodes", TTR("Unlock Selected Node(s)"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::L));
@@ -4938,7 +4938,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	group_button = memnew(Button);
 	group_button->set_theme_type_variation("FlatButton");
 	main_menu_hbox->add_child(group_button);
-	group_button->connect("pressed", callable_mp(this, &CanvasItemEditor::_popup_callback).bind(GROUP_SELECTED));
+	group_button->connect(SceneStringName(pressed), callable_mp(this, &CanvasItemEditor::_popup_callback).bind(GROUP_SELECTED));
 	group_button->set_tooltip_text(TTR("Make selected node's children not selectable."));
 	// Define the shortcut globally (without a context) so that it works if the Scene tree dock is currently focused.
 	group_button->set_shortcut(ED_SHORTCUT("editor/group_selected_nodes", TTR("Group Selected Node(s)"), KeyModifierMask::CMD_OR_CTRL | Key::G));
@@ -4946,7 +4946,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	ungroup_button = memnew(Button);
 	ungroup_button->set_theme_type_variation("FlatButton");
 	main_menu_hbox->add_child(ungroup_button);
-	ungroup_button->connect("pressed", callable_mp(this, &CanvasItemEditor::_popup_callback).bind(UNGROUP_SELECTED));
+	ungroup_button->connect(SceneStringName(pressed), callable_mp(this, &CanvasItemEditor::_popup_callback).bind(UNGROUP_SELECTED));
 	ungroup_button->set_tooltip_text(TTR("Make selected node's children selectable."));
 	// Define the shortcut globally (without a context) so that it works if the Scene tree dock is currently focused.
 	ungroup_button->set_shortcut(ED_SHORTCUT("editor/ungroup_selected_nodes", TTR("Ungroup Selected Node(s)"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::G));
@@ -4967,14 +4967,14 @@ CanvasItemEditor::CanvasItemEditor() {
 	view_menu->set_switch_on_hover(true);
 	view_menu->set_shortcut_context(this);
 	main_menu_hbox->add_child(view_menu);
-	view_menu->get_popup()->connect("id_pressed", callable_mp(this, &CanvasItemEditor::_popup_callback));
+	view_menu->get_popup()->connect(SceneStringName(id_pressed), callable_mp(this, &CanvasItemEditor::_popup_callback));
 
 	p = view_menu->get_popup();
 	p->set_hide_on_checkable_item_selection(false);
 
 	grid_menu = memnew(PopupMenu);
 	grid_menu->connect("about_to_popup", callable_mp(this, &CanvasItemEditor::_prepare_grid_menu));
-	grid_menu->connect("id_pressed", callable_mp(this, &CanvasItemEditor::_on_grid_menu_id_pressed));
+	grid_menu->connect(SceneStringName(id_pressed), callable_mp(this, &CanvasItemEditor::_on_grid_menu_id_pressed));
 	grid_menu->set_name("GridMenu");
 	grid_menu->add_radio_check_item(TTR("Show"), GRID_VISIBILITY_SHOW);
 	grid_menu->add_radio_check_item(TTR("Show When Snapping"), GRID_VISIBILITY_SHOW_WHEN_SNAPPING);
@@ -4998,7 +4998,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	p->add_check_shortcut(ED_SHORTCUT("canvas_item_editor/preview_canvas_scale", TTR("Preview Canvas Scale")), PREVIEW_CANVAS_SCALE);
 
 	theme_menu = memnew(PopupMenu);
-	theme_menu->connect("id_pressed", callable_mp(this, &CanvasItemEditor::_switch_theme_preview));
+	theme_menu->connect(SceneStringName(id_pressed), callable_mp(this, &CanvasItemEditor::_switch_theme_preview));
 	theme_menu->set_name("ThemeMenu");
 	theme_menu->add_radio_check_item(TTR("Project theme"), THEME_PREVIEW_PROJECT);
 	theme_menu->add_radio_check_item(TTR("Editor theme"), THEME_PREVIEW_EDITOR);
@@ -5029,7 +5029,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	key_loc_button->set_toggle_mode(true);
 	key_loc_button->set_pressed(true);
 	key_loc_button->set_focus_mode(FOCUS_NONE);
-	key_loc_button->connect("pressed", callable_mp(this, &CanvasItemEditor::_popup_callback).bind(ANIM_INSERT_POS));
+	key_loc_button->connect(SceneStringName(pressed), callable_mp(this, &CanvasItemEditor::_popup_callback).bind(ANIM_INSERT_POS));
 	key_loc_button->set_tooltip_text(TTR("Translation mask for inserting keys."));
 	animation_hb->add_child(key_loc_button);
 
@@ -5038,7 +5038,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	key_rot_button->set_toggle_mode(true);
 	key_rot_button->set_pressed(true);
 	key_rot_button->set_focus_mode(FOCUS_NONE);
-	key_rot_button->connect("pressed", callable_mp(this, &CanvasItemEditor::_popup_callback).bind(ANIM_INSERT_ROT));
+	key_rot_button->connect(SceneStringName(pressed), callable_mp(this, &CanvasItemEditor::_popup_callback).bind(ANIM_INSERT_ROT));
 	key_rot_button->set_tooltip_text(TTR("Rotation mask for inserting keys."));
 	animation_hb->add_child(key_rot_button);
 
@@ -5046,14 +5046,14 @@ CanvasItemEditor::CanvasItemEditor() {
 	key_scale_button->set_theme_type_variation("FlatButton");
 	key_scale_button->set_toggle_mode(true);
 	key_scale_button->set_focus_mode(FOCUS_NONE);
-	key_scale_button->connect("pressed", callable_mp(this, &CanvasItemEditor::_popup_callback).bind(ANIM_INSERT_SCALE));
+	key_scale_button->connect(SceneStringName(pressed), callable_mp(this, &CanvasItemEditor::_popup_callback).bind(ANIM_INSERT_SCALE));
 	key_scale_button->set_tooltip_text(TTR("Scale mask for inserting keys."));
 	animation_hb->add_child(key_scale_button);
 
 	key_insert_button = memnew(Button);
 	key_insert_button->set_theme_type_variation("FlatButton");
 	key_insert_button->set_focus_mode(FOCUS_NONE);
-	key_insert_button->connect("pressed", callable_mp(this, &CanvasItemEditor::_popup_callback).bind(ANIM_INSERT_KEY));
+	key_insert_button->connect(SceneStringName(pressed), callable_mp(this, &CanvasItemEditor::_popup_callback).bind(ANIM_INSERT_KEY));
 	key_insert_button->set_tooltip_text(TTR("Insert keys (based on mask)."));
 	key_insert_button->set_shortcut(ED_SHORTCUT("canvas_item_editor/anim_insert_key", TTR("Insert Key"), Key::INSERT));
 	key_insert_button->set_shortcut_context(this);
@@ -5074,7 +5074,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	animation_menu->set_shortcut_context(this);
 	animation_menu->set_tooltip_text(TTR("Animation Key Options"));
 	animation_hb->add_child(animation_menu);
-	animation_menu->get_popup()->connect("id_pressed", callable_mp(this, &CanvasItemEditor::_popup_callback));
+	animation_menu->get_popup()->connect(SceneStringName(id_pressed), callable_mp(this, &CanvasItemEditor::_popup_callback));
 	animation_menu->set_switch_on_hover(true);
 
 	p = animation_menu->get_popup();
@@ -5093,12 +5093,12 @@ CanvasItemEditor::CanvasItemEditor() {
 	add_child(selection_menu);
 	selection_menu->set_min_size(Vector2(100, 0));
 	selection_menu->set_auto_translate(false);
-	selection_menu->connect("id_pressed", callable_mp(this, &CanvasItemEditor::_selection_result_pressed));
+	selection_menu->connect(SceneStringName(id_pressed), callable_mp(this, &CanvasItemEditor::_selection_result_pressed));
 	selection_menu->connect("popup_hide", callable_mp(this, &CanvasItemEditor::_selection_menu_hide), CONNECT_DEFERRED);
 
 	add_node_menu = memnew(PopupMenu);
 	add_child(add_node_menu);
-	add_node_menu->connect("id_pressed", callable_mp(this, &CanvasItemEditor::_add_node_pressed));
+	add_node_menu->connect(SceneStringName(id_pressed), callable_mp(this, &CanvasItemEditor::_add_node_pressed));
 
 	multiply_grid_step_shortcut = ED_SHORTCUT("canvas_item_editor/multiply_grid_step", TTR("Multiply grid step by 2"), Key::KP_MULTIPLY);
 	divide_grid_step_shortcut = ED_SHORTCUT("canvas_item_editor/divide_grid_step", TTR("Divide grid step by 2"), Key::KP_DIVIDE);
@@ -5561,11 +5561,11 @@ void CanvasItemEditorViewport::_notification(int p_what) {
 
 		case NOTIFICATION_ENTER_TREE: {
 			_update_theme();
-			connect("mouse_exited", callable_mp(this, &CanvasItemEditorViewport::_on_mouse_exit));
+			connect(SceneStringName(mouse_exited), callable_mp(this, &CanvasItemEditorViewport::_on_mouse_exit));
 		} break;
 
 		case NOTIFICATION_EXIT_TREE: {
-			disconnect("mouse_exited", callable_mp(this, &CanvasItemEditorViewport::_on_mouse_exit));
+			disconnect(SceneStringName(mouse_exited), callable_mp(this, &CanvasItemEditorViewport::_on_mouse_exit));
 		} break;
 	}
 }

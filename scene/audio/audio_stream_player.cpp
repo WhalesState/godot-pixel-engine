@@ -61,7 +61,7 @@ void AudioStreamPlayer::_notification(int p_what) {
 				set_process_internal(false);
 			}
 			if (!playbacks_to_remove.is_empty()) {
-				emit_signal(SNAME("finished"));
+				emit_signal(SceneStringName(finished));
 			}
 		} break;
 
@@ -201,7 +201,7 @@ StringName AudioStreamPlayer::get_bus() const {
 			return bus;
 		}
 	}
-	return SceneStringNames::get_singleton()->Master;
+	return SceneStringName(Master);
 }
 
 void AudioStreamPlayer::set_autoplay(bool p_enable) {

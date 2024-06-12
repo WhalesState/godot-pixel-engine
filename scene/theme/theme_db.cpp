@@ -226,7 +226,7 @@ ThemeContext *ThemeDB::create_theme_context(Node *p_node, List<Ref<Theme>> &p_th
 	theme_contexts[p_node] = context;
 	_propagate_theme_context(p_node, context);
 
-	p_node->connect("tree_exited", callable_mp(this, &ThemeDB::destroy_theme_context).bind(p_node));
+	p_node->connect(SceneStringName(tree_exited), callable_mp(this, &ThemeDB::destroy_theme_context).bind(p_node));
 
 	return context;
 }
@@ -234,7 +234,7 @@ ThemeContext *ThemeDB::create_theme_context(Node *p_node, List<Ref<Theme>> &p_th
 void ThemeDB::destroy_theme_context(Node *p_node) {
 	ERR_FAIL_COND(!theme_contexts.has(p_node));
 
-	p_node->disconnect("tree_exited", callable_mp(this, &ThemeDB::destroy_theme_context));
+	p_node->disconnect(SceneStringName(tree_exited), callable_mp(this, &ThemeDB::destroy_theme_context));
 
 	ThemeContext *context = theme_contexts[p_node];
 
@@ -456,7 +456,7 @@ ThemeDB::~ThemeDB() {
 }
 
 void ThemeContext::_emit_changed() {
-	emit_signal(SNAME("changed"));
+	emit_signal(CoreStringName(changed));
 }
 
 void ThemeContext::set_themes(List<Ref<Theme>> &p_themes) {

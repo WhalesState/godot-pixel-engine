@@ -42,6 +42,7 @@
 #include "scene/resources/style_box_flat.h"
 #include "scene/resources/style_box_line.h"
 #include "scene/resources/style_box_texture.h"
+#include "scene/scene_string_names.h"
 #include "scene/theme/theme_db.h"
 
 #include "modules/modules_enabled.gen.h" // For svg.
@@ -928,7 +929,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	Ref<StyleBoxFlat> style_menu = style_widget->duplicate();
 	style_menu->set_draw_center(false);
 	style_menu->set_border_width_all(0);
-	theme->set_stylebox("panel", "PanelContainer", style_menu);
+	theme->set_stylebox(SceneStringName(panel), "PanelContainer", style_menu);
 	theme->set_stylebox("MenuPanel", EditorStringName(EditorStyles), style_menu);
 
 	// CanvasItem Editor
@@ -962,9 +963,9 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_stylebox("LaunchPadNormal", EditorStringName(EditorStyles), style_launch_pad);
 
 	// MenuButton
-	theme->set_stylebox("normal", "MenuButton", style_menu);
+	theme->set_stylebox(CoreStringName(normal), "MenuButton", style_menu);
 	theme->set_stylebox("hover", "MenuButton", style_widget_hover);
-	theme->set_stylebox("pressed", "MenuButton", style_menu);
+	theme->set_stylebox(SceneStringName(pressed), "MenuButton", style_menu);
 	theme->set_stylebox("focus", "MenuButton", style_menu);
 	theme->set_stylebox("disabled", "MenuButton", style_menu);
 
@@ -979,9 +980,9 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_stylebox("MenuHover", EditorStringName(EditorStyles), style_widget_hover);
 
 	// Buttons
-	theme->set_stylebox("normal", "Button", style_widget);
+	theme->set_stylebox(CoreStringName(normal), "Button", style_widget);
 	theme->set_stylebox("hover", "Button", style_widget_hover);
-	theme->set_stylebox("pressed", "Button", style_widget_pressed);
+	theme->set_stylebox(SceneStringName(pressed), "Button", style_widget_pressed);
 	theme->set_stylebox("focus", "Button", style_widget_focus);
 	theme->set_stylebox("disabled", "Button", style_widget_disabled);
 
@@ -1016,14 +1017,14 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	}
 	style_flat_button_pressed->set_bg_color(flat_pressed_color);
 
-	theme->set_stylebox("normal", "FlatButton", style_flat_button);
+	theme->set_stylebox(CoreStringName(normal), "FlatButton", style_flat_button);
 	theme->set_stylebox("hover", "FlatButton", style_flat_button);
-	theme->set_stylebox("pressed", "FlatButton", style_flat_button_pressed);
+	theme->set_stylebox(SceneStringName(pressed), "FlatButton", style_flat_button_pressed);
 	theme->set_stylebox("disabled", "FlatButton", style_flat_button);
 
-	theme->set_stylebox("normal", "FlatMenuButton", style_flat_button);
+	theme->set_stylebox(CoreStringName(normal), "FlatMenuButton", style_flat_button);
 	theme->set_stylebox("hover", "FlatMenuButton", style_flat_button);
-	theme->set_stylebox("pressed", "FlatMenuButton", style_flat_button_pressed);
+	theme->set_stylebox(SceneStringName(pressed), "FlatMenuButton", style_flat_button_pressed);
 	theme->set_stylebox("disabled", "FlatMenuButton", style_flat_button);
 
 	const float ACTION_BUTTON_EXTRA_MARGIN = 32 * EDSCALE;
@@ -1034,13 +1035,13 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	Ref<StyleBoxFlat> style_inspector_action = style_widget->duplicate();
 	style_inspector_action->set_bg_color(color_inspector_action);
 	style_inspector_action->set_content_margin(SIDE_RIGHT, ACTION_BUTTON_EXTRA_MARGIN);
-	theme->set_stylebox("normal", "InspectorActionButton", style_inspector_action);
+	theme->set_stylebox(CoreStringName(normal), "InspectorActionButton", style_inspector_action);
 	style_inspector_action = style_widget_hover->duplicate();
 	style_inspector_action->set_content_margin(SIDE_RIGHT, ACTION_BUTTON_EXTRA_MARGIN);
 	theme->set_stylebox("hover", "InspectorActionButton", style_inspector_action);
 	style_inspector_action = style_widget_pressed->duplicate();
 	style_inspector_action->set_content_margin(SIDE_RIGHT, ACTION_BUTTON_EXTRA_MARGIN);
-	theme->set_stylebox("pressed", "InspectorActionButton", style_inspector_action);
+	theme->set_stylebox(SceneStringName(pressed), "InspectorActionButton", style_inspector_action);
 	style_inspector_action = style_widget_disabled->duplicate();
 	style_inspector_action->set_content_margin(SIDE_RIGHT, ACTION_BUTTON_EXTRA_MARGIN);
 	theme->set_stylebox("disabled", "InspectorActionButton", style_inspector_action);
@@ -1058,7 +1059,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	Ref<StyleBoxFlat> editor_log_button_pressed = style_flat_button_pressed->duplicate();
 	editor_log_button_pressed->set_border_width(SIDE_BOTTOM, 2 * EDSCALE);
 	editor_log_button_pressed->set_border_color(accent_color);
-	theme->set_stylebox("pressed", "EditorLogFilterButton", editor_log_button_pressed);
+	theme->set_stylebox(SceneStringName(pressed), "EditorLogFilterButton", editor_log_button_pressed);
 
 	// ProjectTag
 	{
@@ -1070,7 +1071,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 		tag->set_corner_radius(CORNER_BOTTOM_LEFT, 0);
 		tag->set_corner_radius(CORNER_TOP_RIGHT, 4);
 		tag->set_corner_radius(CORNER_BOTTOM_RIGHT, 4);
-		theme->set_stylebox("normal", "ProjectTag", tag);
+		theme->set_stylebox(CoreStringName(normal), "ProjectTag", tag);
 
 		tag = style_widget_hover->duplicate();
 		tag->set_corner_radius(CORNER_TOP_LEFT, 0);
@@ -1084,13 +1085,13 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 		tag->set_corner_radius(CORNER_BOTTOM_LEFT, 0);
 		tag->set_corner_radius(CORNER_TOP_RIGHT, 4);
 		tag->set_corner_radius(CORNER_BOTTOM_RIGHT, 4);
-		theme->set_stylebox("pressed", "ProjectTag", tag);
+		theme->set_stylebox(SceneStringName(pressed), "ProjectTag", tag);
 	}
 
 	// MenuBar
-	theme->set_stylebox("normal", "MenuBar", style_widget);
+	theme->set_stylebox(CoreStringName(normal), "MenuBar", style_widget);
 	theme->set_stylebox("hover", "MenuBar", style_widget_hover);
-	theme->set_stylebox("pressed", "MenuBar", style_widget_pressed);
+	theme->set_stylebox(SceneStringName(pressed), "MenuBar", style_widget_pressed);
 	theme->set_stylebox("disabled", "MenuBar", style_widget_disabled);
 
 	theme->set_color("font_color", "MenuBar", font_color);
@@ -1124,9 +1125,9 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	style_option_button_disabled->set_content_margin(SIDE_RIGHT, 4 * EDSCALE);
 
 	theme->set_stylebox("focus", "OptionButton", style_option_button_focus);
-	theme->set_stylebox("normal", "OptionButton", style_widget);
+	theme->set_stylebox(CoreStringName(normal), "OptionButton", style_widget);
 	theme->set_stylebox("hover", "OptionButton", style_widget_hover);
-	theme->set_stylebox("pressed", "OptionButton", style_widget_pressed);
+	theme->set_stylebox(SceneStringName(pressed), "OptionButton", style_widget_pressed);
 	theme->set_stylebox("disabled", "OptionButton", style_widget_disabled);
 
 	theme->set_stylebox("normal_mirrored", "OptionButton", style_option_button_normal);
@@ -1155,8 +1156,8 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_constant("outline_size", "OptionButton", 0);
 
 	// CheckButton
-	theme->set_stylebox("normal", "CheckButton", style_menu);
-	theme->set_stylebox("pressed", "CheckButton", style_menu);
+	theme->set_stylebox(CoreStringName(normal), "CheckButton", style_menu);
+	theme->set_stylebox(SceneStringName(pressed), "CheckButton", style_menu);
 	theme->set_stylebox("disabled", "CheckButton", style_menu);
 	theme->set_stylebox("hover", "CheckButton", style_menu);
 	theme->set_stylebox("hover_pressed", "CheckButton", style_menu);
@@ -1193,8 +1194,8 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	Ref<StyleBoxFlat> sb_checkbox = style_menu->duplicate();
 	sb_checkbox->set_content_margin_all(default_margin_size * EDSCALE);
 
-	theme->set_stylebox("normal", "CheckBox", sb_checkbox);
-	theme->set_stylebox("pressed", "CheckBox", sb_checkbox);
+	theme->set_stylebox(CoreStringName(normal), "CheckBox", sb_checkbox);
+	theme->set_stylebox(SceneStringName(pressed), "CheckBox", sb_checkbox);
 	theme->set_stylebox("disabled", "CheckBox", sb_checkbox);
 	theme->set_stylebox("hover", "CheckBox", sb_checkbox);
 	theme->set_stylebox("hover_pressed", "CheckBox", sb_checkbox);
@@ -1226,7 +1227,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_constant("outline_size", "CheckBox", 0);
 
 	// PopupDialog
-	theme->set_stylebox("panel", "PopupDialog", style_popup);
+	theme->set_stylebox(SceneStringName(panel), "PopupDialog", style_popup);
 
 	// PopupMenu
 	Ref<StyleBoxFlat> style_popup_menu = style_popup->duplicate();
@@ -1241,7 +1242,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	} else {
 		style_popup_menu->set_border_color(dark_color_2);
 	}
-	theme->set_stylebox("panel", "PopupMenu", style_popup_menu);
+	theme->set_stylebox(SceneStringName(panel), "PopupMenu", style_popup_menu);
 
 	Ref<StyleBoxFlat> style_menu_hover = style_widget_hover->duplicate();
 	// Don't use rounded corners for hover highlights since the StyleBox touches the PopupMenu's edges.
@@ -1369,8 +1370,8 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 		style_tree_bg->set_border_color(dark_color_3);
 	}
 
-	theme->set_stylebox("panel", "Tree", style_tree_bg);
-	theme->set_stylebox("panel", "EditorValidationPanel", style_tree_bg);
+	theme->set_stylebox(SceneStringName(panel), "Tree", style_tree_bg);
+	theme->set_stylebox(SceneStringName(panel), "EditorValidationPanel", style_tree_bg);
 
 	// Tree
 	theme->set_icon("checked", "Tree", theme->get_icon(SNAME("GuiChecked"), EditorStringName(EditorIcons)));
@@ -1495,7 +1496,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	style_itemlist_hover->set_bg_color(highlight_color * Color(1, 1, 1, 0.3));
 	style_itemlist_hover->set_border_width_all(0);
 
-	theme->set_stylebox("panel", "ItemList", style_itemlist_bg);
+	theme->set_stylebox(SceneStringName(panel), "ItemList", style_itemlist_bg);
 	theme->set_stylebox("focus", "ItemList", style_widget_focus);
 	theme->set_stylebox("cursor", "ItemList", style_itemlist_cursor);
 	theme->set_stylebox("cursor_unfocused", "ItemList", style_itemlist_cursor);
@@ -1510,7 +1511,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_constant("v_separation", "ItemList", force_even_vsep * 0.5 * EDSCALE);
 	theme->set_constant("h_separation", "ItemList", 6 * EDSCALE);
 	theme->set_constant("icon_margin", "ItemList", 6 * EDSCALE);
-	theme->set_constant("line_separation", "ItemList", 3 * EDSCALE);
+	theme->set_constant(SceneStringName(line_separation), "ItemList", 3 * EDSCALE);
 	theme->set_constant("outline_size", "ItemList", 0);
 
 	// TabBar & TabContainer
@@ -1568,7 +1569,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	style_content_panel->set_corner_radius(CORNER_TOP_RIGHT, 0);
 	// Compensate for the border.
 	style_content_panel->set_content_margin_individual(margin_size_extra * EDSCALE, (2 + margin_size_extra) * EDSCALE, margin_size_extra * EDSCALE, margin_size_extra * EDSCALE);
-	theme->set_stylebox("panel", "TabContainer", style_content_panel);
+	theme->set_stylebox(SceneStringName(panel), "TabContainer", style_content_panel);
 
 	// Bottom panel.
 	Ref<StyleBoxFlat> style_bottom_panel = style_content_panel->duplicate();
@@ -1584,7 +1585,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 
 	Ref<StyleBoxFlat> style_content_panel_odd = style_content_panel->duplicate();
 	style_content_panel_odd->set_bg_color(disabled_bg_color);
-	theme->set_stylebox("panel", "TabContainerOdd", style_content_panel_odd);
+	theme->set_stylebox(SceneStringName(panel), "TabContainerOdd", style_content_panel_odd);
 
 	// This stylebox is used in 3d and 2d viewports (no borders).
 	Ref<StyleBoxFlat> style_content_panel_vp = style_content_panel->duplicate();
@@ -1615,7 +1616,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_stylebox("DebuggerPanel", EditorStringName(EditorStyles), style_panel_debugger);
 
 	Ref<StyleBoxFlat> style_panel_invisible_top = style_content_panel->duplicate();
-	int stylebox_offset = theme->get_font(SNAME("tab_selected"), SNAME("TabContainer"))->get_height(theme->get_font_size(SNAME("tab_selected"), SNAME("TabContainer"))) + theme->get_stylebox(SNAME("tab_selected"), SNAME("TabContainer"))->get_minimum_size().height + theme->get_stylebox(SNAME("panel"), SNAME("TabContainer"))->get_content_margin(SIDE_TOP);
+	int stylebox_offset = theme->get_font(SNAME("tab_selected"), SNAME("TabContainer"))->get_height(theme->get_font_size(SNAME("tab_selected"), SNAME("TabContainer"))) + theme->get_stylebox(SNAME("tab_selected"), SNAME("TabContainer"))->get_minimum_size().height + theme->get_stylebox(SceneStringName(panel), SNAME("TabContainer"))->get_content_margin(SIDE_TOP);
 	style_panel_invisible_top->set_expand_margin(SIDE_TOP, -stylebox_offset);
 	style_panel_invisible_top->set_content_margin(SIDE_TOP, 0);
 	theme->set_stylebox("BottomPanelDebuggerOverride", EditorStringName(EditorStyles), style_panel_invisible_top);
@@ -1645,7 +1646,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	style_line_edit_disabled->set_border_color(disabled_color);
 	style_line_edit_disabled->set_bg_color(disabled_bg_color);
 
-	theme->set_stylebox("normal", "LineEdit", style_line_edit);
+	theme->set_stylebox(CoreStringName(normal), "LineEdit", style_line_edit);
 	theme->set_stylebox("focus", "LineEdit", style_widget_focus);
 	theme->set_stylebox("read_only", "LineEdit", style_line_edit_disabled);
 	theme->set_icon("clear", "LineEdit", theme->get_icon(SNAME("GuiClose"), EditorStringName(EditorIcons)));
@@ -1664,7 +1665,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_constant("caret_width", "LineEdit", 1);
 
 	// TextEdit
-	theme->set_stylebox("normal", "TextEdit", style_line_edit);
+	theme->set_stylebox(CoreStringName(normal), "TextEdit", style_line_edit);
 	theme->set_stylebox("focus", "TextEdit", style_widget_focus);
 	theme->set_stylebox("read_only", "TextEdit", style_line_edit_disabled);
 	theme->set_icon("tab", "TextEdit", theme->get_icon(SNAME("GuiTab"), EditorStringName(EditorIcons)));
@@ -1748,12 +1749,12 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	Ref<StyleBoxFlat> style_complex_window = style_window->duplicate();
 	style_complex_window->set_bg_color(dark_color_2);
 	style_complex_window->set_border_color(dark_color_2);
-	theme->set_stylebox("panel", "EditorSettingsDialog", style_complex_window);
-	theme->set_stylebox("panel", "ProjectSettingsEditor", style_complex_window);
-	theme->set_stylebox("panel", "EditorAbout", style_complex_window);
+	theme->set_stylebox(SceneStringName(panel), "EditorSettingsDialog", style_complex_window);
+	theme->set_stylebox(SceneStringName(panel), "ProjectSettingsEditor", style_complex_window);
+	theme->set_stylebox(SceneStringName(panel), "EditorAbout", style_complex_window);
 
 	// AcceptDialog
-	theme->set_stylebox("panel", "AcceptDialog", style_window_title);
+	theme->set_stylebox(SceneStringName(panel), "AcceptDialog", style_window_title);
 	theme->set_constant("buttons_separation", "AcceptDialog", 8 * EDSCALE);
 
 	// HScrollBar
@@ -1822,7 +1823,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_constant("shadow_outline_size", "RichTextLabel", 1 * EDSCALE);
 	theme->set_constant("outline_size", "RichTextLabel", 0);
 	theme->set_stylebox("focus", "RichTextLabel", make_empty_stylebox());
-	theme->set_stylebox("normal", "RichTextLabel", style_tree_bg);
+	theme->set_stylebox(CoreStringName(normal), "RichTextLabel", style_tree_bg);
 
 	// Editor help.
 	Ref<StyleBoxFlat> style_editor_help = style_default->duplicate();
@@ -1845,18 +1846,18 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_color("code_bg_color", "EditorHelp", dark_color_3);
 	theme->set_color("kbd_bg_color", "EditorHelp", dark_color_1);
 	theme->set_color("param_bg_color", "EditorHelp", dark_color_1);
-	theme->set_constant("line_separation", "EditorHelp", Math::round(6 * EDSCALE));
+	theme->set_constant(SceneStringName(line_separation), "EditorHelp", Math::round(6 * EDSCALE));
 	theme->set_constant("table_h_separation", "EditorHelp", 16 * EDSCALE);
 	theme->set_constant("table_v_separation", "EditorHelp", 6 * EDSCALE);
 	theme->set_constant("text_highlight_h_padding", "EditorHelp", 1 * EDSCALE);
 	theme->set_constant("text_highlight_v_padding", "EditorHelp", 2 * EDSCALE);
 
 	// Panel
-	theme->set_stylebox("panel", "Panel", make_flat_stylebox(dark_color_1, 6, 4, 6, 4, corner_width));
+	theme->set_stylebox(SceneStringName(panel), SceneStringName(panel), make_flat_stylebox(dark_color_1, 6, 4, 6, 4, corner_width));
 	theme->set_stylebox("PanelForeground", EditorStringName(EditorStyles), style_default);
 
 	// Label
-	theme->set_stylebox("normal", "Label", style_empty);
+	theme->set_stylebox(CoreStringName(normal), "Label", style_empty);
 	theme->set_color("font_color", "Label", font_color);
 	theme->set_color("font_shadow_color", "Label", Color(0, 0, 0, 0));
 	theme->set_color("font_outline_color", "Label", font_outline_color);
@@ -1892,10 +1893,10 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	style_tooltip->set_border_width_all(0);
 	theme->set_color("font_color", "TooltipLabel", font_hover_color);
 	theme->set_color("font_shadow_color", "TooltipLabel", Color(0, 0, 0, 0));
-	theme->set_stylebox("panel", "TooltipPanel", style_tooltip);
+	theme->set_stylebox(SceneStringName(panel), "TooltipPanel", style_tooltip);
 
 	// PopupPanel
-	theme->set_stylebox("panel", "PopupPanel", style_popup);
+	theme->set_stylebox(SceneStringName(panel), "PopupPanel", style_popup);
 
 	Ref<StyleBoxFlat> control_editor_popup_style = style_popup->duplicate();
 	control_editor_popup_style->set_shadow_size(0);
@@ -1905,7 +1906,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	control_editor_popup_style->set_content_margin(SIDE_BOTTOM, default_margin_size * EDSCALE);
 	control_editor_popup_style->set_border_width_all(0);
 
-	theme->set_stylebox("panel", "ControlEditorPopupPanel", control_editor_popup_style);
+	theme->set_stylebox(SceneStringName(panel), "ControlEditorPopupPanel", control_editor_popup_style);
 	theme->set_type_variation("ControlEditorPopupPanel", "PopupPanel");
 
 	// SpinBox
@@ -2011,7 +2012,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	const Color user_type_color = dark_theme ? Color(0.78, 1, 0.93) : Color(0.18, 0.45, 0.4);
 	const Color comment_color = dark_theme ? dim_color : Color(0.08, 0.08, 0.08, 0.5);
 	const Color comment_warning_color = Color(0.969, 0.44, 0.333);
-	const Color comment_question_color = Color(0.04, 0.52, 1); 
+	const Color comment_question_color = Color(0.04, 0.52, 1);
 	const Color doc_comment_color = dark_theme ? Color(0.6, 0.7, 0.8, 0.8) : Color(0.15, 0.15, 0.4, 0.7);
 	const Color string_color = dark_theme ? Color(1, 0.93, 0.63) : Color(0.6, 0.42, 0);
 
@@ -2098,7 +2099,7 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_font_size("font_size", "CodeEdit", theme->get_font_size(SNAME("source_size"), EditorStringName(EditorFonts)));
 
 	Ref<StyleBoxFlat> code_edit_stylebox = make_flat_stylebox(EDITOR_GET("text_editor/theme/highlighting/background_color"), widget_default_margin.x, widget_default_margin.y, widget_default_margin.x, widget_default_margin.y, corner_radius);
-	theme->set_stylebox("normal", "CodeEdit", code_edit_stylebox);
+	theme->set_stylebox(CoreStringName(normal), "CodeEdit", code_edit_stylebox);
 	theme->set_stylebox("read_only", "CodeEdit", code_edit_stylebox);
 	theme->set_stylebox("focus", "CodeEdit", Ref<StyleBoxEmpty>(memnew(StyleBoxEmpty)));
 

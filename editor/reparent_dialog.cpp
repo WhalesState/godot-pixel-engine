@@ -89,7 +89,7 @@ ReparentDialog::ReparentDialog() {
 
 	//vbc->add_margin_child("Options:",node_only);
 
-	//cancel->connect("pressed", this,"_cancel");
+	//cancel->connect(SceneStringName(pressed), this,"_cancel");
 
 	set_ok_button_text(TTR("Reparent"));
 }

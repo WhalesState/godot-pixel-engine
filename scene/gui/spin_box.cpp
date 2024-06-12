@@ -402,7 +402,7 @@ SpinBox::SpinBox() {
 
 	line_edit->connect("text_submitted", callable_mp(this, &SpinBox::_text_submitted), CONNECT_DEFERRED);
 	line_edit->connect("editing_toggled", callable_mp(this, &SpinBox::_line_edit_editing_toggled), CONNECT_DEFERRED);
-	line_edit->connect("gui_input", callable_mp(this, &SpinBox::_line_edit_input));
+	line_edit->connect(SceneStringName(gui_input), callable_mp(this, &SpinBox::_line_edit_input));
 
 	range_click_timer = memnew(Timer);
 	range_click_timer->connect("timeout", callable_mp(this, &SpinBox::_range_click_timeout));

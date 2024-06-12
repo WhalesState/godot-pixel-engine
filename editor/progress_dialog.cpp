@@ -259,5 +259,5 @@ ProgressDialog::ProgressDialog() {
 	cancel->set_h_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_CENTER);
 	cancel_hb->add_child(cancel);
 	cancel->set_text(TTR("Cancel"));
-	cancel->connect("pressed", callable_mp(this, &ProgressDialog::_cancel_pressed));
+	cancel->connect(SceneStringName(pressed), callable_mp(this, &ProgressDialog::_cancel_pressed));
 }

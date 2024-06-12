@@ -62,7 +62,6 @@
 #include "editor/window_wrapper.h"
 #include "scene/main/node.h"
 #include "scene/main/window.h"
-#include "scene/scene_string_names.h"
 #include "script_text_editor.h"
 #include "servers/display_server.h"
 #include "text_editor.h"
@@ -413,7 +412,7 @@ ScriptEditorQuickOpen::ScriptEditorQuickOpen() {
 	search_box = memnew(LineEdit);
 	vbc->add_margin_child(TTR("Search:"), search_box);
 	search_box->connect("text_changed", callable_mp(this, &ScriptEditorQuickOpen::_text_changed));
-	search_box->connect("gui_input", callable_mp(this, &ScriptEditorQuickOpen::_sbox_input));
+	search_box->connect(SceneStringName(gui_input), callable_mp(this, &ScriptEditorQuickOpen::_sbox_input));
 	search_options = memnew(Tree);
 	vbc->add_margin_child(TTR("Matches:"), search_options, true);
 	set_ok_button_text(TTR("Open"));
@@ -933,7 +932,7 @@ void ScriptEditor::_queue_close_tabs() {
 			// Maybe there are unsaved changes.
 			if (se->is_unsaved()) {
 				_ask_close_current_unsaved_tab(se);
-				erase_tab_confirm->connect(SceneStringNames::get_singleton()->visibility_changed, callable_mp(this, &ScriptEditor::_queue_close_tabs), CONNECT_ONE_SHOT);
+				erase_tab_confirm->connect(SceneStringName(visibility_changed), callable_mp(this, &ScriptEditor::_queue_close_tabs), CONNECT_ONE_SHOT);
 				break;
 			}
 		}
@@ -3876,7 +3875,7 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 
 	context_menu = memnew(PopupMenu);
 	add_child(context_menu);
-	context_menu->connect("id_pressed", callable_mp(this, &ScriptEditor::_menu_option));
+	context_menu->connect(SceneStringName(id_pressed), callable_mp(this, &ScriptEditor::_menu_option));
 
 	overview_vbox = memnew(VBoxContainer);
 	overview_vbox->set_custom_minimum_size(Size2(0, 90));
@@ -3960,7 +3959,7 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 	recent_scripts = memnew(PopupMenu);
 	recent_scripts->set_name("RecentScripts");
 	file_menu->get_popup()->add_child(recent_scripts);
-	recent_scripts->connect("id_pressed", callable_mp(this, &ScriptEditor::_open_recent_script));
+	recent_scripts->connect(SceneStringName(id_pressed), callable_mp(this, &ScriptEditor::_open_recent_script));
 	_update_recent_scripts();
 
 	file_menu->get_popup()->add_separator();
@@ -3983,7 +3982,7 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 	theme_submenu = memnew(PopupMenu);
 	theme_submenu->set_name("Theme");
 	file_menu->get_popup()->add_child(theme_submenu);
-	theme_submenu->connect("id_pressed", callable_mp(this, &ScriptEditor::_theme_option));
+	theme_submenu->connect(SceneStringName(id_pressed), callable_mp(this, &ScriptEditor::_theme_option));
 	theme_submenu->add_shortcut(ED_SHORTCUT("script_editor/import_theme", TTR("Import Theme...")), THEME_IMPORT);
 	theme_submenu->add_shortcut(ED_SHORTCUT("script_editor/reload_theme", TTR("Reload Theme")), THEME_RELOAD);
 
@@ -4002,7 +4001,7 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 
 	file_menu->get_popup()->add_separator();
 	file_menu->get_popup()->add_shortcut(ED_SHORTCUT("script_editor/toggle_scripts_panel", TTR("Toggle Scripts Panel"), KeyModifierMask::CMD_OR_CTRL | Key::BACKSLASH), TOGGLE_SCRIPTS_PANEL);
-	file_menu->get_popup()->connect("id_pressed", callable_mp(this, &ScriptEditor::_menu_option));
+	file_menu->get_popup()->connect(SceneStringName(id_pressed), callable_mp(this, &ScriptEditor::_menu_option));
 	file_menu->get_popup()->connect("about_to_popup", callable_mp(this, &ScriptEditor::_prepare_file_menu));
 	file_menu->get_popup()->connect("popup_hide", callable_mp(this, &ScriptEditor::_file_menu_closed));
 
@@ -4010,7 +4009,7 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 	script_search_menu->set_text(TTR("Search"));
 	script_search_menu->set_switch_on_hover(true);
 	script_search_menu->set_shortcut_context(this);
-	script_search_menu->get_popup()->connect("id_pressed", callable_mp(this, &ScriptEditor::_menu_option));
+	script_search_menu->get_popup()->connect(SceneStringName(id_pressed), callable_mp(this, &ScriptEditor::_menu_option));
 	menu_hb->add_child(script_search_menu);
 
 	MenuButton *debug_menu_btn = memnew(MenuButton);
@@ -4040,14 +4039,14 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 	help_search->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
 	help_search->set_flat(true);
 	help_search->set_text(TTR("Search Help"));
-	help_search->connect("pressed", callable_mp(this, &ScriptEditor::_menu_option).bind(SEARCH_HELP));
+	help_search->connect(SceneStringName(pressed), callable_mp(this, &ScriptEditor::_menu_option).bind(SEARCH_HELP));
 	menu_hb->add_child(help_search);
 	help_search->set_tooltip_text(TTR("Search the reference documentation."));
 
 	site_search = memnew(Button);
 	site_search->set_flat(true);
 	site_search->set_text(TTR("Online Godot Docs"));
-	site_search->connect("pressed", callable_mp(this, &ScriptEditor::_menu_option).bind(SEARCH_WEBSITE));
+	site_search->connect(SceneStringName(pressed), callable_mp(this, &ScriptEditor::_menu_option).bind(SEARCH_WEBSITE));
 	menu_hb->add_child(site_search);
 	site_search->set_tooltip_text(TTR("Open Godot online documentation."));
 	site_search->hide();
@@ -4056,14 +4055,14 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 
 	script_back = memnew(Button);
 	script_back->set_flat(true);
-	script_back->connect("pressed", callable_mp(this, &ScriptEditor::_history_back));
+	script_back->connect(SceneStringName(pressed), callable_mp(this, &ScriptEditor::_history_back));
 	menu_hb->add_child(script_back);
 	script_back->set_disabled(true);
 	script_back->set_tooltip_text(TTR("Go to previous edited document."));
 
 	script_forward = memnew(Button);
 	script_forward->set_flat(true);
-	script_forward->connect("pressed", callable_mp(this, &ScriptEditor::_history_forward));
+	script_forward->connect(SceneStringName(pressed), callable_mp(this, &ScriptEditor::_history_forward));
 	menu_hb->add_child(script_forward);
 	script_forward->set_disabled(true);
 	script_forward->set_tooltip_text(TTR("Go to next edited document."));
@@ -4128,7 +4127,7 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 
 	autosave_timer = memnew(Timer);
 	autosave_timer->set_one_shot(false);
-	autosave_timer->connect(SceneStringNames::get_singleton()->tree_entered, callable_mp(this, &ScriptEditor::_update_autosave_timer));
+	autosave_timer->connect(SceneStringName(tree_entered), callable_mp(this, &ScriptEditor::_update_autosave_timer));
 	autosave_timer->connect("timeout", callable_mp(this, &ScriptEditor::_autosave_scripts));
 	add_child(autosave_timer);
 

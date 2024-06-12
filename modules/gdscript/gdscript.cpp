@@ -53,6 +53,8 @@
 #include "core/io/file_access_encrypted.h"
 #include "core/os/os.h"
 
+#include "scene/scene_string_names.h"
+
 #ifdef TOOLS_ENABLED
 #include "editor/editor_paths.h"
 #endif
@@ -1876,7 +1878,7 @@ bool GDScriptInstance::has_method(const StringName &p_method) const {
 
 Variant GDScriptInstance::callp(const StringName &p_method, const Variant **p_args, int p_argcount, Callable::CallError &r_error) {
 	GDScript *sptr = script.ptr();
-	if (unlikely(p_method == SNAME("_ready"))) {
+	if (unlikely(p_method == SceneStringName(_ready))) {
 		// Call implicit ready first, including for the super classes.
 		while (sptr) {
 			if (sptr->implicit_ready) {
@@ -1927,15 +1929,15 @@ void GDScriptInstance::notification(int p_notification, bool p_reversed) {
 }
 
 String GDScriptInstance::to_string(bool *r_valid) {
-	if (has_method(CoreStringNames::get_singleton()->_to_string)) {
+	if (has_method(CoreStringName(_to_string))) {
 		Callable::CallError ce;
-		Variant ret = callp(CoreStringNames::get_singleton()->_to_string, nullptr, 0, ce);
+		Variant ret = callp(CoreStringName(_to_string), nullptr, 0, ce);
 		if (ce.error == Callable::CallError::CALL_OK) {
 			if (ret.get_type() != Variant::STRING) {
 				if (r_valid) {
 					*r_valid = false;
 				}
-				ERR_FAIL_V_MSG(String(), "Wrong type for " + CoreStringNames::get_singleton()->_to_string + ", must be a String.");
+				ERR_FAIL_V_MSG(String(), "Wrong type for " + CoreStringName(_to_string) + ", must be a String.");
 			}
 			if (r_valid) {
 				*r_valid = true;

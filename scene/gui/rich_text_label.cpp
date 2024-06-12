@@ -39,7 +39,6 @@
 #include "scene/gui/label.h"
 #include "scene/gui/rich_text_effect.h"
 #include "scene/resources/atlas_texture.h"
-#include "scene/scene_string_names.h"
 #include "scene/theme/theme_db.h"
 #include "servers/display_server.h"
 
@@ -3045,7 +3044,7 @@ void RichTextLabel::_process_line_caches() {
 	if (fit_content) {
 		update_minimum_size();
 	}
-	emit_signal(SNAME("finished"));
+	emit_signal(SceneStringName(finished));
 }
 
 void RichTextLabel::_invalidate_current_line(ItemFrame *p_frame) {
@@ -6178,7 +6177,7 @@ Size2 RichTextLabel::get_minimum_size() const {
 void RichTextLabel::_generate_context_menu() {
 	menu = memnew(PopupMenu);
 	add_child(menu, false, INTERNAL_MODE_FRONT);
-	menu->connect("id_pressed", callable_mp(this, &RichTextLabel::menu_option));
+	menu->connect(SceneStringName(id_pressed), callable_mp(this, &RichTextLabel::menu_option));
 
 	menu->add_item(RTR("Copy"), MENU_COPY);
 	menu->add_item(RTR("Select All"), MENU_SELECT_ALL);

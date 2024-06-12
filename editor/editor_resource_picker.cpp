@@ -940,7 +940,7 @@ void EditorResourcePicker::_ensure_resource_menu() {
 	}
 	edit_menu = memnew(PopupMenu);
 	add_child(edit_menu);
-	edit_menu->connect("id_pressed", callable_mp(this, &EditorResourcePicker::_edit_menu_cbk));
+	edit_menu->connect(SceneStringName(id_pressed), callable_mp(this, &EditorResourcePicker::_edit_menu_cbk));
 	edit_menu->connect("popup_hide", callable_mp((BaseButton *)edit_button, &BaseButton::set_pressed).bind(false));
 }
 
@@ -1036,9 +1036,9 @@ EditorResourcePicker::EditorResourcePicker(bool p_hide_assign_button_controls) {
 	assign_button->set_auto_translate(false);
 	SET_DRAG_FORWARDING_GCD(assign_button, EditorResourcePicker);
 	add_child(assign_button);
-	assign_button->connect("pressed", callable_mp(this, &EditorResourcePicker::_resource_selected));
-	assign_button->connect("draw", callable_mp(this, &EditorResourcePicker::_button_draw));
-	assign_button->connect("gui_input", callable_mp(this, &EditorResourcePicker::_button_input));
+	assign_button->connect(SceneStringName(pressed), callable_mp(this, &EditorResourcePicker::_resource_selected));
+	assign_button->connect(SceneStringName(draw), callable_mp(this, &EditorResourcePicker::_button_draw));
+	assign_button->connect(SceneStringName(gui_input), callable_mp(this, &EditorResourcePicker::_button_input));
 
 	if (!p_hide_assign_button_controls) {
 		preview_rect = memnew(TextureRect);
@@ -1054,9 +1054,9 @@ EditorResourcePicker::EditorResourcePicker(bool p_hide_assign_button_controls) {
 	edit_button = memnew(Button);
 	edit_button->set_flat(true);
 	edit_button->set_toggle_mode(true);
-	edit_button->connect("pressed", callable_mp(this, &EditorResourcePicker::_update_menu));
+	edit_button->connect(SceneStringName(pressed), callable_mp(this, &EditorResourcePicker::_update_menu));
 	add_child(edit_button);
-	edit_button->connect("gui_input", callable_mp(this, &EditorResourcePicker::_button_input));
+	edit_button->connect(SceneStringName(gui_input), callable_mp(this, &EditorResourcePicker::_button_input));
 
 	add_theme_constant_override("separation", 0);
 }
@@ -1325,7 +1325,7 @@ EditorAudioStreamPicker::EditorAudioStreamPicker() :
 	stream_preview_rect->set_offset(SIDE_BOTTOM, -1);
 	stream_preview_rect->set_offset(SIDE_RIGHT, -1);
 	stream_preview_rect->set_mouse_filter(MOUSE_FILTER_IGNORE);
-	stream_preview_rect->connect("draw", callable_mp(this, &EditorAudioStreamPicker::_preview_draw));
+	stream_preview_rect->connect(SceneStringName(draw), callable_mp(this, &EditorAudioStreamPicker::_preview_draw));
 
 	get_assign_button()->add_child(stream_preview_rect);
 	get_assign_button()->move_child(stream_preview_rect, 0);

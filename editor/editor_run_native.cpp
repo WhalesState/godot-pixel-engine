@@ -145,7 +145,7 @@ bool EditorRunNative::is_deploy_debug_remote_enabled() const {
 
 EditorRunNative::EditorRunNative() {
 	remote_debug = memnew(MenuButton);
-	remote_debug->get_popup()->connect("id_pressed", callable_mp(this, &EditorRunNative::start_run_native));
+	remote_debug->get_popup()->connect(SceneStringName(id_pressed), callable_mp(this, &EditorRunNative::start_run_native));
 	remote_debug->set_tooltip_text(TTR("Remote Debug"));
 	remote_debug->set_disabled(true);
 

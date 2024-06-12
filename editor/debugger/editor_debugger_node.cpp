@@ -90,7 +90,7 @@ EditorDebuggerNode::EditorDebuggerNode() {
 	remote_scene_tree_timeout = EDITOR_GET("debugger/remote_scene_tree_refresh_interval");
 	inspect_edited_object_timeout = EDITOR_GET("debugger/remote_inspect_refresh_interval");
 
-	EditorRunBar::get_singleton()->get_pause_button()->connect("pressed", callable_mp(this, &EditorDebuggerNode::_paused));
+	EditorRunBar::get_singleton()->get_pause_button()->connect(SceneStringName(pressed), callable_mp(this, &EditorDebuggerNode::_paused));
 }
 
 ScriptEditorDebugger *EditorDebuggerNode::_add_debugger() {
@@ -490,7 +490,7 @@ void EditorDebuggerNode::set_script_debug_button(MenuButton *p_button) {
 	p->add_shortcut(ED_GET_SHORTCUT("debugger/continue"), DEBUG_CONTINUE);
 	p->add_separator();
 	p->add_check_shortcut(ED_GET_SHORTCUT("debugger/debug_with_external_editor"), DEBUG_WITH_EXTERNAL_EDITOR);
-	p->connect("id_pressed", callable_mp(this, &EditorDebuggerNode::_menu_option));
+	p->connect(SceneStringName(id_pressed), callable_mp(this, &EditorDebuggerNode::_menu_option));
 
 	_break_state_changed();
 	script_menu->show();

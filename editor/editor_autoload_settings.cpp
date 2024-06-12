@@ -420,7 +420,7 @@ Node *EditorAutoloadSettings::_create_autoload(const String &p_path) {
 		Ref<Script> scr = res;
 		if (scr.is_valid()) {
 			StringName ibt = scr->get_instance_base_type();
-			bool valid_type = ClassDB::is_parent_class(ibt, "Node");
+			bool valid_type = ClassDB::is_parent_class(ibt, SNAME("Node"));
 			ERR_FAIL_COND_V_MSG(!valid_type, nullptr, vformat("Failed to create an autoload, script '%s' does not inherit from 'Node'.", p_path));
 
 			Object *obj = ClassDB::instantiate(ibt);
@@ -896,7 +896,7 @@ EditorAutoloadSettings::EditorAutoloadSettings() {
 
 	browse_button = memnew(Button);
 	hbc->add_child(browse_button);
-	browse_button->connect("pressed", callable_mp(this, &EditorAutoloadSettings::_browse_autoload_add_path));
+	browse_button->connect(SceneStringName(pressed), callable_mp(this, &EditorAutoloadSettings::_browse_autoload_add_path));
 
 	file_dialog = memnew(EditorFileDialog);
 	hbc->add_child(file_dialog);
@@ -920,7 +920,7 @@ EditorAutoloadSettings::EditorAutoloadSettings() {
 
 	add_autoload = memnew(Button);
 	add_autoload->set_text(TTR("Add"));
-	add_autoload->connect("pressed", callable_mp(this, &EditorAutoloadSettings::_autoload_add));
+	add_autoload->connect(SceneStringName(pressed), callable_mp(this, &EditorAutoloadSettings::_autoload_add));
 	// The button will be enabled once a valid name is entered (either automatically or manually).
 	add_autoload->set_disabled(true);
 	hbc->add_child(add_autoload);

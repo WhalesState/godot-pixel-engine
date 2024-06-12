@@ -34,7 +34,7 @@
 #include "core/os/keyboard.h"
 #include "scene/theme/theme_db.h"
 
-const float zoom_array[17] = {.125f, .25f, .5f, 1.f, 2.f, 3.f, 4.f, 6.f, 8.f, 12.f, 16.f, 24.f, 32.f, 48.f, 64.f, 96.f, 128.f};
+const float zoom_array[17] = { .125f, .25f, .5f, 1.f, 2.f, 3.f, 4.f, 6.f, 8.f, 12.f, 16.f, 24.f, 32.f, 48.f, 64.f, 96.f, 128.f };
 
 void ZoomWidget::_update_zoom_label() {
 	String zoom_text;
@@ -200,7 +200,7 @@ ZoomWidget::ZoomWidget() {
 	zoom_minus->set_flat(true);
 	zoom_minus->set_focus_mode(FOCUS_NONE);
 	add_child(zoom_minus);
-	zoom_minus->connect("pressed", callable_mp(this, &ZoomWidget::_button_zoom_minus));
+	zoom_minus->connect(SceneStringName(pressed), callable_mp(this, &ZoomWidget::_button_zoom_minus));
 
 	zoom_reset = memnew(Button);
 	zoom_reset->set_flat(true);
@@ -209,7 +209,7 @@ ZoomWidget::ZoomWidget() {
 	zoom_reset->add_theme_style_override("normal", empty_stylebox);
 	zoom_reset->add_theme_style_override("hover", empty_stylebox);
 	zoom_reset->add_theme_style_override("focus", empty_stylebox);
-	zoom_reset->add_theme_style_override("pressed", empty_stylebox);
+	zoom_reset->add_theme_style_override(SceneStringName(pressed), empty_stylebox);
 	zoom_reset->add_theme_constant_override("outline_size", 2);
 	zoom_reset->add_theme_color_override("font_outline_color", Color(0, 0, 0));
 	zoom_reset->add_theme_color_override("font_color", Color(1, 1, 1));
@@ -219,13 +219,13 @@ ZoomWidget::ZoomWidget() {
 	// Prevent the button's size from changing when the text size changes
 	zoom_reset->set_custom_minimum_size(Size2(64, 0));
 	add_child(zoom_reset);
-	zoom_reset->connect("pressed", callable_mp(this, &ZoomWidget::_button_zoom_reset));
+	zoom_reset->connect(SceneStringName(pressed), callable_mp(this, &ZoomWidget::_button_zoom_reset));
 
 	zoom_plus = memnew(Button);
 	zoom_plus->set_flat(true);
 	zoom_plus->set_focus_mode(FOCUS_NONE);
 	add_child(zoom_plus);
-	zoom_plus->connect("pressed", callable_mp(this, &ZoomWidget::_button_zoom_plus));
+	zoom_plus->connect(SceneStringName(pressed), callable_mp(this, &ZoomWidget::_button_zoom_plus));
 
 	_update_zoom_label();
 

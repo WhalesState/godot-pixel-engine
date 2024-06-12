@@ -1369,7 +1369,7 @@ DynamicFontImportSettings::DynamicFontImportSettings() {
 	add_var = memnew(Button);
 	add_var->set_tooltip_text(TTR("Add configuration"));
 	page2_hb_vars->add_child(add_var);
-	add_var->connect("pressed", callable_mp(this, &DynamicFontImportSettings::_variation_add));
+	add_var->connect(SceneStringName(pressed), callable_mp(this, &DynamicFontImportSettings::_variation_add));
 
 	vars_list = memnew(Tree);
 	vars_list->set_custom_minimum_size(Size2(300 * EDSCALE, 0));
@@ -1410,7 +1410,7 @@ DynamicFontImportSettings::DynamicFontImportSettings() {
 	Button *btn_clear = memnew(Button);
 	btn_clear->set_text(TTR("Clear Glyph List"));
 	gl_hb->add_child(btn_clear);
-	btn_clear->connect("pressed", callable_mp(this, &DynamicFontImportSettings::_glyph_clear));
+	btn_clear->connect(SceneStringName(pressed), callable_mp(this, &DynamicFontImportSettings::_glyph_clear));
 
 	VBoxContainer *page2_0_vb = memnew(VBoxContainer);
 	page2_0_vb->set_name(TTR("Glyphs from the Translations"));
@@ -1441,7 +1441,7 @@ DynamicFontImportSettings::DynamicFontImportSettings() {
 	btn_fill_locales = memnew(Button);
 	btn_fill_locales->set_text(TTR("Shape all Strings in the Translations and Add Glyphs"));
 	locale_hb->add_child(btn_fill_locales);
-	btn_fill_locales->connect("pressed", callable_mp(this, &DynamicFontImportSettings::_process_locales));
+	btn_fill_locales->connect(SceneStringName(pressed), callable_mp(this, &DynamicFontImportSettings::_process_locales));
 
 	// Page 2.1 layout: Text to select glyphs
 	VBoxContainer *page2_1_vb = memnew(VBoxContainer);
@@ -1479,7 +1479,7 @@ DynamicFontImportSettings::DynamicFontImportSettings() {
 	btn_fill = memnew(Button);
 	btn_fill->set_text(TTR("Shape Text and Add Glyphs"));
 	text_hb->add_child(btn_fill);
-	btn_fill->connect("pressed", callable_mp(this, &DynamicFontImportSettings::_glyph_text_selected));
+	btn_fill->connect(SceneStringName(pressed), callable_mp(this, &DynamicFontImportSettings::_glyph_text_selected));
 
 	// Page 2.2 layout: Character map
 	VBoxContainer *page2_2_vb = memnew(VBoxContainer);

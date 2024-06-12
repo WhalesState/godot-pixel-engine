@@ -1196,7 +1196,7 @@ void EditorSelection::add_node(Node *p_node) {
 	}
 	selection[p_node] = meta;
 
-	p_node->connect("tree_exiting", callable_mp(this, &EditorSelection::_node_removed).bind(p_node), CONNECT_ONE_SHOT);
+	p_node->connect(SceneStringName(tree_exiting), callable_mp(this, &EditorSelection::_node_removed).bind(p_node), CONNECT_ONE_SHOT);
 }
 
 void EditorSelection::remove_node(Node *p_node) {
@@ -1213,7 +1213,7 @@ void EditorSelection::remove_node(Node *p_node) {
 	}
 	selection.erase(p_node);
 
-	p_node->disconnect("tree_exiting", callable_mp(this, &EditorSelection::_node_removed));
+	p_node->disconnect(SceneStringName(tree_exiting), callable_mp(this, &EditorSelection::_node_removed));
 }
 
 bool EditorSelection::is_selected(Node *p_node) const {

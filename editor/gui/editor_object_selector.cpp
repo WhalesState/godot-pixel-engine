@@ -212,7 +212,7 @@ void EditorObjectSelector::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_READY: {
-			connect("pressed", callable_mp(this, &EditorObjectSelector::_show_popup));
+			connect(SceneStringName(pressed), callable_mp(this, &EditorObjectSelector::_show_popup));
 		} break;
 	}
 }
@@ -252,7 +252,7 @@ EditorObjectSelector::EditorObjectSelector(EditorSelectionHistory *p_history) {
 	sub_objects_menu->set_auto_translate(false);
 	add_child(sub_objects_menu);
 	sub_objects_menu->connect("about_to_popup", callable_mp(this, &EditorObjectSelector::_about_to_show));
-	sub_objects_menu->connect("id_pressed", callable_mp(this, &EditorObjectSelector::_id_pressed));
+	sub_objects_menu->connect(SceneStringName(id_pressed), callable_mp(this, &EditorObjectSelector::_id_pressed));
 
 	set_tooltip_text(TTR("Open a list of sub-resources."));
 }

@@ -49,13 +49,13 @@ void EditorAbout::_notification(int p_what) {
 			_tpl_text->begin_bulk_theme_override();
 			_tpl_text->add_theme_font_override("normal_font", font);
 			_tpl_text->add_theme_font_size_override("normal_font_size", font_size);
-			_tpl_text->add_theme_constant_override("line_separation", 4 * EDSCALE);
+			_tpl_text->add_theme_constant_override(SceneStringName(line_separation), 4 * EDSCALE);
 			_tpl_text->end_bulk_theme_override();
 
 			_license_text->begin_bulk_theme_override();
 			_license_text->add_theme_font_override("normal_font", font);
 			_license_text->add_theme_font_size_override("normal_font_size", font_size);
-			_license_text->add_theme_constant_override("line_separation", 4 * EDSCALE);
+			_license_text->add_theme_constant_override(SceneStringName(line_separation), 4 * EDSCALE);
 			_license_text->end_bulk_theme_override();
 
 			_logo->set_texture(get_editor_theme_icon(SNAME("Logo")));
@@ -149,7 +149,7 @@ EditorAbout::EditorAbout() {
 	version_btn->set_meta(META_TEXT_TO_COPY, "v" VERSION_FULL_BUILD + hash);
 	version_btn->set_underline_mode(LinkButton::UNDERLINE_MODE_ON_HOVER);
 	version_btn->set_tooltip_text(TTR("Click to copy."));
-	version_btn->connect("pressed", callable_mp(this, &EditorAbout::_version_button_pressed));
+	version_btn->connect(SceneStringName(pressed), callable_mp(this, &EditorAbout::_version_button_pressed));
 	version_info_vbc->add_child(version_btn);
 
 	Label *about_text = memnew(Label);

@@ -398,8 +398,8 @@ EditorPerformanceProfiler::EditorPerformanceProfiler() {
 
 	monitor_draw = memnew(Control);
 	monitor_draw->set_clip_contents(true);
-	monitor_draw->connect("draw", callable_mp(this, &EditorPerformanceProfiler::_monitor_draw));
-	monitor_draw->connect("gui_input", callable_mp(this, &EditorPerformanceProfiler::_marker_input));
+	monitor_draw->connect(SceneStringName(draw), callable_mp(this, &EditorPerformanceProfiler::_monitor_draw));
+	monitor_draw->connect(SceneStringName(gui_input), callable_mp(this, &EditorPerformanceProfiler::_marker_input));
 	add_child(monitor_draw);
 
 	info_message = memnew(Label);

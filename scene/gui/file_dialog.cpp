@@ -1130,9 +1130,9 @@ FileDialog::FileDialog() {
 	hbc->add_child(dir_prev);
 	hbc->add_child(dir_next);
 	hbc->add_child(dir_up);
-	dir_prev->connect("pressed", callable_mp(this, &FileDialog::_go_back));
-	dir_next->connect("pressed", callable_mp(this, &FileDialog::_go_forward));
-	dir_up->connect("pressed", callable_mp(this, &FileDialog::_go_up));
+	dir_prev->connect(SceneStringName(pressed), callable_mp(this, &FileDialog::_go_back));
+	dir_next->connect(SceneStringName(pressed), callable_mp(this, &FileDialog::_go_forward));
+	dir_up->connect(SceneStringName(pressed), callable_mp(this, &FileDialog::_go_up));
 
 	hbc->add_child(memnew(Label(RTR("Path:"))));
 
@@ -1151,7 +1151,7 @@ FileDialog::FileDialog() {
 	refresh = memnew(Button);
 	refresh->set_theme_type_variation("FlatButton");
 	refresh->set_tooltip_text(RTR("Refresh files."));
-	refresh->connect("pressed", callable_mp(this, &FileDialog::update_file_list));
+	refresh->connect(SceneStringName(pressed), callable_mp(this, &FileDialog::update_file_list));
 	hbc->add_child(refresh);
 
 	show_hidden = memnew(Button);
@@ -1167,7 +1167,7 @@ FileDialog::FileDialog() {
 
 	makedir = memnew(Button);
 	makedir->set_text(RTR("Create Folder"));
-	makedir->connect("pressed", callable_mp(this, &FileDialog::_make_dir));
+	makedir->connect(SceneStringName(pressed), callable_mp(this, &FileDialog::_make_dir));
 	hbc->add_child(makedir);
 	vbox->add_child(hbc);
 

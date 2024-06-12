@@ -51,8 +51,8 @@ void Popup::_initialize_visible_parents() {
 			parent_window = parent_window->get_parent_visible_window();
 			if (parent_window) {
 				visible_parents.push_back(parent_window);
-				parent_window->connect("focus_entered", callable_mp(this, &Popup::_parent_focused));
-				parent_window->connect("tree_exited", callable_mp(this, &Popup::_deinitialize_visible_parents));
+				parent_window->connect(SceneStringName(focus_entered), callable_mp(this, &Popup::_parent_focused));
+				parent_window->connect(SceneStringName(tree_exited), callable_mp(this, &Popup::_deinitialize_visible_parents));
 			}
 		}
 	}
@@ -61,8 +61,8 @@ void Popup::_initialize_visible_parents() {
 void Popup::_deinitialize_visible_parents() {
 	if (is_embedded()) {
 		for (Window *parent_window : visible_parents) {
-			parent_window->disconnect("focus_entered", callable_mp(this, &Popup::_parent_focused));
-			parent_window->disconnect("tree_exited", callable_mp(this, &Popup::_deinitialize_visible_parents));
+			parent_window->disconnect(SceneStringName(focus_entered), callable_mp(this, &Popup::_parent_focused));
+			parent_window->disconnect(SceneStringName(tree_exited), callable_mp(this, &Popup::_deinitialize_visible_parents));
 		}
 
 		visible_parents.clear();
@@ -207,7 +207,7 @@ Popup::Popup() {
 	set_flag(FLAG_RESIZE_DISABLED, true);
 	set_flag(FLAG_POPUP, true);
 
-	connect("window_input", callable_mp(this, &Popup::_input_from_window));
+	connect(SceneStringName(window_input), callable_mp(this, &Popup::_input_from_window));
 }
 
 Popup::~Popup() {

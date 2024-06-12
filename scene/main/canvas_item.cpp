@@ -40,7 +40,6 @@
 #include "scene/resources/font.h"
 #include "scene/resources/style_box.h"
 #include "scene/resources/world_2d.h"
-#include "scene/scene_string_names.h"
 
 #ifdef TOOLS_ENABLED
 bool CanvasItem::_edit_is_selected_on_click(const Point2 &p_point, double p_tolerance) const {
@@ -93,7 +92,7 @@ void CanvasItem::_handle_visibility_change(bool p_visible) {
 	if (p_visible) {
 		queue_redraw();
 	} else {
-		emit_signal(SceneStringNames::get_singleton()->hidden);
+		emit_signal(SceneStringName(hidden));
 	}
 
 	_block();
@@ -139,7 +138,7 @@ void CanvasItem::_redraw_callback() {
 		drawing = true;
 		current_item_drawn = this;
 		notification(NOTIFICATION_DRAW);
-		emit_signal(SceneStringNames::get_singleton()->draw);
+		emit_signal(SceneStringName(draw));
 		GDVIRTUAL_CALL(_draw);
 		current_item_drawn = nullptr;
 		drawing = false;
@@ -307,7 +306,7 @@ void CanvasItem::_notification(int p_what) {
 
 						window = Object::cast_to<Window>(viewport);
 						if (window) {
-							window->connect(SceneStringNames::get_singleton()->visibility_changed, callable_mp(this, &CanvasItem::_window_visibility_changed));
+							window->connect(SceneStringName(visibility_changed), callable_mp(this, &CanvasItem::_window_visibility_changed));
 							parent_visible_in_tree = window->is_visible();
 						} else {
 							parent_visible_in_tree = true;
@@ -348,7 +347,7 @@ void CanvasItem::_notification(int p_what) {
 				C = nullptr;
 			}
 			if (window) {
-				window->disconnect(SceneStringNames::get_singleton()->visibility_changed, callable_mp(this, &CanvasItem::_window_visibility_changed));
+				window->disconnect(SceneStringName(visibility_changed), callable_mp(this, &CanvasItem::_window_visibility_changed));
 				window = nullptr;
 			}
 			_set_global_invalid(true);
@@ -362,7 +361,7 @@ void CanvasItem::_notification(int p_what) {
 		case NOTIFICATION_VISIBILITY_CHANGED: {
 			ERR_MAIN_THREAD_GUARD;
 
-			emit_signal(SceneStringNames::get_singleton()->visibility_changed);
+			emit_signal(SceneStringName(visibility_changed));
 		} break;
 		case NOTIFICATION_WORLD_2D_CHANGED: {
 			ERR_MAIN_THREAD_GUARD;
@@ -534,7 +533,7 @@ void CanvasItem::item_rect_changed(bool p_size_changed) {
 	if (p_size_changed) {
 		queue_redraw();
 	}
-	emit_signal(SceneStringNames::get_singleton()->item_rect_changed);
+	emit_signal(SceneStringName(item_rect_changed));
 }
 
 void CanvasItem::set_z_index(int p_z) {

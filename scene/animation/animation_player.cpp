@@ -32,7 +32,6 @@
 #include "animation_player.h"
 
 #include "core/config/engine.h"
-#include "scene/scene_string_names.h"
 
 bool AnimationPlayer::_set(const StringName &p_name, const Variant &p_value) {
 	String name = p_name;
@@ -41,7 +40,7 @@ bool AnimationPlayer::_set(const StringName &p_name, const Variant &p_value) {
 	} else if (name.begins_with("next/")) {
 		String which = name.get_slicec('/', 1);
 		animation_set_next(which, p_value);
-	} else if (p_name == SceneStringNames::get_singleton()->blend_times) {
+	} else if (p_name == SceneStringName(blend_times)) {
 		Array array = p_value;
 		int len = array.size();
 		ERR_FAIL_COND_V(len % 3, false);
@@ -304,14 +303,14 @@ void AnimationPlayer::_blend_post_process() {
 				String new_name = playback.assigned;
 				playback_queue.pop_front();
 				if (end_notify) {
-					emit_signal(SceneStringNames::get_singleton()->animation_changed, old, new_name);
+					emit_signal(SceneStringName(animation_changed), old, new_name);
 				}
 			} else {
 				_clear_caches();
 				playing = false;
 				_set_process(false);
 				if (end_notify) {
-					emit_signal(SceneStringNames::get_singleton()->animation_finished, playback.assigned);
+					emit_signal(SceneStringName(animation_finished), playback.assigned);
 				}
 			}
 		}
@@ -429,7 +428,7 @@ void AnimationPlayer::play(const StringName &p_name, double p_custom_blend, floa
 	_set_process(true); // Always process when starting an animation.
 	playing = true;
 
-	emit_signal(SceneStringNames::get_singleton()->animation_started, c.assigned);
+	emit_signal(SceneStringName(animation_started), c.assigned);
 
 	if (is_inside_tree() && Engine::get_singleton()->is_editor_hint()) {
 		return; // No next in this case.
