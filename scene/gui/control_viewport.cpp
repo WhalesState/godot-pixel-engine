@@ -222,7 +222,7 @@ void ControlViewport::center_view() {
 		offset -= Size2(theme_cache.ruler_width, theme_cache.ruler_width) / 2.0;
 	}
 	offset /= zoom;
-	view_offset = offset + (view_size / 2.0);
+	view_offset = (offset + (view_size / 2.0)).floor();
 	_update_scrollbars();
 	viewport->queue_redraw();
 }
@@ -513,14 +513,14 @@ void ControlViewport::_draw_rulers() {
 	for (int i = ceil(first.x); i < last.x; i++) {
 		Point2 position = (transform * ruler_transform * major_subdivide * minor_subdivide).xform(Point2(i, 0)).floor();
 		if (i % (major_subdivision * minor_subdivision) == 0) {
-			viewport->draw_line(Point2(position.x, 0), Point2(position.x, ruler_width), graduation_color, 1.0);
+			viewport->draw_line(Point2(position.x, 0), Point2(position.x, ruler_width), graduation_color);
 			real_t val = (ruler_transform * major_subdivide * minor_subdivide).xform(Point2(i, 0)).x;
 			viewport->draw_string(font, Point2(position.x + 2, font->get_height(font_size)), TS->format_number(vformat(((int)val == val) ? "%d" : "%.1f", val)), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, font_color);
 		} else {
 			if (i % minor_subdivision == 0) {
-				viewport->draw_line(Point2(position.x, ruler_width * 0.33), Point2(position.x, ruler_width), graduation_color, 1.0);
+				viewport->draw_line(Point2(position.x, ruler_width * 0.33), Point2(position.x, ruler_width), graduation_color);
 			} else {
-				viewport->draw_line(Point2(position.x, ruler_width * 0.75), Point2(position.x, ruler_width), graduation_color, 1.0);
+				viewport->draw_line(Point2(position.x, ruler_width * 0.75), Point2(position.x, ruler_width), graduation_color);
 			}
 		}
 	}
@@ -529,7 +529,7 @@ void ControlViewport::_draw_rulers() {
 	for (int i = ceil(first.y); i < last.y; i++) {
 		Point2 position = (transform * ruler_transform * major_subdivide * minor_subdivide).xform(Point2(0, i)).floor();
 		if (i % (major_subdivision * minor_subdivision) == 0) {
-			viewport->draw_line(Point2(0, position.y), Point2(ruler_width, position.y), graduation_color, 1.0);
+			viewport->draw_line(Point2(0, position.y), Point2(ruler_width, position.y), graduation_color);
 			real_t val = (ruler_transform * major_subdivide * minor_subdivide).xform(Point2(0, i)).y;
 			Transform2D text_xform = Transform2D(-Math_PI / 2.0, Point2(font->get_height(font_size), position.y - 2));
 			viewport->draw_set_transform_matrix(viewport->get_transform() * text_xform);
@@ -537,9 +537,9 @@ void ControlViewport::_draw_rulers() {
 			viewport->draw_set_transform_matrix(viewport->get_transform());
 		} else {
 			if (i % minor_subdivision == 0) {
-				viewport->draw_line(Point2(ruler_width * 0.33, position.y), Point2(ruler_width, position.y), graduation_color, 1.0);
+				viewport->draw_line(Point2(ruler_width * 0.33, position.y), Point2(ruler_width, position.y), graduation_color);
 			} else {
-				viewport->draw_line(Point2(ruler_width * 0.75, position.y), Point2(ruler_width, position.y), graduation_color, 1.0);
+				viewport->draw_line(Point2(ruler_width * 0.75, position.y), Point2(ruler_width, position.y), graduation_color);
 			}
 		}
 	}
@@ -573,7 +573,7 @@ void ControlViewport::_draw_grid() {
 				} else {
 					grid_color = cell % primary_grid_step.x == 0 ? primary_grid_color : secondary_grid_color;
 				}
-				viewport->draw_line(Point2(i, 0), Point2(i, viewport_size.height), grid_color, 1.0);
+				viewport->draw_line(Point2(i, 0), Point2(i, viewport_size.height), grid_color);
 			}
 			last_cell = cell;
 		}
@@ -592,7 +592,7 @@ void ControlViewport::_draw_grid() {
 				} else {
 					grid_color = cell % primary_grid_step.y == 0 ? primary_grid_color : secondary_grid_color;
 				}
-				viewport->draw_line(Point2(0, i), Point2(viewport_size.width, i), grid_color, 1.0);
+				viewport->draw_line(Point2(0, i), Point2(viewport_size.width, i), grid_color);
 			}
 			last_cell = cell;
 		}
@@ -608,14 +608,14 @@ void ControlViewport::_draw_guides() {
 			continue;
 		}
 		real_t x = xform.xform(Point2(vguides[i], 0)).x;
-		viewport->draw_line(Point2(x, 0), Point2(x, viewport->get_size().y), guide_color, 1.0);
+		viewport->draw_line(Point2(x, 0), Point2(x, viewport->get_size().y), guide_color);
 	}
 	for (int i = 0; i < hguides.size(); i++) {
 		if (drag_type == DRAG_H_GUIDE && i == dragged_guide_index) {
 			continue;
 		}
 		real_t y = xform.xform(Point2(0, hguides[i])).y;
-		viewport->draw_line(Point2(0, y), Point2(viewport->get_size().x, y), guide_color, 1.0);
+		viewport->draw_line(Point2(0, y), Point2(viewport->get_size().x, y), guide_color);
 	}
 	// Dragged guide.
 	Color text_color = theme_cache.ruler_font_color;
@@ -628,7 +628,7 @@ void ControlViewport::_draw_guides() {
 		Size2 text_size = font->get_string_size(str, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size);
 		viewport->draw_string_outline(font, Point2(dragged_guide_pos.x + 10, theme_cache.ruler_width + text_size.y / 2 + 10), str, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, outline_size, outline_color);
 		viewport->draw_string(font, Point2(dragged_guide_pos.x + 10, theme_cache.ruler_width + text_size.y / 2 + 10), str, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, text_color);
-		viewport->draw_line(Point2(dragged_guide_pos.x, 0), Point2(dragged_guide_pos.x, viewport->get_size().y), guide_color, 1.0);
+		viewport->draw_line(Point2(dragged_guide_pos.x, 0), Point2(dragged_guide_pos.x, viewport->get_size().y), guide_color);
 	}
 	if (drag_type == DRAG_DOUBLE_GUIDE || drag_type == DRAG_H_GUIDE) {
 		String str = TS->format_number(vformat("%d px", floor(xform.affine_inverse().xform(dragged_guide_pos).y)));
@@ -637,7 +637,7 @@ void ControlViewport::_draw_guides() {
 		Size2 text_size = font->get_string_size(str, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size);
 		viewport->draw_string_outline(font, Point2(theme_cache.ruler_width + 10, dragged_guide_pos.y + text_size.y / 2 + 10), str, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, outline_size, outline_color);
 		viewport->draw_string(font, Point2(theme_cache.ruler_width + 10, dragged_guide_pos.y + text_size.y / 2 + 10), str, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, text_color);
-		viewport->draw_line(Point2(0, dragged_guide_pos.y), Point2(viewport->get_size().x, dragged_guide_pos.y), guide_color, 1.0);
+		viewport->draw_line(Point2(0, dragged_guide_pos.y), Point2(viewport->get_size().x, dragged_guide_pos.y), guide_color);
 	}
 }
 
@@ -659,7 +659,7 @@ void ControlViewport::_draw_viewport_rect() {
 			transform.xform(Vector2(0, screen_size.height))
 		};
 		for (int i = 0; i < 4; i++) {
-			viewport->draw_line(screen_endpoints[i], screen_endpoints[(i + 1) % 4], theme_cache.viewport_color, 1.0);
+			viewport->draw_line(screen_endpoints[i], screen_endpoints[(i + 1) % 4], theme_cache.viewport_color);
 		}
 	}
 }
@@ -734,7 +734,7 @@ void ControlViewport::_draw_straight_line(Point2 p_from, Point2 p_to, Color p_co
 		}
 	}
 	if (points.size() >= 2) {
-		viewport->draw_line(points[0], points[1], p_color, 1.0);
+		viewport->draw_line(points[0], points[1], p_color);
 	}
 }
 
