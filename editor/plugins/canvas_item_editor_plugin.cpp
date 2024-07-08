@@ -1100,7 +1100,7 @@ void CanvasItemEditor::_is_hovering_guide(Point2 p_pos, bool p_is_pressed, bool 
 bool CanvasItemEditor::_gui_input_rulers_and_guides(const Ref<InputEvent> &p_event) {
 	Node *const scene = EditorNode::get_singleton()->get_edited_scene();
 	if (!scene) {
-		return true;
+		return false;
 	}
 
 	Ref<InputEventMouseButton> b = p_event;
