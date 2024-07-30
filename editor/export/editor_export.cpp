@@ -101,7 +101,7 @@ void EditorExport::_save() {
 	}
 
 	config->save("res://export_presets.cfg");
-	credentials->save("res://.godot/export_credentials.cfg");
+	credentials->save("res://.pixel_designer/export_credentials.cfg");
 }
 
 void EditorExport::save_presets() {
@@ -196,7 +196,7 @@ void EditorExport::load_config() {
 
 	Ref<ConfigFile> credentials;
 	credentials.instantiate();
-	err = credentials->load("res://.godot/export_credentials.cfg");
+	err = credentials->load("res://.pixel_designer/export_credentials.cfg");
 	if (!(err == OK || err == ERR_FILE_NOT_FOUND)) {
 		return;
 	}

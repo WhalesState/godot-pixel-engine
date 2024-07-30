@@ -283,7 +283,7 @@ void Main::print_help(const char *p_binary) {
 	OS::get_singleton()->print("(c) 2014-present Godot Engine contributors.\n");
 	OS::get_singleton()->print("(c) 2007-2014 Juan Linietsky, Ariel Manzur.\n");
 	OS::get_singleton()->print("\n");
-	OS::get_singleton()->print("Usage: %s [options] [path to scene or 'project.godot' file]\n", p_binary);
+	OS::get_singleton()->print("Usage: %s [options] [path to scene or 'project.pixel_designer' file]\n", p_binary);
 	OS::get_singleton()->print("\n");
 
 	OS::get_singleton()->print("General options:\n");
@@ -306,8 +306,8 @@ void Main::print_help(const char *p_binary) {
 	OS::get_singleton()->print("  --quit                            Quit after the first iteration.\n");
 	OS::get_singleton()->print("  --quit-after <int>                Quit after the given number of iterations. Set to 0 to disable.\n");
 	OS::get_singleton()->print("  -l, --language <locale>           Use a specific locale (<locale> being a two-letter code).\n");
-	OS::get_singleton()->print("  --path <directory>                Path to a project (<directory> must contain a 'project.godot' file).\n");
-	OS::get_singleton()->print("  -u, --upwards                     Scan folders upwards for project.godot file.\n");
+	OS::get_singleton()->print("  --path <directory>                Path to a project (<directory> must contain a 'project.pixel_designer' file).\n");
+	OS::get_singleton()->print("  -u, --upwards                     Scan folders upwards for project.pixel_designer file.\n");
 	OS::get_singleton()->print("  --main-pack <file>                Path to a pack (.pck) file to load.\n");
 	OS::get_singleton()->print("  --render-thread <mode>            Render thread mode ['unsafe', 'safe', 'separate'].\n");
 	OS::get_singleton()->print("  --remote-fs <address>             Remote filesystem (<host/IP>[:<port>] address).\n");
@@ -1207,7 +1207,7 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 				OS::get_singleton()->print("Missing number of iterations, aborting.\n");
 				goto error;
 			}
-		} else if (I->get().ends_with("project.godot")) {
+		} else if (I->get().ends_with("project.pixel_designer")) {
 			String path;
 			String file = I->get();
 			int sep = MAX(file.rfind("/"), file.rfind("\\"));
@@ -1369,7 +1369,7 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 #endif
 
 	// Network file system needs to be configured before globals, since globals are based on the
-	// 'project.godot' file which will only be available through the network if this is enabled
+	// 'project.pixel_designer' file which will only be available through the network if this is enabled
 	if (!remotefs.is_empty()) {
 		int port;
 		if (remotefs.contains(":")) {
@@ -2119,7 +2119,7 @@ Error Main::setup2() {
 		GLOBAL_DEF_RST_NOVAL(PropertyInfo(Variant::STRING, "input_devices/pen_tablet/driver.windows", PROPERTY_HINT_ENUM, "wintab,winink"), "");
 	}
 
-	if (tablet_driver.is_empty()) { // specified in project.godot
+	if (tablet_driver.is_empty()) { // specified in project.pixel_designer
 		tablet_driver = GLOBAL_GET("input_devices/pen_tablet/driver");
 		if (tablet_driver.is_empty()) {
 			tablet_driver = DisplayServer::get_singleton()->tablet_get_driver_name(0);

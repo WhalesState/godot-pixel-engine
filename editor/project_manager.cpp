@@ -139,7 +139,7 @@ String ProjectDialog::_test_path() {
 	}
 
 	if (mode == MODE_IMPORT || mode == MODE_RENAME) {
-		if (!valid_path.is_empty() && !d->file_exists("project.godot")) {
+		if (!valid_path.is_empty() && !d->file_exists("project.pixel_designer")) {
 			if (valid_path.ends_with(".zip")) {
 				Ref<FileAccess> io_fa;
 				zlib_filefunc_def io = zipio_create_io(&io_fa);
@@ -161,7 +161,7 @@ String ProjectDialog::_test_path() {
 						break;
 					}
 
-					if (String::utf8(fname).ends_with("project.godot")) {
+					if (String::utf8(fname).ends_with("project.pixel_designer")) {
 						break;
 					}
 
@@ -169,7 +169,7 @@ String ProjectDialog::_test_path() {
 				}
 
 				if (ret == UNZ_END_OF_LIST_OF_FILE) {
-					_set_message(TTR("Invalid \".zip\" project file; it doesn't contain a \"project.godot\" file."), MESSAGE_ERROR);
+					_set_message(TTR("Invalid \".zip\" project file; it doesn't contain a \"project.pixel_designer\" file."), MESSAGE_ERROR);
 					get_ok_button()->set_disabled(true);
 					unzClose(pkg);
 					return "";
@@ -201,7 +201,7 @@ String ProjectDialog::_test_path() {
 				}
 
 			} else {
-				_set_message(TTR("Please choose a \"project.godot\", a directory with it, or a \".zip\" file."), MESSAGE_ERROR);
+				_set_message(TTR("Please choose a \"project.pixel_designer\", a directory with it, or a \".zip\" file."), MESSAGE_ERROR);
 				install_path_container->hide();
 				get_ok_button()->set_disabled(true);
 				return "";
@@ -281,7 +281,7 @@ void ProjectDialog::_file_selected(const String &p_path) {
 
 	String p = p_path;
 	if (mode == MODE_IMPORT) {
-		if (p.ends_with("project.godot")) {
+		if (p.ends_with("project.pixel_designer")) {
 			p = p.get_base_dir();
 			install_path_container->hide();
 			get_ok_button()->set_disabled(false);
@@ -290,7 +290,7 @@ void ProjectDialog::_file_selected(const String &p_path) {
 			install_path_container->show();
 			get_ok_button()->set_disabled(false);
 		} else {
-			_set_message(TTR("Please choose a \"project.godot\" or \".zip\" file."), MESSAGE_ERROR);
+			_set_message(TTR("Please choose a \"project.pixel_designer\" or \".zip\" file."), MESSAGE_ERROR);
 			get_ok_button()->set_disabled(true);
 			return;
 		}
@@ -329,7 +329,7 @@ void ProjectDialog::_browse_path() {
 	if (mode == MODE_IMPORT) {
 		fdialog->set_file_mode(EditorFileDialog::FILE_MODE_OPEN_ANY);
 		fdialog->clear_filters();
-		fdialog->add_filter("project.godot", vformat("%s %s", VERSION_NAME, TTR("Project")));
+		fdialog->add_filter("project.pixel_designer", vformat("%s %s", VERSION_NAME, TTR("Project")));
 		fdialog->add_filter("*.zip", TTR("ZIP File"));
 	} else {
 		fdialog->set_file_mode(EditorFileDialog::FILE_MODE_OPEN_DIR);
@@ -408,9 +408,9 @@ void ProjectDialog::ok_pressed() {
 			return;
 		}
 
-		// Load project.godot as ConfigFile to set the new name.
+		// Load project.pixel_designer as ConfigFile to set the new name.
 		ConfigFile cfg;
-		String project_godot = dir2.path_join("project.godot");
+		String project_godot = dir2.path_join("project.pixel_designer");
 		Error err = cfg.load(project_godot);
 		if (err != OK) {
 			_set_message(vformat(TTR("Couldn't load project at '%s' (error %d). It may be missing or corrupted."), project_godot, err), MESSAGE_ERROR);
@@ -455,20 +455,10 @@ void ProjectDialog::ok_pressed() {
 				project_features.sort();
 				initial_settings["application/config/features"] = project_features;
 				initial_settings["application/config/name"] = project_name->get_text().strip_edges();
-				initial_settings["application/config/icon"] = "res://icon.svg";
 
-				if (ProjectSettings::get_singleton()->save_custom(dir.path_join("project.godot"), initial_settings, Vector<String>(), false) != OK) {
-					_set_message(TTR("Couldn't create project.godot in project path."), MESSAGE_ERROR);
+				if (ProjectSettings::get_singleton()->save_custom(dir.path_join("project.pixel_designer"), initial_settings, Vector<String>(), false) != OK) {
+					_set_message(TTR("Couldn't create project.pixel_designer in project path."), MESSAGE_ERROR);
 				} else {
-					// Store default project icon in SVG format.
-					Error err;
-					Ref<FileAccess> fa_icon = FileAccess::open(dir.path_join("icon.svg"), FileAccess::WRITE, &err);
-					fa_icon->store_string(get_default_project_icon());
-
-					if (err != OK) {
-						_set_message(TTR("Couldn't create icon.svg in project path."), MESSAGE_ERROR);
-					}
-
 					EditorVCSInterface::create_vcs_metadata_files(EditorVCSInterface::VCSMetadata(vcs_metadata_selection->get_selected()), dir);
 				}
 			} else if (mode == MODE_INSTALL) {
@@ -496,8 +486,8 @@ void ProjectDialog::ok_pressed() {
 					unzGetCurrentFileInfo(pkg, &info, fname, 16384, nullptr, 0, nullptr, 0);
 
 					String name = String::utf8(fname);
-					if (name.ends_with("project.godot")) {
-						zip_root = name.substr(0, name.rfind("project.godot"));
+					if (name.ends_with("project.pixel_designer")) {
+						zip_root = name.substr(0, name.rfind("project.pixel_designer"));
 						break;
 					}
 
@@ -638,9 +628,9 @@ void ProjectDialog::show_dialog() {
 		default_files_container->hide();
 		get_ok_button()->set_disabled(false);
 
-		// Fetch current name from project.godot to prefill the text input.
+		// Fetch current name from project.pixel_designer to prefill the text input.
 		ConfigFile cfg;
-		String project_godot = project_path->get_text().path_join("project.godot");
+		String project_godot = project_path->get_text().path_join("project.pixel_designer");
 		Error err = cfg.load(project_godot);
 		if (err != OK) {
 			_set_message(vformat(TTR("Couldn't load project at '%s' (error %d). It may be missing or corrupted."), project_godot, err), MESSAGE_ERROR);
@@ -1158,7 +1148,7 @@ void ProjectList::_load_project_icon(int p_index) {
 // Load project data from p_property_key and return it in a ProjectList::Item.
 // p_favorite is passed directly into the Item.
 ProjectList::Item ProjectList::load_project_data(const String &p_path, bool p_favorite) {
-	String conf = p_path.path_join("project.godot");
+	String conf = p_path.path_join("project.pixel_designer");
 	bool grayed = false;
 	bool missing = false;
 
@@ -1191,7 +1181,7 @@ ProjectList::Item ProjectList::load_project_data(const String &p_path, bool p_fa
 	uint64_t last_edited = 0;
 	if (cf_err == OK) {
 		// The modification date marks the date the project was last edited.
-		// This is because the `project.godot` file will always be modified
+		// This is because the `project.pixel_designer` file will always be modified
 		// when editing a project (but not when running it).
 		last_edited = FileAccess::get_modified_time(conf);
 
@@ -1322,7 +1312,7 @@ void ProjectList::_global_menu_open_project(const Variant &p_tag) {
 	int idx = (int)p_tag;
 
 	if (idx >= 0 && idx < _projects.size()) {
-		String conf = _projects[idx].path.path_join("project.godot");
+		String conf = _projects[idx].path.path_join("project.pixel_designer");
 		List<String> args;
 		args.push_back(conf);
 		OS::get_singleton()->create_instance(args);
@@ -1546,7 +1536,7 @@ void ProjectList::_scan_folder_recursive(const String &p_path, List<String> *r_p
 	while (!n.is_empty()) {
 		if (da->current_is_dir() && n[0] != '.') {
 			_scan_folder_recursive(da->get_current_dir().path_join(n), r_projects);
-		} else if (n == "project.godot") {
+		} else if (n == "project.pixel_designer") {
 			r_projects->push_back(da->get_current_dir());
 		}
 		n = da->get_next();
@@ -2128,7 +2118,7 @@ void ProjectManager::_open_selected_projects() {
 	const HashSet<String> &selected_list = _project_list->get_selected_project_keys();
 
 	for (const String &path : selected_list) {
-		String conf = path.path_join("project.godot");
+		String conf = path.path_join("project.pixel_designer");
 
 		if (!FileAccess::exists(conf)) {
 			dialog_error->set_text(vformat(TTR("Can't open project at '%s'."), path));
@@ -2190,7 +2180,7 @@ void ProjectManager::_open_selected_projects_ask() {
 
 	// Check if the config_version property was empty or 0.
 	if (config_version == 0) {
-		ask_update_settings->set_text(vformat(TTR("The selected project \"%s\" does not specify its supported Godot version in its configuration file (\"project.godot\").\n\nProject path: %s\n\nIf you proceed with opening it, it will be converted to Godot's current configuration file format."), project.project_name, project.path));
+		ask_update_settings->set_text(vformat(TTR("The selected project \"%s\" does not specify its supported Godot version in its configuration file (\"project.pixel_designer\").\n\nProject path: %s\n\nIf you proceed with opening it, it will be converted to Godot's current configuration file format."), project.project_name, project.path));
 		ask_update_settings->popup_centered(popup_min_size);
 		return;
 	}
@@ -2360,7 +2350,7 @@ void ProjectManager::_apply_project_tags() {
 	}
 
 	ConfigFile cfg;
-	const String project_godot = _project_list->get_selected_projects()[0].path.path_join("project.godot");
+	const String project_godot = _project_list->get_selected_projects()[0].path.path_join("project.pixel_designer");
 	Error err = cfg.load(project_godot);
 	if (err != OK) {
 		tag_edit_error->set_text(vformat(TTR("Couldn't load project at '%s' (error %d). It may be missing or corrupted."), project_godot, err));
