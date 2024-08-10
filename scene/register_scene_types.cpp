@@ -61,6 +61,7 @@
 #include "scene/gui/center_container.h"
 #include "scene/gui/check_box.h"
 #include "scene/gui/check_button.h"
+#include "scene/gui/checker_container.h"
 #include "scene/gui/code_edit.h"
 #include "scene/gui/color_picker.h"
 #include "scene/gui/color_rect.h"
@@ -93,6 +94,7 @@
 #include "scene/gui/slider.h"
 #include "scene/gui/spin_box.h"
 #include "scene/gui/split_container.h"
+#include "scene/gui/splitter_container.h"
 #include "scene/gui/subviewport_container.h"
 #include "scene/gui/tab_bar.h"
 #include "scene/gui/tab_container.h"
@@ -262,6 +264,7 @@ void register_scene_types() {
 	GDREGISTER_CLASS(HFlowContainer);
 	GDREGISTER_CLASS(VFlowContainer);
 	GDREGISTER_CLASS(MarginContainer);
+	GDREGISTER_CLASS(CheckerContainer);
 
 	OS::get_singleton()->yield(); // may take time to init
 
@@ -301,6 +304,7 @@ void register_scene_types() {
 	GDREGISTER_CLASS(SplitContainer);
 	GDREGISTER_CLASS(HSplitContainer);
 	GDREGISTER_CLASS(VSplitContainer);
+	GDREGISTER_CLASS(SplitterContainer);
 
 	OS::get_singleton()->yield(); // may take time to init
 

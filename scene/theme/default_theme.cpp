@@ -1123,6 +1123,10 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_constant("margin_top", "MarginContainer", 0);
 	theme->set_constant("margin_right", "MarginContainer", 0);
 	theme->set_constant("margin_bottom", "MarginContainer", 0);
+	theme->set_constant("margin_left", "CheckerContainer", 0);
+	theme->set_constant("margin_top", "CheckerContainer", 0);
+	theme->set_constant("margin_right", "CheckerContainer", 0);
+	theme->set_constant("margin_bottom", "CheckerContainer", 0);
 	theme->set_constant("h_separation", "GridContainer", Math::round(4 * scale));
 	theme->set_constant("v_separation", "GridContainer", Math::round(4 * scale));
 	theme->set_constant("separation", "SplitContainer", Math::round(12 * scale));
@@ -1134,6 +1138,10 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_constant("autohide", "SplitContainer", 1);
 	theme->set_constant("autohide", "HSplitContainer", 1);
 	theme->set_constant("autohide", "VSplitContainer", 1);
+	theme->set_constant("autohide", "SplitterContainer", 1);
+	theme->set_color("normal_color", "SplitterContainer", Color(0.6, 0.6, 0.6));
+	theme->set_color("hover_color", "SplitterContainer", Color(0.8, 0.8, 0.8));
+	theme->set_color("pressed_color", "SplitterContainer", Color(1, 1, 1));
 	theme->set_constant("h_separation", "FlowContainer", Math::round(4 * scale));
 	theme->set_constant("v_separation", "FlowContainer", Math::round(4 * scale));
 	theme->set_constant("h_separation", "HFlowContainer", Math::round(4 * scale));
