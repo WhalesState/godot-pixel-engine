@@ -61,6 +61,16 @@ int SplitterContainer::get_separation() const {
 	return separation;
 }
 
+void SplitterContainer::set_offsets(const Vector<float> &p_offsets) {
+	offsets = p_offsets;
+	free_draggers();
+	queue_sort();
+}
+
+Vector<float> SplitterContainer::get_offsets() const {
+	return offsets;
+}
+
 void SplitterContainer::sort_children() {
 	children.clear();
 	for (int i = 0; i < get_child_count(); i++) {
@@ -85,16 +95,10 @@ void SplitterContainer::sort_children() {
 		set_custom_minimum_size(children[0]->get_combined_minimum_size());
 	} else {
 		bool use_offsets = false;
-		Vector<float> draggers_offset;
-		for (Control *c : children) {
-			if (c->has_meta("dragger_offset")) {
-				draggers_offset.append(c->get_meta("dragger_offset"));
-			}
-		}
-		if (draggers_offset.size() >= children.size() - 1) {
+		if (offsets.size() >= children.size() - 1) {
 			use_offsets = true;
 		} else {
-			draggers_offset.clear();
+			offsets.clear();
 		}
 		if (draggers.size() != children.size() - 1) {
 			free_draggers();
@@ -112,10 +116,10 @@ void SplitterContainer::sort_children() {
 				c->set_position(cur_pos);
 				if (i != children.size() - 1) {
 					if (use_offsets) {
-						child_size[vertical ? 1 : 0] = (draggers_offset[i] * size[vertical ? 1 : 0]) - cur_pos[vertical ? 1 : 0];
+						child_size[vertical ? 1 : 0] = (offsets[i] * size[vertical ? 1 : 0]) - cur_pos[vertical ? 1 : 0];
 					}
 					c->set_size(child_size);
-					Dragger *dragger = memnew(Dragger(this));
+					Dragger *dragger = memnew(Dragger());
 					add_child(dragger);
 					move_child(dragger, c->get_index() + 1);
 					dragger->connect("move_dragger", callable_mp(this, &SplitterContainer::move_dragger).bind(dragger, i, false));
@@ -123,6 +127,9 @@ void SplitterContainer::sort_children() {
 					Point2 dragger_pos = cur_pos + child_size;
 					dragger_pos[vertical ? 0 : 1] = 0;
 					dragger->set_position(dragger_pos);
+					if (!use_offsets) {
+						offsets.append((dragger->get_position() / size)[vertical ? 1 : 0]);
+					}
 					Size2 dragger_size = size;
 					dragger_size[vertical ? 1 : 0] = separation;
 					dragger->set_size(dragger_size);
@@ -130,13 +137,10 @@ void SplitterContainer::sort_children() {
 					c->set_size(size - cur_pos);
 				}
 				if (use_offsets && i != children.size() - 1) {
-					cur_pos[vertical ? 1 : 0] = draggers_offset[i] * size[vertical ? 1 : 0] + separation;
+					cur_pos[vertical ? 1 : 0] = offsets[i] * size[vertical ? 1 : 0] + separation;
 				} else {
 					cur_pos[vertical ? 1 : 0] += child_size[vertical ? 1 : 0] + separation;
 				}
-			}
-			for (int i = 0; i < draggers.size(); i++) {
-				move_dragger(draggers[i], i, true);
 			}
 		} else {
 			Point2 cur_pos;
@@ -148,7 +152,7 @@ void SplitterContainer::sort_children() {
 				Size2 child_size = size;
 				child_size[vertical ? 1 : 0] = (dragger->get_position() - cur_pos)[vertical ? 1 : 0];
 				c->set_size(child_size);
-				cur_pos = dragger->get_position() + dragger->get_size();
+				cur_pos = dragger->get_position() + Point2(separation, separation);
 				cur_pos[vertical ? 0 : 1] = 0;
 				if (i == draggers.size() - 1) {
 					Control *last_child = children[i + 1];
@@ -193,19 +197,21 @@ void SplitterContainer::move_dragger(Dragger *p_dragger, int p_index, bool p_res
 		max = draggers[p_index + 1]->get_position()[vertical ? 1 : 0] - separation;
 	}
 	max = MIN(max, max - children[p_index + 1]->get_combined_minimum_size()[vertical ? 1 : 0]);
-	int new_pos = p_dragger->get_position()[vertical ? 1 : 0] + relative[vertical ? 1 : 0];
+	int new_pos;
 	if (!p_reset) {
-		new_pos -= floor(separation / 2);
+		new_pos = p_dragger->get_position()[vertical ? 1 : 0] + relative[vertical ? 1 : 0] - floor(separation / 2);
 	} else {
-		new_pos = (p_dragger->get_position() / (prev_size / size))[vertical ? 1 : 0];
+		new_pos = offsets[p_index] * size[vertical ? 1 : 0];
 	}
 	new_pos = CLAMP(new_pos, min, max);
 	Point2 pos;
 	pos[vertical ? 1 : 0] = new_pos;
 	if (pos != p_dragger->get_position()) {
 		p_dragger->set_position(pos);
-		children[p_index]->set_meta("dragger_offset", (p_dragger->get_position() / size)[vertical ? 1 : 0]);
-		queue_sort();
+		if (!p_reset) {
+			offsets.set(p_index, (p_dragger->get_position() / size)[vertical ? 1 : 0]);
+		}
+		sort_children();
 	}
 }
 
@@ -241,6 +247,8 @@ void SplitterContainer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_vertical"), &SplitterContainer::is_vertical);
 	ClassDB::bind_method(D_METHOD("set_separation", "separation"), &SplitterContainer::set_separation);
 	ClassDB::bind_method(D_METHOD("get_separation"), &SplitterContainer::get_separation);
+	ClassDB::bind_method(D_METHOD("set_offsets", "offsets"), &SplitterContainer::set_offsets);
+	ClassDB::bind_method(D_METHOD("get_offsets"), &SplitterContainer::get_offsets);
 
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "vertical"), "set_vertical", "is_vertical");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "separation", PROPERTY_HINT_RANGE, "4,16,2"), "set_separation", "get_separation");
@@ -249,12 +257,31 @@ void SplitterContainer::_bind_methods() {
 	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, SplitterContainer, normal_color);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, SplitterContainer, hover_color);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, SplitterContainer, pressed_color);
+
+	ADD_SIGNAL(MethodInfo("offsets_changed"));
+}
+
+Vector<int> SplitterContainer::get_allowed_size_flags_horizontal() const {
+	Vector<int> flags;
+	flags.append(SIZE_FILL);
+	return flags;
+}
+
+Vector<int> SplitterContainer::get_allowed_size_flags_vertical() const {
+	Vector<int> flags;
+	flags.append(SIZE_FILL);
+	return flags;
 }
 
 SplitterContainer::SplitterContainer() {
 }
 
 void Dragger::mouse_io(bool p_entered) {
+	SplitterContainer *splitter = Object::cast_to<SplitterContainer>(get_parent());
+	if (!splitter) {
+		return;
+	}
+
 	Control::CursorShape cursor_shape = get_cursor_shape();
 	Control::CursorShape new_cursor_shape = splitter->vertical ? Control::CURSOR_VSIZE : Control::CURSOR_HSIZE;
 	set_default_cursor_shape(p_entered ? new_cursor_shape : cursor_shape);
@@ -265,6 +292,11 @@ void Dragger::mouse_io(bool p_entered) {
 void Dragger::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_DRAW: {
+			SplitterContainer *splitter = Object::cast_to<SplitterContainer>(get_parent());
+			if (!splitter) {
+				return;
+			}
+
 			Point2 offset = Point2(splitter->vertical ? 0 : get_size().x - 4, splitter->vertical ? get_size().y - 4 : 0);
 			Color color;
 			if (is_dragging) {
@@ -292,6 +324,9 @@ void Dragger::gui_input(const Ref<InputEvent> &p_event) {
 	if (mb.is_valid() && mb->get_button_index() == MouseButton::LEFT) {
 		is_dragging = mb->is_pressed();
 		queue_redraw();
+		if (!is_dragging) {
+			get_parent()->emit_signal(SNAME("offsets_changed"));
+		}
 		return;
 	}
 
@@ -303,8 +338,4 @@ void Dragger::gui_input(const Ref<InputEvent> &p_event) {
 
 void Dragger::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("move_dragger"));
-}
-
-Dragger::Dragger(SplitterContainer *p_splitter) {
-	splitter = p_splitter;
 }

@@ -34,6 +34,20 @@
 
 #include "scene/gui/container.h"
 
+class Dragger : public Control {
+	GDCLASS(Dragger, Control);
+
+	bool is_dragging = false;
+	bool mouse_in = false;
+
+	void mouse_io(bool p_entered);
+
+protected:
+	void _notification(int p_what);
+	virtual void gui_input(const Ref<InputEvent> &p_event) override;
+	static void _bind_methods();
+};
+
 class SplitterContainer : public Container {
 	GDCLASS(SplitterContainer, Container);
 	friend class Dragger;
@@ -49,6 +63,7 @@ class SplitterContainer : public Container {
 	int separation = 8;
 	Vector<Dragger *> draggers;
 	Vector<Control *> children;
+	Vector<float> offsets;
 	Size2 prev_size;
 
 	void sort_children();
@@ -64,27 +79,13 @@ public:
 	bool is_vertical() const;
 	void set_separation(int p_separation);
 	int get_separation() const;
+	void set_offsets(const Vector<float> &p_offsets);
+	Vector<float> get_offsets() const;
+
+	virtual Vector<int> get_allowed_size_flags_horizontal() const override;
+	virtual Vector<int> get_allowed_size_flags_vertical() const override;
 
 	SplitterContainer();
-};
-
-class Dragger : public Control {
-	GDCLASS(Dragger, Control);
-
-	SplitterContainer *splitter;
-
-	bool is_dragging = false;
-	bool mouse_in = false;
-
-	void mouse_io(bool p_entered);
-
-protected:
-	void _notification(int p_what);
-	virtual void gui_input(const Ref<InputEvent> &p_event) override;
-	static void _bind_methods();
-
-public:
-	Dragger(SplitterContainer *p_splitter);
 };
 
 #endif // SPLITTER_CONTAINER_H
