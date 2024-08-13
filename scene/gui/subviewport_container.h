@@ -37,7 +37,7 @@
 class SubViewportContainer : public Container {
 	GDCLASS(SubViewportContainer, Container);
 
-	bool stretch = false;
+	bool stretch = true;
 	int shrink = 1;
 	void _notify_viewports(int p_notification);
 	bool _is_propagated_in_gui_input(const Ref<InputEvent> &p_event);

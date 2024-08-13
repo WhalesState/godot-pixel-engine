@@ -297,4 +297,5 @@ void SubViewportContainer::_bind_methods() {
 SubViewportContainer::SubViewportContainer() {
 	set_process_unhandled_input(true);
 	set_focus_mode(FOCUS_CLICK);
+	set_texture_filter(TextureFilter::TEXTURE_FILTER_NEAREST);
 }
