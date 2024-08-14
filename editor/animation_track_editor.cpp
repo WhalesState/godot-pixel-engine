@@ -2204,11 +2204,8 @@ bool AnimationTrackEdit::_is_value_key_valid(const Variant &p_key_value, Variant
 }
 
 Ref<Texture2D> AnimationTrackEdit::_get_key_type_icon() const {
-	const Ref<Texture2D> type_icons[8] = {
+	const Ref<Texture2D> type_icons[5] = {
 		get_editor_theme_icon(SNAME("KeyValue")),
-		get_editor_theme_icon(SNAME("KeyTrackPosition")),
-		get_editor_theme_icon(SNAME("KeyTrackRotation")),
-		get_editor_theme_icon(SNAME("KeyTrackScale")),
 		get_editor_theme_icon(SNAME("KeyTrackBlendShape")),
 		get_editor_theme_icon(SNAME("KeyCall")),
 		get_editor_theme_icon(SNAME("KeyBezier")),
