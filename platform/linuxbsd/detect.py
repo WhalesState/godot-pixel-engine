@@ -40,10 +40,7 @@ def get_opts():
         BoolVariable("use_tsan", "Use LLVM/GCC compiler thread sanitizer (TSAN)", False),
         BoolVariable("use_msan", "Use LLVM compiler memory sanitizer (MSAN)", False),
         BoolVariable("use_sowrap", "Dynamically load system libraries", True),
-        BoolVariable("alsa", "Use ALSA", True),
-        BoolVariable("pulseaudio", "Use PulseAudio", True),
         BoolVariable("dbus", "Use D-Bus to handle screensaver and portal desktop settings", True),
-        BoolVariable("speechd", "Use Speech Dispatcher for Text-to-Speech support", True),
         BoolVariable("fontconfig", "Use fontconfig for system fonts support", True),
         BoolVariable("udev", "Use udev for gamepad connection callbacks", True),
         BoolVariable("x11", "Enable X11 display", True),
@@ -303,28 +300,6 @@ def configure(env: "Environment"):
         else:
             env.Append(CPPDEFINES=["FONTCONFIG_ENABLED"])
 
-    if env["alsa"]:
-        if not env["use_sowrap"]:
-            if os.system("pkg-config --exists alsa") == 0:  # 0 means found
-                env.ParseConfig("pkg-config alsa --cflags --libs")
-                env.Append(CPPDEFINES=["ALSA_ENABLED", "ALSAMIDI_ENABLED"])
-            else:
-                print("Warning: ALSA development libraries not found. Disabling the ALSA audio driver.")
-                env["alsa"] = False
-        else:
-            env.Append(CPPDEFINES=["ALSA_ENABLED", "ALSAMIDI_ENABLED"])
-
-    if env["pulseaudio"]:
-        if not env["use_sowrap"]:
-            if os.system("pkg-config --exists libpulse") == 0:  # 0 means found
-                env.ParseConfig("pkg-config libpulse --cflags --libs")
-                env.Append(CPPDEFINES=["PULSEAUDIO_ENABLED"])
-            else:
-                print("Warning: PulseAudio development libraries not found. Disabling the PulseAudio audio driver.")
-                env["pulseaudio"] = False
-        else:
-            env.Append(CPPDEFINES=["PULSEAUDIO_ENABLED", "_REENTRANT"])
-
     if env["dbus"]:
         if not env["use_sowrap"]:
             if os.system("pkg-config --exists dbus-1") == 0:  # 0 means found
@@ -335,17 +310,6 @@ def configure(env: "Environment"):
                 env["dbus"] = False
         else:
             env.Append(CPPDEFINES=["DBUS_ENABLED"])
-
-    if env["speechd"]:
-        if not env["use_sowrap"]:
-            if os.system("pkg-config --exists speech-dispatcher") == 0:  # 0 means found
-                env.ParseConfig("pkg-config speech-dispatcher --cflags --libs")
-                env.Append(CPPDEFINES=["SPEECHD_ENABLED"])
-            else:
-                print("Warning: speech-dispatcher development libraries not found. Disabling text to speech support.")
-                env["speechd"] = False
-        else:
-            env.Append(CPPDEFINES=["SPEECHD_ENABLED"])
 
     if not env["use_sowrap"]:
         if os.system("pkg-config --exists xkbcommon") == 0:  # 0 means found

@@ -35,7 +35,6 @@
 #include "scene/main/node.h"
 #include "scene/resources/animation.h"
 #include "scene/resources/animation_library.h"
-#include "scene/resources/audio_stream_polyphonic.h"
 
 class AnimatedValuesBackup;
 
@@ -120,7 +119,6 @@ protected:
 	/* ---- General settings for animation ---- */
 	AnimationCallbackModeProcess callback_mode_process = ANIMATION_CALLBACK_MODE_PROCESS_IDLE;
 	AnimationCallbackModeMethod callback_mode_method = ANIMATION_CALLBACK_MODE_METHOD_DEFERRED;
-	int audio_max_polyphony = 32;
 	NodePath root_node;
 
 	bool processing = false;
@@ -213,41 +211,6 @@ protected:
 		~TrackCacheBezier() {}
 	};
 
-	// Audio stream information for each audio stream placed on the track.
-	struct PlayingAudioStreamInfo {
-		AudioStreamPlaybackPolyphonic::ID index = -1; // ID retrieved from AudioStreamPlaybackPolyphonic.
-		double start = 0.0;
-		double len = 0.0;
-	};
-
-	// Audio track information for mixng and ending.
-	struct PlayingAudioTrackInfo {
-		HashMap<int, PlayingAudioStreamInfo> stream_info;
-		double length = 0.0;
-		double time = 0.0;
-		real_t volume = 0.0;
-		bool loop = false;
-		bool backward = false;
-		bool use_blend = false;
-	};
-
-	struct TrackCacheAudio : public TrackCache {
-		Ref<AudioStreamPolyphonic> audio_stream;
-		Ref<AudioStreamPlaybackPolyphonic> audio_stream_playback;
-		HashMap<ObjectID, PlayingAudioTrackInfo> playing_streams; // Key is Animation resource ObjectID.
-
-		TrackCacheAudio(const TrackCacheAudio &p_other) :
-				TrackCache(p_other),
-				audio_stream(p_other.audio_stream),
-				audio_stream_playback(p_other.audio_stream_playback),
-				playing_streams(p_other.playing_streams) {}
-
-		TrackCacheAudio() {
-			type = Animation::TYPE_AUDIO;
-		}
-		~TrackCacheAudio() {}
-	};
-
 	struct TrackCacheAnimation : public TrackCache {
 		bool playing = false;
 
@@ -259,11 +222,9 @@ protected:
 
 	HashMap<NodePath, TrackCache *> track_cache;
 	HashSet<TrackCache *> playing_caches;
-	Vector<Node *> playing_audio_stream_players;
 
 	// Helpers.
 	void _clear_caches();
-	void _clear_audio_streams();
 	void _clear_playing_caches();
 	bool _update_caches();
 
@@ -333,9 +294,6 @@ public:
 
 	void set_callback_mode_method(AnimationCallbackModeMethod p_mode);
 	AnimationCallbackModeMethod get_callback_mode_method() const;
-
-	void set_audio_max_polyphony(int p_audio_max_polyphony);
-	int get_audio_max_polyphony() const;
 
 	/* ---- Blending processor ---- */
 	void make_animation_instance(const StringName &p_name, const PlaybackInfo p_playback_info);

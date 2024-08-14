@@ -1088,103 +1088,6 @@
 				[b]Note:[/b] This method is implemented only on Windows.
 			</description>
 		</method>
-		<method name="tts_get_voices" qualifiers="const">
-			<return type="Dictionary[]" />
-			<description>
-				Returns an [Array] of voice information dictionaries.
-				Each [Dictionary] contains two [String] entries:
-				- [code]name[/code] is voice name.
-				- [code]id[/code] is voice identifier.
-				- [code]language[/code] is language code in [code]lang_Variant[/code] format. The [code]lang[/code] part is a 2 or 3-letter code based on the ISO-639 standard, in lowercase. The [code skip-lint]Variant[/code] part is an engine-dependent string describing country, region or/and dialect.
-				Note that Godot depends on system libraries for text-to-speech functionality. These libraries are installed by default on Windows and macOS, but not on all Linux distributions. If they are not present, this method will return an empty list. This applies to both Godot users on Linux, as well as end-users on Linux running Godot games that use text-to-speech.
-				[b]Note:[/b] This method is implemented on Android, iOS, Web, Linux (X11), macOS, and Windows.
-				[b]Note:[/b] [member ProjectSettings.audio/general/text_to_speech] should be [code]true[/code] to use text-to-speech.
-			</description>
-		</method>
-		<method name="tts_get_voices_for_language" qualifiers="const">
-			<return type="PackedStringArray" />
-			<param index="0" name="language" type="String" />
-			<description>
-				Returns an [PackedStringArray] of voice identifiers for the [param language].
-				[b]Note:[/b] This method is implemented on Android, iOS, Web, Linux (X11), macOS, and Windows.
-				[b]Note:[/b] [member ProjectSettings.audio/general/text_to_speech] should be [code]true[/code] to use text-to-speech.
-			</description>
-		</method>
-		<method name="tts_is_paused" qualifiers="const">
-			<return type="bool" />
-			<description>
-				Returns [code]true[/code] if the synthesizer is in a paused state.
-				[b]Note:[/b] This method is implemented on Android, iOS, Web, Linux (X11), macOS, and Windows.
-				[b]Note:[/b] [member ProjectSettings.audio/general/text_to_speech] should be [code]true[/code] to use text-to-speech.
-			</description>
-		</method>
-		<method name="tts_is_speaking" qualifiers="const">
-			<return type="bool" />
-			<description>
-				Returns [code]true[/code] if the synthesizer is generating speech, or have utterance waiting in the queue.
-				[b]Note:[/b] This method is implemented on Android, iOS, Web, Linux (X11), macOS, and Windows.
-				[b]Note:[/b] [member ProjectSettings.audio/general/text_to_speech] should be [code]true[/code] to use text-to-speech.
-			</description>
-		</method>
-		<method name="tts_pause">
-			<return type="void" />
-			<description>
-				Puts the synthesizer into a paused state.
-				[b]Note:[/b] This method is implemented on Android, iOS, Web, Linux (X11), macOS, and Windows.
-				[b]Note:[/b] [member ProjectSettings.audio/general/text_to_speech] should be [code]true[/code] to use text-to-speech.
-			</description>
-		</method>
-		<method name="tts_resume">
-			<return type="void" />
-			<description>
-				Resumes the synthesizer if it was paused.
-				[b]Note:[/b] This method is implemented on Android, iOS, Web, Linux (X11), macOS, and Windows.
-				[b]Note:[/b] [member ProjectSettings.audio/general/text_to_speech] should be [code]true[/code] to use text-to-speech.
-			</description>
-		</method>
-		<method name="tts_set_utterance_callback">
-			<return type="void" />
-			<param index="0" name="event" type="int" enum="DisplayServer.TTSUtteranceEvent" />
-			<param index="1" name="callable" type="Callable" />
-			<description>
-				Adds a callback, which is called when the utterance has started, finished, canceled or reached a text boundary.
-				- [constant TTS_UTTERANCE_STARTED], [constant TTS_UTTERANCE_ENDED], and [constant TTS_UTTERANCE_CANCELED] callable's method should take one [int] parameter, the utterance ID.
-				- [constant TTS_UTTERANCE_BOUNDARY] callable's method should take two [int] parameters, the index of the character and the utterance ID.
-				[b]Note:[/b] The granularity of the boundary callbacks is engine dependent.
-				[b]Note:[/b] This method is implemented on Android, iOS, Web, Linux (X11), macOS, and Windows.
-				[b]Note:[/b] [member ProjectSettings.audio/general/text_to_speech] should be [code]true[/code] to use text-to-speech.
-			</description>
-		</method>
-		<method name="tts_speak">
-			<return type="void" />
-			<param index="0" name="text" type="String" />
-			<param index="1" name="voice" type="String" />
-			<param index="2" name="volume" type="int" default="50" />
-			<param index="3" name="pitch" type="float" default="1.0" />
-			<param index="4" name="rate" type="float" default="1.0" />
-			<param index="5" name="utterance_id" type="int" default="0" />
-			<param index="6" name="interrupt" type="bool" default="false" />
-			<description>
-				Adds an utterance to the queue. If [param interrupt] is [code]true[/code], the queue is cleared first.
-				- [param voice] identifier is one of the [code]"id"[/code] values returned by [method tts_get_voices] or one of the values returned by [method tts_get_voices_for_language].
-				- [param volume] ranges from [code]0[/code] (lowest) to [code]100[/code] (highest).
-				- [param pitch] ranges from [code]0.0[/code] (lowest) to [code]2.0[/code] (highest), [code]1.0[/code] is default pitch for the current voice.
-				- [param rate] ranges from [code]0.1[/code] (lowest) to [code]10.0[/code] (highest), [code]1.0[/code] is a normal speaking rate. Other values act as a percentage relative.
-				- [param utterance_id] is passed as a parameter to the callback functions.
-				[b]Note:[/b] On Windows and Linux (X11), utterance [param text] can use SSML markup. SSML support is engine and voice dependent. If the engine does not support SSML, you should strip out all XML markup before calling [method tts_speak].
-				[b]Note:[/b] The granularity of pitch, rate, and volume is engine and voice dependent. Values may be truncated.
-				[b]Note:[/b] This method is implemented on Android, iOS, Web, Linux (X11), macOS, and Windows.
-				[b]Note:[/b] [member ProjectSettings.audio/general/text_to_speech] should be [code]true[/code] to use text-to-speech.
-			</description>
-		</method>
-		<method name="tts_stop">
-			<return type="void" />
-			<description>
-				Stops synthesis in progress and removes all utterances from the queue.
-				[b]Note:[/b] This method is implemented on Android, iOS, Web, Linux (X11), macOS, and Windows.
-				[b]Note:[/b] [member ProjectSettings.audio/general/text_to_speech] should be [code]true[/code] to use text-to-speech.
-			</description>
-		</method>
 		<method name="virtual_keyboard_get_height" qualifiers="const">
 			<return type="int" />
 			<description>
@@ -1659,13 +1562,10 @@
 		<constant name="FEATURE_CLIPBOARD_PRIMARY" value="18" enum="Feature">
 			Display server supports Primary clipboard can be used. This is a different clipboard from [constant FEATURE_CLIPBOARD]. [b]Linux (X11)[/b]
 		</constant>
-		<constant name="FEATURE_TEXT_TO_SPEECH" value="19" enum="Feature">
-			Display server supports text-to-speech. See [code]tts_*[/code] methods. [b]Windows, macOS, Linux (X11), Android, iOS, Web[/b]
-		</constant>
-		<constant name="FEATURE_EXTEND_TO_TITLE" value="20" enum="Feature">
+		<constant name="FEATURE_EXTEND_TO_TITLE" value="19" enum="Feature">
 			Display server supports expanding window content to the title. See [constant WINDOW_FLAG_EXTEND_TO_TITLE]. [b]macOS[/b]
 		</constant>
-		<constant name="FEATURE_SCREEN_CAPTURE" value="21" enum="Feature">
+		<constant name="FEATURE_SCREEN_CAPTURE" value="20" enum="Feature">
 			Display server supports reading screen pixels. See [method screen_get_pixel].
 		</constant>
 		<constant name="MOUSE_MODE_VISIBLE" value="0" enum="MouseMode">
@@ -1933,18 +1833,6 @@
 			- Linux: [code]GLXContext*[/code] for the window.
 			- macOS: [code]NSOpenGLContext*[/code] for the window (native GL), or [code]EGLContext[/code] for the window (ANGLE).
 			- Android: [code]EGLContext[/code] for the window.
-		</constant>
-		<constant name="TTS_UTTERANCE_STARTED" value="0" enum="TTSUtteranceEvent">
-			Utterance has begun to be spoken.
-		</constant>
-		<constant name="TTS_UTTERANCE_ENDED" value="1" enum="TTSUtteranceEvent">
-			Utterance was successfully finished.
-		</constant>
-		<constant name="TTS_UTTERANCE_CANCELED" value="2" enum="TTSUtteranceEvent">
-			Utterance was canceled, or TTS service was unable to process it.
-		</constant>
-		<constant name="TTS_UTTERANCE_BOUNDARY" value="3" enum="TTSUtteranceEvent">
-			Utterance reached a word or sentence boundary.
 		</constant>
 	</constants>
 </class>

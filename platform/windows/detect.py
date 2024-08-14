@@ -381,8 +381,6 @@ def configure_msvc(env, vcvars_msvc_config):
     env.AppendUnique(
         CPPDEFINES=[
             "WINDOWS_ENABLED",
-            "WASAPI_ENABLED",
-            "WINMIDI_ENABLED",
             "TYPED_METHOD_BIND",
             "WIN32",
             "WINVER=%s" % env["target_win_version"],
@@ -573,7 +571,7 @@ def configure_mingw(env):
     if not env["use_llvm"]:
         env.Append(CCFLAGS=["-mwindows"])
 
-    env.Append(CPPDEFINES=["WINDOWS_ENABLED", "WASAPI_ENABLED", "WINMIDI_ENABLED"])
+    env.Append(CPPDEFINES=["WINDOWS_ENABLED"])
     env.Append(
         CPPDEFINES=[
             ("WINVER", env["target_win_version"]),

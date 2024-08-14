@@ -39,13 +39,6 @@
 #include "core/input/input.h"
 #include "core/os/os.h"
 #include "drivers/unix/ip_unix.h"
-#include "drivers/wasapi/audio_driver_wasapi.h"
-#include "drivers/winmidi/midi_driver_winmidi.h"
-#include "servers/audio_server.h"
-
-#ifdef XAUDIO2_ENABLED
-#include "drivers/xaudio2/audio_driver_xaudio2.h"
-#endif
 
 #include <io.h>
 #include <shellapi.h>
@@ -97,16 +90,6 @@ class OS_Windows : public OS {
 
 	HINSTANCE hInstance;
 	MainLoop *main_loop = nullptr;
-
-#ifdef WASAPI_ENABLED
-	AudioDriverWASAPI driver_wasapi;
-#endif
-#ifdef XAUDIO2_ENABLED
-	AudioDriverXAudio2 driver_xaudio2;
-#endif
-#ifdef WINMIDI_ENABLED
-	MIDIDriverWinMidi driver_midi;
-#endif
 
 	CrashHandler crash_handler;
 

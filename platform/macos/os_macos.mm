@@ -128,10 +128,6 @@ void OS_MacOS::finalize() {
 		}
 	}
 
-#ifdef COREMIDI_ENABLED
-	midi_driver.close();
-#endif
-
 	delete_main_loop();
 
 	if (joypad_macos) {
@@ -801,10 +797,6 @@ OS_MacOS::OS_MacOS() {
 	Vector<Logger *> loggers;
 	loggers.push_back(memnew(MacOSTerminalLogger));
 	_set_logger(memnew(CompositeLogger(loggers)));
-
-#ifdef COREAUDIO_ENABLED
-	AudioDriverManager::add_driver(&audio_driver);
-#endif
 
 	DisplayServerMacOS::register_macos_driver();
 

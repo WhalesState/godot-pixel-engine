@@ -35,22 +35,14 @@
 #include "crash_handler_windows.h"
 #include "joypad_windows.h"
 #include "key_mapping_windows.h"
-#include "tts_windows.h"
 
 #include "core/config/project_settings.h"
 #include "core/input/input.h"
 #include "core/os/os.h"
 #include "drivers/unix/ip_unix.h"
-#include "drivers/wasapi/audio_driver_wasapi.h"
-#include "drivers/winmidi/midi_driver_winmidi.h"
-#include "servers/audio_server.h"
 #include "servers/display_server.h"
 #include "servers/rendering/renderer_compositor.h"
 #include "servers/rendering_server.h"
-
-#ifdef XAUDIO2_ENABLED
-#include "drivers/xaudio2/audio_driver_xaudio2.h"
-#endif
 
 #if defined(GLES3_ENABLED)
 #include "gl_manager_windows_angle.h"
@@ -346,8 +338,6 @@ class DisplayServerWindows : public DisplayServer {
 	bool keep_screen_on = false;
 	HANDLE power_request;
 
-	TTS_Windows *tts = nullptr;
-
 	struct WindowData {
 		HWND hWnd;
 
@@ -491,15 +481,6 @@ public:
 
 	virtual bool has_feature(Feature p_feature) const override;
 	virtual String get_name() const override;
-
-	virtual bool tts_is_speaking() const override;
-	virtual bool tts_is_paused() const override;
-	virtual TypedArray<Dictionary> tts_get_voices() const override;
-
-	virtual void tts_speak(const String &p_text, const String &p_voice, int p_volume = 50, float p_pitch = 1.f, float p_rate = 1.f, int p_utterance_id = 0, bool p_interrupt = false) override;
-	virtual void tts_pause() override;
-	virtual void tts_resume() override;
-	virtual void tts_stop() override;
 
 	virtual bool is_dark_mode_supported() const override;
 	virtual bool is_dark_mode() const override;

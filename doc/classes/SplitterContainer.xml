@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="SplitterContainer" inherits="Container" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_offsets" qualifiers="const">
+			<return type="PackedFloat32Array" />
+			<description>
+			</description>
+		</method>
+		<method name="set_offsets">
+			<return type="void" />
+			<param index="0" name="offsets" type="PackedFloat32Array" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="separation" type="int" setter="set_separation" getter="get_separation" default="8">
+		</member>
+		<member name="vertical" type="bool" setter="set_vertical" getter="is_vertical" default="false">
+		</member>
+	</members>
+	<signals>
+		<signal name="offsets_changed">
+			<description>
+			</description>
+		</signal>
+	</signals>
+	<theme_items>
+		<theme_item name="hover_color" data_type="color" type="Color" default="Color(0.8, 0.8, 0.8, 1)">
+		</theme_item>
+		<theme_item name="normal_color" data_type="color" type="Color" default="Color(0.6, 0.6, 0.6, 1)">
+		</theme_item>
+		<theme_item name="pressed_color" data_type="color" type="Color" default="Color(1, 1, 1, 1)">
+		</theme_item>
+		<theme_item name="autohide" data_type="constant" type="int" default="1">
+		</theme_item>
+	</theme_items>
+</class>

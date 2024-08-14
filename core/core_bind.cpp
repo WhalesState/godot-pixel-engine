@@ -193,18 +193,6 @@ void ResourceSaver::_bind_methods() {
 
 ////// OS //////
 
-PackedStringArray OS::get_connected_midi_inputs() {
-	return ::OS::get_singleton()->get_connected_midi_inputs();
-}
-
-void OS::open_midi_inputs() {
-	::OS::get_singleton()->open_midi_inputs();
-}
-
-void OS::close_midi_inputs() {
-	::OS::get_singleton()->close_midi_inputs();
-}
-
 void OS::set_use_file_access_save_and_swap(bool p_enable) {
 	FileAccess::set_backup_save(p_enable);
 }
@@ -560,10 +548,6 @@ String OS::get_unique_id() const {
 OS *OS::singleton = nullptr;
 
 void OS::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("get_connected_midi_inputs"), &OS::get_connected_midi_inputs);
-	ClassDB::bind_method(D_METHOD("open_midi_inputs"), &OS::open_midi_inputs);
-	ClassDB::bind_method(D_METHOD("close_midi_inputs"), &OS::close_midi_inputs);
-
 	ClassDB::bind_method(D_METHOD("alert", "text", "title"), &OS::alert, DEFVAL("Alert!"));
 	ClassDB::bind_method(D_METHOD("crash", "message"), &OS::crash);
 

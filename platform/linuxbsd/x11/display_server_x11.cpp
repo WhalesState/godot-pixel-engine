@@ -129,7 +129,6 @@ bool DisplayServerX11::has_feature(Feature p_feature) const {
 		case FEATURE_KEEP_SCREEN_ON:
 #endif
 		case FEATURE_CLIPBOARD_PRIMARY:
-		case FEATURE_TEXT_TO_SPEECH:
 		case FEATURE_SCREEN_CAPTURE:
 			return true;
 		default: {
@@ -301,45 +300,6 @@ void DisplayServerX11::_flush_mouse_motion() {
 	xi.relative_motion.x = 0;
 	xi.relative_motion.y = 0;
 }
-
-#ifdef SPEECHD_ENABLED
-
-bool DisplayServerX11::tts_is_speaking() const {
-	ERR_FAIL_NULL_V_MSG(tts, false, "Enable the \"audio/general/text_to_speech\" project setting to use text-to-speech.");
-	return tts->is_speaking();
-}
-
-bool DisplayServerX11::tts_is_paused() const {
-	ERR_FAIL_NULL_V_MSG(tts, false, "Enable the \"audio/general/text_to_speech\" project setting to use text-to-speech.");
-	return tts->is_paused();
-}
-
-TypedArray<Dictionary> DisplayServerX11::tts_get_voices() const {
-	ERR_FAIL_NULL_V_MSG(tts, TypedArray<Dictionary>(), "Enable the \"audio/general/text_to_speech\" project setting to use text-to-speech.");
-	return tts->get_voices();
-}
-
-void DisplayServerX11::tts_speak(const String &p_text, const String &p_voice, int p_volume, float p_pitch, float p_rate, int p_utterance_id, bool p_interrupt) {
-	ERR_FAIL_NULL_MSG(tts, "Enable the \"audio/general/text_to_speech\" project setting to use text-to-speech.");
-	tts->speak(p_text, p_voice, p_volume, p_pitch, p_rate, p_utterance_id, p_interrupt);
-}
-
-void DisplayServerX11::tts_pause() {
-	ERR_FAIL_NULL_MSG(tts, "Enable the \"audio/general/text_to_speech\" project setting to use text-to-speech.");
-	tts->pause();
-}
-
-void DisplayServerX11::tts_resume() {
-	ERR_FAIL_NULL_MSG(tts, "Enable the \"audio/general/text_to_speech\" project setting to use text-to-speech.");
-	tts->resume();
-}
-
-void DisplayServerX11::tts_stop() {
-	ERR_FAIL_NULL_MSG(tts, "Enable the \"audio/general/text_to_speech\" project setting to use text-to-speech.");
-	tts->stop();
-}
-
-#endif
 
 #ifdef DBUS_ENABLED
 
@@ -5965,14 +5925,6 @@ DisplayServerX11::DisplayServerX11(const String &p_rendering_driver, WindowMode 
 	xdnd_finished = XInternAtom(x11_display, "XdndFinished", False);
 	xdnd_selection = XInternAtom(x11_display, "XdndSelection", False);
 
-#ifdef SPEECHD_ENABLED
-	// Init TTS
-	bool tts_enabled = GLOBAL_GET("audio/general/text_to_speech");
-	if (tts_enabled) {
-		tts = memnew(TTS_Linux);
-	}
-#endif
-
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!
 	//TODO - do OpenGL support checks, driver selection and fallback
 	rendering_driver = p_rendering_driver;
@@ -6321,12 +6273,6 @@ DisplayServerX11::~DisplayServerX11() {
 	if (xmbstring) {
 		memfree(xmbstring);
 	}
-
-#ifdef SPEECHD_ENABLED
-	if (tts) {
-		memdelete(tts);
-	}
-#endif
 
 #ifdef DBUS_ENABLED
 	memdelete(screensaver);

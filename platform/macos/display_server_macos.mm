@@ -39,7 +39,6 @@
 #include "godot_window_delegate.h"
 #include "key_mapping_macos.h"
 #include "os_macos.h"
-#include "tts_macos.h"
 
 #include "core/config/project_settings.h"
 #include "core/io/marshalls.h"
@@ -782,7 +781,6 @@ bool DisplayServerMacOS::has_feature(Feature p_feature) const {
 		case FEATURE_NATIVE_ICON:
 		//case FEATURE_KEEP_SCREEN_ON:
 		case FEATURE_SWAP_BUFFERS:
-		case FEATURE_TEXT_TO_SPEECH:
 		case FEATURE_EXTEND_TO_TITLE:
 		case FEATURE_SCREEN_CAPTURE:
 			return true;
@@ -1877,41 +1875,6 @@ void DisplayServerMacOS::global_menu_clear(const String &p_menu_root) {
 			submenu.erase(p_menu_root);
 		}
 	}
-}
-
-bool DisplayServerMacOS::tts_is_speaking() const {
-	ERR_FAIL_NULL_V_MSG(tts, false, "Enable the \"audio/general/text_to_speech\" project setting to use text-to-speech.");
-	return [tts isSpeaking];
-}
-
-bool DisplayServerMacOS::tts_is_paused() const {
-	ERR_FAIL_NULL_V_MSG(tts, false, "Enable the \"audio/general/text_to_speech\" project setting to use text-to-speech.");
-	return [tts isPaused];
-}
-
-TypedArray<Dictionary> DisplayServerMacOS::tts_get_voices() const {
-	ERR_FAIL_NULL_V_MSG(tts, Array(), "Enable the \"audio/general/text_to_speech\" project setting to use text-to-speech.");
-	return [tts getVoices];
-}
-
-void DisplayServerMacOS::tts_speak(const String &p_text, const String &p_voice, int p_volume, float p_pitch, float p_rate, int p_utterance_id, bool p_interrupt) {
-	ERR_FAIL_NULL_MSG(tts, "Enable the \"audio/general/text_to_speech\" project setting to use text-to-speech.");
-	[tts speak:p_text voice:p_voice volume:p_volume pitch:p_pitch rate:p_rate utterance_id:p_utterance_id interrupt:p_interrupt];
-}
-
-void DisplayServerMacOS::tts_pause() {
-	ERR_FAIL_NULL_MSG(tts, "Enable the \"audio/general/text_to_speech\" project setting to use text-to-speech.");
-	[tts pauseSpeaking];
-}
-
-void DisplayServerMacOS::tts_resume() {
-	ERR_FAIL_NULL_MSG(tts, "Enable the \"audio/general/text_to_speech\" project setting to use text-to-speech.");
-	[tts resumeSpeaking];
-}
-
-void DisplayServerMacOS::tts_stop() {
-	ERR_FAIL_NULL_MSG(tts, "Enable the \"audio/general/text_to_speech\" project setting to use text-to-speech.");
-	[tts stopSpeaking];
 }
 
 bool DisplayServerMacOS::is_dark_mode_supported() const {
@@ -4422,12 +4385,6 @@ DisplayServerMacOS::DisplayServerMacOS(const String &p_rendering_driver, WindowM
 
 	// Register to be notified on displays arrangement changes.
 	CGDisplayRegisterReconfigurationCallback(_displays_arrangement_changed, nullptr);
-
-	// Init TTS
-	bool tts_enabled = GLOBAL_GET("audio/general/text_to_speech");
-	if (tts_enabled) {
-		tts = [[TTS_MacOS alloc] init];
-	}
 
 	NSMenuItem *menu_item;
 	NSString *title;

@@ -8,20 +8,6 @@ env.drivers_sources = []
 SConscript("unix/SCsub")
 SConscript("windows/SCsub")
 
-# Sounds drivers
-SConscript("alsa/SCsub")
-SConscript("coreaudio/SCsub")
-SConscript("pulseaudio/SCsub")
-if env["platform"] == "windows":
-    SConscript("wasapi/SCsub")
-if env["xaudio2"]:
-    SConscript("xaudio2/SCsub")
-
-# Midi drivers
-SConscript("alsamidi/SCsub")
-SConscript("coremidi/SCsub")
-SConscript("winmidi/SCsub")
-
 # Graphics drivers
 if env["opengl3"]:
     SConscript("gl_context/SCsub")

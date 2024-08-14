@@ -297,8 +297,6 @@ def generate_scu_files(max_includes_per_scu):
     process_folder(["servers"])
     process_folder(["servers/rendering"])
     process_folder(["servers/rendering/storage"])
-    process_folder(["servers/audio"])
-    process_folder(["servers/audio/effects"])
 
     # Finally change back the path to the calling folder
     os.chdir(curr_folder)

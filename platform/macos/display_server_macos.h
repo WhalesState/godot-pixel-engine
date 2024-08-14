@@ -152,7 +152,6 @@ private:
 	Vector<KeyEvent> key_event_buffer;
 	int key_event_pos = 0;
 
-	id tts = nullptr;
 	id menu_delegate = nullptr;
 
 	Point2i im_selection;
@@ -311,15 +310,6 @@ public:
 
 	virtual void global_menu_remove_item(const String &p_menu_root, int p_idx) override;
 	virtual void global_menu_clear(const String &p_menu_root) override;
-
-	virtual bool tts_is_speaking() const override;
-	virtual bool tts_is_paused() const override;
-	virtual TypedArray<Dictionary> tts_get_voices() const override;
-
-	virtual void tts_speak(const String &p_text, const String &p_voice, int p_volume = 50, float p_pitch = 1.f, float p_rate = 1.f, int p_utterance_id = 0, bool p_interrupt = false) override;
-	virtual void tts_pause() override;
-	virtual void tts_resume() override;
-	virtual void tts_stop() override;
 
 	virtual bool is_dark_mode_supported() const override;
 	virtual bool is_dark_mode() const override;

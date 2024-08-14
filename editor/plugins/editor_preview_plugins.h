@@ -92,16 +92,6 @@ public:
 	EditorScriptPreviewPlugin();
 };
 
-class EditorAudioStreamPreviewPlugin : public EditorResourcePreviewGenerator {
-	GDCLASS(EditorAudioStreamPreviewPlugin, EditorResourcePreviewGenerator);
-
-public:
-	virtual bool handles(const String &p_type) const override;
-	virtual Ref<Texture2D> generate(const Ref<Resource> &p_from, const Size2 &p_size, Dictionary &p_metadata) const override;
-
-	EditorAudioStreamPreviewPlugin();
-};
-
 class EditorFontPreviewPlugin : public EditorResourcePreviewGenerator {
 	GDCLASS(EditorFontPreviewPlugin, EditorResourcePreviewGenerator);
 

@@ -95,9 +95,6 @@ SceneStringNames::SceneStringNames() {
 
 	path_pp = NodePath("..");
 
-	// Audio bus name.
-	Master = StaticCString::create("Master");
-
 	default_ = StaticCString::create("default");
 
 	window_input = StaticCString::create("window_input");

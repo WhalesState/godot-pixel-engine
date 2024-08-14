@@ -56,7 +56,6 @@
 #include "scene/gui/texture_rect.h"
 #include "scene/gui/view_panner.h"
 #include "scene/main/window.h"
-#include "servers/audio/audio_stream.h"
 
 void AnimationTrackKeyEdit::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("_update_obj"), &AnimationTrackKeyEdit::_update_obj);
@@ -288,56 +287,6 @@ bool AnimationTrackKeyEdit::_set(const StringName &p_name, const Variant &p_valu
 				return true;
 			}
 		} break;
-		case Animation::TYPE_AUDIO: {
-			if (name == "stream") {
-				Ref<AudioStream> stream = p_value;
-
-				setting = true;
-				undo_redo->create_action(TTR("Animation Change Keyframe Value"), UndoRedo::MERGE_ENDS);
-				Ref<Resource> prev = animation->audio_track_get_key_stream(track, key);
-				undo_redo->add_do_method(animation.ptr(), "audio_track_set_key_stream", track, key, stream);
-				undo_redo->add_undo_method(animation.ptr(), "audio_track_set_key_stream", track, key, prev);
-				undo_redo->add_do_method(this, "_update_obj", animation);
-				undo_redo->add_undo_method(this, "_update_obj", animation);
-				undo_redo->commit_action();
-
-				setting = false;
-				notify_change(); // To update limits for `start_offset`/`end_offset` sliders (they depend on the stream length).
-				return true;
-			}
-
-			if (name == "start_offset") {
-				float value = p_value;
-
-				setting = true;
-				undo_redo->create_action(TTR("Animation Change Keyframe Value"), UndoRedo::MERGE_ENDS);
-				float prev = animation->audio_track_get_key_start_offset(track, key);
-				undo_redo->add_do_method(animation.ptr(), "audio_track_set_key_start_offset", track, key, value);
-				undo_redo->add_undo_method(animation.ptr(), "audio_track_set_key_start_offset", track, key, prev);
-				undo_redo->add_do_method(this, "_update_obj", animation);
-				undo_redo->add_undo_method(this, "_update_obj", animation);
-				undo_redo->commit_action();
-
-				setting = false;
-				return true;
-			}
-
-			if (name == "end_offset") {
-				float value = p_value;
-
-				setting = true;
-				undo_redo->create_action(TTR("Animation Change Keyframe Value"), UndoRedo::MERGE_ENDS);
-				float prev = animation->audio_track_get_key_end_offset(track, key);
-				undo_redo->add_do_method(animation.ptr(), "audio_track_set_key_end_offset", track, key, value);
-				undo_redo->add_undo_method(animation.ptr(), "audio_track_set_key_end_offset", track, key, prev);
-				undo_redo->add_do_method(this, "_update_obj", animation);
-				undo_redo->add_undo_method(this, "_update_obj", animation);
-				undo_redo->commit_action();
-
-				setting = false;
-				return true;
-			}
-		} break;
 		case Animation::TYPE_ANIMATION: {
 			if (name == "animation") {
 				StringName anim_name = p_value;
@@ -436,23 +385,6 @@ bool AnimationTrackKeyEdit::_get(const StringName &p_name, Variant &r_ret) const
 			}
 
 		} break;
-		case Animation::TYPE_AUDIO: {
-			if (name == "stream") {
-				r_ret = animation->audio_track_get_key_stream(track, key);
-				return true;
-			}
-
-			if (name == "start_offset") {
-				r_ret = animation->audio_track_get_key_start_offset(track, key);
-				return true;
-			}
-
-			if (name == "end_offset") {
-				r_ret = animation->audio_track_get_key_end_offset(track, key);
-				return true;
-			}
-
-		} break;
 		case Animation::TYPE_ANIMATION: {
 			if (name == "animation") {
 				r_ret = animation->animation_track_get_key_animation(track, key);
@@ -538,14 +470,6 @@ void AnimationTrackKeyEdit::_get_property_list(List<PropertyInfo> *p_list) const
 				p_list->push_back(PropertyInfo(Variant::VECTOR2, PNAME("out_handle")));
 			}
 			p_list->push_back(PropertyInfo(Variant::INT, PNAME("handle_mode"), PROPERTY_HINT_ENUM, "Free,Linear,Balanced,Mirrored"));
-
-		} break;
-		case Animation::TYPE_AUDIO: {
-			p_list->push_back(PropertyInfo(Variant::OBJECT, PNAME("stream"), PROPERTY_HINT_RESOURCE_TYPE, "AudioStream"));
-			Ref<AudioStream> audio_stream = animation->audio_track_get_key_stream(track, key);
-			String hint_string = vformat("0,%.4f,0.0001,or_greater", audio_stream.is_valid() ? audio_stream->get_length() : 3600.0);
-			p_list->push_back(PropertyInfo(Variant::FLOAT, PNAME("start_offset"), PROPERTY_HINT_RANGE, hint_string));
-			p_list->push_back(PropertyInfo(Variant::FLOAT, PNAME("end_offset"), PROPERTY_HINT_RANGE, hint_string));
 
 		} break;
 		case Animation::TYPE_ANIMATION: {
@@ -815,42 +739,6 @@ bool AnimationMultiTrackKeyEdit::_set(const StringName &p_name, const Variant &p
 						update_obj = true;
 					}
 				} break;
-				case Animation::TYPE_AUDIO: {
-					if (name == "stream") {
-						Ref<AudioStream> stream = p_value;
-
-						if (!setting) {
-							setting = true;
-							undo_redo->create_action(TTR("Animation Multi Change Keyframe Value"), UndoRedo::MERGE_ENDS);
-						}
-						Ref<Resource> prev = animation->audio_track_get_key_stream(track, key);
-						undo_redo->add_do_method(animation.ptr(), "audio_track_set_key_stream", track, key, stream);
-						undo_redo->add_undo_method(animation.ptr(), "audio_track_set_key_stream", track, key, prev);
-						update_obj = true;
-					} else if (name == "start_offset") {
-						float value = p_value;
-
-						if (!setting) {
-							setting = true;
-							undo_redo->create_action(TTR("Animation Multi Change Keyframe Value"), UndoRedo::MERGE_ENDS);
-						}
-						float prev = animation->audio_track_get_key_start_offset(track, key);
-						undo_redo->add_do_method(animation.ptr(), "audio_track_set_key_start_offset", track, key, value);
-						undo_redo->add_undo_method(animation.ptr(), "audio_track_set_key_start_offset", track, key, prev);
-						update_obj = true;
-					} else if (name == "end_offset") {
-						float value = p_value;
-
-						if (!setting) {
-							setting = true;
-							undo_redo->create_action(TTR("Animation Multi Change Keyframe Value"), UndoRedo::MERGE_ENDS);
-						}
-						float prev = animation->audio_track_get_key_end_offset(track, key);
-						undo_redo->add_do_method(animation.ptr(), "audio_track_set_key_end_offset", track, key, value);
-						undo_redo->add_undo_method(animation.ptr(), "audio_track_set_key_end_offset", track, key, prev);
-						update_obj = true;
-					}
-				} break;
 				case Animation::TYPE_ANIMATION: {
 					if (name == "animation") {
 						StringName anim_name = p_value;
@@ -964,23 +852,6 @@ bool AnimationMultiTrackKeyEdit::_get(const StringName &p_name, Variant &r_ret) 
 
 					if (name == "handle_mode") {
 						r_ret = animation->bezier_track_get_key_handle_mode(track, key);
-						return true;
-					}
-
-				} break;
-				case Animation::TYPE_AUDIO: {
-					if (name == "stream") {
-						r_ret = animation->audio_track_get_key_stream(track, key);
-						return true;
-					}
-
-					if (name == "start_offset") {
-						r_ret = animation->audio_track_get_key_start_offset(track, key);
-						return true;
-					}
-
-					if (name == "end_offset") {
-						r_ret = animation->audio_track_get_key_end_offset(track, key);
 						return true;
 					}
 
@@ -1099,11 +970,6 @@ void AnimationMultiTrackKeyEdit::_get_property_list(List<PropertyInfo> *p_list) 
 				p_list->push_back(PropertyInfo(Variant::VECTOR2, "in_handle"));
 				p_list->push_back(PropertyInfo(Variant::VECTOR2, "out_handle"));
 				p_list->push_back(PropertyInfo(Variant::INT, "handle_mode", PROPERTY_HINT_ENUM, "Free,Linear,Balanced,Mirrored"));
-			} break;
-			case Animation::TYPE_AUDIO: {
-				p_list->push_back(PropertyInfo(Variant::OBJECT, "stream", PROPERTY_HINT_RESOURCE_TYPE, "AudioStream"));
-				p_list->push_back(PropertyInfo(Variant::FLOAT, "start_offset", PROPERTY_HINT_RANGE, "0,3600,0.0001,or_greater"));
-				p_list->push_back(PropertyInfo(Variant::FLOAT, "end_offset", PROPERTY_HINT_RANGE, "0,3600,0.0001,or_greater"));
 			} break;
 			case Animation::TYPE_ANIMATION: {
 				if (key_ofs_map.size() > 1) {
@@ -1258,7 +1124,6 @@ void AnimationTimelineEdit::_notification(int p_what) {
 			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyBlendShape")), TTR("Blend Shape Track..."));
 			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyCall")), TTR("Call Method Track..."));
 			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyBezier")), TTR("Bezier Curve Track..."));
-			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyAudio")), TTR("Audio Playback Track..."));
 			add_track->get_popup()->add_icon_item(get_editor_theme_icon(SNAME("KeyAnimation")), TTR("Animation Playback Track..."));
 		} break;
 
@@ -1795,8 +1660,6 @@ void AnimationTrackEdit::_notification(int p_what) {
 				if (in_group) {
 					if (animation->track_get_type(track) == Animation::TYPE_METHOD) {
 						text = TTR("Functions:");
-					} else if (animation->track_get_type(track) == Animation::TYPE_AUDIO) {
-						text = TTR("Audio Clips:");
 					} else if (animation->track_get_type(track) == Animation::TYPE_ANIMATION) {
 						text = TTR("Animation Clips:");
 					} else {
@@ -1911,11 +1774,6 @@ void AnimationTrackEdit::_notification(int p_what) {
 					if (!animation->track_is_compressed(track) && animation->track_get_type(track) == Animation::TYPE_VALUE) {
 						draw_texture(update_icon, update_mode_rect.position);
 					}
-					if (animation->track_get_type(track) == Animation::TYPE_AUDIO) {
-						Ref<Texture2D> use_blend_icon = blend_icon[animation->audio_track_is_use_blend(track) ? 0 : 1];
-						Vector2 use_blend_icon_pos = update_mode_rect.position + (update_mode_rect.size - use_blend_icon->get_size()) / 2;
-						draw_texture(use_blend_icon, use_blend_icon_pos);
-					}
 					// Make it easier to click.
 					update_mode_rect.position.y = 0;
 					update_mode_rect.size.y = get_size().height;
@@ -1924,7 +1782,7 @@ void AnimationTrackEdit::_notification(int p_what) {
 					update_mode_rect.size.x += hsep / 2;
 
 					if (!read_only) {
-						if (animation->track_get_type(track) == Animation::TYPE_VALUE || animation->track_get_type(track) == Animation::TYPE_AUDIO) {
+						if (animation->track_get_type(track) == Animation::TYPE_VALUE) {
 							draw_texture(down_icon, Vector2(ofs, int(get_size().height - down_icon->get_height()) / 2));
 							update_mode_rect.size.x += down_icon->get_width();
 						} else if (animation->track_get_type(track) == Animation::TYPE_BEZIER) {
@@ -2346,7 +2204,7 @@ bool AnimationTrackEdit::_is_value_key_valid(const Variant &p_key_value, Variant
 }
 
 Ref<Texture2D> AnimationTrackEdit::_get_key_type_icon() const {
-	const Ref<Texture2D> type_icons[9] = {
+	const Ref<Texture2D> type_icons[8] = {
 		get_editor_theme_icon(SNAME("KeyValue")),
 		get_editor_theme_icon(SNAME("KeyTrackPosition")),
 		get_editor_theme_icon(SNAME("KeyTrackRotation")),
@@ -2354,7 +2212,6 @@ Ref<Texture2D> AnimationTrackEdit::_get_key_type_icon() const {
 		get_editor_theme_icon(SNAME("KeyTrackBlendShape")),
 		get_editor_theme_icon(SNAME("KeyCall")),
 		get_editor_theme_icon(SNAME("KeyBezier")),
-		get_editor_theme_icon(SNAME("KeyAudio")),
 		get_editor_theme_icon(SNAME("KeyAnimation"))
 	};
 	return type_icons[animation->track_get_type(track)];
@@ -2371,11 +2228,7 @@ String AnimationTrackEdit::get_tooltip(const Point2 &p_pos) const {
 	}
 
 	if (update_mode_rect.has_point(p_pos)) {
-		if (animation->track_get_type(track) == Animation::TYPE_AUDIO) {
-			return TTR("Use Blend");
-		} else {
-			return TTR("Update Mode (How this property is set)");
-		}
+		return TTR("Update Mode (How this property is set)");
 	}
 
 	if (interp_mode_rect.has_point(p_pos)) {
@@ -2480,25 +2333,6 @@ String AnimationTrackEdit::get_tooltip(const Point2 &p_pos) const {
 						} break;
 					}
 				} break;
-				case Animation::TYPE_AUDIO: {
-					String stream_name = "null";
-					Ref<Resource> stream = animation->audio_track_get_key_stream(track, key_idx);
-					if (stream.is_valid()) {
-						if (stream->get_path().is_resource_file()) {
-							stream_name = stream->get_path().get_file();
-						} else if (!stream->get_name().is_empty()) {
-							stream_name = stream->get_name();
-						} else {
-							stream_name = stream->get_class();
-						}
-					}
-
-					text += TTR("Stream:") + " " + stream_name + "\n";
-					float so = animation->audio_track_get_key_start_offset(track, key_idx);
-					text += TTR("Start (s):") + " " + rtos(so) + "\n";
-					float eo = animation->audio_track_get_key_end_offset(track, key_idx);
-					text += TTR("End (s):") + " " + rtos(eo) + "\n";
-				} break;
 				case Animation::TYPE_ANIMATION: {
 					String name = animation->animation_track_get_key_animation(track, key_idx);
 					text += TTR("Animation Clip:") + " " + name + "\n";
@@ -2565,14 +2399,9 @@ void AnimationTrackEdit::gui_input(const Ref<InputEvent> &p_event) {
 					menu->connect(SceneStringName(id_pressed), callable_mp(this, &AnimationTrackEdit::_menu_selected));
 				}
 				menu->clear();
-				if (animation->track_get_type(track) == Animation::TYPE_AUDIO) {
-					menu->add_icon_item(get_editor_theme_icon(SNAME("UseBlendEnable")), TTR("Use Blend"), MENU_USE_BLEND_ENABLED);
-					menu->add_icon_item(get_editor_theme_icon(SNAME("UseBlendDisable")), TTR("Don't Use Blend"), MENU_USE_BLEND_DISABLED);
-				} else {
-					menu->add_icon_item(get_editor_theme_icon(SNAME("TrackContinuous")), TTR("Continuous"), MENU_CALL_MODE_CONTINUOUS);
-					menu->add_icon_item(get_editor_theme_icon(SNAME("TrackDiscrete")), TTR("Discrete"), MENU_CALL_MODE_DISCRETE);
-					menu->add_icon_item(get_editor_theme_icon(SNAME("TrackCapture")), TTR("Capture"), MENU_CALL_MODE_CAPTURE);
-				}
+				menu->add_icon_item(get_editor_theme_icon(SNAME("TrackContinuous")), TTR("Continuous"), MENU_CALL_MODE_CONTINUOUS);
+				menu->add_icon_item(get_editor_theme_icon(SNAME("TrackDiscrete")), TTR("Discrete"), MENU_CALL_MODE_DISCRETE);
+				menu->add_icon_item(get_editor_theme_icon(SNAME("TrackCapture")), TTR("Capture"), MENU_CALL_MODE_CAPTURE);
 				menu->reset_size();
 
 				Vector2 popup_pos = get_screen_position() + update_mode_rect.position + Vector2(0, update_mode_rect.size.height);
@@ -2991,16 +2820,6 @@ void AnimationTrackEdit::_menu_selected(int p_index) {
 			emit_signal(SNAME("delete_request"));
 
 		} break;
-		case MENU_USE_BLEND_ENABLED:
-		case MENU_USE_BLEND_DISABLED: {
-			bool use_blend = p_index == MENU_USE_BLEND_ENABLED;
-			EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-			undo_redo->create_action(TTR("Change Animation Use Blend"));
-			undo_redo->add_do_method(animation.ptr(), "audio_track_set_use_blend", track, use_blend);
-			undo_redo->add_undo_method(animation.ptr(), "audio_track_set_use_blend", track, animation->audio_track_is_use_blend(track));
-			undo_redo->commit_action();
-			queue_redraw();
-		} break;
 	}
 }
 
@@ -3076,13 +2895,6 @@ AnimationTrackEdit::AnimationTrackEdit() {
 AnimationTrackEdit *AnimationTrackEditPlugin::create_value_track_edit(Object *p_object, Variant::Type p_type, const String &p_property, PropertyHint p_hint, const String &p_hint_string, int p_usage) {
 	if (get_script_instance()) {
 		return Object::cast_to<AnimationTrackEdit>(get_script_instance()->call("create_value_track_edit", p_object, p_type, p_property, p_hint, p_hint_string, p_usage));
-	}
-	return nullptr;
-}
-
-AnimationTrackEdit *AnimationTrackEditPlugin::create_audio_track_edit() {
-	if (get_script_instance()) {
-		return Object::cast_to<AnimationTrackEdit>(get_script_instance()->call("create_audio_track_edit").operator Object *());
 	}
 	return nullptr;
 }
@@ -3439,10 +3251,6 @@ void AnimationTrackEditor::_animation_track_remove_request(int p_track, Ref<Anim
 		if (p_from_animation->track_get_type(idx) == Animation::TYPE_VALUE) {
 			undo_redo->add_undo_method(p_from_animation.ptr(), "value_track_set_update_mode", idx, p_from_animation->value_track_get_update_mode(idx));
 		}
-		if (animation->track_get_type(idx) == Animation::TYPE_AUDIO) {
-			undo_redo->add_undo_method(animation.ptr(), "audio_track_set_use_blend", idx, animation->audio_track_is_use_blend(idx));
-		}
-
 		undo_redo->commit_action();
 	}
 }
@@ -4236,14 +4044,6 @@ void AnimationTrackEditor::_update_tracks() {
 				}
 			}
 		}
-		if (animation->track_get_type(i) == Animation::TYPE_AUDIO) {
-			for (int j = 0; j < track_edit_plugins.size(); j++) {
-				track_edit = track_edit_plugins.write[j]->create_audio_track_edit();
-				if (track_edit) {
-					break;
-				}
-			}
-		}
 
 		if (animation->track_get_type(i) == Animation::TYPE_ANIMATION) {
 			NodePath path = animation->track_get_path(i);
@@ -4572,20 +4372,6 @@ void AnimationTrackEditor::_new_track_node_selected(NodePath p_path) {
 			prop_selector->set_type_filter(filter);
 			prop_selector->select_property_from_instance(node);
 		} break;
-		case Animation::TYPE_AUDIO: {
-			if (!node->is_class("AudioStreamPlayer")) {
-				EditorNode::get_singleton()->show_warning(TTR("Audio tracks can only point to nodes of type:\n-AudioStreamPlayer\n-AudioStreamPlayer2D\n-AudioStreamPlayer3D"));
-				return;
-			}
-
-			EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-			undo_redo->create_action(TTR("Add Track"));
-			undo_redo->add_do_method(animation.ptr(), "add_track", adding_track_type);
-			undo_redo->add_do_method(animation.ptr(), "track_set_path", animation->get_track_count(), path_to);
-			undo_redo->add_undo_method(animation.ptr(), "remove_track", animation->get_track_count());
-			undo_redo->commit_action();
-
-		} break;
 		case Animation::TYPE_ANIMATION: {
 			if (!node->is_class("AnimationPlayer")) {
 				EditorNode::get_singleton()->show_warning(TTR("Animation tracks can only point to AnimationPlayer nodes."));
@@ -4757,17 +4543,6 @@ void AnimationTrackEditor::_insert_key_from_track(float p_ofs, int p_track) {
 			undo_redo->add_undo_method(animation.ptr(), "track_remove_key_at_time", p_track, p_ofs);
 			undo_redo->commit_action();
 
-		} break;
-		case Animation::TYPE_AUDIO: {
-			Dictionary ak;
-			ak["stream"] = Ref<Resource>();
-			ak["start_offset"] = 0;
-			ak["end_offset"] = 0;
-
-			undo_redo->create_action(TTR("Add Track Key"));
-			undo_redo->add_do_method(animation.ptr(), "track_insert_key", p_track, p_ofs, ak);
-			undo_redo->add_undo_method(animation.ptr(), "track_remove_key_at_time", p_track, p_ofs);
-			undo_redo->commit_action();
 		} break;
 		case Animation::TYPE_ANIMATION: {
 			StringName anim = "[stop]";
@@ -5400,9 +5175,6 @@ void AnimationTrackEditor::_edit_menu_pressed(int p_option) {
 					case Animation::TYPE_BEZIER:
 						track_type = TTR("Bezier");
 						break;
-					case Animation::TYPE_AUDIO:
-						track_type = TTR("Audio");
-						break;
 					default: {
 					};
 				}
@@ -5440,9 +5212,6 @@ void AnimationTrackEditor::_edit_menu_pressed(int p_option) {
 						tc.interp_type = animation->track_get_interpolation_type(idx);
 						if (tc.track_type == Animation::TYPE_VALUE) {
 							tc.update_mode = animation->value_track_get_update_mode(idx);
-						}
-						if (tc.track_type == Animation::TYPE_AUDIO) {
-							tc.use_blend = animation->audio_track_is_use_blend(idx);
 						}
 						tc.loop_wrap = animation->track_get_interpolation_loop_wrap(idx);
 						tc.enabled = animation->track_is_enabled(idx);
@@ -5487,9 +5256,6 @@ void AnimationTrackEditor::_edit_menu_pressed(int p_option) {
 				undo_redo->add_do_method(animation.ptr(), "track_set_enabled", base_track, track_clipboard[i].enabled);
 				if (track_clipboard[i].track_type == Animation::TYPE_VALUE) {
 					undo_redo->add_do_method(animation.ptr(), "value_track_set_update_mode", base_track, track_clipboard[i].update_mode);
-				}
-				if (track_clipboard[i].track_type == Animation::TYPE_AUDIO) {
-					undo_redo->add_do_method(animation.ptr(), "audio_track_set_use_blend", base_track, track_clipboard[i].use_blend);
 				}
 
 				for (int j = 0; j < track_clipboard[i].keys.size(); j++) {

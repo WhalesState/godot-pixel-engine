@@ -60,9 +60,6 @@
 #include "editor/import/resource_importer_imagefont.h"
 #include "editor/import/resource_importer_texture.h"
 #include "editor/import/resource_importer_texture_atlas.h"
-#include "editor/import/resource_importer_wav.h"
-#include "editor/plugins/audio_stream_editor_plugin.h"
-#include "editor/plugins/audio_stream_randomizer_editor_plugin.h"
 #include "editor/plugins/bit_map_editor_plugin.h"
 #include "editor/plugins/control_editor_plugin.h"
 #include "editor/plugins/curve_editor_plugin.h"
@@ -149,11 +146,8 @@ void register_editor_types() {
 	GDREGISTER_CLASS(ResourceImporterImageFont);
 	GDREGISTER_CLASS(ResourceImporterTexture);
 	GDREGISTER_CLASS(ResourceImporterTextureAtlas);
-	GDREGISTER_CLASS(ResourceImporterWAV);
 
 	// This list is alphabetized, and plugins that depend on Node2D are in their own section below.
-	EditorPlugins::add_by_type<AudioStreamEditorPlugin>();
-	EditorPlugins::add_by_type<AudioStreamRandomizerEditorPlugin>();
 	EditorPlugins::add_by_type<BitMapEditorPlugin>();
 	EditorPlugins::add_by_type<ControlEditorPlugin>();
 	EditorPlugins::add_by_type<CurveEditorPlugin>();

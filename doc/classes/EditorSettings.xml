@@ -265,9 +265,6 @@
 		<member name="filesystem/directories/default_project_path" type="String" setter="" getter="">
 			The folder where new projects should be created by default when clicking the project manager's [b]New Project[/b] button. This can be set to the same value as [member filesystem/directories/autoscan_project_path] for convenience.
 		</member>
-		<member name="filesystem/external_programs/audio_editor" type="String" setter="" getter="">
-			The program that opens audio files when clicking "Open in External Program" option in Filesystem Dock. If not specified, the file will be opened in the system's default program.
-		</member>
 		<member name="filesystem/external_programs/raster_image_editor" type="String" setter="" getter="">
 			The program that opens raster image files when clicking "Open in External Program" option in Filesystem Dock. If not specified, the file will be opened in the system's default program.
 		</member>

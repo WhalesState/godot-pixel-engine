@@ -87,28 +87,6 @@ enum class JoyButton {
 	MAX = 128, // Android supports up to 36 buttons. DirectInput supports up to 128 buttons.
 };
 
-enum class MIDIMessage {
-	NONE = 0,
-	NOTE_OFF = 0x8,
-	NOTE_ON = 0x9,
-	AFTERTOUCH = 0xA,
-	CONTROL_CHANGE = 0xB,
-	PROGRAM_CHANGE = 0xC,
-	CHANNEL_PRESSURE = 0xD,
-	PITCH_BEND = 0xE,
-	SYSTEM_EXCLUSIVE = 0xF0,
-	QUARTER_FRAME = 0xF1,
-	SONG_POSITION_POINTER = 0xF2,
-	SONG_SELECT = 0xF3,
-	TUNE_REQUEST = 0xF6,
-	TIMING_CLOCK = 0xF8,
-	START = 0xFA,
-	CONTINUE = 0xFB,
-	STOP = 0xFC,
-	ACTIVE_SENSING = 0xFE,
-	SYSTEM_RESET = 0xFF,
-};
-
 enum class MouseButton {
 	NONE = 0,
 	LEFT = 1,

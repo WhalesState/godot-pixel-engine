@@ -69,12 +69,10 @@
 #include "servers/display_server.h"
 #include "servers/rendering_server.h"
 
-#include "editor/audio_stream_preview.h"
 #include "editor/debugger/editor_debugger_node.h"
 #include "editor/debugger/script_editor_debugger.h"
 #include "editor/dependency_editor.h"
 #include "editor/editor_about.h"
-#include "editor/editor_audio_buses.h"
 #include "editor/editor_build_profile.h"
 #include "editor/editor_command_palette.h"
 #include "editor/editor_data.h"
@@ -110,7 +108,6 @@
 #include "editor/gui/editor_title_bar.h"
 #include "editor/gui/editor_toaster.h"
 #include "editor/history_dock.h"
-#include "editor/import/audio_stream_import_settings.h"
 #include "editor/import/dynamic_font_import_settings.h"
 #include "editor/import/resource_importer_bitmask.h"
 #include "editor/import/resource_importer_bmfont.h"
@@ -120,7 +117,6 @@
 #include "editor/import/resource_importer_imagefont.h"
 #include "editor/import/resource_importer_texture.h"
 #include "editor/import/resource_importer_texture_atlas.h"
-#include "editor/import/resource_importer_wav.h"
 #include "editor/import_dock.h"
 #include "editor/inspector_dock.h"
 #include "editor/multi_node_edit.h"
@@ -6251,8 +6247,6 @@ EditorNode::EditorNode() {
 		PortableCompressedTexture2D::set_keep_all_compressed_buffers(true);
 		RenderingServer::get_singleton()->set_debug_generate_wireframes(true);
 
-		AudioServer::get_singleton()->set_enable_tagging_used_audio_streams(true);
-
 		// No scripting by default if in editor (except for tool).
 		ScriptServer::set_scripting_enabled(false);
 
@@ -6371,10 +6365,6 @@ EditorNode::EditorNode() {
 		Ref<ResourceImporterCSVTranslation> import_csv_translation;
 		import_csv_translation.instantiate();
 		ResourceFormatImporter::get_singleton()->add_importer(import_csv_translation);
-
-		Ref<ResourceImporterWAV> import_wav;
-		import_wav.instantiate();
-		ResourceFormatImporter::get_singleton()->add_importer(import_wav);
 
 		Ref<ResourceImporterBitMap> import_bitmap;
 		import_bitmap.instantiate();
@@ -6681,9 +6671,6 @@ EditorNode::EditorNode() {
 
 	project_settings_editor = memnew(ProjectSettingsEditor(&editor_data));
 	gui_base->add_child(project_settings_editor);
-
-	audio_stream_import_settings = memnew(AudioStreamImportSettings);
-	gui_base->add_child(audio_stream_import_settings);
 
 	fontdata_import_settings = memnew(DynamicFontImportSettings);
 	gui_base->add_child(fontdata_import_settings);
@@ -7089,9 +7076,6 @@ EditorNode::EditorNode() {
 	file->connect("file_selected", callable_mp(this, &EditorNode::_dialog_action));
 	file_templates->connect("file_selected", callable_mp(this, &EditorNode::_dialog_action));
 
-	audio_preview_gen = memnew(AudioStreamPreviewGenerator);
-	add_child(audio_preview_gen);
-
 	add_editor_plugin(memnew(DebuggerEditorPlugin(debug_menu)));
 
 	disk_changed = memnew(ConfirmationDialog);
@@ -7122,8 +7106,6 @@ EditorNode::EditorNode() {
 	add_editor_plugin(memnew(CanvasItemEditorPlugin));
 	add_editor_plugin(memnew(ScriptEditorPlugin));
 
-	EditorAudioBuses *audio_bus_editor = EditorAudioBuses::register_editor();
-
 	ScriptTextEditor::register_editor(); // Register one for text scripts.
 	TextEditor::register_editor();
 
@@ -7139,8 +7121,6 @@ EditorNode::EditorNode() {
 	vcs_actions_menu->add_item(TTR("Version Control Settings..."), RUN_VCS_SETTINGS);
 	project_menu->add_child(vcs_actions_menu);
 	project_menu->set_item_submenu(project_menu->get_item_index(VCS_MENU), "Version Control");
-
-	add_editor_plugin(memnew(AudioBusesEditorPlugin(audio_bus_editor)));
 
 	for (int i = 0; i < EditorPlugins::get_plugin_count(); i++) {
 		add_editor_plugin(EditorPlugins::create(i));
@@ -7160,7 +7140,6 @@ EditorNode::EditorNode() {
 	resource_preview->add_preview_generator(Ref<EditorImagePreviewPlugin>(memnew(EditorImagePreviewPlugin)));
 	resource_preview->add_preview_generator(Ref<EditorPackedScenePreviewPlugin>(memnew(EditorPackedScenePreviewPlugin)));
 	resource_preview->add_preview_generator(Ref<EditorScriptPreviewPlugin>(memnew(EditorScriptPreviewPlugin)));
-	resource_preview->add_preview_generator(Ref<EditorAudioStreamPreviewPlugin>(memnew(EditorAudioStreamPreviewPlugin)));
 	resource_preview->add_preview_generator(Ref<EditorBitmapPreviewPlugin>(memnew(EditorBitmapPreviewPlugin)));
 	resource_preview->add_preview_generator(Ref<EditorFontPreviewPlugin>(memnew(EditorFontPreviewPlugin)));
 	resource_preview->add_preview_generator(Ref<EditorGradientPreviewPlugin>(memnew(EditorGradientPreviewPlugin)));

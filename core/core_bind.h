@@ -131,10 +131,6 @@ public:
 		RENDERING_DRIVER_OPENGL3,
 	};
 
-	virtual PackedStringArray get_connected_midi_inputs();
-	virtual void open_midi_inputs();
-	virtual void close_midi_inputs();
-
 	void set_low_processor_usage_mode(bool p_enabled);
 	bool is_in_low_processor_usage_mode() const;
 

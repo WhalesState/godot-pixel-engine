@@ -44,7 +44,6 @@
 #include "scene/resources/font.h"
 #include "scene/resources/gradient_texture.h"
 #include "scene/resources/image_texture.h"
-#include "servers/audio/audio_stream.h"
 
 void post_process_preview(Ref<Image> p_image) {
 	if (p_image->get_format() != Image::FORMAT_RGBA8) {
@@ -424,86 +423,6 @@ Ref<Texture2D> EditorScriptPreviewPlugin::generate(const Ref<Resource> &p_from, 
 }
 
 EditorScriptPreviewPlugin::EditorScriptPreviewPlugin() {
-}
-
-///////////////////////////////////////////////////////////////////
-
-bool EditorAudioStreamPreviewPlugin::handles(const String &p_type) const {
-	return ClassDB::is_parent_class(p_type, "AudioStream");
-}
-
-Ref<Texture2D> EditorAudioStreamPreviewPlugin::generate(const Ref<Resource> &p_from, const Size2 &p_size, Dictionary &p_metadata) const {
-	Ref<AudioStream> stream = p_from;
-	ERR_FAIL_COND_V(stream.is_null(), Ref<Texture2D>());
-
-	Vector<uint8_t> img;
-
-	int w = p_size.x;
-	int h = p_size.y;
-	img.resize(w * h * 3);
-
-	uint8_t *imgdata = img.ptrw();
-	uint8_t *imgw = imgdata;
-
-	Ref<AudioStreamPlayback> playback = stream->instantiate_playback();
-	ERR_FAIL_COND_V(playback.is_null(), Ref<Texture2D>());
-
-	real_t len_s = stream->get_length();
-	if (len_s == 0) {
-		len_s = 60; //one minute audio if no length specified
-	}
-	int frame_length = AudioServer::get_singleton()->get_mix_rate() * len_s;
-
-	Vector<AudioFrame> frames;
-	frames.resize(frame_length);
-
-	playback->start();
-	playback->mix(frames.ptrw(), 1, frames.size());
-	playback->stop();
-
-	for (int i = 0; i < w; i++) {
-		real_t max = -1000;
-		real_t min = 1000;
-		int from = uint64_t(i) * frame_length / w;
-		int to = (uint64_t(i) + 1) * frame_length / w;
-		to = MIN(to, frame_length);
-		from = MIN(from, frame_length - 1);
-		if (to == from) {
-			to = from + 1;
-		}
-
-		for (int j = from; j < to; j++) {
-			max = MAX(max, frames[j].l);
-			max = MAX(max, frames[j].r);
-
-			min = MIN(min, frames[j].l);
-			min = MIN(min, frames[j].r);
-		}
-
-		int pfrom = CLAMP((min * 0.5 + 0.5) * h / 2, 0, h / 2) + h / 4;
-		int pto = CLAMP((max * 0.5 + 0.5) * h / 2, 0, h / 2) + h / 4;
-
-		for (int j = 0; j < h; j++) {
-			uint8_t *p = &imgw[(j * w + i) * 3];
-			if (j < pfrom || j > pto) {
-				p[0] = 100;
-				p[1] = 100;
-				p[2] = 100;
-			} else {
-				p[0] = 180;
-				p[1] = 180;
-				p[2] = 180;
-			}
-		}
-	}
-
-	//post_process_preview(img);
-
-	Ref<Image> image = Image::create_from_data(w, h, false, Image::FORMAT_RGB8, img);
-	return ImageTexture::create_from_image(image);
-}
-
-EditorAudioStreamPreviewPlugin::EditorAudioStreamPreviewPlugin() {
 }
 
 ///////////////////////////////////////////////////////////////////////////

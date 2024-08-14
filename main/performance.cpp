@@ -36,7 +36,6 @@
 #include "core/variant/typed_array.h"
 #include "scene/main/node.h"
 #include "scene/main/scene_tree.h"
-#include "servers/audio_server.h"
 #include "servers/rendering_server.h"
 
 Performance *Performance::singleton = nullptr;
@@ -66,7 +65,6 @@ void Performance::_bind_methods() {
 	BIND_ENUM_CONSTANT(RENDER_VIDEO_MEM_USED);
 	BIND_ENUM_CONSTANT(RENDER_TEXTURE_MEM_USED);
 	BIND_ENUM_CONSTANT(RENDER_BUFFER_MEM_USED);
-	BIND_ENUM_CONSTANT(AUDIO_OUTPUT_LATENCY);
 	BIND_ENUM_CONSTANT(MONITOR_MAX);
 }
 
@@ -98,7 +96,6 @@ String Performance::get_monitor_name(Monitor p_monitor) const {
 		"video/video_mem",
 		"video/texture_mem",
 		"video/buffer_mem",
-		"audio/driver/output_latency",
 	};
 
 	return names[p_monitor];
@@ -138,8 +135,6 @@ double Performance::get_monitor(Monitor p_monitor) const {
 			return RS::get_singleton()->get_rendering_info(RS::RENDERING_INFO_TEXTURE_MEM_USED);
 		case RENDER_BUFFER_MEM_USED:
 			return RS::get_singleton()->get_rendering_info(RS::RENDERING_INFO_BUFFER_MEM_USED);
-		case AUDIO_OUTPUT_LATENCY:
-			return AudioServer::get_singleton()->get_output_latency();
 		default: {
 		}
 	}
@@ -167,7 +162,6 @@ Performance::MonitorType Performance::get_monitor_type(Monitor p_monitor) const 
 		MONITOR_TYPE_MEMORY,
 		MONITOR_TYPE_MEMORY,
 		MONITOR_TYPE_MEMORY,
-		MONITOR_TYPE_TIME,
 	};
 
 	return types[p_monitor];

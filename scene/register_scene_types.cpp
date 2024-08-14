@@ -52,7 +52,6 @@
 #include "scene/animation/animation_mixer.h"
 #include "scene/animation/animation_player.h"
 #include "scene/animation/tween.h"
-#include "scene/audio/audio_stream_player.h"
 #include "scene/debugger/scene_debugger.h"
 #include "scene/gui/aspect_ratio_container.h"
 #include "scene/gui/box_container.h"
@@ -103,7 +102,6 @@
 #include "scene/gui/texture_progress_bar.h"
 #include "scene/gui/texture_rect.h"
 #include "scene/gui/tree.h"
-#include "scene/gui/video_stream_player.h"
 #include "scene/gui/zoom_widget.h"
 #include "scene/main/canvas_item.h"
 #include "scene/main/canvas_layer.h"
@@ -118,8 +116,6 @@
 #include "scene/resources/animated_texture.h"
 #include "scene/resources/animation_library.h"
 #include "scene/resources/atlas_texture.h"
-#include "scene/resources/audio_stream_polyphonic.h"
-#include "scene/resources/audio_stream_wav.h"
 #include "scene/resources/bit_map.h"
 #include "scene/resources/compressed_texture.h"
 #include "scene/resources/curve_texture.h"
@@ -145,7 +141,6 @@
 #include "scene/resources/text_paragraph.h"
 #include "scene/resources/texture.h"
 #include "scene/resources/theme.h"
-#include "scene/resources/video_stream.h"
 #include "scene/resources/world_2d.h"
 #include "scene/theme/theme_db.h"
 
@@ -272,10 +267,7 @@ void register_scene_types() {
 	GDREGISTER_CLASS(ItemList);
 
 	GDREGISTER_CLASS(LineEdit);
-	GDREGISTER_CLASS(VideoStreamPlayer);
 	GDREGISTER_CLASS(ZoomWidget);
-	GDREGISTER_VIRTUAL_CLASS(VideoStreamPlayback);
-	GDREGISTER_VIRTUAL_CLASS(VideoStream);
 
 #ifndef ADVANCED_GUI_DISABLED
 	GDREGISTER_CLASS(FileDialog);
@@ -412,13 +404,6 @@ void register_scene_types() {
 	GDREGISTER_CLASS(PolygonPathFinder);
 	GDREGISTER_CLASS(BitMap);
 	GDREGISTER_CLASS(Gradient);
-
-	OS::get_singleton()->yield(); // may take time to init
-
-	GDREGISTER_CLASS(AudioStreamPlayer);
-	GDREGISTER_CLASS(AudioStreamWAV);
-	GDREGISTER_CLASS(AudioStreamPolyphonic);
-	GDREGISTER_ABSTRACT_CLASS(AudioStreamPlaybackPolyphonic);
 
 	OS::get_singleton()->yield(); // may take time to init
 

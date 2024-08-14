@@ -40,18 +40,10 @@
 #include "core/os/mutex.h"
 #include "core/os/thread.h"
 #include "core/templates/local_vector.h"
-#include "drivers/alsa/audio_driver_alsa.h"
-#include "drivers/alsamidi/midi_driver_alsamidi.h"
-#include "drivers/pulseaudio/audio_driver_pulseaudio.h"
 #include "drivers/unix/os_unix.h"
-#include "servers/audio_server.h"
 #include "servers/display_server.h"
 #include "servers/rendering/renderer_compositor.h"
 #include "servers/rendering_server.h"
-
-#if defined(SPEECHD_ENABLED)
-#include "tts_linux.h"
-#endif
 
 #if defined(GLES3_ENABLED)
 #include "x11/gl_manager_x11.h"
@@ -140,10 +132,6 @@ class DisplayServerX11 : public DisplayServer {
 #if defined(DBUS_ENABLED)
 	FreeDesktopScreenSaver *screensaver = nullptr;
 	bool keep_screen_on = false;
-#endif
-
-#ifdef SPEECHD_ENABLED
-	TTS_Linux *tts = nullptr;
 #endif
 
 #if defined(DBUS_ENABLED)
@@ -374,17 +362,6 @@ public:
 
 	virtual bool has_feature(Feature p_feature) const override;
 	virtual String get_name() const override;
-
-#ifdef SPEECHD_ENABLED
-	virtual bool tts_is_speaking() const override;
-	virtual bool tts_is_paused() const override;
-	virtual TypedArray<Dictionary> tts_get_voices() const override;
-
-	virtual void tts_speak(const String &p_text, const String &p_voice, int p_volume = 50, float p_pitch = 1.f, float p_rate = 1.f, int p_utterance_id = 0, bool p_interrupt = false) override;
-	virtual void tts_pause() override;
-	virtual void tts_resume() override;
-	virtual void tts_stop() override;
-#endif
 
 #if defined(DBUS_ENABLED)
 	virtual bool is_dark_mode_supported() const override;

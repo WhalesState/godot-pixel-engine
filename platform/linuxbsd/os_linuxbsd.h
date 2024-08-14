@@ -36,11 +36,7 @@
 #include "joypad_linux.h"
 
 #include "core/input/input.h"
-#include "drivers/alsa/audio_driver_alsa.h"
-#include "drivers/alsamidi/midi_driver_alsamidi.h"
-#include "drivers/pulseaudio/audio_driver_pulseaudio.h"
 #include "drivers/unix/os_unix.h"
-#include "servers/audio_server.h"
 
 #ifdef FONTCONFIG_ENABLED
 #ifdef SOWRAP_ENABLED
@@ -64,18 +60,6 @@ class OS_LinuxBSD : public OS_Unix {
 
 #ifdef JOYDEV_ENABLED
 	JoypadLinux *joypad = nullptr;
-#endif
-
-#ifdef ALSA_ENABLED
-	AudioDriverALSA driver_alsa;
-#endif
-
-#ifdef ALSAMIDI_ENABLED
-	MIDIDriverALSAMidi driver_alsamidi;
-#endif
-
-#ifdef PULSEAUDIO_ENABLED
-	AudioDriverPulseAudio driver_pulseaudio;
 #endif
 
 	CrashHandler crash_handler;

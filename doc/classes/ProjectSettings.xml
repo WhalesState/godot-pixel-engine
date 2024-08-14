@@ -329,51 +329,6 @@
 			The name of the type implementing the [SceneTree]'s root. The custom type should extends Window.
 			[b]Note:[/b] has no effect if running a custom scene.
 		</member>
-		<member name="audio/buses/channel_disable_threshold_db" type="float" setter="" getter="" default="-60.0">
-			Audio buses will disable automatically when sound goes below a given dB threshold for a given time. This saves CPU as effects assigned to that bus will no longer do any processing.
-		</member>
-		<member name="audio/buses/channel_disable_time" type="float" setter="" getter="" default="2.0">
-			Audio buses will disable automatically when sound goes below a given dB threshold for a given time. This saves CPU as effects assigned to that bus will no longer do any processing.
-		</member>
-		<member name="audio/buses/default_bus_layout" type="String" setter="" getter="" default="&quot;res://default_bus_layout.tres&quot;">
-			Default [AudioBusLayout] resource file to use in the project, unless overridden by the scene.
-		</member>
-		<member name="audio/driver/driver" type="String" setter="" getter="">
-			Specifies the audio driver to use. This setting is platform-dependent as each platform supports different audio drivers. If left empty, the default audio driver will be used.
-			The [code]Dummy[/code] audio driver disables all audio playback and recording, which is useful for non-game applications as it reduces CPU usage. It also prevents the engine from appearing as an application playing audio in the OS' audio mixer.
-			[b]Note:[/b] The driver in use can be overridden at runtime via the [code]--audio-driver[/code] [url=$DOCS_URL/tutorials/editor/command_line_tutorial.html]command line argument[/url].
-		</member>
-		<member name="audio/driver/enable_input" type="bool" setter="" getter="" default="false">
-			If [code]true[/code], microphone input will be allowed.
-			[b]Note:[/b] If the operating system blocks access to audio input devices (due to the user's privacy settings), audio capture will only return silence. On Windows 10 and later, make sure that apps are allowed to access the microphone in the OS' privacy settings.
-		</member>
-		<member name="audio/driver/mix_rate" type="int" setter="" getter="" default="44100">
-			The mixing rate used for audio (in Hz). In general, it's better to not touch this and leave it to the host operating system.
-		</member>
-		<member name="audio/driver/mix_rate.web" type="int" setter="" getter="" default="0">
-		</member>
-		<member name="audio/driver/output_latency" type="int" setter="" getter="" default="15">
-			Specifies the preferred output latency in milliseconds for audio. Lower values will result in lower audio latency at the cost of increased CPU usage. Low values may result in audible cracking on slower hardware.
-			Audio output latency may be constrained by the host operating system and audio hardware drivers. If the host can not provide the specified audio output latency then Godot will attempt to use the nearest latency allowed by the host. As such you should always use [method AudioServer.get_output_latency] to determine the actual audio output latency.
-			Audio output latency can be overridden using the [code]--audio-output-latency &lt;ms&gt;[/code] command line argument.
-			[b]Note:[/b] This setting is ignored on Android, and on all versions of Windows prior to Windows 10.
-		</member>
-		<member name="audio/driver/output_latency.web" type="int" setter="" getter="" default="50">
-		</member>
-		<member name="audio/general/ios/mix_with_others" type="bool" setter="" getter="" default="false">
-			Sets the [url=https://developer.apple.com/documentation/avfaudio/avaudiosession/categoryoptions/1616611-mixwithothers]mixWithOthers[/url] option for the AVAudioSession on iOS. This will override the mix behavior, if the category is set to [code]Play and Record[/code], [code]Playback[/code], or [code]Multi Route[/code].
-			[code]Ambient[/code] always has this set per default.
-		</member>
-		<member name="audio/general/ios/session_category" type="int" setter="" getter="" default="0">
-			Sets the [url=https://developer.apple.com/documentation/avfaudio/avaudiosessioncategory]AVAudioSessionCategory[/url] on iOS. Use the [code]Playback[/code] category to get sound output, even if the phone is in silent mode.
-		</member>
-		<member name="audio/general/text_to_speech" type="bool" setter="" getter="" default="false">
-			If [code]true[/code], text-to-speech support is enabled, see [method DisplayServer.tts_get_voices] and [method DisplayServer.tts_speak].
-			[b]Note:[/b] Enabling TTS can cause addition idle CPU usage and interfere with the sleep mode, so consider disabling it if TTS is not used.
-		</member>
-		<member name="audio/video/video_delay_compensation_ms" type="int" setter="" getter="" default="0">
-			Setting to hardcode audio delay when playing video. Best to leave this untouched unless you know what you are doing.
-		</member>
 		<member name="compression/formats/gzip/compression_level" type="int" setter="" getter="" default="-1">
 			The default compression level for gzip. Affects compressed scenes and resources. Higher levels result in smaller files at the cost of compression speed. Decompression speed is mostly unaffected by the compression level. [code]-1[/code] uses the default gzip compression level, which is identical to [code]6[/code] but could change in the future due to underlying zlib updates.
 		</member>

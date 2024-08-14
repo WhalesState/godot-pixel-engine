@@ -44,7 +44,6 @@
 #include "drivers/windows/dir_access_windows.h"
 #include "drivers/windows/file_access_windows.h"
 #include "main/main.h"
-#include "servers/audio_server.h"
 #include "servers/rendering/rendering_server_default.h"
 #include "servers/text_server.h"
 
@@ -56,6 +55,7 @@
 #include <psapi.h>
 #include <regstr.h>
 #include <shlobj.h>
+#include <timeapi.h>
 #include <wbemcli.h>
 #include <wincrypt.h>
 
@@ -256,9 +256,6 @@ void OS_Windows::finalize() {
 		dwrite_factory->Release();
 		dwrite_factory = nullptr;
 	}
-#ifdef WINMIDI_ENABLED
-	driver_midi.close();
-#endif
 
 	if (main_loop) {
 		memdelete(main_loop);
@@ -973,9 +970,6 @@ public:
 		if (IID_IUnknown == riid) {
 			AddRef();
 			*ppvInterface = (IUnknown *)this;
-		} else if (__uuidof(IMMNotificationClient) == riid) {
-			AddRef();
-			*ppvInterface = (IMMNotificationClient *)this;
 		} else {
 			*ppvInterface = nullptr;
 			return E_NOINTERFACE;
@@ -1711,13 +1705,6 @@ OS_Windows::OS_Windows(HINSTANCE _hInstance) {
 	hInstance = _hInstance;
 
 	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-
-#ifdef WASAPI_ENABLED
-	AudioDriverManager::add_driver(&driver_wasapi);
-#endif
-#ifdef XAUDIO2_ENABLED
-	AudioDriverManager::add_driver(&driver_xaudio2);
-#endif
 
 	DisplayServerWindows::register_windows_driver();
 

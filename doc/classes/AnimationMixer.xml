@@ -117,10 +117,6 @@
 		<member name="active" type="bool" setter="set_active" getter="is_active" default="true">
 			If [code]true[/code], the [AnimationMixer] will be processing.
 		</member>
-		<member name="audio_max_polyphony" type="int" setter="set_audio_max_polyphony" getter="get_audio_max_polyphony" default="32">
-			The number of possible simultaneous sounds for each of the assigned AudioStreamPlayers.
-			For example, if this value is [code]32[/code] and the animation has two audio tracks, the two [AudioStreamPlayer]s assigned can play simultaneously up to [code]32[/code] voices each.
-		</member>
 		<member name="callback_mode_method" type="int" setter="set_callback_mode_method" getter="get_callback_mode_method" enum="AnimationMixer.AnimationCallbackModeMethod" default="0">
 			The call mode to use for Call Method tracks.
 		</member>

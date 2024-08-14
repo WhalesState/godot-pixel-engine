@@ -32,7 +32,6 @@
 #ifndef NATIVE_PTR_H
 #define NATIVE_PTR_H
 
-#include "core/math/audio_frame.h"
 #include "core/variant/method_ptrcall.h"
 #include "core/variant/type_info.h"
 
@@ -136,7 +135,6 @@ struct PtrToArg<GDExtensionPtr<T>> {
 };
 
 GDVIRTUAL_NATIVE_PTR(void)
-GDVIRTUAL_NATIVE_PTR(AudioFrame)
 GDVIRTUAL_NATIVE_PTR(bool)
 GDVIRTUAL_NATIVE_PTR(char)
 GDVIRTUAL_NATIVE_PTR(char16_t)

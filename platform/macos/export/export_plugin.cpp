@@ -198,13 +198,6 @@ String EditorExportPlatformMacOS::get_export_option_warning(const EditorExportPr
 		}
 
 		if (codesign_tool > 0) {
-			if (p_name == "privacy/microphone_usage_description") {
-				String discr = p_preset->get("privacy/microphone_usage_description");
-				bool enabled = p_preset->get("codesign/entitlements/audio_input");
-				if (enabled && discr.is_empty()) {
-					return TTR("Microphone access is enabled, but usage description is not specified.");
-				}
-			}
 			if (p_name == "privacy/location_usage_description") {
 				String discr = p_preset->get("privacy/location_usage_description");
 				bool enabled = p_preset->get("codesign/entitlements/location");
@@ -399,7 +392,6 @@ void EditorExportPlatformMacOS::get_export_options(List<ExportOption> *r_options
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "codesign/entitlements/allow_unsigned_executable_memory"), false));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "codesign/entitlements/allow_dyld_environment_variables"), false));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "codesign/entitlements/disable_library_validation"), false));
-	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "codesign/entitlements/audio_input"), false));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "codesign/entitlements/location"), false));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "codesign/entitlements/address_book"), false));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "codesign/entitlements/calendars"), false));
@@ -1718,10 +1710,6 @@ Error EditorExportPlatformMacOS::export_project(const Ref<EditorExportPreset> &p
 
 				if (lib_validation) {
 					ent_f->store_line("<key>com.apple.security.cs.disable-library-validation</key>");
-					ent_f->store_line("<true/>");
-				}
-				if ((bool)p_preset->get("codesign/entitlements/audio_input")) {
-					ent_f->store_line("<key>com.apple.security.device.audio-input</key>");
 					ent_f->store_line("<true/>");
 				}
 				if ((bool)p_preset->get("codesign/entitlements/location")) {

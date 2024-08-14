@@ -2077,8 +2077,6 @@ void FileSystemDock::_file_option(int p_option, const Vector<String> &p_selected
 				} else {
 					external_program = EDITOR_GET("filesystem/external_programs/raster_image_editor");
 				}
-			} else if (ClassDB::is_parent_class(resource_type, "AudioStream")) {
-				external_program = EDITOR_GET("filesystem/external_programs/audio_editor");
 			} else if (resource_type == "PackedScene") {
 				// Ignore non-model scenes.
 				if (file.get_extension() != "tscn" && file.get_extension() != "scn" && file.get_extension() != "res") {
@@ -2317,13 +2315,19 @@ void FileSystemDock::_file_option(int p_option, const Vector<String> &p_selected
 		case FILE_NEW_RESOURCE: {
 			new_resource_dialog->popup_create(true);
 		} break;
+		case FILE_NEW_IMAGE:
 		case FILE_NEW_TEXTFILE: {
 			String fpath = current_path;
 			if (!fpath.ends_with("/")) {
 				fpath = fpath.get_base_dir();
 			}
 			String dir = ProjectSettings::get_singleton()->globalize_path(fpath);
-			ScriptEditor::get_singleton()->open_text_file_create_dialog(dir);
+			if (p_option == FILE_NEW_TEXTFILE) {
+				ScriptEditor::get_singleton()->open_text_file_create_dialog(dir);
+			} else {
+				// ANCHOR: Enable
+				// ImageEditor::get_singleton()->open_image_create_dialog(dir);
+			}
 		} break;
 	}
 }
@@ -2903,6 +2907,7 @@ void FileSystemDock::_file_and_folders_fill_popup(PopupMenu *p_popup, Vector<Str
 		new_menu->add_icon_item(get_editor_theme_icon(SNAME("Script")), TTR("Script..."), FILE_NEW_SCRIPT);
 		new_menu->add_icon_item(get_editor_theme_icon(SNAME("Object")), TTR("Resource..."), FILE_NEW_RESOURCE);
 		new_menu->add_icon_item(get_editor_theme_icon(SNAME("TextFile")), TTR("TextFile..."), FILE_NEW_TEXTFILE);
+		new_menu->add_icon_item(get_editor_theme_icon(SNAME("Image")), TTR("Image..."), FILE_NEW_IMAGE);
 		p_popup->add_separator();
 	}
 
@@ -3047,6 +3052,7 @@ void FileSystemDock::_tree_empty_click(const Vector2 &p_pos, MouseButton p_butto
 	tree_popup->add_icon_item(get_editor_theme_icon(SNAME("Script")), TTR("New Script..."), FILE_NEW_SCRIPT);
 	tree_popup->add_icon_item(get_editor_theme_icon(SNAME("Object")), TTR("New Resource..."), FILE_NEW_RESOURCE);
 	tree_popup->add_icon_item(get_editor_theme_icon(SNAME("TextFile")), TTR("New TextFile..."), FILE_NEW_TEXTFILE);
+	tree_popup->add_icon_item(get_editor_theme_icon(SNAME("Image")), TTR("New Image..."), FILE_NEW_IMAGE);
 	// Opening the system file manager is not supported on the Android and web editors.
 	tree_popup->add_separator();
 	tree_popup->add_icon_shortcut(get_editor_theme_icon(SNAME("Filesystem")), ED_GET_SHORTCUT("filesystem_dock/show_in_explorer"), FILE_SHOW_IN_EXPLORER);
@@ -3109,6 +3115,7 @@ void FileSystemDock::_file_list_empty_clicked(const Vector2 &p_pos, MouseButton 
 	file_list_popup->add_icon_item(get_editor_theme_icon(SNAME("Script")), TTR("New Script..."), FILE_NEW_SCRIPT);
 	file_list_popup->add_icon_item(get_editor_theme_icon(SNAME("Object")), TTR("New Resource..."), FILE_NEW_RESOURCE);
 	file_list_popup->add_icon_item(get_editor_theme_icon(SNAME("TextFile")), TTR("New TextFile..."), FILE_NEW_TEXTFILE);
+	file_list_popup->add_icon_item(get_editor_theme_icon(SNAME("Image")), TTR("New Image..."), FILE_NEW_IMAGE);
 	file_list_popup->add_separator();
 	file_list_popup->add_icon_shortcut(get_editor_theme_icon(SNAME("Filesystem")), ED_GET_SHORTCUT("filesystem_dock/show_in_explorer"), FILE_SHOW_IN_EXPLORER);
 

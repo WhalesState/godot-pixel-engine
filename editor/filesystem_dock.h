@@ -131,6 +131,7 @@ private:
 		FILE_NEW_FOLDER,
 		FILE_NEW_SCRIPT,
 		FILE_NEW_SCENE,
+		FILE_NEW_IMAGE,
 	};
 
 	enum Overwrite {

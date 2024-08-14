@@ -114,9 +114,6 @@
 		<member name="codesign/entitlements/apple_events" type="bool" setter="" getter="">
 			Enable to allow app to send Apple events to other apps. See [url=https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_security_automation_apple-events]com.apple.security.automation.apple-events[/url].
 		</member>
-		<member name="codesign/entitlements/audio_input" type="bool" setter="" getter="">
-			Enable if you need to use the microphone or other audio input sources, if it's enabled you should also provide usage message in the [member privacy/microphone_usage_description] option. See [url=https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_security_device_audio-input]com.apple.security.device.audio-input[/url].
-		</member>
 		<member name="codesign/entitlements/calendars" type="bool" setter="" getter="">
 			Enable to allow access to the user's calendar, if it's enabled you should also provide usage message in the [member privacy/calendar_usage_description] option. See [url=https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_security_personal-information_calendars]com.apple.security.personal-information.calendars[/url].
 		</member>

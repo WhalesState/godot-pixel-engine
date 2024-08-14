@@ -50,6 +50,8 @@
 		</member>
 		<member name="grid_step" type="Vector2" setter="set_grid_step" getter="get_grid_step" default="Vector2(16, 16)">
 		</member>
+		<member name="hguides" type="PackedInt32Array" setter="set_hguides" getter="get_hguides" default="PackedInt32Array()">
+		</member>
 		<member name="primary_grid_step" type="Vector2i" setter="set_primary_grid_step" getter="get_primary_grid_step" default="Vector2i(8, 8)">
 		</member>
 		<member name="show_axis" type="bool" setter="set_show_axis" getter="is_axis_visible" default="true">
@@ -66,12 +68,18 @@
 		</member>
 		<member name="size_flags_horizontal" type="int" setter="set_h_size_flags" getter="get_h_size_flags" overrides="Control" enum="Control.SizeFlags" is_bitfield="true" default="3" />
 		<member name="size_flags_vertical" type="int" setter="set_v_size_flags" getter="get_v_size_flags" overrides="Control" enum="Control.SizeFlags" is_bitfield="true" default="3" />
+		<member name="vguides" type="PackedInt32Array" setter="set_vguides" getter="get_vguides" default="PackedInt32Array()">
+		</member>
 		<member name="view_offset" type="Vector2" setter="set_view_offset" getter="get_view_offset" default="Vector2(-20, -20)">
 		</member>
 		<member name="view_size" type="Vector2" setter="set_view_size" getter="get_view_size" default="Vector2(64, 64)">
 		</member>
 	</members>
 	<signals>
+		<signal name="guides_changed">
+			<description>
+			</description>
+		</signal>
 		<signal name="view_transform_changed">
 			<param index="0" name="transform" type="Transform2D" />
 			<description>

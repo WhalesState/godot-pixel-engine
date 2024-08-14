@@ -69,8 +69,6 @@ class VBoxContainer;
 class VSplitContainer;
 class Window;
 
-class AudioStreamImportSettings;
-class AudioStreamPreviewGenerator;
 class BackgroundProgress;
 class DependencyEditor;
 class DependencyErrorDialog;
@@ -327,7 +325,6 @@ private:
 	PopupMenu *tool_menu = nullptr;
 	Button *export_button = nullptr;
 	Button *search_button = nullptr;
-	TextureProgressBar *audio_vu = nullptr;
 
 	uint64_t started_timestamp = 0;
 
@@ -377,7 +374,6 @@ private:
 	Vector<Button *> main_editor_buttons;
 	Vector<EditorPlugin *> editor_table;
 
-	AudioStreamPreviewGenerator *audio_preview_gen = nullptr;
 	ProgressDialog *progress_dialog = nullptr;
 	BackgroundProgress *progress_hb = nullptr;
 
@@ -451,7 +447,6 @@ private:
 
 	DynamicFontImportSettings *fontdata_import_settings = nullptr;
 	SceneImportSettings *scene_import_settings = nullptr;
-	AudioStreamImportSettings *audio_stream_import_settings = nullptr;
 
 	String import_reload_fn;
 

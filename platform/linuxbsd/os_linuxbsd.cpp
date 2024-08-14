@@ -217,10 +217,6 @@ void OS_LinuxBSD::finalize() {
 	}
 	main_loop = nullptr;
 
-#ifdef ALSAMIDI_ENABLED
-	driver_alsamidi.close();
-#endif
-
 #ifdef JOYDEV_ENABLED
 	if (joypad) {
 		memdelete(joypad);
@@ -1179,14 +1175,6 @@ String OS_LinuxBSD::get_system_ca_certificates() {
 
 OS_LinuxBSD::OS_LinuxBSD() {
 	main_loop = nullptr;
-
-#ifdef PULSEAUDIO_ENABLED
-	AudioDriverManager::add_driver(&driver_pulseaudio);
-#endif
-
-#ifdef ALSA_ENABLED
-	AudioDriverManager::add_driver(&driver_alsa);
-#endif
 
 #ifdef X11_ENABLED
 	DisplayServerX11::register_x11_driver();

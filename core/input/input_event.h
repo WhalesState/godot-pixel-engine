@@ -508,52 +508,6 @@ public:
 	InputEventPanGesture() {}
 };
 
-class InputEventMIDI : public InputEvent {
-	GDCLASS(InputEventMIDI, InputEvent);
-
-	int channel = 0;
-	MIDIMessage message = MIDIMessage::NONE;
-	int pitch = 0;
-	int velocity = 0;
-	int instrument = 0;
-	int pressure = 0;
-	int controller_number = 0;
-	int controller_value = 0;
-
-protected:
-	static void _bind_methods();
-
-public:
-	void set_channel(const int p_channel);
-	int get_channel() const;
-
-	void set_message(const MIDIMessage p_message);
-	MIDIMessage get_message() const;
-
-	void set_pitch(const int p_pitch);
-	int get_pitch() const;
-
-	void set_velocity(const int p_velocity);
-	int get_velocity() const;
-
-	void set_instrument(const int p_instrument);
-	int get_instrument() const;
-
-	void set_pressure(const int p_pressure);
-	int get_pressure() const;
-
-	void set_controller_number(const int p_controller_number);
-	int get_controller_number() const;
-
-	void set_controller_value(const int p_controller_value);
-	int get_controller_value() const;
-
-	virtual String as_text() const override;
-	virtual String to_string() override;
-
-	InputEventMIDI() {}
-};
-
 class InputEventShortcut : public InputEvent {
 	GDCLASS(InputEventShortcut, InputEvent);
 

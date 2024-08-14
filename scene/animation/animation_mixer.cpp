@@ -34,7 +34,6 @@
 #include "core/config/engine.h"
 #include "scene/animation/animation_player.h"
 #include "scene/resources/animation.h"
-#include "servers/audio/audio_stream.h"
 
 #ifdef TOOLS_ENABLED
 #include "editor/editor_node.h"
@@ -480,15 +479,6 @@ AnimationMixer::AnimationCallbackModeMethod AnimationMixer::get_callback_mode_me
 	return callback_mode_method;
 }
 
-void AnimationMixer::set_audio_max_polyphony(int p_audio_max_polyphony) {
-	ERR_FAIL_COND(p_audio_max_polyphony < 0 || p_audio_max_polyphony > 128);
-	audio_max_polyphony = p_audio_max_polyphony;
-}
-
-int AnimationMixer::get_audio_max_polyphony() const {
-	return audio_max_polyphony;
-}
-
 #ifdef TOOLS_ENABLED
 void AnimationMixer::set_editing(bool p_editing) {
 	if (editing == p_editing) {
@@ -523,7 +513,6 @@ bool AnimationMixer::is_dummy() const {
 /* -------------------------------------------- */
 
 void AnimationMixer::_clear_caches() {
-	_clear_audio_streams();
 	_clear_playing_caches();
 	for (KeyValue<NodePath, TrackCache *> &K : track_cache) {
 		memdelete(K.value);
@@ -532,14 +521,6 @@ void AnimationMixer::_clear_caches() {
 	cache_valid = false;
 
 	emit_signal(SNAME("caches_cleared"));
-}
-
-void AnimationMixer::_clear_audio_streams() {
-	for (int i = 0; i < playing_audio_stream_players.size(); i++) {
-		playing_audio_stream_players[i]->call(SNAME("stop"));
-		playing_audio_stream_players[i]->call(SNAME("set_stream"), Ref<AudioStream>());
-	}
-	playing_audio_stream_players.clear();
 }
 
 void AnimationMixer::_clear_playing_caches() {
@@ -667,17 +648,6 @@ bool AnimationMixer::_update_caches() {
 								track_bezier->init_value = (reset_anim->track_get_key_value(rt, 0).operator Array())[0];
 							}
 						}
-
-					} break;
-					case Animation::TYPE_AUDIO: {
-						TrackCacheAudio *track_audio = memnew(TrackCacheAudio);
-
-						track_audio->object = child;
-						track_audio->object_id = track_audio->object->get_instance_id();
-						track_audio->audio_stream.instantiate();
-						track_audio->audio_stream->set_polyphony(audio_max_polyphony);
-
-						track = track_audio;
 
 					} break;
 					case Animation::TYPE_ANIMATION: {
@@ -817,13 +787,6 @@ void AnimationMixer::_blend_init() {
 			case Animation::TYPE_BEZIER: {
 				TrackCacheBezier *t = static_cast<TrackCacheBezier *>(track);
 				t->value = t->init_value;
-			} break;
-			case Animation::TYPE_AUDIO: {
-				TrackCacheAudio *t = static_cast<TrackCacheAudio *>(track);
-				for (KeyValue<ObjectID, PlayingAudioTrackInfo> &L : t->playing_streams) {
-					PlayingAudioTrackInfo &track_info = L.value;
-					track_info.volume = 0.0;
-				}
 			} break;
 			default: {
 			} break;
@@ -1008,88 +971,6 @@ void AnimationMixer::_blend_process(double p_delta, bool p_update_only) {
 					bezier = post_process_key_value(a, i, bezier, t->object);
 					t->value += (bezier - t->init_value) * blend;
 				} break;
-				case Animation::TYPE_AUDIO: {
-					// The end of audio should be observed even if the blend value is 0, build up the information and store to the cache for that.
-					TrackCacheAudio *t = static_cast<TrackCacheAudio *>(track);
-					Node *asp = Object::cast_to<Node>(t->object);
-					if (!asp) {
-						t->playing_streams.clear();
-						continue;
-					}
-					ObjectID oid = a->get_instance_id();
-					if (!t->playing_streams.has(oid)) {
-						t->playing_streams[oid] = PlayingAudioTrackInfo();
-					}
-
-					PlayingAudioTrackInfo &track_info = t->playing_streams[oid];
-					track_info.length = a->get_length();
-					track_info.time = time;
-					track_info.volume += blend;
-					track_info.loop = a->get_loop_mode() != Animation::LOOP_NONE;
-					track_info.backward = backward;
-					track_info.use_blend = a->audio_track_is_use_blend(i);
-					HashMap<int, PlayingAudioStreamInfo> &map = track_info.stream_info;
-
-					// Main process to fire key is started from here.
-					if (p_update_only) {
-						continue;
-					}
-					// Find stream.
-					int idx = -1;
-					if (seeked) {
-						idx = a->track_find_key(i, time, is_external_seeking ? Animation::FIND_MODE_NEAREST : Animation::FIND_MODE_EXACT);
-						// Discard previous stream when seeking.
-						if (map.has(idx)) {
-							t->audio_stream_playback->stop_stream(map[idx].index);
-							map.erase(idx);
-						}
-					} else {
-						List<int> to_play;
-						a->track_get_key_indices_in_range(i, time, delta, &to_play, looped_flag);
-						if (to_play.size()) {
-							idx = to_play.back()->get();
-						}
-					}
-					if (idx < 0) {
-						continue;
-					}
-					// Play stream.
-					Ref<AudioStream> stream = a->audio_track_get_key_stream(i, idx);
-					if (stream.is_valid()) {
-						double start_ofs = a->audio_track_get_key_start_offset(i, idx);
-						double end_ofs = a->audio_track_get_key_end_offset(i, idx);
-						double len = stream->get_length();
-						if (seeked) {
-							start_ofs += time - a->track_get_key_time(i, idx);
-						}
-						if (t->object->call(SNAME("get_stream")) != t->audio_stream) {
-							t->object->call(SNAME("set_stream"), t->audio_stream);
-							t->audio_stream_playback.unref();
-							if (!playing_audio_stream_players.has(asp)) {
-								playing_audio_stream_players.push_back(asp);
-							}
-						}
-						if (!t->object->call(SNAME("is_playing"))) {
-							t->object->call(SNAME("play"));
-						}
-						if (!t->object->call(SNAME("has_stream_playback"))) {
-							t->audio_stream_playback.unref();
-							continue;
-						}
-						if (t->audio_stream_playback.is_null()) {
-							t->audio_stream_playback = t->object->call(SNAME("get_stream_playback"));
-						}
-						PlayingAudioStreamInfo pasi;
-						pasi.index = t->audio_stream_playback->play_stream(stream, start_ofs);
-						pasi.start = time;
-						if (len && end_ofs > 0) { // Force an end at a time.
-							pasi.len = len - start_ofs - end_ofs;
-						} else {
-							pasi.len = 0;
-						}
-						map[idx] = pasi;
-					}
-				} break;
 				case Animation::TYPE_ANIMATION: {
 					if (Math::is_zero_approx(blend)) {
 						continue;
@@ -1206,64 +1087,6 @@ void AnimationMixer::_blend_apply() {
 				t->object->set_indexed(t->subpath, t->value);
 
 			} break;
-			case Animation::TYPE_AUDIO: {
-				TrackCacheAudio *t = static_cast<TrackCacheAudio *>(track);
-
-				// Audio ending process.
-				LocalVector<ObjectID> erase_maps;
-				for (KeyValue<ObjectID, PlayingAudioTrackInfo> &L : t->playing_streams) {
-					PlayingAudioTrackInfo &track_info = L.value;
-					float db = Math::linear_to_db(track_info.use_blend ? track_info.volume : 1.0);
-					LocalVector<int> erase_streams;
-					HashMap<int, PlayingAudioStreamInfo> &map = track_info.stream_info;
-					for (const KeyValue<int, PlayingAudioStreamInfo> &M : map) {
-						PlayingAudioStreamInfo pasi = M.value;
-
-						bool stop = false;
-						if (!t->audio_stream_playback->is_stream_playing(pasi.index)) {
-							stop = true;
-						}
-						if (!track_info.loop) {
-							if (!track_info.backward) {
-								if (track_info.time < pasi.start) {
-									stop = true;
-								}
-							} else if (track_info.backward) {
-								if (track_info.time > pasi.start) {
-									stop = true;
-								}
-							}
-						}
-						if (pasi.len > 0) {
-							double len = 0.0;
-							if (!track_info.backward) {
-								len = pasi.start > track_info.time ? (track_info.length - pasi.start) + track_info.time : track_info.time - pasi.start;
-							} else {
-								len = pasi.start < track_info.time ? (track_info.length - track_info.time) + pasi.start : pasi.start - track_info.time;
-							}
-							if (len > pasi.len) {
-								stop = true;
-							}
-						}
-						if (stop) {
-							// Time to stop.
-							t->audio_stream_playback->stop_stream(pasi.index);
-							erase_streams.push_back(M.key);
-						} else {
-							t->audio_stream_playback->set_stream_volume(pasi.index, db);
-						}
-					}
-					for (uint32_t erase_idx = 0; erase_idx < erase_streams.size(); erase_idx++) {
-						map.erase(erase_streams[erase_idx]);
-					}
-					if (map.size() == 0) {
-						erase_maps.push_back(L.key);
-					}
-				}
-				for (uint32_t erase_idx = 0; erase_idx < erase_maps.size(); erase_idx++) {
-					t->playing_streams.erase(erase_maps[erase_idx]);
-				}
-			} break;
 			default: {
 			} // The rest don't matter.
 		}
@@ -1340,13 +1163,6 @@ void AnimationMixer::_build_backup_track_cache() {
 			case Animation::TYPE_BEZIER: {
 				TrackCacheBezier *t = static_cast<TrackCacheBezier *>(track);
 				t->value = t->object->get_indexed(t->subpath);
-			} break;
-			case Animation::TYPE_AUDIO: {
-				TrackCacheAudio *t = static_cast<TrackCacheAudio *>(track);
-				Node *asp = Object::cast_to<Node>(t->object);
-				if (asp) {
-					t->object->call(SNAME("set_stream"), Ref<AudioStream>());
-				}
 			} break;
 			default: {
 			} // The rest don't matter.
@@ -1496,9 +1312,6 @@ void AnimationMixer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_callback_mode_method", "mode"), &AnimationMixer::set_callback_mode_method);
 	ClassDB::bind_method(D_METHOD("get_callback_mode_method"), &AnimationMixer::get_callback_mode_method);
 
-	ClassDB::bind_method(D_METHOD("set_audio_max_polyphony", "max_polyphony"), &AnimationMixer::set_audio_max_polyphony);
-	ClassDB::bind_method(D_METHOD("get_audio_max_polyphony"), &AnimationMixer::get_audio_max_polyphony);
-
 	/* ---- Blending processor ---- */
 	ClassDB::bind_method(D_METHOD("clear_caches"), &AnimationMixer::clear_caches);
 	ClassDB::bind_method(D_METHOD("advance", "delta"), &AnimationMixer::advance);
@@ -1513,9 +1326,6 @@ void AnimationMixer::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("mixer_updated")); // For updating dummy player.
 
 	ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "root_node"), "set_root_node", "get_root_node");
-
-	ADD_GROUP("Audio", "audio_");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "audio_max_polyphony", PROPERTY_HINT_RANGE, "1,127,1"), "set_audio_max_polyphony", "get_audio_max_polyphony");
 
 	ADD_GROUP("Callback Mode", "callback_mode_");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "callback_mode_process", PROPERTY_HINT_ENUM, "Physics,Idle,Manual"), "set_callback_mode_process", "get_callback_mode_process");
@@ -1593,12 +1403,6 @@ AnimationMixer::TrackCache *AnimatedValuesBackup::get_cache_copy(AnimationMixer:
 		case Animation::TYPE_BEZIER: {
 			AnimationMixer::TrackCacheBezier *src = static_cast<AnimationMixer::TrackCacheBezier *>(p_cache);
 			AnimationMixer::TrackCacheBezier *tc = memnew(AnimationMixer::TrackCacheBezier(*src));
-			return tc;
-		}
-
-		case Animation::TYPE_AUDIO: {
-			AnimationMixer::TrackCacheAudio *src = static_cast<AnimationMixer::TrackCacheAudio *>(p_cache);
-			AnimationMixer::TrackCacheAudio *tc = memnew(AnimationMixer::TrackCacheAudio(*src));
 			return tc;
 		}
 

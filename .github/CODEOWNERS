@@ -25,16 +25,6 @@ doc_classes/*                       @godotengine/documentation
 
 # Drivers
 
-## Audio
-/drivers/alsa/                      @godotengine/audio
-/drivers/alsamidi/                  @godotengine/audio
-/drivers/coreaudio/                 @godotengine/audio
-/drivers/coremidi/                  @godotengine/audio
-/drivers/pulseaudio/                @godotengine/audio
-/drivers/wasapi/                    @godotengine/audio
-/drivers/winmidi/                   @godotengine/audio
-/drivers/xaudio2/                   @godotengine/audio
-
 ## Rendering
 /drivers/dummy/                     @godotengine/rendering
 /drivers/gles3/                     @godotengine/rendering
@@ -71,14 +61,6 @@ doc_classes/*                       @godotengine/documentation
 /misc/extension_api_validation/     @godotengine/gdextension @godotengine/dotnet
 
 # Modules
-
-## Audio (+ video)
-/modules/minimp3/                   @godotengine/audio
-/modules/ogg/                       @godotengine/audio
-/modules/opus/                      @godotengine/audio
-/modules/theora/                    @godotengine/audio
-/modules/vorbis/                    @godotengine/audio
-/modules/webm/                      @godotengine/audio
 
 ## Import
 /modules/bmp/                       @godotengine/import
@@ -145,7 +127,6 @@ doc_classes/*                       @godotengine/documentation
 /scene/2d/                          @godotengine/2d-nodes
 /scene/3d/                          @godotengine/3d-nodes
 /scene/animation/                   @godotengine/animation
-/scene/audio/                       @godotengine/audio
 /scene/debugger/                    @godotengine/debugger
 /scene/gui/                         @godotengine/gui-nodes
 /scene/main/                        @godotengine/core
@@ -156,14 +137,9 @@ doc_classes/*                       @godotengine/documentation
 
 # Servers
 
-/servers/audio*                     @godotengine/audio
-/servers/camera*                    @godotengine/xr
 /servers/display_server.*           @godotengine/_platforms
-/servers/navigation_server*.*       @godotengine/navigation
-/servers/physics*                   @godotengine/physics
 /servers/rendering*                 @godotengine/rendering
 /servers/text_server.*              @godotengine/gui-nodes
-/servers/xr*                        @godotengine/xr
 
 # Tests
 

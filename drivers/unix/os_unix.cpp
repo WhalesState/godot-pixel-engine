@@ -149,10 +149,6 @@ void OS_Unix::initialize_debugging() {
 	}
 }
 
-int OS_Unix::unix_initialize_audio(int p_audio_driver) {
-	return 0;
-}
-
 void OS_Unix::initialize_core() {
 	init_thread_posix();
 

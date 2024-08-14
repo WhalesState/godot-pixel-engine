@@ -47,7 +47,6 @@ public:
 		TYPE_BLEND_SHAPE, ///< Blend Shape track
 		TYPE_METHOD, ///< Call any method on a specific node.
 		TYPE_BEZIER, ///< Bezier curve
-		TYPE_AUDIO,
 		TYPE_ANIMATION,
 	};
 
@@ -169,25 +168,6 @@ private:
 
 		BezierTrack() {
 			type = TYPE_BEZIER;
-		}
-	};
-
-	/* AUDIO TRACK */
-
-	struct AudioKey {
-		Ref<Resource> stream;
-		real_t start_offset = 0.0; //offset from start
-		real_t end_offset = 0.0; //offset from end, if 0 then full length or infinite
-		AudioKey() {
-		}
-	};
-
-	struct AudioTrack : public Track {
-		Vector<TKey<AudioKey>> values;
-		bool use_blend = true;
-
-		AudioTrack() {
-			type = TYPE_AUDIO;
 		}
 	};
 
@@ -392,16 +372,6 @@ public:
 #endif // TOOLS_ENABLED
 
 	real_t bezier_track_interpolate(int p_track, double p_time) const;
-
-	int audio_track_insert_key(int p_track, double p_time, const Ref<Resource> &p_stream, real_t p_start_offset = 0, real_t p_end_offset = 0);
-	void audio_track_set_key_stream(int p_track, int p_key, const Ref<Resource> &p_stream);
-	void audio_track_set_key_start_offset(int p_track, int p_key, real_t p_offset);
-	void audio_track_set_key_end_offset(int p_track, int p_key, real_t p_offset);
-	Ref<Resource> audio_track_get_key_stream(int p_track, int p_key) const;
-	real_t audio_track_get_key_start_offset(int p_track, int p_key) const;
-	real_t audio_track_get_key_end_offset(int p_track, int p_key) const;
-	void audio_track_set_use_blend(int p_track, bool p_enable);
-	bool audio_track_is_use_blend(int p_track) const;
 
 	int animation_track_insert_key(int p_track, double p_time, const StringName &p_animation);
 	void animation_track_set_key_animation(int p_track, int p_key, const StringName &p_animation);

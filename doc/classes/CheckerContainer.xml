@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="CheckerContainer" inherits="MarginContainer" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="checker_dark_color" type="Color" setter="set_checker_dark_color" getter="get_checker_dark_color" default="Color(0.4, 0.4, 0.4, 1)">
+		</member>
+		<member name="checker_light_color" type="Color" setter="set_checker_light_color" getter="get_checker_light_color" default="Color(0.8, 0.8, 0.8, 1)">
+		</member>
+		<member name="checker_size" type="Vector2i" setter="set_checker_size" getter="get_checker_size" default="Vector2i(4, 4)">
+		</member>
+		<member name="checker_visible" type="bool" setter="set_checker_visible" getter="is_checker_visible" default="true">
+		</member>
+		<member name="texture_filter" type="int" setter="set_texture_filter" getter="get_texture_filter" overrides="CanvasItem" enum="CanvasItem.TextureFilter" default="1" />
+	</members>
+</class>

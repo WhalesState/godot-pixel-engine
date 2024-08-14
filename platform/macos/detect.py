@@ -224,19 +224,13 @@ def configure(env: "Environment"):
     ## Flags
 
     env.Prepend(CPPPATH=["#platform/macos"])
-    env.Append(CPPDEFINES=["MACOS_ENABLED", "UNIX_ENABLED", "COREAUDIO_ENABLED", "COREMIDI_ENABLED"])
+    env.Append(CPPDEFINES=["MACOS_ENABLED", "UNIX_ENABLED"])
     env.Append(
         LINKFLAGS=[
             "-framework",
             "Cocoa",
             "-framework",
             "Carbon",
-            "-framework",
-            "AudioUnit",
-            "-framework",
-            "CoreAudio",
-            "-framework",
-            "CoreMIDI",
             "-framework",
             "IOKit",
             "-framework",

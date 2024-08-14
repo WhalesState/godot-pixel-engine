@@ -222,8 +222,6 @@ class AnimationTrackEdit : public Control {
 		MENU_KEY_DUPLICATE,
 		MENU_KEY_ADD_RESET,
 		MENU_KEY_DELETE,
-		MENU_USE_BLEND_ENABLED,
-		MENU_USE_BLEND_DISABLED,
 	};
 
 	AnimationTimelineEdit *timeline = nullptr;
@@ -330,7 +328,6 @@ class AnimationTrackEditPlugin : public RefCounted {
 
 public:
 	virtual AnimationTrackEdit *create_value_track_edit(Object *p_object, Variant::Type p_type, const String &p_property, PropertyHint p_hint, const String &p_hint_string, int p_usage);
-	virtual AnimationTrackEdit *create_audio_track_edit();
 	virtual AnimationTrackEdit *create_animation_track_edit(Object *p_object);
 };
 
@@ -577,7 +574,6 @@ class AnimationTrackEditor : public VBoxContainer {
 		Animation::LoopMode loop_mode = Animation::LOOP_PINGPONG;
 		bool loop_wrap = false;
 		bool enabled = false;
-		bool use_blend = false;
 
 		struct Key {
 			float time = 0;

@@ -13,7 +13,6 @@ common_win = [
     "display_server_windows.cpp",
     "key_mapping_windows.cpp",
     "joypad_windows.cpp",
-    "tts_windows.cpp",
     "windows_terminal_logger.cpp",
     "gl_manager_windows_native.cpp",
     "gl_manager_windows_angle.cpp",

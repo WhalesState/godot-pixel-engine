@@ -36,20 +36,10 @@
 #include "joypad_macos.h"
 
 #include "core/input/input.h"
-#import "drivers/coreaudio/audio_driver_coreaudio.h"
-#import "drivers/coremidi/midi_driver_coremidi.h"
 #include "drivers/unix/os_unix.h"
-#include "servers/audio_server.h"
 
 class OS_MacOS : public OS_Unix {
 	JoypadMacOS *joypad_macos = nullptr;
-
-#ifdef COREAUDIO_ENABLED
-	AudioDriverCoreAudio audio_driver;
-#endif
-#ifdef COREMIDI_ENABLED
-	MIDIDriverCoreMidi midi_driver;
-#endif
 
 	CrashHandler crash_handler;
 

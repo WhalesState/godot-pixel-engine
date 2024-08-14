@@ -6,7 +6,6 @@ env.servers_sources = []
 env.add_source_files(env.servers_sources, "*.cpp")
 
 SConscript("rendering/SCsub")
-SConscript("audio/SCsub")
 SConscript("text/SCsub")
 SConscript("debugger/SCsub")
 
