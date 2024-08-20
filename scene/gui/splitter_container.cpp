@@ -73,62 +73,89 @@ Vector<float> SplitterContainer::get_offsets() const {
 
 void SplitterContainer::sort_children() {
 	children.clear();
+	Vector<Control *> visible_children;
+
 	for (int i = 0; i < get_child_count(); i++) {
 		Control *c = Object::cast_to<Control>(get_child(i));
 		if (!c || get_child(i)->is_class("Dragger")) {
 			continue;
 		}
-		if (c->is_visible_in_tree()) {
-			if (!c->is_top_level_control()) {
-				children.append(c);
+		if (!c->is_top_level_control()) {
+			children.append(c);
+			if (c->is_visible_in_tree()) {
+				visible_children.append(c);
 			}
 		}
 	}
-	if (children.size() == 0) {
+	if (visible_children.size() == 0) {
 		free_draggers();
 		set_custom_minimum_size(Size2(0, 0));
 		return;
 	}
-	if (children.size() == 1) {
+	if (visible_children.size() == 1) {
 		free_draggers();
-		fit_child_in_rect(children[0], Rect2(Point2(), get_size()));
-		set_custom_minimum_size(children[0]->get_combined_minimum_size());
+		fit_child_in_rect(visible_children[0], Rect2(Point2(), get_size()));
+		set_custom_minimum_size(visible_children[0]->get_combined_minimum_size());
 	} else {
 		bool use_offsets = false;
-		if (offsets.size() >= children.size() - 1) {
+		if (offsets.size() == children.size() - 1) {
 			use_offsets = true;
 		} else {
 			offsets.clear();
 		}
-		if (draggers.size() != children.size() - 1) {
+		if (draggers.size() != visible_children.size() - 1) {
 			free_draggers();
 			Size2 size = get_size();
 			Size2 child_size;
 			if (!use_offsets) {
 				Size2 cur_size = size;
-				cur_size[vertical ? 1 : 0] -= separation * (children.size() - 1);
-				child_size = (cur_size / children.size()).floor();
+				cur_size[vertical ? 1 : 0] -= separation * (visible_children.size() - 1);
+				child_size = (cur_size / visible_children.size()).floor();
+				offsets.resize(children.size() - 1);
+			} else {
+				if (visible_children.size() > 2) {
+					for (int i = visible_children.size() - 3; i >= 0; i--) {
+						int index = children.find(visible_children[i]);
+						float max = offsets[index];
+						max = MIN(max, offsets[children.find(visible_children[i + 1])] - ((visible_children[i + 1]->get_combined_minimum_size()[vertical ? 1 : 0] + separation) / size[vertical ? 1 : 0]));
+						if (max != offsets[index]) {
+							offsets.set(index, max);
+						}
+					}
+				}
 			}
 			child_size[vertical ? 0 : 1] = size[vertical ? 0 : 1];
 			Point2 cur_pos;
-			for (int i = 0; i < children.size(); i++) {
-				Control *c = children[i];
+			for (int i = 0; i < visible_children.size(); i++) {
+				Control *c = visible_children[i];
 				c->set_position(cur_pos);
-				if (i != children.size() - 1) {
+				if (i != visible_children.size() - 1) {
 					if (use_offsets) {
-						child_size[vertical ? 1 : 0] = (offsets[i] * size[vertical ? 1 : 0]) - cur_pos[vertical ? 1 : 0];
+						int index = children.find(c);
+						float min = offsets[index];
+						if (i == 0) {
+							min = MAX(min, (c->get_combined_minimum_size() / size)[vertical ? 1 : 0]);
+						} else {
+							Control *prev_child = visible_children[i - 1];
+							int prev_index = children.find(prev_child);
+							min = MAX(min, offsets[prev_index] + ((prev_child->get_combined_minimum_size() + Size2(separation, separation)) / size)[vertical ? 1 : 0]);
+						}
+						if (min != offsets[index]) {
+							offsets.set(index, min);
+						}
+						child_size[vertical ? 1 : 0] = (offsets[children.find(c)] * size[vertical ? 1 : 0]) - cur_pos[vertical ? 1 : 0];
 					}
 					c->set_size(child_size);
 					Dragger *dragger = memnew(Dragger());
 					add_child(dragger);
-					move_child(dragger, c->get_index() + 1);
+					move_child(dragger, children.find(c) + 1);
 					dragger->connect("move_dragger", callable_mp(this, &SplitterContainer::move_dragger).bind(dragger, i, false));
 					draggers.append(dragger);
 					Point2 dragger_pos = cur_pos + child_size;
 					dragger_pos[vertical ? 0 : 1] = 0;
 					dragger->set_position(dragger_pos);
 					if (!use_offsets) {
-						offsets.append((dragger->get_position() / size)[vertical ? 1 : 0]);
+						offsets.set(children.find(c), (dragger->get_position() / size)[vertical ? 1 : 0]);
 					}
 					Size2 dragger_size = size;
 					dragger_size[vertical ? 1 : 0] = separation;
@@ -136,8 +163,8 @@ void SplitterContainer::sort_children() {
 				} else {
 					c->set_size(size - cur_pos);
 				}
-				if (use_offsets && i != children.size() - 1) {
-					cur_pos[vertical ? 1 : 0] = offsets[i] * size[vertical ? 1 : 0] + separation;
+				if (use_offsets && i != visible_children.size() - 1) {
+					cur_pos[vertical ? 1 : 0] = offsets[children.find(c)] * size[vertical ? 1 : 0] + separation;
 				} else {
 					cur_pos[vertical ? 1 : 0] += child_size[vertical ? 1 : 0] + separation;
 				}
@@ -147,7 +174,7 @@ void SplitterContainer::sort_children() {
 			Size2 size = get_size();
 			for (int i = 0; i < draggers.size(); i++) {
 				Dragger *dragger = draggers[i];
-				Control *c = children[i];
+				Control *c = visible_children[i];
 				c->set_position(cur_pos);
 				Size2 child_size = size;
 				child_size[vertical ? 1 : 0] = (dragger->get_position() - cur_pos)[vertical ? 1 : 0];
@@ -155,15 +182,16 @@ void SplitterContainer::sort_children() {
 				cur_pos = dragger->get_position() + Point2(separation, separation);
 				cur_pos[vertical ? 0 : 1] = 0;
 				if (i == draggers.size() - 1) {
-					Control *last_child = children[i + 1];
+					Control *last_child = visible_children[i + 1];
 					last_child->set_position(cur_pos);
 					last_child->set_size(size - cur_pos);
 				}
 			}
 		}
 		Size2 min_size;
-		for (Control *c : children) {
-			min_size += c->get_combined_minimum_size();
+		for (Control *c : visible_children) {
+			min_size[vertical ? 1 : 0] += c->get_combined_minimum_size()[vertical ? 1 : 0];
+			min_size[vertical ? 0 : 1] = MAX(min_size[vertical ? 0 : 1], c->get_combined_minimum_size()[vertical ? 0 : 1]);
 		}
 		min_size[vertical ? 1 : 0] += separation * draggers.size();
 		set_custom_minimum_size(min_size);
@@ -192,16 +220,19 @@ void SplitterContainer::move_dragger(Dragger *p_dragger, int p_index, bool p_res
 	if (p_index > 0) {
 		min = draggers[p_index - 1]->get_position()[vertical ? 1 : 0] + separation;
 	}
-	min = MAX(min, min + children[p_index]->get_combined_minimum_size()[vertical ? 1 : 0]);
+
+	Vector<Control *> visible_children = _get_visible_children();
+
+	min = MAX(min, min + visible_children[p_index]->get_combined_minimum_size()[vertical ? 1 : 0]);
 	if (p_index < draggers.size() - 1) {
 		max = draggers[p_index + 1]->get_position()[vertical ? 1 : 0] - separation;
 	}
-	max = MIN(max, max - children[p_index + 1]->get_combined_minimum_size()[vertical ? 1 : 0]);
+	max = MIN(max, max - visible_children[p_index + 1]->get_combined_minimum_size()[vertical ? 1 : 0]);
 	int new_pos;
 	if (!p_reset) {
 		new_pos = p_dragger->get_position()[vertical ? 1 : 0] + relative[vertical ? 1 : 0] - floor(separation / 2);
 	} else {
-		new_pos = offsets[p_index] * size[vertical ? 1 : 0];
+		new_pos = offsets[children.find(visible_children[p_index])] * size[vertical ? 1 : 0];
 	}
 	new_pos = CLAMP(new_pos, min, max);
 	Point2 pos;
@@ -209,10 +240,20 @@ void SplitterContainer::move_dragger(Dragger *p_dragger, int p_index, bool p_res
 	if (pos != p_dragger->get_position()) {
 		p_dragger->set_position(pos);
 		if (!p_reset) {
-			offsets.set(p_index, (p_dragger->get_position() / size)[vertical ? 1 : 0]);
+			offsets.set(children.find(visible_children[p_index]), (p_dragger->get_position() / size)[vertical ? 1 : 0]);
 		}
 		sort_children();
 	}
+}
+
+Vector<Control *> SplitterContainer::_get_visible_children() const {
+	Vector<Control *> visible_children;
+	for (int i = 0; i < children.size(); i++) {
+		if (children[i]->is_visible_in_tree()) {
+			visible_children.append(children[i]);
+		}
+	}
+	return visible_children;
 }
 
 void SplitterContainer::_notification(int p_what) {
@@ -221,7 +262,9 @@ void SplitterContainer::_notification(int p_what) {
 			sort_children();
 		} break;
 		case NOTIFICATION_RESIZED: {
-			if (prev_size != get_size() && draggers.size() == children.size() - 1) {
+			Vector<Control *> visible_children = _get_visible_children();
+
+			if (prev_size != get_size() && draggers.size() == visible_children.size() - 1) {
 				for (int i = 0; i < draggers.size(); i++) {
 					Dragger *dragger = draggers[i];
 					if (vertical) {

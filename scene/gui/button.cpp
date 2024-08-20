@@ -130,6 +130,22 @@ void Button::_notification(int p_what) {
 					}
 					[[fallthrough]];
 				}
+				case DRAW_HOVER: {
+					if (rtl && has_theme_stylebox(SNAME("hover_mirrored"))) {
+						style = theme_cache.hover_mirrored;
+					} else {
+						style = theme_cache.hover;
+					}
+
+					if (!flat) {
+						style->draw(ci, Rect2(Point2(0, 0), size));
+					}
+					color = theme_cache.font_hover_color;
+					if (has_theme_color(SNAME("icon_hover_color"))) {
+						color_icon = theme_cache.icon_hover_color;
+					}
+
+				} break;
 				case DRAW_PRESSED: {
 					if (rtl && has_theme_stylebox(SNAME("pressed_mirrored"))) {
 						style = theme_cache.pressed_mirrored;
@@ -147,22 +163,6 @@ void Button::_notification(int p_what) {
 					}
 					if (has_theme_color(SNAME("icon_pressed_color"))) {
 						color_icon = theme_cache.icon_pressed_color;
-					}
-
-				} break;
-				case DRAW_HOVER: {
-					if (rtl && has_theme_stylebox(SNAME("hover_mirrored"))) {
-						style = theme_cache.hover_mirrored;
-					} else {
-						style = theme_cache.hover;
-					}
-
-					if (!flat) {
-						style->draw(ci, Rect2(Point2(0, 0), size));
-					}
-					color = theme_cache.font_hover_color;
-					if (has_theme_color(SNAME("icon_hover_color"))) {
-						color_icon = theme_cache.icon_hover_color;
 					}
 
 				} break;

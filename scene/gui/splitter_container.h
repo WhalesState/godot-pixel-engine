@@ -69,6 +69,7 @@ class SplitterContainer : public Container {
 	void sort_children();
 	void free_draggers();
 	void move_dragger(Dragger *p_dragger, int p_index, bool p_reset = false);
+	Vector<Control *> _get_visible_children() const;
 
 protected:
 	void _notification(int p_what);
