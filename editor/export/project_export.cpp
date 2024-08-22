@@ -115,6 +115,11 @@ void ProjectExportDialog::_notification(int p_what) {
 }
 
 void ProjectExportDialog::popup_export() {
+	int current = presets->get_current();
+	presets->clear();
+	_edit_preset(-1);
+	EditorExport::get_singleton()->load_config();
+
 	add_preset->get_popup()->clear();
 	for (int i = 0; i < EditorExport::get_singleton()->get_export_platform_count(); i++) {
 		Ref<EditorExportPlatform> plat = EditorExport::get_singleton()->get_export_platform(i);
@@ -122,9 +127,24 @@ void ProjectExportDialog::popup_export() {
 		add_preset->get_popup()->add_icon_item(plat->get_logo(), plat->get_name());
 	}
 
-	_update_presets();
-	if (presets->get_current() >= 0) {
-		_update_current_preset(); // triggers rescan for templates if newly installed
+	int presets_count = EditorExport::get_singleton()->get_export_preset_count();
+	if (presets_count > 0) {
+		for (int i = 0; i < presets_count; i++) {
+			Ref<EditorExportPreset> preset = EditorExport::get_singleton()->get_export_preset(i);
+			String preset_name = preset->get_name();
+
+			if (preset->is_runnable()) {
+				preset_name += " (" + TTR("Runnable") + ")";
+			}
+			preset->update_files();
+			presets->add_item(preset_name, preset->get_platform()->get_logo());
+		}
+
+		current = MIN(current, presets_count - 1);
+		if (current >= 0) {
+			presets->select(current);
+			_edit_preset(current);
+		}
 	}
 
 	// Restore valid window bounds or pop up at default size.

@@ -187,6 +187,7 @@ void EditorExport::_notification(int p_what) {
 }
 
 void EditorExport::load_config() {
+	export_presets.clear();
 	Ref<ConfigFile> config;
 	config.instantiate();
 	Error err = config->load("res://export_presets.cfg");
