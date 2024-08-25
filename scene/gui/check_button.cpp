@@ -74,7 +74,7 @@ Size2 CheckButton::get_minimum_size() const {
 	if (get_text().length() > 0) {
 		minsize.width += MAX(0, theme_cache.h_separation);
 	}
-	minsize.height = MAX(minsize.height, tex_size.height + theme_cache.normal_style->get_margin(SIDE_TOP) + theme_cache.normal_style->get_margin(SIDE_BOTTOM));
+	minsize.height = MAX(minsize.height, tex_size.height + theme_cache.normal_style->get_minimum_size().height);
 
 	return minsize;
 }

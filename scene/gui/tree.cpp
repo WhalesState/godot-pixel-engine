@@ -4301,8 +4301,7 @@ Size2 Tree::get_minimum_size() const {
 		Vector2 min_size = get_internal_min_size();
 		Ref<StyleBox> bg = theme_cache.panel_style;
 		if (bg.is_valid()) {
-			min_size.x += bg->get_margin(SIDE_LEFT) + bg->get_margin(SIDE_RIGHT);
-			min_size.y += bg->get_margin(SIDE_TOP) + bg->get_margin(SIDE_BOTTOM);
+			min_size += bg->get_minimum_size();
 		}
 		return Vector2(h_scroll_enabled ? 0 : min_size.x, v_scroll_enabled ? 0 : min_size.y);
 	}

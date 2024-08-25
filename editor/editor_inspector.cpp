@@ -1461,7 +1461,7 @@ Size2 EditorInspectorSection::get_minimum_size() const {
 	}
 	Ref<StyleBoxFlat> section_indent_style = get_theme_stylebox(SNAME("indent_box"), SNAME("EditorInspectorSection"));
 	if (indent_depth > 0 && section_indent_style.is_valid()) {
-		ms.width += section_indent_style->get_margin(SIDE_LEFT) + section_indent_style->get_margin(SIDE_RIGHT);
+		ms.width += section_indent_style->get_minimum_size().width;
 	}
 
 	return ms;
