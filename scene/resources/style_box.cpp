@@ -86,6 +86,12 @@ float StyleBox::get_margin(Side p_side) const {
 	}
 }
 
+float StyleBox::get_style_margin(Side p_side) const {
+	float margin = 0.0;
+	GDVIRTUAL_CALL(_get_style_margin, p_side, margin);
+	return margin;
+}
+
 Point2 StyleBox::get_offset() const {
 	return Point2(get_margin(SIDE_LEFT), get_margin(SIDE_TOP));
 }
@@ -140,6 +146,7 @@ void StyleBox::_bind_methods() {
 	GDVIRTUAL_BIND(_get_draw_rect, "rect")
 	GDVIRTUAL_BIND(_get_minimum_size)
 	GDVIRTUAL_BIND(_test_mask, "point", "rect")
+	GDVIRTUAL_BIND(_get_style_margin, "side")
 }
 
 StyleBox::StyleBox() {
