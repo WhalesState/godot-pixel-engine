@@ -1123,10 +1123,6 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_constant("margin_top", "MarginContainer", 0);
 	theme->set_constant("margin_right", "MarginContainer", 0);
 	theme->set_constant("margin_bottom", "MarginContainer", 0);
-	theme->set_constant("margin_left", "CheckerContainer", 0);
-	theme->set_constant("margin_top", "CheckerContainer", 0);
-	theme->set_constant("margin_right", "CheckerContainer", 0);
-	theme->set_constant("margin_bottom", "CheckerContainer", 0);
 	theme->set_constant("h_separation", "GridContainer", Math::round(4 * scale));
 	theme->set_constant("v_separation", "GridContainer", Math::round(4 * scale));
 	theme->set_constant("separation", "SplitContainer", Math::round(12 * scale));
