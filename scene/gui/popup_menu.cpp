@@ -2728,6 +2728,8 @@ void PopupMenu::popup(const Rect2i &p_bounds) {
 }
 
 PopupMenu::PopupMenu() {
+	set_transparent_background(true);
+	set_flag(FLAG_TRANSPARENT, true);
 	// Scroll Container
 	scroll_container = memnew(ScrollContainer);
 	scroll_container->set_anchors_and_offsets_preset(Control::PRESET_FULL_RECT);
