@@ -64,6 +64,12 @@
 				Returns the [Texture2D] for the tab at index [param tab_idx] or [code]null[/code] if the tab has no [Texture2D].
 			</description>
 		</method>
+		<method name="get_tab_icon_max_width" qualifiers="const">
+			<return type="int" />
+			<param index="0" name="tab_idx" type="int" />
+			<description>
+			</description>
+		</method>
 		<method name="get_tab_idx_at_point" qualifiers="const">
 			<return type="int" />
 			<param index="0" name="point" type="Vector2" />
@@ -90,6 +96,12 @@
 			<param index="0" name="tab_idx" type="int" />
 			<description>
 				Returns the title of the tab at index [param tab_idx]. Tab titles default to the name of the indexed child node, but this can be overridden with [method set_tab_title].
+			</description>
+		</method>
+		<method name="get_tab_tooltip" qualifiers="const">
+			<return type="String" />
+			<param index="0" name="tab_idx" type="int" />
+			<description>
 			</description>
 		</method>
 		<method name="is_tab_disabled" qualifiers="const">
@@ -157,6 +169,13 @@
 				Sets an icon for the tab at index [param tab_idx].
 			</description>
 		</method>
+		<method name="set_tab_icon_max_width">
+			<return type="void" />
+			<param index="0" name="tab_idx" type="int" />
+			<param index="1" name="width" type="int" />
+			<description>
+			</description>
+		</method>
 		<method name="set_tab_metadata">
 			<return type="void" />
 			<param index="0" name="tab_idx" type="int" />
@@ -173,20 +192,26 @@
 				Sets a custom title for the tab at index [param tab_idx] (tab titles default to the name of the indexed child node). Set it back to the child's name to make the tab default to it again.
 			</description>
 		</method>
+		<method name="set_tab_tooltip">
+			<return type="void" />
+			<param index="0" name="tab_idx" type="int" />
+			<param index="1" name="tooltip" type="String" />
+			<description>
+			</description>
+		</method>
 	</methods>
 	<members>
 		<member name="all_tabs_in_front" type="bool" setter="set_all_tabs_in_front" getter="is_all_tabs_in_front" default="false">
 			If [code]true[/code], all tabs are drawn in front of the panel. If [code]false[/code], inactive tabs are drawn behind the panel.
 		</member>
-		<member name="bottom_tabs" type="bool" setter="set_bottom_tabs" getter="is_bottom_tabs" default="false">
-			Allows the [TabBar] to draw at the bottom.
-		</member>
 		<member name="clip_contents" type="bool" setter="set_clip_contents" getter="is_clipping_contents" overrides="Control" default="true" />
 		<member name="clip_tabs" type="bool" setter="set_clip_tabs" getter="get_clip_tabs" default="true">
 			If [code]true[/code], tabs overflowing this node's width will be hidden, displaying two navigation buttons instead. Otherwise, this node's minimum size is updated so that all tabs are visible.
 		</member>
-		<member name="current_tab" type="int" setter="set_current_tab" getter="get_current_tab" default="0">
+		<member name="current_tab" type="int" setter="set_current_tab" getter="get_current_tab" default="-1">
 			The current tab index. When set, this index's [Control] node's [code]visible[/code] property is set to [code]true[/code] and all others are set to [code]false[/code].
+		</member>
+		<member name="deselect_enabled" type="bool" setter="set_deselect_enabled" getter="get_deselect_enabled" default="false">
 		</member>
 		<member name="drag_to_rearrange_enabled" type="bool" setter="set_drag_to_rearrange_enabled" getter="get_drag_to_rearrange_enabled" default="false">
 			If [code]true[/code], tabs can be rearranged with mouse drag.
@@ -196,6 +221,8 @@
 		</member>
 		<member name="tab_focus_mode" type="int" setter="set_tab_focus_mode" getter="get_tab_focus_mode" enum="Control.FocusMode" default="2">
 			The focus access mode for the internal [TabBar] node.
+		</member>
+		<member name="tabs_position" type="int" setter="set_tabs_position" getter="get_tabs_position" enum="TabContainer.TabPosition" default="0">
 		</member>
 		<member name="tabs_rearrange_group" type="int" setter="set_tabs_rearrange_group" getter="get_tabs_rearrange_group" default="-1">
 			[TabContainer]s with the same rearrange group ID will allow dragging the tabs between them. Enable drag with [member drag_to_rearrange_enabled].
@@ -251,6 +278,14 @@
 			</description>
 		</signal>
 	</signals>
+	<constants>
+		<constant name="POSITION_TOP" value="0" enum="TabPosition">
+		</constant>
+		<constant name="POSITION_BOTTOM" value="1" enum="TabPosition">
+		</constant>
+		<constant name="POSITION_MAX" value="2" enum="TabPosition">
+		</constant>
+	</constants>
 	<theme_items>
 		<theme_item name="drop_mark_color" data_type="color" type="Color" default="Color(1, 1, 1, 1)">
 			Modulation color for the [theme_item drop_mark] icon.

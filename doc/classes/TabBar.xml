@@ -111,6 +111,12 @@
 				Returns the title of the tab at index [param tab_idx].
 			</description>
 		</method>
+		<method name="get_tab_tooltip" qualifiers="const">
+			<return type="String" />
+			<param index="0" name="tab_idx" type="int" />
+			<description>
+			</description>
+		</method>
 		<method name="is_tab_disabled" qualifiers="const">
 			<return type="bool" />
 			<param index="0" name="tab_idx" type="int" />
@@ -224,13 +230,22 @@
 				Sets a [param title] for the tab at index [param tab_idx].
 			</description>
 		</method>
+		<method name="set_tab_tooltip">
+			<return type="void" />
+			<param index="0" name="tab_idx" type="int" />
+			<param index="1" name="tooltip" type="String" />
+			<description>
+			</description>
+		</method>
 	</methods>
 	<members>
 		<member name="clip_tabs" type="bool" setter="set_clip_tabs" getter="get_clip_tabs" default="true">
 			If [code]true[/code], tabs overflowing this node's width will be hidden, displaying two navigation buttons instead. Otherwise, this node's minimum size is updated so that all tabs are visible.
 		</member>
-		<member name="current_tab" type="int" setter="set_current_tab" getter="get_current_tab" default="0">
+		<member name="current_tab" type="int" setter="set_current_tab" getter="get_current_tab" default="-1">
 			Select tab at index [code]tab_idx[/code].
+		</member>
+		<member name="deselect_enabled" type="bool" setter="set_deselect_enabled" getter="get_deselect_enabled" default="false">
 		</member>
 		<member name="drag_to_rearrange_enabled" type="bool" setter="set_drag_to_rearrange_enabled" getter="get_drag_to_rearrange_enabled" default="false">
 			If [code]true[/code], tabs can be rearranged with mouse drag.

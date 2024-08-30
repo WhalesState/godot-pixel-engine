@@ -29,6 +29,13 @@
 				Virtual method to be implemented by the user. Returns a custom minimum size that the stylebox must respect when drawing. By default [method get_minimum_size] only takes content margins into account. This method can be overridden to add another size restriction. A combination of the default behavior and the output of this method will be used, to account for both sizes.
 			</description>
 		</method>
+		<method name="_get_style_margin" qualifiers="virtual const">
+			<return type="float" />
+			<param index="0" name="side" type="int" enum="Side" />
+			<description>
+				Override how the side margins are calculated if [method get_margin] returns -1.
+			</description>
+		</method>
 		<method name="_test_mask" qualifiers="virtual const">
 			<return type="bool" />
 			<param index="0" name="point" type="Vector2" />
