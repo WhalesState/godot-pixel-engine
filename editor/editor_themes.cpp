@@ -1682,11 +1682,6 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_constant("outline_size", "TextEdit", 0);
 	theme->set_constant("caret_width", "TextEdit", 1);
 
-	theme->set_icon("h_grabber", "SplitContainer", theme->get_icon(SNAME("GuiHsplitter"), EditorStringName(EditorIcons)));
-	theme->set_icon("v_grabber", "SplitContainer", theme->get_icon(SNAME("GuiVsplitter"), EditorStringName(EditorIcons)));
-	theme->set_icon("grabber", "VSplitContainer", theme->get_icon(SNAME("GuiVsplitter"), EditorStringName(EditorIcons)));
-	theme->set_icon("grabber", "HSplitContainer", theme->get_icon(SNAME("GuiHsplitter"), EditorStringName(EditorIcons)));
-
 	theme->set_constant("separation", "SplitContainer", default_margin_size * 2 * EDSCALE);
 	theme->set_constant("separation", "HSplitContainer", default_margin_size * 2 * EDSCALE);
 	theme->set_constant("separation", "VSplitContainer", default_margin_size * 2 * EDSCALE);
@@ -1694,6 +1689,22 @@ Ref<Theme> create_editor_theme(const Ref<Theme> p_theme) {
 	theme->set_constant("minimum_grab_thickness", "SplitContainer", 6 * EDSCALE);
 	theme->set_constant("minimum_grab_thickness", "HSplitContainer", 6 * EDSCALE);
 	theme->set_constant("minimum_grab_thickness", "VSplitContainer", 6 * EDSCALE);
+
+	theme->set_constant("grabber_thickness", "SplitContainer", 4 * EDSCALE);
+	theme->set_constant("grabber_thickness", "HSplitContainer", 4 * EDSCALE);
+	theme->set_constant("grabber_thickness", "VSplitContainer", 4 * EDSCALE);
+
+	theme->set_color("grabber_normal", "SplitContainer", font_color);
+	theme->set_color("grabber_normal", "HSplitContainer", font_color);
+	theme->set_color("grabber_normal", "VSplitContainer", font_color);
+
+	theme->set_color("grabber_hovered", "SplitContainer", font_hover_color);
+	theme->set_color("grabber_hovered", "HSplitContainer", font_hover_color);
+	theme->set_color("grabber_hovered", "VSplitContainer", font_hover_color);
+
+	theme->set_color("grabber_pressed", "SplitContainer", accent_color);
+	theme->set_color("grabber_pressed", "HSplitContainer", accent_color);
+	theme->set_color("grabber_pressed", "VSplitContainer", accent_color);
 
 	// Containers
 	theme->set_constant("separation", "BoxContainer", default_margin_size * EDSCALE);

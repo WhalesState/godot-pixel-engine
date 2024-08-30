@@ -74,15 +74,15 @@ private:
 	struct ThemeCache {
 		int separation = 0;
 		int minimum_grab_thickness = 0;
+		int grabber_thickness = 0;
 		bool autohide = false;
-		Ref<Texture2D> grabber_icon;
-		Ref<Texture2D> grabber_icon_h;
-		Ref<Texture2D> grabber_icon_v;
+		Color grabber_normal;
+		Color grabber_hovered;
+		Color grabber_pressed;
 	} theme_cache;
 
 	Control *_getch(int p_idx) const;
 
-	Ref<Texture2D> _get_grabber_icon() const;
 	void _compute_middle_sep(bool p_clamp);
 	void _resort();
 

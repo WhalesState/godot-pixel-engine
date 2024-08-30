@@ -31,8 +31,6 @@
 
 #include "split_container.h"
 
-#include "scene/gui/label.h"
-#include "scene/gui/margin_container.h"
 #include "scene/theme/theme_db.h"
 
 void SplitContainerDragger::gui_input(const Ref<InputEvent> &p_event) {
@@ -59,8 +57,8 @@ void SplitContainerDragger::gui_input(const Ref<InputEvent> &p_event) {
 				}
 			} else {
 				dragging = false;
-				queue_redraw();
 			}
+			queue_redraw();
 		}
 	}
 
@@ -97,18 +95,12 @@ void SplitContainerDragger::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_MOUSE_ENTER: {
 			mouse_inside = true;
-			SplitContainer *sc = Object::cast_to<SplitContainer>(get_parent());
-			if (sc->theme_cache.autohide) {
-				queue_redraw();
-			}
+			queue_redraw();
 		} break;
 
 		case NOTIFICATION_MOUSE_EXIT: {
 			mouse_inside = false;
-			SplitContainer *sc = Object::cast_to<SplitContainer>(get_parent());
-			if (sc->theme_cache.autohide) {
-				queue_redraw();
-			}
+			queue_redraw();
 		} break;
 
 		case NOTIFICATION_DRAW: {
@@ -116,9 +108,28 @@ void SplitContainerDragger::_notification(int p_what) {
 			if (!dragging && !mouse_inside && sc->theme_cache.autohide) {
 				return;
 			}
-
-			Ref<Texture2D> tex = sc->_get_grabber_icon();
-			draw_texture(tex, (get_size() - tex->get_size()) / 2);
+			int thickness = CLAMP(sc->theme_cache.grabber_thickness, 0, sc->is_vertical() ? get_size().y : get_size().x);
+			if (thickness == 0) {
+				return;
+			}
+			Color color = sc->theme_cache.grabber_normal;
+			if (dragging) {
+				color = sc->theme_cache.grabber_pressed;
+			} else {
+				if (mouse_inside) {
+					color = sc->theme_cache.grabber_hovered;
+				}
+			}
+			Point2 from;
+			Point2 to;
+			if (sc->is_vertical()) {
+				from = Point2(0, get_size().y / 2.0);
+				to = Point2(get_size().x, get_size().y / 2.0);
+			} else {
+				from = Point2(get_size().x / 2.0, 0);
+				to = Point2(get_size().x / 2.0, get_size().y);
+			}
+			draw_line(from, to, color, thickness);
 		} break;
 	}
 }
@@ -145,18 +156,6 @@ Control *SplitContainer::_getch(int p_idx) const {
 	return nullptr;
 }
 
-Ref<Texture2D> SplitContainer::_get_grabber_icon() const {
-	if (is_fixed) {
-		return theme_cache.grabber_icon;
-	} else {
-		if (vertical) {
-			return theme_cache.grabber_icon_v;
-		} else {
-			return theme_cache.grabber_icon_h;
-		}
-	}
-}
-
 void SplitContainer::_compute_middle_sep(bool p_clamp) {
 	Control *first = _getch(0);
 	Control *second = _getch(1);
@@ -172,8 +171,7 @@ void SplitContainer::_compute_middle_sep(bool p_clamp) {
 	int ms_second = second->get_combined_minimum_size()[axis];
 
 	// Determine the separation between items.
-	Ref<Texture2D> g = _get_grabber_icon();
-	int sep = (dragger_visibility != DRAGGER_HIDDEN_COLLAPSED) ? MAX(theme_cache.separation, vertical ? g->get_height() : g->get_width()) : 0;
+	int sep = (dragger_visibility == DRAGGER_HIDDEN_COLLAPSED) ? 0 : theme_cache.separation;
 
 	// Compute the wished separation_point.
 	int wished_middle_sep = 0;
@@ -218,8 +216,7 @@ void SplitContainer::_resort() {
 	_compute_middle_sep(false);
 
 	// Determine the separation between items.
-	Ref<Texture2D> g = _get_grabber_icon();
-	int sep = (dragger_visibility != DRAGGER_HIDDEN_COLLAPSED) ? MAX(theme_cache.separation, vertical ? g->get_height() : g->get_width()) : 0;
+	int sep = (dragger_visibility == DRAGGER_HIDDEN_COLLAPSED) ? 0 : theme_cache.separation;
 
 	// Move the children, including the dragger.
 	if (vertical) {
@@ -258,8 +255,7 @@ void SplitContainer::_resort() {
 
 Size2 SplitContainer::get_minimum_size() const {
 	Size2i minimum;
-	Ref<Texture2D> g = _get_grabber_icon();
-	int sep = (dragger_visibility != DRAGGER_HIDDEN_COLLAPSED) ? MAX(theme_cache.separation, vertical ? g->get_height() : g->get_width()) : 0;
+	int sep = (dragger_visibility == DRAGGER_HIDDEN_COLLAPSED) ? 0 : theme_cache.separation;
 
 	for (int i = 0; i < 2; i++) {
 		if (!_getch(i)) {
@@ -423,9 +419,10 @@ void SplitContainer::_bind_methods() {
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, SplitContainer, separation);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, SplitContainer, minimum_grab_thickness);
 	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, SplitContainer, autohide);
-	BIND_THEME_ITEM_CUSTOM(Theme::DATA_TYPE_ICON, SplitContainer, grabber_icon, "grabber");
-	BIND_THEME_ITEM_CUSTOM(Theme::DATA_TYPE_ICON, SplitContainer, grabber_icon_h, "h_grabber");
-	BIND_THEME_ITEM_CUSTOM(Theme::DATA_TYPE_ICON, SplitContainer, grabber_icon_v, "v_grabber");
+	BIND_THEME_ITEM(Theme::DATA_TYPE_CONSTANT, SplitContainer, grabber_thickness);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, SplitContainer, grabber_normal);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, SplitContainer, grabber_hovered);
+	BIND_THEME_ITEM(Theme::DATA_TYPE_COLOR, SplitContainer, grabber_pressed);
 }
 
 SplitContainer::SplitContainer(bool p_vertical) {
