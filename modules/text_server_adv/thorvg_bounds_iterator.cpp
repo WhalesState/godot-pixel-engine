@@ -29,20 +29,9 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifdef GDEXTENSION
-// Headers for building as GDExtension plug-in.
-
-#include <godot_cpp/godot.hpp>
-
-using namespace godot;
-
-#else
-// Headers for building as built-in module.
-
 #include "core/typedefs.h"
 
 #include "modules/modules_enabled.gen.h" // For svg.
-#endif
 
 #ifdef MODULE_SVG_ENABLED
 

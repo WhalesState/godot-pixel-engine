@@ -32,22 +32,9 @@
 #ifndef SCRIPT_ITERATOR_H
 #define SCRIPT_ITERATOR_H
 
-#ifdef GDEXTENSION
-
-// Headers for building as GDExtension plug-in.
-#include <godot_cpp/godot.hpp>
-#include <godot_cpp/templates/vector.hpp>
-#include <godot_cpp/variant/string.hpp>
-
-using namespace godot;
-
-#else
-
 // Headers for building as built-in module.
 #include "core/string/ustring.h"
 #include "core/templates/vector.h"
-
-#endif
 
 #include <unicode/uchar.h>
 #include <unicode/uloc.h>

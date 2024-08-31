@@ -32,24 +32,11 @@
 #ifndef THORVG_SVG_IN_OT_H
 #define THORVG_SVG_IN_OT_H
 
-#ifdef GDEXTENSION
-// Headers for building as GDExtension plug-in.
-
-#include <godot_cpp/core/mutex_lock.hpp>
-#include <godot_cpp/godot.hpp>
-#include <godot_cpp/templates/hash_map.hpp>
-
-using namespace godot;
-
-#else
-// Headers for building as built-in module.
-
 #include "core/os/mutex.h"
 #include "core/templates/hash_map.h"
 #include "core/typedefs.h"
 
 #include "modules/modules_enabled.gen.h" // For svg, freetype.
-#endif
 
 #ifdef MODULE_SVG_ENABLED
 #ifdef MODULE_FREETYPE_ENABLED

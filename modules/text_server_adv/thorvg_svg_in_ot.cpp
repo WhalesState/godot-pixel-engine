@@ -29,19 +29,6 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifdef GDEXTENSION
-// Headers for building as GDExtension plug-in.
-
-#include <godot_cpp/classes/xml_parser.hpp>
-#include <godot_cpp/core/mutex_lock.hpp>
-#include <godot_cpp/godot.hpp>
-#include <godot_cpp/templates/vector.hpp>
-
-using namespace godot;
-
-#else
-// Headers for building as built-in module.
-
 #include "core/error/error_macros.h"
 #include "core/io/xml_parser.h"
 #include "core/os/memory.h"
@@ -51,7 +38,6 @@ using namespace godot;
 #include "core/variant/variant.h"
 
 #include "modules/modules_enabled.gen.h" // For svg, freetype.
-#endif
 
 #ifdef MODULE_SVG_ENABLED
 #ifdef MODULE_FREETYPE_ENABLED
