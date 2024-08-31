@@ -2738,54 +2738,50 @@
 		<constant name="PROPERTY_USAGE_UPDATE_ALL_IF_MODIFIED" value="16384" enum="PropertyUsageFlags" is_bitfield="true">
 			If this property is modified, all inspector fields will be refreshed.
 		</constant>
-		<constant name="PROPERTY_USAGE_SCRIPT_DEFAULT_VALUE" value="32768" enum="PropertyUsageFlags" is_bitfield="true" is_deprecated="true">
-			Signifies a default value from a placeholder script instance.
-			[i]Deprecated.[/i] This hint is not used anywhere and will be removed in the future.
-		</constant>
-		<constant name="PROPERTY_USAGE_CLASS_IS_ENUM" value="65536" enum="PropertyUsageFlags" is_bitfield="true">
+		<constant name="PROPERTY_USAGE_CLASS_IS_ENUM" value="32768" enum="PropertyUsageFlags" is_bitfield="true">
 			The property is an enum, i.e. it only takes named integer constants from its associated enumeration.
 		</constant>
-		<constant name="PROPERTY_USAGE_NIL_IS_VARIANT" value="131072" enum="PropertyUsageFlags" is_bitfield="true">
+		<constant name="PROPERTY_USAGE_NIL_IS_VARIANT" value="65536" enum="PropertyUsageFlags" is_bitfield="true">
 			If property has [code]nil[/code] as default value, its type will be [Variant].
 		</constant>
-		<constant name="PROPERTY_USAGE_ARRAY" value="262144" enum="PropertyUsageFlags" is_bitfield="true">
+		<constant name="PROPERTY_USAGE_ARRAY" value="131072" enum="PropertyUsageFlags" is_bitfield="true">
 			The property is an array.
 		</constant>
-		<constant name="PROPERTY_USAGE_ALWAYS_DUPLICATE" value="524288" enum="PropertyUsageFlags" is_bitfield="true">
+		<constant name="PROPERTY_USAGE_ALWAYS_DUPLICATE" value="262144" enum="PropertyUsageFlags" is_bitfield="true">
 			When duplicating a resource with [method Resource.duplicate], and this flag is set on a property of that resource, the property should always be duplicated, regardless of the [code]subresources[/code] bool parameter.
 		</constant>
-		<constant name="PROPERTY_USAGE_NEVER_DUPLICATE" value="1048576" enum="PropertyUsageFlags" is_bitfield="true">
+		<constant name="PROPERTY_USAGE_NEVER_DUPLICATE" value="524288" enum="PropertyUsageFlags" is_bitfield="true">
 			When duplicating a resource with [method Resource.duplicate], and this flag is set on a property of that resource, the property should never be duplicated, regardless of the [code]subresources[/code] bool parameter.
 		</constant>
-		<constant name="PROPERTY_USAGE_HIGH_END_GFX" value="2097152" enum="PropertyUsageFlags" is_bitfield="true">
+		<constant name="PROPERTY_USAGE_HIGH_END_GFX" value="1048576" enum="PropertyUsageFlags" is_bitfield="true">
 			The property is only shown in the editor if modern renderers are supported (the Compatibility rendering method is excluded).
 		</constant>
-		<constant name="PROPERTY_USAGE_NODE_PATH_FROM_SCENE_ROOT" value="4194304" enum="PropertyUsageFlags" is_bitfield="true">
+		<constant name="PROPERTY_USAGE_NODE_PATH_FROM_SCENE_ROOT" value="2097152" enum="PropertyUsageFlags" is_bitfield="true">
 			The [NodePath] property will always be relative to the scene's root. Mostly useful for local resources.
 		</constant>
-		<constant name="PROPERTY_USAGE_RESOURCE_NOT_PERSISTENT" value="8388608" enum="PropertyUsageFlags" is_bitfield="true">
+		<constant name="PROPERTY_USAGE_RESOURCE_NOT_PERSISTENT" value="4194304" enum="PropertyUsageFlags" is_bitfield="true">
 			Use when a resource is created on the fly, i.e. the getter will always return a different instance. [ResourceSaver] needs this information to properly save such resources.
 		</constant>
-		<constant name="PROPERTY_USAGE_KEYING_INCREMENTS" value="16777216" enum="PropertyUsageFlags" is_bitfield="true">
+		<constant name="PROPERTY_USAGE_KEYING_INCREMENTS" value="8388608" enum="PropertyUsageFlags" is_bitfield="true">
 			Inserting an animation key frame of this property will automatically increment the value, allowing to easily keyframe multiple values in a row.
 		</constant>
-		<constant name="PROPERTY_USAGE_DEFERRED_SET_RESOURCE" value="33554432" enum="PropertyUsageFlags" is_bitfield="true" is_deprecated="true">
-			When loading, the resource for this property can be set at the end of loading.
-			[i]Deprecated.[/i] This hint is not used anywhere and will be removed in the future.
-		</constant>
-		<constant name="PROPERTY_USAGE_EDITOR_INSTANTIATE_OBJECT" value="67108864" enum="PropertyUsageFlags" is_bitfield="true">
+		<constant name="PROPERTY_USAGE_EDITOR_INSTANTIATE_OBJECT" value="16777216" enum="PropertyUsageFlags" is_bitfield="true">
 			When this property is a [Resource] and base object is a [Node], a resource instance will be automatically created whenever the node is created in the editor.
 		</constant>
-		<constant name="PROPERTY_USAGE_EDITOR_BASIC_SETTING" value="134217728" enum="PropertyUsageFlags" is_bitfield="true">
+		<constant name="PROPERTY_USAGE_EDITOR_BASIC_SETTING" value="33554432" enum="PropertyUsageFlags" is_bitfield="true">
 			The property is considered a basic setting and will appear even when advanced mode is disabled. Used for project settings.
 		</constant>
-		<constant name="PROPERTY_USAGE_READ_ONLY" value="268435456" enum="PropertyUsageFlags" is_bitfield="true">
+		<constant name="PROPERTY_USAGE_READ_ONLY" value="67108864" enum="PropertyUsageFlags" is_bitfield="true">
 			The property is read-only in the [EditorInspector].
 		</constant>
-		<constant name="PROPERTY_USAGE_SECRET" value="536870912" enum="PropertyUsageFlags" is_bitfield="true">
+		<constant name="PROPERTY_USAGE_SECRET" value="134217728" enum="PropertyUsageFlags" is_bitfield="true">
 			An export preset property with this flag contains confidential information and is stored separately from the rest of the export preset configuration.
 		</constant>
-		<constant name="PROPERTY_USAGE_NO_UNDO" value="1073741824" enum="PropertyUsageFlags" is_bitfield="true">
+		<constant name="PROPERTY_USAGE_NO_UNDO" value="268435456" enum="PropertyUsageFlags" is_bitfield="true">
+			Prevent the property from being added to the EditorUndoRedo when changed.
+		</constant>
+		<constant name="PROPERTY_USAGE_CUSTOM" value="536870912" enum="PropertyUsageFlags" is_bitfield="true">
+			For custom properties, ie. custom property editors like a user defined object inspector.
 		</constant>
 		<constant name="PROPERTY_USAGE_DEFAULT" value="6" enum="PropertyUsageFlags" is_bitfield="true">
 			Default usage (storage and editor).
