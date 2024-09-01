@@ -83,8 +83,6 @@ public:
 	enum APIType {
 		API_CORE,
 		API_EDITOR,
-		API_EXTENSION,
-		API_EDITOR_EXTENSION,
 		API_NONE
 	};
 
@@ -102,8 +100,6 @@ public:
 		APIType api = API_NONE;
 		ClassInfo *inherits_ptr = nullptr;
 		void *class_ptr = nullptr;
-
-		ObjectGDExtension *gdextension = nullptr;
 
 		HashMap<StringName, MethodBind *> method_map;
 		HashMap<StringName, LocalVector<MethodBind *>> method_map_compatibility;
@@ -229,9 +225,6 @@ public:
 		T::register_custom_data_to_otdb();
 	}
 
-	static void register_extension_class(ObjectGDExtension *p_extension);
-	static void unregister_extension_class(const StringName &p_class, bool p_free_method_binds = true);
-
 	template <class T>
 	static Object *_create_ptr_func() {
 		return T::create();
@@ -265,7 +258,6 @@ public:
 	static bool can_instantiate(const StringName &p_class);
 	static bool is_virtual(const StringName &p_class);
 	static Object *instantiate(const StringName &p_class);
-	static void set_object_extension_instance(Object *p_object, const StringName &p_class, GDExtensionClassInstancePtr p_instance);
 
 	static APIType get_api_type(const StringName &p_class);
 

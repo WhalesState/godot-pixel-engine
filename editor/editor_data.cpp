@@ -32,7 +32,6 @@
 #include "editor_data.h"
 
 #include "core/config/project_settings.h"
-#include "core/extension/gdextension_manager.h"
 #include "core/io/file_access.h"
 #include "core/io/image_loader.h"
 #include "core/io/resource_loader.h"
@@ -1074,17 +1073,6 @@ void EditorData::script_class_load_icon_paths() {
 	}
 }
 
-Ref<Texture2D> EditorData::extension_class_get_icon(const String &p_class) const {
-	if (GDExtensionManager::get_singleton()->class_has_icon_path(p_class)) {
-		String icon_path = GDExtensionManager::get_singleton()->class_get_icon_path(p_class);
-		Ref<Texture2D> icon = _load_script_icon(icon_path);
-		if (icon.is_valid()) {
-			return icon;
-		}
-	}
-	return nullptr;
-}
-
 Ref<Texture2D> EditorData::_load_script_icon(const String &p_path) const {
 	if (!p_path.is_empty() && ResourceLoader::exists(p_path)) {
 		Ref<Texture2D> icon = ResourceLoader::load(p_path);
@@ -1136,13 +1124,6 @@ Ref<Texture2D> EditorData::get_script_icon(const Ref<Script> &p_script) {
 	// class of the script instead.
 	String base_type;
 	p_script->get_language()->get_global_class_name(p_script->get_path(), &base_type);
-
-	// Check if the base type is an extension-defined type.
-	Ref<Texture2D> ext_icon = extension_class_get_icon(base_type);
-	if (ext_icon.is_valid()) {
-		_script_icon_cache[p_script] = ext_icon;
-		return ext_icon;
-	}
 
 	// If no icon found, cache it as null.
 	_script_icon_cache[p_script] = Ref<Texture>();

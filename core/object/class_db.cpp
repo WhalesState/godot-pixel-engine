@@ -102,21 +102,6 @@ void ClassDB::get_class_list(List<StringName> *p_classes) {
 	p_classes->sort_custom<StringName::AlphCompare>();
 }
 
-#ifdef TOOLS_ENABLED
-void ClassDB::get_extensions_class_list(List<StringName> *p_classes) {
-	OBJTYPE_RLOCK;
-
-	for (const KeyValue<StringName, ClassInfo> &E : classes) {
-		if (E.value.api != API_EXTENSION && E.value.api != API_EDITOR_EXTENSION) {
-			continue;
-		}
-		p_classes->push_back(E.key);
-	}
-
-	p_classes->sort_custom<StringName::AlphCompare>();
-}
-#endif
-
 void ClassDB::get_inheriters_from_class(const StringName &p_class, List<StringName> *p_classes) {
 	OBJTYPE_RLOCK;
 
@@ -318,11 +303,6 @@ uint32_t ClassDB::get_api_hash(APIType p_api) {
 
 	hash = hash_fmix32(hash);
 
-	// Extension API changes at runtime; let's just not cache them by now.
-	if (p_api != API_EXTENSION && p_api != API_EDITOR_EXTENSION) {
-		api_hashes_cache[p_api] = hash;
-	}
-
 	return hash;
 #else
 	return 0;
@@ -351,7 +331,7 @@ Object *ClassDB::instantiate(const StringName &p_class) {
 	{
 		OBJTYPE_RLOCK;
 		ti = classes.getptr(p_class);
-		if (!ti || ti->disabled || !ti->creation_func || (ti->gdextension && !ti->gdextension->create_instance)) {
+		if (!ti || ti->disabled || !ti->creation_func) {
 			if (compat_classes.has(p_class)) {
 				ti = classes.getptr(compat_classes[p_class]);
 			}
@@ -366,37 +346,7 @@ Object *ClassDB::instantiate(const StringName &p_class) {
 		return nullptr;
 	}
 #endif
-	if (ti->gdextension && ti->gdextension->create_instance) {
-		return (Object *)ti->gdextension->create_instance(ti->gdextension->class_userdata);
-	} else {
-		return ti->creation_func();
-	}
-}
-
-void ClassDB::set_object_extension_instance(Object *p_object, const StringName &p_class, GDExtensionClassInstancePtr p_instance) {
-	ERR_FAIL_NULL(p_object);
-	ClassInfo *ti;
-	{
-		OBJTYPE_RLOCK;
-		ti = classes.getptr(p_class);
-		if (!ti || ti->disabled || !ti->creation_func || (ti->gdextension && !ti->gdextension->create_instance)) {
-			if (compat_classes.has(p_class)) {
-				ti = classes.getptr(compat_classes[p_class]);
-			}
-		}
-		ERR_FAIL_NULL_MSG(ti, "Cannot get class '" + String(p_class) + "'.");
-		ERR_FAIL_COND_MSG(ti->disabled, "Class '" + String(p_class) + "' is disabled.");
-		ERR_FAIL_NULL_MSG(ti->gdextension, "Class '" + String(p_class) + "' has no native extension.");
-	}
-
-	p_object->_extension = ti->gdextension;
-	p_object->_extension_instance = p_instance;
-
-#ifdef TOOLS_ENABLED
-	if (p_object->_extension->track_instance) {
-		p_object->_extension->track_instance(p_object->_extension->tracking_userdata, p_object);
-	}
-#endif
+	return ti->creation_func();
 }
 
 bool ClassDB::can_instantiate(const StringName &p_class) {
@@ -416,7 +366,7 @@ bool ClassDB::can_instantiate(const StringName &p_class) {
 		return false;
 	}
 #endif
-	return (!ti->disabled && ti->creation_func != nullptr && !(ti->gdextension && !ti->gdextension->create_instance));
+	return (!ti->disabled && ti->creation_func != nullptr);
 }
 
 bool ClassDB::is_virtual(const StringName &p_class) {
@@ -436,7 +386,7 @@ bool ClassDB::is_virtual(const StringName &p_class) {
 		return false;
 	}
 #endif
-	return (!ti->disabled && ti->creation_func != nullptr && !(ti->gdextension && !ti->gdextension->create_instance) && ti->is_virtual);
+	return (!ti->disabled && ti->creation_func != nullptr && ti->is_virtual);
 }
 
 void ClassDB::_add_class2(const StringName &p_class, const StringName &p_inherits) {
@@ -1747,57 +1697,6 @@ Variant ClassDB::class_get_default_property_value(const StringName &p_class, con
 #endif
 
 	return var;
-}
-
-void ClassDB::register_extension_class(ObjectGDExtension *p_extension) {
-	GLOBAL_LOCK_FUNCTION;
-
-	ERR_FAIL_COND_MSG(classes.has(p_extension->class_name), "Class already registered: " + String(p_extension->class_name));
-	ERR_FAIL_COND_MSG(!classes.has(p_extension->parent_class_name), "Parent class name for extension class not found: " + String(p_extension->parent_class_name));
-
-	ClassInfo *parent = classes.getptr(p_extension->parent_class_name);
-
-	ClassInfo c;
-	c.api = p_extension->editor_class ? API_EDITOR_EXTENSION : API_EXTENSION;
-	c.gdextension = p_extension;
-	c.name = p_extension->class_name;
-	c.is_virtual = p_extension->is_virtual;
-	if (!p_extension->is_abstract) {
-		// Find the closest ancestor which is either non-abstract or native (or both).
-		ClassInfo *concrete_ancestor = parent;
-		while (concrete_ancestor->creation_func == nullptr &&
-				concrete_ancestor->inherits_ptr != nullptr &&
-				concrete_ancestor->gdextension != nullptr) {
-			concrete_ancestor = concrete_ancestor->inherits_ptr;
-		}
-		ERR_FAIL_NULL_MSG(concrete_ancestor->creation_func, "Extension class " + String(p_extension->class_name) + " cannot extend native abstract class " + String(concrete_ancestor->name));
-		c.creation_func = concrete_ancestor->creation_func;
-	}
-	c.inherits = parent->name;
-	c.class_ptr = parent->class_ptr;
-	c.inherits_ptr = parent;
-	c.exposed = p_extension->is_exposed;
-	if (c.exposed) {
-		// The parent classes should be exposed if it has an exposed child class.
-		while (parent && !parent->exposed) {
-			parent->exposed = true;
-			parent = classes.getptr(parent->name);
-		}
-	}
-	c.reloadable = p_extension->reloadable;
-
-	classes[p_extension->class_name] = c;
-}
-
-void ClassDB::unregister_extension_class(const StringName &p_class, bool p_free_method_binds) {
-	ClassInfo *c = classes.getptr(p_class);
-	ERR_FAIL_NULL_MSG(c, "Class '" + String(p_class) + "' does not exist.");
-	if (p_free_method_binds) {
-		for (KeyValue<StringName, MethodBind *> &F : c->method_map) {
-			memdelete(F.value);
-		}
-	}
-	classes.erase(p_class);
 }
 
 HashMap<StringName, ClassDB::NativeStruct> ClassDB::native_structs;

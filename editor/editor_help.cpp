@@ -2294,9 +2294,6 @@ void EditorHelp::_load_doc_thread(void *p_udata) {
 		for (int i = 0; i < classes.size(); i++) {
 			doc->add_doc(DocData::ClassDoc::from_dict(classes[i]));
 		}
-
-		// Extensions' docs are not cached. Generate them now (on the main thread).
-		callable_mp_static(&EditorHelp::_gen_extensions_docs).call_deferred();
 	} else {
 		// We have to go back to the main thread to start from scratch, bypassing any possibly existing cache.
 		callable_mp_static(&EditorHelp::generate_doc).bind(false).call_deferred();
@@ -2313,12 +2310,6 @@ void EditorHelp::_gen_doc_thread(void *p_udata) {
 	cache_res->set_meta("version_hash", doc_version_hash);
 	Array classes;
 	for (const KeyValue<String, DocData::ClassDoc> &E : doc->class_list) {
-		if (ClassDB::class_exists(E.value.name)) {
-			ClassDB::APIType api = ClassDB::get_api_type(E.value.name);
-			if (api == ClassDB::API_EXTENSION || api == ClassDB::API_EDITOR_EXTENSION) {
-				continue;
-			}
-		}
 		classes.push_back(DocData::ClassDoc::to_dict(E.value));
 	}
 	cache_res->set_meta("classes", classes);
@@ -2326,10 +2317,6 @@ void EditorHelp::_gen_doc_thread(void *p_udata) {
 	if (err) {
 		ERR_PRINT("Cannot save editor help cache (" + get_cache_full_path() + ").");
 	}
-}
-
-void EditorHelp::_gen_extensions_docs() {
-	doc->generate((DocTools::GENERATE_FLAG_SKIP_BASIC_TYPES | DocTools::GENERATE_FLAG_EXTENSION_CLASSES_ONLY));
 }
 
 void EditorHelp::generate_doc(bool p_use_cache) {

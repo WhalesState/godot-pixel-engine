@@ -153,33 +153,6 @@ void PacketPeer::_bind_methods() {
 
 /***************/
 
-Error PacketPeerExtension::get_packet(const uint8_t **r_buffer, int &r_buffer_size) {
-	Error err;
-	if (GDVIRTUAL_CALL(_get_packet, r_buffer, &r_buffer_size, err)) {
-		return err;
-	}
-	WARN_PRINT_ONCE("PacketPeerExtension::_get_packet_native is unimplemented!");
-	return FAILED;
-}
-
-Error PacketPeerExtension::put_packet(const uint8_t *p_buffer, int p_buffer_size) {
-	Error err;
-	if (GDVIRTUAL_CALL(_put_packet, p_buffer, p_buffer_size, err)) {
-		return err;
-	}
-	WARN_PRINT_ONCE("PacketPeerExtension::_put_packet_native is unimplemented!");
-	return FAILED;
-}
-
-void PacketPeerExtension::_bind_methods() {
-	GDVIRTUAL_BIND(_get_packet, "r_buffer", "r_buffer_size");
-	GDVIRTUAL_BIND(_put_packet, "p_buffer", "p_buffer_size");
-	GDVIRTUAL_BIND(_get_available_packet_count);
-	GDVIRTUAL_BIND(_get_max_packet_size);
-}
-
-/***************/
-
 void PacketPeerStream::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_stream_peer", "peer"), &PacketPeerStream::set_stream_peer);
 	ClassDB::bind_method(D_METHOD("get_stream_peer"), &PacketPeerStream::get_stream_peer);

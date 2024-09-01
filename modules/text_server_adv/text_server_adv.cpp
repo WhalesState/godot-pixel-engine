@@ -350,11 +350,7 @@ bool TextServerAdvanced::has_feature(Feature p_feature) const {
 }
 
 String TextServerAdvanced::get_name() const {
-#ifdef GDEXTENSION
-	return "ICU / HarfBuzz / Graphite (GDExtension)";
-#else
 	return "ICU / HarfBuzz / Graphite (Built-in)";
-#endif
 }
 
 int64_t TextServerAdvanced::get_features() const {
@@ -5586,12 +5582,8 @@ void TextServerAdvanced::_shape_run(ShapedTextDataAdvanced *p_sd, int64_t p_star
 			String locale = (p_sd->spans[p_span].language.is_empty()) ? TranslationServer::get_singleton()->get_tool_locale() : p_sd->spans[p_span].language;
 
 			PackedStringArray fallback_font_name = OS::get_singleton()->get_system_font_path_for_text(font_name, text, locale, script_code, font_weight, font_stretch, font_style & TextServer::FONT_ITALIC);
-#ifdef GDEXTENSION
-			for (int fb = 0; fb < fallback_font_name.size(); fb++) {
-				const String &E = fallback_font_name[fb];
-#else
+
 			for (const String &E : fallback_font_name) {
-#endif
 				SystemFontKey key = SystemFontKey(E, font_style & TextServer::FONT_ITALIC, font_weight, font_stretch, fdef, this);
 				if (system_fonts.has(key)) {
 					const SystemFontCache &sysf_cache = system_fonts[key];
@@ -6749,11 +6741,7 @@ String TextServerAdvanced::strip_diacritics(const String &p_string) const {
 	String result;
 	for (int i = 0; i < normalized_string.length(); i++) {
 		if (u_getCombiningClass(normalized_string[i]) == 0) {
-#ifdef GDEXTENSION
-			result = result + String::chr(normalized_string[i]);
-#else
 			result = result + normalized_string[i];
-#endif
 		}
 	}
 	return result;

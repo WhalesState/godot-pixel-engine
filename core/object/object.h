@@ -32,7 +32,6 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
-#include "core/extension/gdextension_interface.h"
 #include "core/object/message_queue.h"
 #include "core/object/object_id.h"
 #include "core/os/rw_lock.h"
@@ -177,14 +176,6 @@ struct PropertyInfo {
 			type(Variant::OBJECT),
 			class_name(p_class_name) {}
 
-	explicit PropertyInfo(const GDExtensionPropertyInfo &pinfo) :
-			type((Variant::Type)pinfo.type),
-			name(*reinterpret_cast<StringName *>(pinfo.name)),
-			class_name(*reinterpret_cast<StringName *>(pinfo.class_name)),
-			hint((PropertyHint)pinfo.hint),
-			hint_string(*reinterpret_cast<String *>(pinfo.hint_string)),
-			usage(pinfo.usage) {}
-
 	bool operator==(const PropertyInfo &p_info) const {
 		return ((type == p_info.type) &&
 				(name == p_info.name) &&
@@ -239,20 +230,6 @@ struct MethodInfo {
 
 	MethodInfo() {}
 
-	explicit MethodInfo(const GDExtensionMethodInfo &pinfo) :
-			name(*reinterpret_cast<StringName *>(pinfo.name)),
-			return_val(PropertyInfo(pinfo.return_value)),
-			flags(pinfo.flags),
-			id(pinfo.id) {
-		for (uint32_t j = 0; j < pinfo.argument_count; j++) {
-			arguments.push_back(PropertyInfo(pinfo.arguments[j]));
-		}
-		const Variant *def_values = (const Variant *)pinfo.default_arguments;
-		for (uint32_t j = 0; j < pinfo.default_argument_count; j++) {
-			default_arguments.push_back(def_values[j]);
-		}
-	}
-
 	void _push_params(const PropertyInfo &p_param) {
 		arguments.push_back(p_param);
 	}
@@ -299,57 +276,6 @@ struct MethodInfo {
 
 // API used to extend in GDExtension and other C compatible compiled languages.
 class MethodBind;
-class GDExtension;
-
-struct ObjectGDExtension {
-	GDExtension *library = nullptr;
-	ObjectGDExtension *parent = nullptr;
-	List<ObjectGDExtension *> children;
-	StringName parent_class_name;
-	StringName class_name;
-	bool editor_class = false;
-	bool reloadable = false;
-	bool is_virtual = false;
-	bool is_abstract = false;
-	bool is_exposed = true;
-	GDExtensionClassSet set;
-	GDExtensionClassGet get;
-	GDExtensionClassGetPropertyList get_property_list;
-	GDExtensionClassFreePropertyList free_property_list;
-	GDExtensionClassPropertyCanRevert property_can_revert;
-	GDExtensionClassPropertyGetRevert property_get_revert;
-	GDExtensionClassValidateProperty validate_property;
-	GDExtensionClassNotification2 notification2;
-	GDExtensionClassToString to_string;
-	GDExtensionClassReference reference;
-	GDExtensionClassReference unreference;
-	GDExtensionClassGetRID get_rid;
-
-	_FORCE_INLINE_ bool is_class(const String &p_class) const {
-		const ObjectGDExtension *e = this;
-		while (e) {
-			if (p_class == e->class_name.operator String()) {
-				return true;
-			}
-			e = e->parent;
-		}
-		return false;
-	}
-	void *class_userdata = nullptr;
-
-	GDExtensionClassCreateInstance create_instance;
-	GDExtensionClassFreeInstance free_instance;
-	GDExtensionClassGetVirtual get_virtual;
-	GDExtensionClassGetVirtualCallData get_virtual_call_data;
-	GDExtensionClassCallVirtualWithData call_virtual_with_data;
-	GDExtensionClassRecreateInstance recreate_instance;
-
-#ifdef TOOLS_ENABLED
-	void *tracking_userdata = nullptr;
-	void (*track_instance)(void *p_userdata, void *p_instance);
-	void (*untrack_instance)(void *p_userdata, void *p_instance);
-#endif
-};
 
 #define GDVIRTUAL_CALL(m_name, ...) _gdvirtual_##m_name##_call<false>(__VA_ARGS__)
 #define GDVIRTUAL_CALL_PTR(m_obj, m_name, ...) m_obj->_gdvirtual_##m_name##_call<false>(__VA_ARGS__)
@@ -392,9 +318,6 @@ public:                                                                         
 	typedef m_class self_type;                                                                                                                   \
 	static constexpr bool _class_is_enabled = !bool(GD_IS_DEFINED(ClassDB_Disable_##m_class)) && m_inherits::_class_is_enabled;                  \
 	virtual String get_class() const override {                                                                                                  \
-		if (_get_extension()) {                                                                                                                  \
-			return _get_extension()->class_name.operator String();                                                                               \
-		}                                                                                                                                        \
 		return String(#m_class);                                                                                                                 \
 	}                                                                                                                                            \
 	virtual const StringName *_get_class_namev() const override {                                                                                \
@@ -419,9 +342,6 @@ public:                                                                         
 		p_inheritance_list->push_back(String(#m_class));                                                                                         \
 	}                                                                                                                                            \
 	virtual bool is_class(const String &p_class) const override {                                                                                \
-		if (_get_extension() && _get_extension()->is_class(p_class)) {                                                                           \
-			return true;                                                                                                                         \
-		}                                                                                                                                        \
 		return (p_class == (#m_class)) ? true : m_inherits::is_class(p_class);                                                                   \
 	}                                                                                                                                            \
 	virtual bool is_class_ptr(void *p_ptr) const override { return (p_ptr == get_class_ptr_static()) ? true : m_inherits::is_class_ptr(p_ptr); } \
@@ -595,9 +515,6 @@ private:
 	friend bool predelete_handler(Object *);
 	friend void postinitialize_handler(Object *);
 
-	ObjectGDExtension *_extension = nullptr;
-	GDExtensionClassInstancePtr _extension_instance = nullptr;
-
 	struct SignalData {
 		struct Slot {
 			int reference_count = 0;
@@ -648,38 +565,9 @@ private:
 	friend class RefCounted;
 	bool type_is_reference = false;
 
-	BinaryMutex _instance_binding_mutex;
-	struct InstanceBinding {
-		void *binding = nullptr;
-		void *token = nullptr;
-		GDExtensionInstanceBindingFreeCallback free_callback = nullptr;
-		GDExtensionInstanceBindingReferenceCallback reference_callback = nullptr;
-	};
-	InstanceBinding *_instance_bindings = nullptr;
-	uint32_t _instance_binding_count = 0;
-
 	Object(bool p_reference);
 
 protected:
-	_FORCE_INLINE_ bool _instance_binding_reference(bool p_reference) {
-		bool can_die = true;
-		if (_instance_bindings) {
-			_instance_binding_mutex.lock();
-			for (uint32_t i = 0; i < _instance_binding_count; i++) {
-				if (_instance_bindings[i].reference_callback) {
-					if (!_instance_bindings[i].reference_callback(_instance_bindings[i].token, _instance_bindings[i].binding, p_reference)) {
-						can_die = false;
-					}
-				}
-			}
-			_instance_binding_mutex.unlock();
-		}
-		return can_die;
-	}
-
-	friend class GDExtensionMethodBind;
-	_ALWAYS_INLINE_ const ObjectGDExtension *_get_extension() const { return _extension; }
-	_ALWAYS_INLINE_ GDExtensionClassInstancePtr _get_extension_instance() const { return _extension_instance; }
 	virtual void _initialize_classv() { initialize_class(); }
 	virtual bool _setv(const StringName &p_name, const Variant &p_property) { return false; };
 	virtual bool _getv(const StringName &p_name, Variant &r_property) const { return false; };
@@ -804,27 +692,16 @@ public:
 	static String get_parent_class_static() { return String(); }
 
 	virtual String get_class() const {
-		if (_extension) {
-			return _extension->class_name.operator String();
-		}
 		return "Object";
 	}
 	virtual String get_save_class() const { return get_class(); } //class stored when saving
 
 	virtual bool is_class(const String &p_class) const {
-		if (_extension && _extension->is_class(p_class)) {
-			return true;
-		}
 		return (p_class == "Object");
 	}
 	virtual bool is_class_ptr(void *p_ptr) const { return get_class_ptr_static() == p_ptr; }
 
 	_FORCE_INLINE_ const StringName &get_class_name() const {
-		if (_extension) {
-			// Can't put inside the unlikely as constructor can run it
-			return _extension->class_name;
-		}
-
 		if (unlikely(!_class_name_ptr)) {
 			// While class is initializing / deinitializing, constructors and destructurs
 			// need access to the proper class at the proper stage.
@@ -832,8 +709,6 @@ public:
 		}
 		return *_class_name_ptr;
 	}
-
-	StringName get_class_name_for_extension(const GDExtension *p_library) const;
 
 	/* IAPI */
 
@@ -959,17 +834,8 @@ public:
 
 #endif
 
-	// Used by script languages to store binding data.
-	void *get_instance_binding(void *p_token, const GDExtensionInstanceBindingCallbacks *p_callbacks);
-	// Used on creation by binding only.
-	void set_instance_binding(void *p_token, void *p_binding, const GDExtensionInstanceBindingCallbacks *p_callbacks);
 	bool has_instance_binding(void *p_token);
 	void free_instance_binding(void *p_token);
-
-#ifdef TOOLS_ENABLED
-	void clear_internal_extension();
-	void reset_internal_extension(ObjectGDExtension *p_extension);
-#endif
 
 	void clear_internal_resource_paths();
 

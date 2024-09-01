@@ -15,7 +15,6 @@ SCsub                               @godotengine/buildsystem
 /core/                              @godotengine/core
 /core/crypto/                       @godotengine/network
 /core/debugger/                     @godotengine/debugger
-/core/extension/                    @godotengine/gdextension
 /core/input/                        @godotengine/input
 
 # Doc
@@ -58,7 +57,6 @@ doc_classes/*                       @godotengine/documentation
 # Misc
 
 /misc/                              @godotengine/buildsystem
-/misc/extension_api_validation/     @godotengine/gdextension @godotengine/dotnet
 
 # Modules
 
@@ -101,12 +99,6 @@ doc_classes/*                       @godotengine/documentation
 /modules/freetype/                  @godotengine/buildsystem
 /modules/text_server_adv/           @godotengine/gui-nodes
 /modules/text_server_fb/            @godotengine/gui-nodes
-
-## XR
-/modules/camera/                    @godotengine/xr
-/modules/gdextension/xr/            @godotengine/xr
-/modules/mobile_vr/                 @godotengine/xr
-/modules/webxr/                     @godotengine/xr
 
 ## Misc
 /modules/bullet/                    @godotengine/physics

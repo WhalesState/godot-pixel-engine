@@ -33,7 +33,6 @@
 
 #include "core/config/project_settings.h"
 #include "core/crypto/crypto_core.h"
-#include "core/extension/gdextension.h"
 #include "core/io/file_access_encrypted.h"
 #include "core/io/file_access_pack.h" // PACK_HEADER_MAGIC, PACK_FORMAT_VERSION
 #include "core/io/zip_io.h"
@@ -838,11 +837,6 @@ Vector<String> EditorExportPlatform::get_forced_export_files() {
 	String resource_cache_file = ResourceUID::get_cache_file();
 	if (FileAccess::exists(resource_cache_file)) {
 		files.push_back(resource_cache_file);
-	}
-
-	String extension_list_config_file = GDExtension::get_extension_list_config_file();
-	if (FileAccess::exists(extension_list_config_file)) {
-		files.push_back(extension_list_config_file);
 	}
 
 	// Store text server data if it is supported.

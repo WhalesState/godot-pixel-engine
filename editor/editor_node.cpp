@@ -32,7 +32,6 @@
 #include "editor_node.h"
 
 #include "core/config/project_settings.h"
-#include "core/extension/gdextension_manager.h"
 #include "core/input/input.h"
 #include "core/io/config_file.h"
 #include "core/io/file_access.h"
@@ -128,7 +127,6 @@
 #include "editor/plugins/dedicated_server_export_plugin.h"
 #include "editor/plugins/editor_preview_plugins.h"
 #include "editor/plugins/editor_resource_conversion_plugin.h"
-#include "editor/plugins/gdextension_export_plugin.h"
 #include "editor/plugins/material_editor_plugin.h"
 #include "editor/plugins/packed_scene_translation_parser_plugin.h"
 #include "editor/plugins/script_text_editor.h"
@@ -343,11 +341,6 @@ void EditorNode::_update_from_settings() {
 	scene_root->set_msaa_2d(msaa);
 
 	ResourceImporterTexture::get_singleton()->update_imports();
-}
-
-void EditorNode::_gdextensions_reloaded() {
-	// In case the developer is inspecting an object that will be changed by the reload.
-	InspectorDock::get_inspector_singleton()->update_tree();
 }
 
 void EditorNode::_select_default_main_screen_plugin() {
@@ -625,9 +618,6 @@ void EditorNode::_notification(int p_what) {
 
 			EditorFileSystem::get_singleton()->scan_changes();
 			_scan_external_changes();
-
-			GDExtensionManager *gdextension_manager = GDExtensionManager::get_singleton();
-			callable_mp(gdextension_manager, &GDExtensionManager::reload_extensions).call_deferred();
 		} break;
 
 		case NOTIFICATION_APPLICATION_FOCUS_OUT: {
@@ -4024,12 +4014,6 @@ Ref<Texture2D> EditorNode::_get_class_or_script_icon(const String &p_class, cons
 	// Script was not valid or didn't yield any useful values, try the class name
 	// directly.
 
-	// Check if the class name is an extension-defined type.
-	Ref<Texture2D> ext_icon = ed.extension_class_get_icon(p_class);
-	if (ext_icon.is_valid()) {
-		return ext_icon;
-	}
-
 	// Check if the class name is a custom type.
 	// TODO: Should probably be deprecated in 4.x
 	const EditorData::CustomType *ctype = ed.get_custom_type_by_name(p_class);
@@ -6269,7 +6253,6 @@ EditorNode::EditorNode() {
 	EditorUndoRedoManager::get_singleton()->connect("version_changed", callable_mp(this, &EditorNode::_update_undo_redo_allowed));
 	EditorUndoRedoManager::get_singleton()->connect("history_changed", callable_mp(this, &EditorNode::_update_undo_redo_allowed));
 	ProjectSettings::get_singleton()->connect("settings_changed", callable_mp(this, &EditorNode::_update_from_settings));
-	GDExtensionManager::get_singleton()->connect("extensions_reloaded", callable_mp(this, &EditorNode::_gdextensions_reloaded));
 
 	TranslationServer::get_singleton()->set_enabled(false);
 	// Load settings.
@@ -7126,12 +7109,6 @@ EditorNode::EditorNode() {
 		add_editor_plugin(EditorPlugins::create(i));
 	}
 
-	for (const StringName &extension_class_name : GDExtensionEditorPlugins::get_extension_classes()) {
-		add_extension_editor_plugin(extension_class_name);
-	}
-	GDExtensionEditorPlugins::editor_node_add_plugin = &EditorNode::add_extension_editor_plugin;
-	GDExtensionEditorPlugins::editor_node_remove_plugin = &EditorNode::remove_extension_editor_plugin;
-
 	for (int i = 0; i < plugin_init_callback_count; i++) {
 		plugin_init_callbacks[i]();
 	}
@@ -7156,11 +7133,6 @@ EditorNode::EditorNode() {
 	editor_plugin_screen = nullptr;
 	editor_plugins_over = memnew(EditorPluginList);
 	editor_plugins_force_over = memnew(EditorPluginList);
-
-	Ref<GDExtensionExportPlugin> gdextension_export_plugin;
-	gdextension_export_plugin.instantiate();
-
-	EditorExport::get_singleton()->add_export_plugin(gdextension_export_plugin);
 
 	Ref<DedicatedServerExportPlugin> dedicated_server_export_plugin;
 	dedicated_server_export_plugin.instantiate();
@@ -7273,9 +7245,6 @@ EditorNode::~EditorNode() {
 	EditorSettings::destroy();
 	EditorColorMap::finish();
 	EditorTheme::finalize();
-
-	GDExtensionEditorPlugins::editor_node_add_plugin = nullptr;
-	GDExtensionEditorPlugins::editor_node_remove_plugin = nullptr;
 
 	FileDialog::get_icon_func = nullptr;
 	FileDialog::register_func = nullptr;

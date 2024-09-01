@@ -36,9 +36,6 @@
 #include "core/core_string_names.h"
 #include "core/crypto/crypto.h"
 #include "core/debugger/engine_debugger.h"
-#include "core/extension/extension_api_dump.h"
-#include "core/extension/gdextension_interface_dump.gen.h"
-#include "core/extension/gdextension_manager.h"
 #include "core/input/input.h"
 #include "core/input/input_map.h"
 #include "core/io/dir_access.h"
@@ -52,6 +49,7 @@
 #include "core/os/time.h"
 #include "core/register_core_types.h"
 #include "core/string/translation.h"
+#include "core/variant/variant_parser.h"
 #include "core/version.h"
 #include "drivers/register_driver_types.h"
 #include "main/app_icon.gen.h"
@@ -187,13 +185,6 @@ static bool disable_render_loop = false;
 static int fixed_fps = -1;
 static bool disable_vsync = false;
 static bool print_fps = false;
-#ifdef TOOLS_ENABLED
-static bool dump_gdextension_interface = false;
-static bool dump_extension_api = false;
-static bool include_docs_in_extension_api_dump = false;
-static bool validate_extension_api = false;
-static String validate_extension_api_file;
-#endif
 bool profile_gpu = false;
 
 // Constants.
@@ -386,10 +377,6 @@ void Main::print_help(const char *p_binary) {
 #ifdef MODULE_GDSCRIPT_ENABLED
 	OS::get_singleton()->print("  --gdscript-docs <path>            Rather than dumping the engine API, generate API reference from the inline documentation in the GDScript files found in <path> (used with --doctool).\n");
 #endif
-	OS::get_singleton()->print("  --dump-gdextension-interface      Generate GDExtension header file 'gdextension_interface.h' in the current folder. This file is the base file required to implement a GDExtension.\n");
-	OS::get_singleton()->print("  --dump-extension-api              Generate JSON dump of the Godot API for GDExtension bindings named 'extension_api.json' in the current folder.\n");
-	OS::get_singleton()->print("  --dump-extension-api-with-docs    Generate JSON dump of the Godot API like the previous option, but including documentation.\n");
-	OS::get_singleton()->print("  --validate-extension-api <path>   Validate an extension API file dumped (with one of the two previous options) from a previous version of the engine to ensure API compatibility. If incompatibilities or errors are detected, the return code will be non zero.\n");
 	OS::get_singleton()->print("  --benchmark                       Benchmark the run time and print it to console.\n");
 	OS::get_singleton()->print("  --benchmark-file <path>           Benchmark the run time and save it to a given file in JSON format. The path should be absolute.\n");
 #ifdef TESTS_ENABLED
@@ -430,14 +417,12 @@ Error Main::test_setup() {
 
 	// From `Main::setup2()`.
 	initialize_modules(MODULE_INITIALIZATION_LEVEL_CORE);
-	register_core_extensions();
 
 	register_core_singletons();
 
 	/** INITIALIZE SERVERS **/
 	register_server_types();
 	initialize_modules(MODULE_INITIALIZATION_LEVEL_SERVERS);
-	GDExtensionManager::get_singleton()->initialize_extensions(GDExtension::INITIALIZATION_LEVEL_SERVERS);
 
 	translation_server->setup(); //register translations, load them, etc.
 	if (!locale.is_empty()) {
@@ -458,14 +443,12 @@ Error Main::test_setup() {
 	register_scene_singletons();
 
 	initialize_modules(MODULE_INITIALIZATION_LEVEL_SCENE);
-	GDExtensionManager::get_singleton()->initialize_extensions(GDExtension::INITIALIZATION_LEVEL_SCENE);
 
 #ifdef TOOLS_ENABLED
 	ClassDB::set_current_api(ClassDB::API_EDITOR);
 	register_editor_types();
 
 	initialize_modules(MODULE_INITIALIZATION_LEVEL_EDITOR);
-	GDExtensionManager::get_singleton()->initialize_extensions(GDExtension::INITIALIZATION_LEVEL_EDITOR);
 
 	ClassDB::set_current_api(ClassDB::API_CORE);
 #endif
@@ -518,12 +501,10 @@ void Main::test_cleanup() {
 	ResourceSaver::remove_custom_savers();
 
 #ifdef TOOLS_ENABLED
-	GDExtensionManager::get_singleton()->deinitialize_extensions(GDExtension::INITIALIZATION_LEVEL_EDITOR);
 	uninitialize_modules(MODULE_INITIALIZATION_LEVEL_EDITOR);
 	unregister_editor_types();
 #endif
 
-	GDExtensionManager::get_singleton()->deinitialize_extensions(GDExtension::INITIALIZATION_LEVEL_SCENE);
 	uninitialize_modules(MODULE_INITIALIZATION_LEVEL_SCENE);
 
 	unregister_platform_apis();
@@ -532,7 +513,6 @@ void Main::test_cleanup() {
 
 	finalize_theme_db();
 
-	GDExtensionManager::get_singleton()->deinitialize_extensions(GDExtension::INITIALIZATION_LEVEL_SERVERS);
 	uninitialize_modules(MODULE_INITIALIZATION_LEVEL_SERVERS);
 	unregister_server_types();
 
@@ -556,7 +536,6 @@ void Main::test_cleanup() {
 	}
 
 	unregister_core_driver_types();
-	unregister_core_extensions();
 	uninitialize_modules(MODULE_INITIALIZATION_LEVEL_CORE);
 	unregister_core_types();
 
@@ -1032,55 +1011,6 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 			}
 		} else if (I->get() == "--single-threaded-scene") {
 			single_threaded_scene = true;
-		} else if (I->get() == "--dump-gdextension-interface") {
-			// Register as an editor instance to use low-end fallback if relevant.
-			editor = true;
-			cmdline_tool = true;
-			dump_gdextension_interface = true;
-			print_line("Dumping GDExtension interface header file");
-			// Hack. Not needed but otherwise we end up detecting that this should
-			// run the project instead of a cmdline tool.
-			// Needs full refactoring to fix properly.
-			main_args.push_back(I->get());
-		} else if (I->get() == "--dump-extension-api") {
-			// Register as an editor instance to use low-end fallback if relevant.
-			editor = true;
-			cmdline_tool = true;
-			dump_extension_api = true;
-			print_line("Dumping Extension API");
-			// Hack. Not needed but otherwise we end up detecting that this should
-			// run the project instead of a cmdline tool.
-			// Needs full refactoring to fix properly.
-			main_args.push_back(I->get());
-		} else if (I->get() == "--dump-extension-api-with-docs") {
-			// Register as an editor instance to use low-end fallback if relevant.
-			editor = true;
-			cmdline_tool = true;
-			dump_extension_api = true;
-			include_docs_in_extension_api_dump = true;
-			print_line("Dumping Extension API including documentation");
-			// Hack. Not needed but otherwise we end up detecting that this should
-			// run the project instead of a cmdline tool.
-			// Needs full refactoring to fix properly.
-			main_args.push_back(I->get());
-		} else if (I->get() == "--validate-extension-api") {
-			// Register as an editor instance to use low-end fallback if relevant.
-			editor = true;
-			cmdline_tool = true;
-			validate_extension_api = true;
-			// Hack. Not needed but otherwise we end up detecting that this should
-			// run the project instead of a cmdline tool.
-			// Needs full refactoring to fix properly.
-			main_args.push_back(I->get());
-
-			if (I->next()) {
-				validate_extension_api_file = I->next()->get();
-
-				N = I->next()->next();
-			} else {
-				OS::get_singleton()->print("Missing file to load argument after --validate-extension-api, aborting.");
-				goto error;
-			}
 		} else if (I->get() == "--import") {
 			editor = true;
 			cmdline_tool = true;
@@ -1351,7 +1281,6 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 #ifdef TOOLS_ENABLED
 	if (editor) {
 		Engine::get_singleton()->set_editor_hint(true);
-		Engine::get_singleton()->set_extension_reloading_enabled(true);
 	}
 #endif
 
@@ -1359,7 +1288,6 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 	OS::get_singleton()->ensure_user_data_dir();
 
 	initialize_modules(MODULE_INITIALIZATION_LEVEL_CORE);
-	register_core_extensions(); // core extensions must be registered after globals setup and before display
 
 	ResourceUID::get_singleton()->load_from_cache(); // load UUIDs from cache.
 
@@ -1818,7 +1746,6 @@ error:
 	}
 
 	unregister_core_driver_types();
-	unregister_core_extensions();
 	unregister_core_types();
 
 	OS::get_singleton()->_cmdline.clear();
@@ -1874,7 +1801,6 @@ Error Main::setup2() {
 
 	register_server_types();
 	initialize_modules(MODULE_INITIALIZATION_LEVEL_SERVERS);
-	GDExtensionManager::get_singleton()->initialize_extensions(GDExtension::INITIALIZATION_LEVEL_SERVERS);
 
 #ifdef TOOLS_ENABLED
 	if (editor || project_manager || cmdline_tool) {
@@ -2250,13 +2176,11 @@ Error Main::setup2() {
 	register_scene_singletons();
 
 	initialize_modules(MODULE_INITIALIZATION_LEVEL_SCENE);
-	GDExtensionManager::get_singleton()->initialize_extensions(GDExtension::INITIALIZATION_LEVEL_SCENE);
 
 #ifdef TOOLS_ENABLED
 	ClassDB::set_current_api(ClassDB::API_EDITOR);
 	register_editor_types();
 	initialize_modules(MODULE_INITIALIZATION_LEVEL_EDITOR);
-	GDExtensionManager::get_singleton()->initialize_extensions(GDExtension::INITIALIZATION_LEVEL_EDITOR);
 
 	ClassDB::set_current_api(ClassDB::API_CORE);
 
@@ -2508,26 +2432,6 @@ bool Main::start() {
 		}
 
 		OS::get_singleton()->set_exit_code(EXIT_SUCCESS);
-		return false;
-	}
-
-	if (dump_gdextension_interface) {
-		GDExtensionInterfaceDump::generate_gdextension_interface_file("gdextension_interface.h");
-	}
-
-	if (dump_extension_api) {
-		Engine::get_singleton()->set_editor_hint(true); // "extension_api.json" should always contains editor singletons.
-		GDExtensionAPIDump::generate_extension_json_file("extension_api.json", include_docs_in_extension_api_dump);
-	}
-
-	if (dump_gdextension_interface || dump_extension_api) {
-		OS::get_singleton()->set_exit_code(EXIT_SUCCESS);
-		return false;
-	}
-
-	if (validate_extension_api) {
-		bool valid = GDExtensionAPIDump::validate_extension_json_file(validate_extension_api_file) == OK;
-		OS::get_singleton()->set_exit_code(valid ? EXIT_SUCCESS : EXIT_FAILURE);
 		return false;
 	}
 #endif
@@ -3206,7 +3110,6 @@ void Main::cleanup(bool p_force) {
 	rendering_server->global_shader_parameters_clear();
 
 #ifdef TOOLS_ENABLED
-	GDExtensionManager::get_singleton()->deinitialize_extensions(GDExtension::INITIALIZATION_LEVEL_EDITOR);
 	uninitialize_modules(MODULE_INITIALIZATION_LEVEL_EDITOR);
 	unregister_editor_types();
 
@@ -3214,7 +3117,6 @@ void Main::cleanup(bool p_force) {
 
 	ImageLoader::cleanup();
 
-	GDExtensionManager::get_singleton()->deinitialize_extensions(GDExtension::INITIALIZATION_LEVEL_SCENE);
 	uninitialize_modules(MODULE_INITIALIZATION_LEVEL_SCENE);
 
 	unregister_platform_apis();
@@ -3223,7 +3125,6 @@ void Main::cleanup(bool p_force) {
 
 	finalize_theme_db();
 
-	GDExtensionManager::get_singleton()->deinitialize_extensions(GDExtension::INITIALIZATION_LEVEL_SERVERS);
 	uninitialize_modules(MODULE_INITIALIZATION_LEVEL_SERVERS);
 	unregister_server_types();
 
@@ -3274,7 +3175,6 @@ void Main::cleanup(bool p_force) {
 	memdelete(message_queue);
 
 	unregister_core_driver_types();
-	unregister_core_extensions();
 	uninitialize_modules(MODULE_INITIALIZATION_LEVEL_CORE);
 	unregister_core_types();
 

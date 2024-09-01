@@ -32,7 +32,6 @@
 #include "object.h"
 
 #include "core/core_string_names.h"
-#include "core/extension/gdextension_manager.h"
 #include "core/io/resource.h"
 #include "core/object/class_db.h"
 #include "core/object/message_queue.h"
@@ -236,23 +235,6 @@ void Object::set(const StringName &p_name, const Variant &p_value, bool *r_valid
 		}
 	}
 
-	if (_extension && _extension->set) {
-// C style pointer casts should never trigger a compiler warning because the risk is assumed by the user, so GCC should keep quiet about it.
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#endif
-		if (_extension->set(_extension_instance, (const GDExtensionStringNamePtr)&p_name, (const GDExtensionVariantPtr)&p_value)) {
-			if (r_valid) {
-				*r_valid = true;
-			}
-			return;
-		}
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
-	}
-
 	// Try built-in setter.
 	{
 		if (ClassDB::set_property(this, p_name, p_value, r_valid)) {
@@ -323,24 +305,6 @@ Variant Object::get(const StringName &p_name, bool *r_valid) const {
 			return ret;
 		}
 	}
-	if (_extension && _extension->get) {
-// C style pointer casts should never trigger a compiler warning because the risk is assumed by the user, so GCC should keep quiet about it.
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#endif
-
-		if (_extension->get(_extension_instance, (const GDExtensionStringNamePtr)&p_name, (GDExtensionVariantPtr)&ret)) {
-			if (r_valid) {
-				*r_valid = true;
-			}
-			return ret;
-		}
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
-	}
-
 	// Try built-in getter.
 	{
 		if (ClassDB::get_property(const_cast<Object *>(this), p_name, ret)) {
@@ -485,28 +449,6 @@ void Object::get_property_list(List<PropertyInfo> *p_list, bool p_reversed) cons
 		script_instance->get_property_list(p_list);
 	}
 
-	if (_extension) {
-		const ObjectGDExtension *current_extension = _extension;
-		while (current_extension) {
-			p_list->push_back(PropertyInfo(Variant::NIL, current_extension->class_name, PROPERTY_HINT_NONE, current_extension->class_name, PROPERTY_USAGE_CATEGORY));
-
-			ClassDB::get_property_list(current_extension->class_name, p_list, true, this);
-
-			if (current_extension->get_property_list) {
-				uint32_t pcount;
-				const GDExtensionPropertyInfo *pinfo = current_extension->get_property_list(_extension_instance, &pcount);
-				for (uint32_t i = 0; i < pcount; i++) {
-					p_list->push_back(PropertyInfo(pinfo[i]));
-				}
-				if (current_extension->free_property_list) {
-					current_extension->free_property_list(_extension_instance, pinfo);
-				}
-			}
-
-			current_extension = current_extension->parent;
-		}
-	}
-
 	_get_property_listv(p_list, p_reversed);
 
 	if (!is_class("Script")) { // can still be set, but this is for user-friendliness
@@ -530,27 +472,6 @@ void Object::get_property_list(List<PropertyInfo> *p_list, bool p_reversed) cons
 void Object::validate_property(PropertyInfo &p_property) const {
 	_validate_propertyv(p_property);
 
-	if (_extension && _extension->validate_property) {
-		// GDExtension uses a StringName rather than a String for property name.
-		StringName prop_name = p_property.name;
-		GDExtensionPropertyInfo gdext_prop = {
-			(GDExtensionVariantType)p_property.type,
-			&prop_name,
-			&p_property.class_name,
-			(uint32_t)p_property.hint,
-			&p_property.hint_string,
-			p_property.usage,
-		};
-		if (_extension->validate_property(_extension_instance, &gdext_prop)) {
-			p_property.type = (Variant::Type)gdext_prop.type;
-			p_property.name = *reinterpret_cast<StringName *>(gdext_prop.name);
-			p_property.class_name = *reinterpret_cast<StringName *>(gdext_prop.class_name);
-			p_property.hint = (PropertyHint)gdext_prop.hint;
-			p_property.hint_string = *reinterpret_cast<String *>(gdext_prop.hint_string);
-			p_property.usage = gdext_prop.usage;
-		};
-	}
-
 	if (script_instance) { // Call it last to allow user altering already validated properties.
 		script_instance->validate_property(p_property);
 	}
@@ -562,21 +483,6 @@ bool Object::property_can_revert(const StringName &p_name) const {
 			return true;
 		}
 	}
-
-// C style pointer casts should never trigger a compiler warning because the risk is assumed by the user, so GCC should keep quiet about it.
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#endif
-	if (_extension && _extension->property_can_revert) {
-		if (_extension->property_can_revert(_extension_instance, (const GDExtensionStringNamePtr)&p_name)) {
-			return true;
-		}
-	}
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
-
 	return _property_can_revertv(p_name);
 }
 
@@ -588,21 +494,6 @@ Variant Object::property_get_revert(const StringName &p_name) const {
 			return ret;
 		}
 	}
-
-// C style pointer casts should never trigger a compiler warning because the risk is assumed by the user, so GCC should keep quiet about it.
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#endif
-	if (_extension && _extension->property_get_revert) {
-		if (_extension->property_get_revert(_extension_instance, (const GDExtensionStringNamePtr)&p_name, (GDExtensionVariantPtr)&ret)) {
-			return ret;
-		}
-	}
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
-
 	if (_property_get_revertv(p_name, ret)) {
 		return ret;
 	}
@@ -838,12 +729,6 @@ void Object::notification(int p_notification, bool p_reversed) {
 		_notificationv(p_notification, p_reversed);
 	}
 
-	if (_extension) {
-		if (_extension->notification2) {
-			_extension->notification2(_extension_instance, p_notification, static_cast<GDExtensionBool>(p_reversed));
-		}
-	}
-
 	if (p_reversed) {
 		_notificationv(p_notification, p_reversed);
 	} else {
@@ -860,12 +745,6 @@ String Object::to_string() {
 		if (valid) {
 			return ret;
 		}
-	}
-	if (_extension && _extension->to_string) {
-		String ret;
-		GDExtensionBool is_valid;
-		_extension->to_string(_extension_instance, &is_valid, &ret);
-		return ret;
 	}
 	return "<" + get_class() + "#" + itos(get_instance_id()) + ">";
 }
@@ -1792,162 +1671,6 @@ uint32_t Object::get_edited_version() const {
 }
 #endif
 
-StringName Object::get_class_name_for_extension(const GDExtension *p_library) const {
-	// Only return the class name per the extension if it matches the given p_library.
-	if (_extension && _extension->library == p_library) {
-		return _extension->class_name;
-	}
-
-	// Extensions only have wrapper classes for classes exposed in ClassDB.
-	const StringName *class_name = _get_class_namev();
-	if (ClassDB::is_class_exposed(*class_name)) {
-		return *class_name;
-	}
-
-	// Find the nearest parent class that's exposed.
-	StringName parent_class = ClassDB::get_parent_class(*class_name);
-	while (parent_class != StringName()) {
-		if (ClassDB::is_class_exposed(parent_class)) {
-			return parent_class;
-		}
-		parent_class = ClassDB::get_parent_class(parent_class);
-	}
-
-	return SNAME("Object");
-}
-
-void Object::set_instance_binding(void *p_token, void *p_binding, const GDExtensionInstanceBindingCallbacks *p_callbacks) {
-	// This is only meant to be used on creation by the binder, but we also
-	// need to account for reloading (where the 'binding' will be cleared).
-	ERR_FAIL_COND(_instance_bindings != nullptr && _instance_bindings[0].binding != nullptr);
-	if (_instance_bindings == nullptr) {
-		_instance_bindings = (InstanceBinding *)memalloc(sizeof(InstanceBinding));
-		_instance_binding_count = 1;
-	}
-	_instance_bindings[0].binding = p_binding;
-	_instance_bindings[0].free_callback = p_callbacks->free_callback;
-	_instance_bindings[0].reference_callback = p_callbacks->reference_callback;
-	_instance_bindings[0].token = p_token;
-}
-
-void *Object::get_instance_binding(void *p_token, const GDExtensionInstanceBindingCallbacks *p_callbacks) {
-	void *binding = nullptr;
-	_instance_binding_mutex.lock();
-	for (uint32_t i = 0; i < _instance_binding_count; i++) {
-		if (_instance_bindings[i].token == p_token) {
-			binding = _instance_bindings[i].binding;
-			break;
-		}
-	}
-	if (unlikely(!binding && p_callbacks)) {
-		uint32_t current_size = next_power_of_2(_instance_binding_count);
-		uint32_t new_size = next_power_of_2(_instance_binding_count + 1);
-
-		if (current_size == 0 || new_size > current_size) {
-			_instance_bindings = (InstanceBinding *)memrealloc(_instance_bindings, new_size * sizeof(InstanceBinding));
-		}
-
-		_instance_bindings[_instance_binding_count].free_callback = p_callbacks->free_callback;
-		_instance_bindings[_instance_binding_count].reference_callback = p_callbacks->reference_callback;
-		_instance_bindings[_instance_binding_count].token = p_token;
-
-		binding = p_callbacks->create_callback(p_token, this);
-		_instance_bindings[_instance_binding_count].binding = binding;
-
-#ifdef TOOLS_ENABLED
-		if (!_extension && Engine::get_singleton()->is_extension_reloading_enabled()) {
-			GDExtensionManager::get_singleton()->track_instance_binding(p_token, this);
-		}
-#endif
-
-		_instance_binding_count++;
-	}
-
-	_instance_binding_mutex.unlock();
-
-	return binding;
-}
-
-bool Object::has_instance_binding(void *p_token) {
-	bool found = false;
-	_instance_binding_mutex.lock();
-	for (uint32_t i = 0; i < _instance_binding_count; i++) {
-		if (_instance_bindings[i].token == p_token) {
-			found = true;
-			break;
-		}
-	}
-
-	_instance_binding_mutex.unlock();
-
-	return found;
-}
-
-void Object::free_instance_binding(void *p_token) {
-	bool found = false;
-	_instance_binding_mutex.lock();
-	for (uint32_t i = 0; i < _instance_binding_count; i++) {
-		if (!found && _instance_bindings[i].token == p_token) {
-			if (_instance_bindings[i].free_callback) {
-				_instance_bindings[i].free_callback(_instance_bindings[i].token, this, _instance_bindings[i].binding);
-			}
-			found = true;
-		}
-		if (found) {
-			if (i + 1 < _instance_binding_count) {
-				_instance_bindings[i] = _instance_bindings[i + 1];
-			} else {
-				_instance_bindings[i] = { nullptr };
-			}
-		}
-	}
-	if (found) {
-		_instance_binding_count--;
-	}
-	_instance_binding_mutex.unlock();
-}
-
-#ifdef TOOLS_ENABLED
-void Object::clear_internal_extension() {
-	ERR_FAIL_NULL(_extension);
-
-	// Free the instance inside the GDExtension.
-	if (_extension->free_instance) {
-		_extension->free_instance(_extension->class_userdata, _extension_instance);
-	}
-	_extension = nullptr;
-	_extension_instance = nullptr;
-
-	// Clear the instance bindings.
-	_instance_binding_mutex.lock();
-	if (_instance_bindings[0].free_callback) {
-		_instance_bindings[0].free_callback(_instance_bindings[0].token, this, _instance_bindings[0].binding);
-	}
-	_instance_bindings[0].binding = nullptr;
-	_instance_bindings[0].token = nullptr;
-	_instance_bindings[0].free_callback = nullptr;
-	_instance_bindings[0].reference_callback = nullptr;
-	_instance_binding_mutex.unlock();
-
-	// Clear the virtual methods.
-	while (virtual_method_list) {
-		(*virtual_method_list->method) = nullptr;
-		(*virtual_method_list->initialized) = false;
-		virtual_method_list = virtual_method_list->next;
-	}
-}
-
-void Object::reset_internal_extension(ObjectGDExtension *p_extension) {
-	ERR_FAIL_COND(_extension != nullptr);
-
-	if (p_extension) {
-		_extension_instance = p_extension->recreate_instance ? p_extension->recreate_instance(p_extension->class_userdata, (GDExtensionObjectPtr)this) : nullptr;
-		ERR_FAIL_NULL_MSG(_extension_instance, "Unable to recreate GDExtension instance - does this extension support hot reloading?");
-		_extension = p_extension;
-	}
-}
-#endif
-
 void Object::_construct_object(bool p_reference) {
 	type_is_reference = p_reference;
 	_instance_id = ObjectDB::add_instance(this);
@@ -1977,26 +1700,6 @@ Object::~Object() {
 		memdelete(script_instance);
 	}
 	script_instance = nullptr;
-
-	if (_extension) {
-#ifdef TOOLS_ENABLED
-		if (_extension->untrack_instance) {
-			_extension->untrack_instance(_extension->tracking_userdata, this);
-		}
-#endif
-		if (_extension->free_instance) {
-			_extension->free_instance(_extension->class_userdata, _extension_instance);
-		}
-		_extension = nullptr;
-		_extension_instance = nullptr;
-	}
-#ifdef TOOLS_ENABLED
-	else if (_instance_bindings != nullptr && Engine::get_singleton()->is_extension_reloading_enabled()) {
-		for (uint32_t i = 0; i < _instance_binding_count; i++) {
-			GDExtensionManager::get_singleton()->untrack_instance_binding(_instance_bindings[i].token, this);
-		}
-	}
-#endif
 
 	if (_emitting) {
 		//@todo this may need to actually reach the debugger prioritarily somehow because it may crash before
@@ -2034,15 +1737,6 @@ Object::~Object() {
 		_instance_id = ObjectID();
 	}
 	_predelete_ok = 2;
-
-	if (_instance_bindings != nullptr) {
-		for (uint32_t i = 0; i < _instance_binding_count; i++) {
-			if (_instance_bindings[i].free_callback) {
-				_instance_bindings[i].free_callback(_instance_bindings[i].token, this, _instance_bindings[i].binding);
-			}
-		}
-		memfree(_instance_bindings);
-	}
 }
 
 bool predelete_handler(Object *p_object) {

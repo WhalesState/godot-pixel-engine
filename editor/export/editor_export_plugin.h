@@ -32,7 +32,6 @@
 #ifndef EDITOR_EXPORT_PLUGIN_H
 #define EDITOR_EXPORT_PLUGIN_H
 
-#include "core/extension/gdextension.h"
 #include "editor_export_platform.h"
 #include "editor_export_preset.h"
 #include "editor_export_shared_object.h"

@@ -1472,9 +1472,6 @@
 		<member name="EngineDebugger" type="EngineDebugger" setter="" getter="">
 			The [EngineDebugger] singleton.
 		</member>
-		<member name="GDExtensionManager" type="GDExtensionManager" setter="" getter="">
-			The [GDExtensionManager] singleton.
-		</member>
 		<member name="Geometry2D" type="Geometry2D" setter="" getter="">
 			The [Geometry2D] singleton.
 		</member>

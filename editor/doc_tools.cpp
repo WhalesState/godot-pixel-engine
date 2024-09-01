@@ -344,13 +344,9 @@ void DocTools::generate(BitField<GenerateFlags> p_flags) {
 	// Add ClassDB-exposed classes.
 	{
 		List<StringName> classes;
-		if (p_flags.has_flag(GENERATE_FLAG_EXTENSION_CLASSES_ONLY)) {
-			ClassDB::get_extensions_class_list(&classes);
-		} else {
-			ClassDB::get_class_list(&classes);
-			// Move ProjectSettings, so that other classes can register properties there.
-			classes.move_to_back(classes.find("ProjectSettings"));
-		}
+		ClassDB::get_class_list(&classes);
+		// Move ProjectSettings, so that other classes can register properties there.
+		classes.move_to_back(classes.find("ProjectSettings"));
 
 		bool skip_setter_getter_methods = true;
 

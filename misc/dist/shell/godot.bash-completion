@@ -88,8 +88,6 @@ _complete_godot_options() {
 --export-pack
 --doctool
 --no-docbase
---dump-gdextension-interface
---dump-extension-api
 --benchmark
 --benchmark-file
 --test
