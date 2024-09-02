@@ -34,6 +34,7 @@
 #include "core/config/project_settings.h"
 #include "core/object/class_db.h"
 #include "core/os/os.h"
+#include "modules/modules_enabled.gen.h" // For StyleBoxSvg
 #include "scene/2d/animated_sprite_2d.h"
 #include "scene/2d/back_buffer_copy.h"
 #include "scene/2d/camera_2d.h"
@@ -132,6 +133,9 @@
 #include "scene/resources/style_box.h"
 #include "scene/resources/style_box_flat.h"
 #include "scene/resources/style_box_line.h"
+#ifdef MODULE_SVG_ENABLED
+#include "scene/resources/style_box_svg.h"
+#endif
 #include "scene/resources/style_box_texture.h"
 #include "scene/resources/syntax_highlighter.h"
 #include "scene/resources/text_file.h"
@@ -396,6 +400,9 @@ void register_scene_types() {
 	GDREGISTER_CLASS(StyleBoxTexture);
 	GDREGISTER_CLASS(StyleBoxFlat);
 	GDREGISTER_CLASS(StyleBoxLine);
+#ifdef MODULE_SVG_ENABLED
+	GDREGISTER_CLASS(StyleBoxSvg);
+#endif
 	GDREGISTER_CLASS(Theme);
 
 	GDREGISTER_CLASS(PolygonPathFinder);
