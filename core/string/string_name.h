@@ -2,10 +2,9 @@
 /*  string_name.h                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -61,6 +60,11 @@ class StringName {
 		uint32_t debug_references = 0;
 #endif
 		String get_name() const { return cname ? String(cname) : name; }
+		bool operator==(const String &p_name) const;
+		bool operator!=(const String &p_name) const;
+		bool operator==(const char *p_name) const;
+		bool operator!=(const char *p_name) const;
+
 		int idx = 0;
 		uint32_t hash = 0;
 		_Data *prev = nullptr;
@@ -68,7 +72,7 @@ class StringName {
 		_Data() {}
 	};
 
-	static _Data *_table[STRING_TABLE_LEN];
+	static inline _Data *_table[STRING_TABLE_LEN];
 
 	_Data *_data = nullptr;
 
@@ -76,10 +80,10 @@ class StringName {
 	friend void register_core_types();
 	friend void unregister_core_types();
 	friend class Main;
-	static Mutex mutex;
+	static inline Mutex mutex;
 	static void setup();
 	static void cleanup();
-	static bool configured;
+	static inline bool configured = false;
 #ifdef DEBUG_ENABLED
 	struct DebugSortReferences {
 		bool operator()(const _Data *p_left, const _Data *p_right) const {
@@ -87,7 +91,7 @@ class StringName {
 		}
 	};
 
-	static bool debug_stringname;
+	static inline bool debug_stringname = false;
 #endif
 
 	StringName(_Data *p_data) { _data = p_data; }
@@ -99,6 +103,10 @@ public:
 	bool operator==(const char *p_name) const;
 	bool operator!=(const String &p_name) const;
 	bool operator!=(const char *p_name) const;
+
+	char32_t operator[](int p_index) const;
+	int length() const;
+	bool is_empty() const;
 
 	_FORCE_INLINE_ bool is_node_unique_name() const {
 		if (!_data) {
@@ -176,7 +184,7 @@ public:
 		}
 	};
 
-	void operator=(const StringName &p_name);
+	StringName &operator=(const StringName &p_name);
 	StringName(const char *p_name, bool p_static = false);
 	StringName(const StringName &p_name);
 	StringName(const String &p_name, bool p_static = false);

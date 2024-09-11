@@ -2,10 +2,9 @@
 /*  export_template_manager.cpp                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -37,10 +36,11 @@
 #include "core/version.h"
 #include "editor/editor_node.h"
 #include "editor/editor_paths.h"
-#include "editor/editor_scale.h"
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
+#include "editor/export/editor_export.h"
 #include "editor/progress_dialog.h"
+#include "editor/themes/editor_scale.h"
 #include "scene/gui/file_dialog.h"
 #include "scene/gui/menu_button.h"
 #include "scene/gui/separator.h"
@@ -147,6 +147,9 @@ void ExportTemplateManager::_download_template(const String &p_url, bool p_skip_
 
 	install_options_vb->hide();
 	download_progress_hb->show();
+	download_progress_bar->show();
+	download_progress_bar->set_indeterminate(true);
+
 	_set_current_progress_status(TTR("Starting the download..."));
 
 	download_templates->set_download_file(EditorPaths::get_singleton()->get_cache_dir().path_join("tmp_templates.tpz"));
@@ -160,6 +163,7 @@ void ExportTemplateManager::_download_template(const String &p_url, bool p_skip_
 	Error err = download_templates->request(p_url);
 	if (err != OK) {
 		_set_current_progress_status(TTR("Error requesting URL:") + " " + p_url, true);
+		download_progress_hb->hide();
 		return;
 	}
 
@@ -358,18 +362,19 @@ bool ExportTemplateManager::_humanize_http_status(HTTPRequest *p_request, String
 }
 
 void ExportTemplateManager::_set_current_progress_status(const String &p_status, bool p_error) {
-	download_progress_bar->hide();
 	download_progress_label->set_text(p_status);
 
 	if (p_error) {
-		download_progress_label->add_theme_color_override("font_color", get_theme_color(SNAME("error_color"), EditorStringName(Editor)));
+		download_progress_bar->hide();
+		download_progress_label->add_theme_color_override(SceneStringName(font_color), get_theme_color(SNAME("error_color"), EditorStringName(Editor)));
 	} else {
-		download_progress_label->add_theme_color_override("font_color", get_theme_color(SNAME("font_color"), SNAME("Label")));
+		download_progress_label->add_theme_color_override(SceneStringName(font_color), get_theme_color(SceneStringName(font_color), SNAME("Label")));
 	}
 }
 
 void ExportTemplateManager::_set_current_progress_value(float p_value, const String &p_status) {
 	download_progress_bar->show();
+	download_progress_bar->set_indeterminate(false);
 	download_progress_bar->set_value(p_value);
 	download_progress_label->set_text(p_status);
 }
@@ -538,7 +543,7 @@ bool ExportTemplateManager::_install_file_selected(const String &p_file, bool p_
 	unzClose(pkg);
 
 	_update_template_status();
-	EditorSettings::get_singleton()->set_meta("export_template_download_directory", p_file.get_base_dir());
+	EditorSettings::get_singleton()->set("_export_template_download_directory", p_file.get_base_dir());
 	return true;
 }
 
@@ -655,9 +660,9 @@ void ExportTemplateManager::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE:
 		case NOTIFICATION_THEME_CHANGED: {
-			current_value->add_theme_font_override("font", get_theme_font(SNAME("main"), EditorStringName(EditorFonts)));
-			current_missing_label->add_theme_color_override("font_color", get_theme_color(SNAME("error_color"), EditorStringName(Editor)));
-			current_installed_label->add_theme_color_override("font_color", get_theme_color(SNAME("disabled_font_color"), EditorStringName(Editor)));
+			current_value->add_theme_font_override(SceneStringName(font), get_theme_font(SNAME("main"), EditorStringName(EditorFonts)));
+			current_missing_label->add_theme_color_override(SceneStringName(font_color), get_theme_color(SNAME("error_color"), EditorStringName(Editor)));
+			current_installed_label->add_theme_color_override(SceneStringName(font_color), get_theme_color(SNAME("font_disabled_color"), EditorStringName(Editor)));
 
 			mirror_options_button->set_icon(get_editor_theme_icon(SNAME("GuiTabMenuHl")));
 		} break;
@@ -704,23 +709,10 @@ void ExportTemplateManager::_notification(int p_what) {
 	}
 }
 
-void ExportTemplateManager::_bind_methods() {
-}
-
 ExportTemplateManager::ExportTemplateManager() {
 	set_title(TTR("Export Template Manager"));
 	set_hide_on_ok(false);
 	set_ok_button_text(TTR("Close"));
-
-	// Downloadable export templates are only available for stable and official alpha/beta/RC builds
-	// (which always have a number following their status, e.g. "alpha1").
-	// Therefore, don't display download-related features when using a development version
-	// (whose builds aren't numbered).
-	downloads_available =
-			String(VERSION_STATUS) != String("dev") &&
-			String(VERSION_STATUS) != String("alpha") &&
-			String(VERSION_STATUS) != String("beta") &&
-			String(VERSION_STATUS) != String("rc");
 
 	VBoxContainer *main_vb = memnew(VBoxContainer);
 	add_child(main_vb);
@@ -744,7 +736,6 @@ ExportTemplateManager::ExportTemplateManager() {
 
 	current_missing_label->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	current_missing_label->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_RIGHT);
-	current_missing_label->set_text(TTR("Export templates are missing. Download them or install from a file."));
 	current_hb->add_child(current_missing_label);
 
 	// Status: Current version is installed.
@@ -765,7 +756,7 @@ ExportTemplateManager::ExportTemplateManager() {
 	current_installed_path->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	current_installed_hb->add_child(current_installed_path);
 
-	current_open_button = memnew(Button);
+	Button *current_open_button = memnew(Button);
 	current_open_button->set_text(TTR("Open Folder"));
 	current_open_button->set_tooltip_text(TTR("Open the folder containing installed templates for the current version."));
 	current_installed_hb->add_child(current_open_button);
@@ -798,7 +789,6 @@ ExportTemplateManager::ExportTemplateManager() {
 	mirrors_list = memnew(OptionButton);
 	mirrors_list->set_custom_minimum_size(Size2(280, 0) * EDSCALE);
 	download_install_hb->add_child(mirrors_list);
-	mirrors_list->add_item(TTR("Best available mirror"), 0);
 
 	request_mirrors = memnew(HTTPRequest);
 	mirrors_list->add_child(request_mirrors);
@@ -810,18 +800,13 @@ ExportTemplateManager::ExportTemplateManager() {
 	download_install_hb->add_child(mirror_options_button);
 	mirror_options_button->get_popup()->connect(SceneStringName(id_pressed), callable_mp(this, &ExportTemplateManager::_mirror_options_button_cbk));
 
-	Button *download_current_button = memnew(Button);
-	download_current_button->set_h_size_flags(Control::SIZE_EXPAND | Control::SIZE_SHRINK_END);
+	download_install_hb->add_spacer();
+
+	download_current_button = memnew(Button);
 	download_current_button->set_text(TTR("Download and Install"));
 	download_current_button->set_tooltip_text(TTR("Download and install templates for the current version from the best possible mirror."));
 	download_install_hb->add_child(download_current_button);
 	download_current_button->connect(SceneStringName(pressed), callable_mp(this, &ExportTemplateManager::_download_current));
-
-	// Update downloads buttons to prevent unsupported downloads.
-	if (!downloads_available) {
-		download_current_button->set_disabled(true);
-		download_current_button->set_tooltip_text(TTR("Official export templates aren't available for development builds."));
-	}
 
 	HBoxContainer *install_file_hb = memnew(HBoxContainer);
 	install_file_hb->set_alignment(BoxContainer::ALIGNMENT_END);
@@ -846,6 +831,7 @@ ExportTemplateManager::ExportTemplateManager() {
 	download_progress_bar->set_max(1);
 	download_progress_bar->set_value(0);
 	download_progress_bar->set_step(0.01);
+	download_progress_bar->set_editor_preview_indeterminate(true);
 	download_progress_hb->add_child(download_progress_bar);
 
 	download_progress_label = memnew(Label);
@@ -873,6 +859,7 @@ ExportTemplateManager::ExportTemplateManager() {
 	installed_versions_hb->add_child(installed_label);
 
 	installed_table = memnew(Tree);
+	installed_table->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 	installed_table->set_hide_root(true);
 	installed_table->set_custom_minimum_size(Size2(0, 100) * EDSCALE);
 	installed_table->set_v_size_flags(Control::SIZE_EXPAND_FILL);
@@ -883,13 +870,13 @@ ExportTemplateManager::ExportTemplateManager() {
 	uninstall_confirm = memnew(ConfirmationDialog);
 	uninstall_confirm->set_title(TTR("Uninstall Template"));
 	add_child(uninstall_confirm);
-	uninstall_confirm->connect("confirmed", callable_mp(this, &ExportTemplateManager::_uninstall_template_confirmed));
+	uninstall_confirm->connect(SceneStringName(confirmed), callable_mp(this, &ExportTemplateManager::_uninstall_template_confirmed));
 
 	install_file_dialog = memnew(FileDialog);
 	install_file_dialog->set_title(TTR("Select Template File"));
 	install_file_dialog->set_access(FileDialog::ACCESS_FILESYSTEM);
 	install_file_dialog->set_file_mode(FileDialog::FILE_MODE_OPEN_FILE);
-	install_file_dialog->set_current_dir(EditorSettings::get_singleton()->get_meta("export_template_download_directory", ""));
+	install_file_dialog->set_current_dir(EDITOR_DEF("_export_template_download_directory", ""));
 	install_file_dialog->add_filter("*.tpz", TTR("Godot Export Templates"));
 	install_file_dialog->connect("file_selected", callable_mp(this, &ExportTemplateManager::_install_file_selected).bind(false));
 	add_child(install_file_dialog);
@@ -897,5 +884,5 @@ ExportTemplateManager::ExportTemplateManager() {
 	hide_dialog_accept = memnew(AcceptDialog);
 	hide_dialog_accept->set_text(TTR("The templates will continue to download.\nYou may experience a short editor freeze when they finish."));
 	add_child(hide_dialog_accept);
-	hide_dialog_accept->connect("confirmed", callable_mp(this, &ExportTemplateManager::_hide_dialog));
+	hide_dialog_accept->connect(SceneStringName(confirmed), callable_mp(this, &ExportTemplateManager::_hide_dialog));
 }

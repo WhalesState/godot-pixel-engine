@@ -2,10 +2,9 @@
 /*  file_access_memory.h                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -42,7 +41,7 @@ class FileAccessMemory : public FileAccess {
 	static Ref<FileAccess> create();
 
 public:
-	static void register_file(String p_name, Vector<uint8_t> p_data);
+	static void register_file(const String &p_name, const Vector<uint8_t> &p_data);
 	static void cleanup();
 
 	virtual Error open_custom(const uint8_t *p_data, uint64_t p_len); ///< open a file
@@ -56,14 +55,12 @@ public:
 
 	virtual bool eof_reached() const override; ///< reading passed EOF
 
-	virtual uint8_t get_8() const override; ///< get a byte
-
 	virtual uint64_t get_buffer(uint8_t *p_dst, uint64_t p_length) const override; ///< get an array of bytes
 
 	virtual Error get_error() const override; ///< get last error
 
+	virtual Error resize(int64_t p_length) override { return ERR_UNAVAILABLE; }
 	virtual void flush() override;
-	virtual void store_8(uint8_t p_byte) override; ///< store a byte
 	virtual void store_buffer(const uint8_t *p_src, uint64_t p_length) override; ///< store an array of bytes
 
 	virtual bool file_exists(const String &p_name) override; ///< return true if a file exists

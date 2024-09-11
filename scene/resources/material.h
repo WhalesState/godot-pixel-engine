@@ -2,10 +2,9 @@
 /*  material.h                                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -57,7 +56,8 @@ protected:
 	_FORCE_INLINE_ RID _get_material() const { return material; }
 	static void _bind_methods();
 
-	void _mark_initialized(const Callable &p_queue_shader_change_callable);
+	void _mark_ready();
+	void _mark_initialized(const Callable &p_add_to_dirty_list, const Callable &p_update_shader);
 	bool _is_initialized() { return init_state == INIT_STATE_READY; }
 
 	GDVIRTUAL0RC(RID, _get_shader_rid)
@@ -89,7 +89,9 @@ protected:
 
 	static void _bind_methods();
 
+#ifdef TOOLS_ENABLED
 	void get_argument_options(const StringName &p_function, int p_idx, List<String> *r_options) const override;
+#endif
 
 	void _shader_changed();
 

@@ -2,10 +2,9 @@
 /*  editor_locale_dialog.h                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,7 +31,6 @@
 #ifndef EDITOR_LOCALE_DIALOG_H
 #define EDITOR_LOCALE_DIALOG_H
 
-#include "core/string/translation.h"
 #include "scene/gui/dialogs.h"
 
 class Button;

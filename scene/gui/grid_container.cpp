@@ -2,10 +2,9 @@
 /*  grid_container.cpp                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -45,11 +44,8 @@ void GridContainer::_notification(int p_what) {
 			// Compute the per-column/per-row data.
 			int valid_controls_index = 0;
 			for (int i = 0; i < get_child_count(); i++) {
-				Control *c = Object::cast_to<Control>(get_child(i));
-				if (!c || !c->is_visible_in_tree()) {
-					continue;
-				}
-				if (c->is_set_as_top_level()) {
+				Control *c = as_sortable_control(get_child(i));
+				if (!c) {
 					continue;
 				}
 
@@ -187,8 +183,8 @@ void GridContainer::_notification(int p_what) {
 
 			valid_controls_index = 0;
 			for (int i = 0; i < get_child_count(); i++) {
-				Control *c = Object::cast_to<Control>(get_child(i));
-				if (!c || !c->is_visible_in_tree()) {
+				Control *c = as_sortable_control(get_child(i));
+				if (!c) {
 					continue;
 				}
 				int row = valid_controls_index / columns;
@@ -283,8 +279,8 @@ Size2 GridContainer::get_minimum_size() const {
 
 	int valid_controls_index = 0;
 	for (int i = 0; i < get_child_count(); i++) {
-		Control *c = Object::cast_to<Control>(get_child(i));
-		if (!c || !c->is_visible()) {
+		Control *c = as_sortable_control(get_child(i), SortableVisbilityMode::VISIBLE);
+		if (!c) {
 			continue;
 		}
 		int row = valid_controls_index / columns;

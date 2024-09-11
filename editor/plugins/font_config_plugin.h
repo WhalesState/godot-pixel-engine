@@ -2,10 +2,9 @@
 /*  font_config_plugin.h                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -33,9 +32,9 @@
 #define FONT_CONFIG_PLUGIN_H
 
 #include "core/io/marshalls.h"
-#include "editor/editor_plugin.h"
 #include "editor/editor_properties.h"
 #include "editor/editor_properties_array_dict.h"
+#include "editor/plugins/editor_plugin.h"
 
 /*************************************************************************/
 
@@ -47,7 +46,6 @@ class EditorPropertyFontMetaObject : public RefCounted {
 protected:
 	bool _set(const StringName &p_name, const Variant &p_value);
 	bool _get(const StringName &p_name, Variant &r_ret) const;
-	static void _bind_methods();
 
 public:
 	void set_dict(const Dictionary &p_dict);
@@ -109,7 +107,7 @@ protected:
 
 	void _edit_pressed();
 	void _page_changed(int p_page);
-	void _property_changed(const String &p_property, Variant p_value, const String &p_name = "", bool p_changing = false);
+	void _property_changed(const String &p_property, const Variant &p_value, const String &p_name = "", bool p_changing = false);
 	void _remove(Object *p_button, const String &p_key);
 	void _add_menu();
 	void _add_script(int p_option);
@@ -140,12 +138,11 @@ class EditorPropertyOTVariation : public EditorProperty {
 	EditorPaginator *paginator = nullptr;
 
 protected:
-	void _notification(int p_what);
 	static void _bind_methods(){};
 
 	void _edit_pressed();
 	void _page_changed(int p_page);
-	void _property_changed(const String &p_property, Variant p_value, const String &p_name = "", bool p_changing = false);
+	void _property_changed(const String &p_property, const Variant &p_value, const String &p_name = "", bool p_changing = false);
 	void _object_id_selected(const StringName &p_property, ObjectID p_id);
 
 public:
@@ -194,7 +191,7 @@ protected:
 
 	void _edit_pressed();
 	void _page_changed(int p_page);
-	void _property_changed(const String &p_property, Variant p_value, const String &p_name = "", bool p_changing = false);
+	void _property_changed(const String &p_property, const Variant &p_value, const String &p_name = "", bool p_changing = false);
 	void _remove(Object *p_button, int p_key);
 	void _add_menu();
 	void _add_feature(int p_option);
@@ -226,6 +223,8 @@ protected:
 	static void _bind_methods();
 
 	Ref<Font> prev_font;
+
+	void _preview_changed();
 
 public:
 	virtual Size2 get_minimum_size() const override;

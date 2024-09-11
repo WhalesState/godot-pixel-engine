@@ -2,10 +2,9 @@
 /*  image_compress_astcenc.cpp                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -42,17 +41,11 @@ void _compress_astc(Image *r_img, Image::ASTCFormat p_format) {
 	// TODO: See how to handle lossy quality.
 
 	Image::Format img_format = r_img->get_format();
-	if (img_format >= Image::FORMAT_DXT1) {
+	if (Image::is_format_compressed(img_format)) {
 		return; // Do not compress, already compressed.
 	}
 
-	bool is_hdr = false;
-	if ((img_format >= Image::FORMAT_RH) && (img_format <= Image::FORMAT_RGBE9995)) {
-		is_hdr = true;
-		r_img->convert(Image::FORMAT_RGBAF);
-	} else {
-		r_img->convert(Image::FORMAT_RGBA8);
-	}
+	r_img->convert(Image::FORMAT_RGBA8);
 
 	// Determine encoder output format from our enum.
 
@@ -62,19 +55,9 @@ void _compress_astc(Image *r_img, Image::ASTCFormat p_format) {
 	unsigned int block_y = 4;
 
 	if (p_format == Image::ASTCFormat::ASTC_FORMAT_4x4) {
-		if (is_hdr) {
-			target_format = Image::FORMAT_ASTC_4x4_HDR;
-			profile = ASTCENC_PRF_HDR;
-		} else {
-			target_format = Image::FORMAT_ASTC_4x4;
-		}
+		target_format = Image::FORMAT_ASTC_4x4;
 	} else if (p_format == Image::ASTCFormat::ASTC_FORMAT_8x8) {
-		if (is_hdr) {
-			target_format = Image::FORMAT_ASTC_8x8_HDR;
-			profile = ASTCENC_PRF_HDR;
-		} else {
-			target_format = Image::FORMAT_ASTC_8x8;
-		}
+		target_format = Image::FORMAT_ASTC_8x8;
 		block_x = 8;
 		block_y = 8;
 	}
@@ -98,7 +81,7 @@ void _compress_astc(Image *r_img, Image::ASTCFormat p_format) {
 
 	// Initialize astcenc.
 
-	int dest_size = Image::get_image_data_size(width, height, target_format, mipmaps);
+	int64_t dest_size = Image::get_image_data_size(width, height, target_format, mipmaps);
 	Vector<uint8_t> dest_data;
 	dest_data.resize(dest_size);
 	uint8_t *dest_write = dest_data.ptrw();
@@ -126,14 +109,17 @@ void _compress_astc(Image *r_img, Image::ASTCFormat p_format) {
 	int mip_count = mipmaps ? Image::get_image_required_mipmaps(width, height, target_format) : 0;
 	for (int i = 0; i < mip_count + 1; i++) {
 		int src_mip_w, src_mip_h;
-		int src_ofs = Image::get_image_mipmap_offset_and_dimensions(width, height, r_img->get_format(), i, src_mip_w, src_mip_h);
+		int64_t src_ofs = Image::get_image_mipmap_offset_and_dimensions(width, height, r_img->get_format(), i, src_mip_w, src_mip_h);
 
 		const uint8_t *slices = &image_data.ptr()[src_ofs];
 
 		int dst_mip_w, dst_mip_h;
-		int dst_ofs = Image::get_image_mipmap_offset_and_dimensions(width, height, target_format, i, dst_mip_w, dst_mip_h);
+		int64_t dst_ofs = Image::get_image_mipmap_offset_and_dimensions(width, height, target_format, i, dst_mip_w, dst_mip_h);
 		// Ensure that mip offset is a multiple of 8 (etcpak expects uint64_t pointer).
-		ERR_FAIL_COND(dst_ofs % 8 != 0);
+		if (unlikely(dst_ofs % 8 != 0)) {
+			astcenc_context_free(context);
+			ERR_FAIL_MSG("astcenc: Mip offset is not a multiple of 8.");
+		}
 		uint8_t *dest_mip_write = (uint8_t *)&dest_write[dst_ofs];
 
 		// Compress image.
@@ -143,9 +129,6 @@ void _compress_astc(Image *r_img, Image::ASTCFormat p_format) {
 		image.dim_y = src_mip_h;
 		image.dim_z = 1;
 		image.data_type = ASTCENC_TYPE_U8;
-		if (is_hdr) {
-			image.data_type = ASTCENC_TYPE_F32;
-		}
 		image.data = (void **)(&slices);
 
 		// Compute the number of ASTC blocks in each dimension.
@@ -170,7 +153,7 @@ void _compress_astc(Image *r_img, Image::ASTCFormat p_format) {
 
 	r_img->set_data(width, height, mipmaps, target_format, dest_data);
 
-	print_verbose(vformat("astcenc: Encoding took %s ms.", rtos(OS::get_singleton()->get_ticks_msec() - start_time)));
+	print_verbose(vformat("astcenc: Encoding took %d ms.", OS::get_singleton()->get_ticks_msec() - start_time));
 }
 
 void _decompress_astc(Image *r_img) {
@@ -179,25 +162,14 @@ void _decompress_astc(Image *r_img) {
 	// Determine decompression parameters from image format.
 
 	Image::Format img_format = r_img->get_format();
-	bool is_hdr = false;
 	unsigned int block_x = 0;
 	unsigned int block_y = 0;
 	if (img_format == Image::FORMAT_ASTC_4x4) {
 		block_x = 4;
 		block_y = 4;
-		is_hdr = false;
-	} else if (img_format == Image::FORMAT_ASTC_4x4_HDR) {
-		block_x = 4;
-		block_y = 4;
-		is_hdr = true;
 	} else if (img_format == Image::FORMAT_ASTC_8x8) {
 		block_x = 8;
 		block_y = 8;
-		is_hdr = false;
-	} else if (img_format == Image::FORMAT_ASTC_8x8_HDR) {
-		block_x = 8;
-		block_y = 8;
-		is_hdr = true;
 	} else {
 		ERR_FAIL_MSG("astcenc: Cannot decompress Image with a non-ASTC format.");
 	}
@@ -205,9 +177,6 @@ void _decompress_astc(Image *r_img) {
 	// Initialize astcenc.
 
 	astcenc_profile profile = ASTCENC_PRF_LDR;
-	if (is_hdr) {
-		profile = ASTCENC_PRF_HDR;
-	}
 	astcenc_config config;
 	const float quality = ASTCENC_PRE_MEDIUM;
 
@@ -224,12 +193,12 @@ void _decompress_astc(Image *r_img) {
 	ERR_FAIL_COND_MSG(status != ASTCENC_SUCCESS,
 			vformat("astcenc: Context allocation failed: %s.", astcenc_get_error_string(status)));
 
-	Image::Format target_format = is_hdr ? Image::FORMAT_RGBAF : Image::FORMAT_RGBA8;
+	Image::Format target_format = Image::FORMAT_RGBA8;
 
 	const bool mipmaps = r_img->has_mipmaps();
 	int width = r_img->get_width();
 	int height = r_img->get_height();
-	int dest_size = Image::get_image_data_size(width, height, target_format, mipmaps);
+	int64_t dest_size = Image::get_image_data_size(width, height, target_format, mipmaps);
 	Vector<uint8_t> dest_data;
 	dest_data.resize(dest_size);
 	uint8_t *dest_write = dest_data.ptrw();
@@ -242,9 +211,9 @@ void _decompress_astc(Image *r_img) {
 	for (int i = 0; i < mip_count + 1; i++) {
 		int src_mip_w, src_mip_h;
 
-		int src_ofs = Image::get_image_mipmap_offset_and_dimensions(width, height, r_img->get_format(), i, src_mip_w, src_mip_h);
+		int64_t src_ofs = Image::get_image_mipmap_offset_and_dimensions(width, height, r_img->get_format(), i, src_mip_w, src_mip_h);
 		const uint8_t *src_data = &image_data.ptr()[src_ofs];
-		int src_size;
+		int64_t src_size;
 		if (i == mip_count) {
 			src_size = image_data.size() - src_ofs;
 		} else {
@@ -253,7 +222,7 @@ void _decompress_astc(Image *r_img) {
 		}
 
 		int dst_mip_w, dst_mip_h;
-		int dst_ofs = Image::get_image_mipmap_offset_and_dimensions(width, height, target_format, i, dst_mip_w, dst_mip_h);
+		int64_t dst_ofs = Image::get_image_mipmap_offset_and_dimensions(width, height, target_format, i, dst_mip_w, dst_mip_h);
 		// Ensure that mip offset is a multiple of 8 (etcpak expects uint64_t pointer).
 		ERR_FAIL_COND(dst_ofs % 8 != 0);
 		uint8_t *dest_mip_write = (uint8_t *)&dest_write[dst_ofs];
@@ -263,11 +232,6 @@ void _decompress_astc(Image *r_img) {
 		image.dim_y = dst_mip_h;
 		image.dim_z = 1;
 		image.data_type = ASTCENC_TYPE_U8;
-		if (is_hdr) {
-			target_format = Image::FORMAT_RGBAF;
-			image.data_type = ASTCENC_TYPE_F32;
-		}
-
 		image.data = (void **)(&dest_mip_write);
 
 		const astcenc_swizzle swizzle = {
@@ -287,5 +251,5 @@ void _decompress_astc(Image *r_img) {
 
 	r_img->set_data(width, height, mipmaps, target_format, dest_data);
 
-	print_verbose(vformat("astcenc: Decompression took %s ms.", rtos(OS::get_singleton()->get_ticks_msec() - start_time)));
+	print_verbose(vformat("astcenc: Decompression took %d ms.", OS::get_singleton()->get_ticks_msec() - start_time));
 }

@@ -2,10 +2,9 @@
 /*  godot_core_mbedtls_config.h                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -50,5 +49,12 @@
 #define MBEDTLS_SHA256_C
 #define MBEDTLS_PLATFORM_ZEROIZE_ALT
 #define MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
+
+// This is only to pass a check in the mbedtls check_config.h header, none of
+// the files we include as part of the core build uses it anyway, we already
+// define MBEDTLS_PLATFORM_ZEROIZE_ALT which is the only relevant function.
+#if defined(__MINGW32__)
+#define MBEDTLS_PLATFORM_C
+#endif
 
 #endif // GODOT_CORE_MBEDTLS_CONFIG_H

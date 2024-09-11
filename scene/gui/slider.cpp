@@ -2,10 +2,9 @@
 /*  slider.cpp                                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -65,6 +64,8 @@ void Slider::gui_input(const Ref<InputEvent> &p_event) {
 				}
 
 				grab.pos = orientation == VERTICAL ? mb->get_position().y : mb->get_position().x;
+				grab.value_before_dragging = get_as_ratio();
+				emit_signal(SNAME("drag_started"));
 
 				double grab_width = theme_cache.center_grabber ? 0.0 : (double)grabber->get_width();
 				double grab_height = theme_cache.center_grabber ? 0.0 : (double)grabber->get_height();
@@ -79,12 +80,11 @@ void Slider::gui_input(const Ref<InputEvent> &p_event) {
 				grab.active = true;
 				grab.uvalue = get_as_ratio();
 
-				emit_signal(SNAME("drag_started"));
 				_notify_shared_value_changed();
 			} else {
 				grab.active = false;
 
-				const bool value_changed = !Math::is_equal_approx((double)grab.uvalue, get_as_ratio());
+				const bool value_changed = !Math::is_equal_approx((double)grab.value_before_dragging, get_as_ratio());
 				emit_signal(SNAME("drag_ended"), value_changed);
 			}
 		} else if (scrollable) {

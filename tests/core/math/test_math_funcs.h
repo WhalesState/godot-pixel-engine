@@ -2,10 +2,9 @@
 /*  test_math_funcs.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -109,6 +108,29 @@ TEST_CASE_TEMPLATE("[Math] round/floor/ceil", T, float, double) {
 
 	CHECK(Math::ceil((T)1.5) == (T)2.0);
 	CHECK(Math::ceil((T)-1.9) == (T)-1.0);
+}
+
+TEST_CASE_TEMPLATE("[Math] integer division round up unsigned", T, uint32_t, uint64_t) {
+	CHECK(Math::division_round_up((T)0, (T)64) == 0);
+	CHECK(Math::division_round_up((T)1, (T)64) == 1);
+	CHECK(Math::division_round_up((T)63, (T)64) == 1);
+	CHECK(Math::division_round_up((T)64, (T)64) == 1);
+	CHECK(Math::division_round_up((T)65, (T)64) == 2);
+	CHECK(Math::division_round_up((T)65, (T)1) == 65);
+}
+
+TEST_CASE_TEMPLATE("[Math] integer division round up signed", T, int32_t, int64_t) {
+	CHECK(Math::division_round_up((T)0, (T)64) == 0);
+	CHECK(Math::division_round_up((T)1, (T)64) == 1);
+	CHECK(Math::division_round_up((T)63, (T)64) == 1);
+	CHECK(Math::division_round_up((T)64, (T)64) == 1);
+	CHECK(Math::division_round_up((T)65, (T)64) == 2);
+	CHECK(Math::division_round_up((T)65, (T)1) == 65);
+	CHECK(Math::division_round_up((T)-1, (T)64) == 0);
+	CHECK(Math::division_round_up((T)-1, (T)-1) == 1);
+	CHECK(Math::division_round_up((T)-1, (T)1) == -1);
+	CHECK(Math::division_round_up((T)-1, (T)-2) == 1);
+	CHECK(Math::division_round_up((T)-4, (T)-2) == 2);
 }
 
 TEST_CASE_TEMPLATE("[Math] sin/cos/tan", T, float, double) {
@@ -359,6 +381,9 @@ TEST_CASE_TEMPLATE("[Math] remap", T, float, double) {
 	CHECK(Math::remap((T)-100.0, (T)-100.0, (T)-200.0, (T)0.0, (T)-1000.0) == doctest::Approx((T)0.0));
 	CHECK(Math::remap((T)-200.0, (T)-100.0, (T)-200.0, (T)0.0, (T)-1000.0) == doctest::Approx((T)-1000.0));
 	CHECK(Math::remap((T)-250.0, (T)-100.0, (T)-200.0, (T)0.0, (T)-1000.0) == doctest::Approx((T)-1500.0));
+
+	// Note: undefined behavior can happen when `p_istart == p_istop`. We don't bother testing this as it will
+	// vary between hardware and compilers properly implementing IEEE 754.
 }
 
 TEST_CASE_TEMPLATE("[Math] angle_difference", T, float, double) {

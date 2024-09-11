@@ -9,8 +9,8 @@
 		[codeblocks]
 		[gdscript]
 		var fv = FontVariation.new()
-		fv.set_base_font(load("res://BarlowCondensed-Regular.ttf"))
-		fv.set_variation_embolden(1.2)
+		fv.base_font = load("res://BarlowCondensed-Regular.ttf")
+		fv.variation_embolden = 1.2
 		$Label.add_theme_font_override("font", fv)
 		$Label.add_theme_font_size_override("font_size", 64)
 		[/gdscript]
@@ -39,6 +39,9 @@
 		<member name="base_font" type="Font" setter="set_base_font" getter="get_base_font">
 			Base font used to create a variation. If not set, default [Theme] font is used.
 		</member>
+		<member name="baseline_offset" type="float" setter="set_baseline_offset" getter="get_baseline_offset" default="0.0">
+			Extra baseline offset (as a fraction of font height).
+		</member>
 		<member name="opentype_features" type="Dictionary" setter="set_opentype_features" getter="get_opentype_features" default="{}">
 			A set of OpenType feature tags. More info: [url=https://docs.microsoft.com/en-us/typography/opentype/spec/featuretags]OpenType feature tags[/url].
 		</member>
@@ -56,7 +59,7 @@
 		</member>
 		<member name="variation_embolden" type="float" setter="set_variation_embolden" getter="get_variation_embolden" default="0.0">
 			If is not equal to zero, emboldens the font outlines. Negative values reduce the outline thickness.
-			[b]Note:[/b] Emboldened fonts might have self-intersecting outlines, which will prevent MSDF fonts and TextMesh from working correctly.
+			[b]Note:[/b] Emboldened fonts might have self-intersecting outlines, which will prevent MSDF fonts and [TextMesh] from working correctly.
 		</member>
 		<member name="variation_face_index" type="int" setter="set_variation_face_index" getter="get_variation_face_index" default="0">
 			Active face index in the TrueType / OpenType collection file.

@@ -2,10 +2,9 @@
 /*  editor_import_plugin.cpp                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -187,6 +186,15 @@ Error EditorImportPlugin::import(const String &p_source_file, const String &p_sa
 	ERR_FAIL_V_MSG(ERR_METHOD_NOT_FOUND, "Unimplemented _import in add-on.");
 }
 
+bool EditorImportPlugin::can_import_threaded() const {
+	bool ret = false;
+	if (GDVIRTUAL_CALL(_can_import_threaded, ret)) {
+		return ret;
+	} else {
+		return ResourceImporter::can_import_threaded();
+	}
+}
+
 Error EditorImportPlugin::_append_import_external_resource(const String &p_file, const Dictionary &p_custom_options, const String &p_custom_importer, Variant p_generator_parameters) {
 	HashMap<StringName, Variant> options;
 	List<Variant> keys;
@@ -214,5 +222,6 @@ void EditorImportPlugin::_bind_methods() {
 	GDVIRTUAL_BIND(_get_import_order)
 	GDVIRTUAL_BIND(_get_option_visibility, "path", "option_name", "options")
 	GDVIRTUAL_BIND(_import, "source_file", "save_path", "options", "platform_variants", "gen_files");
+	GDVIRTUAL_BIND(_can_import_threaded);
 	ClassDB::bind_method(D_METHOD("append_import_external_resource", "path", "custom_options", "custom_importer", "generator_parameters"), &EditorImportPlugin::_append_import_external_resource, DEFVAL(Dictionary()), DEFVAL(String()), DEFVAL(Variant()));
 }

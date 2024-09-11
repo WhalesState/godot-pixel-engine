@@ -2,10 +2,9 @@
 /*  scene_string_names.cpp                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -81,6 +80,9 @@ SceneStringNames::SceneStringNames() {
 	v_offset = StaticCString::create("v_offset");
 
 	line_separation = StaticCString::create("line_separation");
+	font = StaticCString::create("font");
+	font_size = StaticCString::create("font_size");
+	font_color = StaticCString::create("font_color");
 
 	frame_changed = StaticCString::create("frame_changed");
 	texture_changed = StaticCString::create("texture_changed");
@@ -106,6 +108,14 @@ SceneStringNames::SceneStringNames() {
 
 	pressed = StaticCString::create("pressed");
 	id_pressed = StaticCString::create("id_pressed");
+	toggled = StaticCString::create("toggled");
 
 	panel = StaticCString::create("panel");
+
+	item_selected = StaticCString::create("item_selected");
+
+	confirmed = StaticCString::create("confirmed");
+
+	text_changed = StaticCString::create("text_changed");
+	value_changed = StaticCString::create("value_changed");
 }

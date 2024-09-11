@@ -2,10 +2,9 @@
 /*  material.cpp                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -41,24 +40,25 @@ RID Material::get_rid() const {
 	return material;
 }
 
-void Material::_mark_initialized(const Callable &p_queue_shader_change_callable) {
+void Material::_mark_ready() {
+	init_state = INIT_STATE_READY;
+}
+
+void Material::_mark_initialized(const Callable &p_add_to_dirty_list, const Callable &p_update_shader) {
 	// If this is happening as part of resource loading, it is not safe to queue the update
-	// as an addition to the dirty list, unless the load is happening on the main thread.
-	if (ResourceLoader::is_within_load() && Thread::get_caller_id() != Thread::get_main_id()) {
+	// as an addition to the dirty list. It would be if the load is happening on the main thread,
+	// but even so we'd rather perform the update directly instead of using the dirty list.
+	if (ResourceLoader::is_within_load()) {
 		DEV_ASSERT(init_state != INIT_STATE_READY);
 		if (init_state == INIT_STATE_UNINITIALIZED) { // Prevent queueing twice.
-			// Let's mark this material as being initialized.
 			init_state = INIT_STATE_INITIALIZING;
-			// Knowing that the ResourceLoader will eventually feed deferred calls into the main message queue, let's do these:
-			// 1. Queue setting the init state to INIT_STATE_READY finally.
-			callable_mp(this, &Material::_mark_initialized).bind(p_queue_shader_change_callable).call_deferred();
-			// 2. Queue an individual update of this material.
-			p_queue_shader_change_callable.call_deferred();
+			callable_mp(this, &Material::_mark_ready).call_deferred();
+			p_update_shader.call_deferred();
 		}
 	} else {
 		// Straightforward conditions.
 		init_state = INIT_STATE_READY;
-		p_queue_shader_change_callable.callv(Array());
+		p_add_to_dirty_list.call();
 	}
 }
 
@@ -239,7 +239,7 @@ void ShaderMaterial::_get_property_list(List<PropertyInfo> *p_list) const {
 				}
 
 				if (is_uniform_type_compatible && E->get().type == Variant::OBJECT && cached.get_type() == Variant::OBJECT) {
-					// Check if the Object class (hint string) changed, for example Texture 2D sampler to Texture 3D.
+					// Check if the Object class (hint string) changed, for example Texture2D sampler to Texture3D.
 					// Allow inheritance, Texture2D type sampler should also accept CompressedTexture2D.
 					Object *cached_obj = cached;
 					if (!cached_obj->is_class(E->get().hint_string)) {
@@ -286,7 +286,7 @@ bool ShaderMaterial::_property_can_revert(const StringName &p_name) const {
 bool ShaderMaterial::_property_get_revert(const StringName &p_name, Variant &r_property) const {
 	if (shader.is_valid()) {
 		const StringName *pr = remap_cache.getptr(p_name);
-		if (*pr) {
+		if (pr) {
 			r_property = RenderingServer::get_singleton()->shader_get_parameter_default(shader->get_rid(), *pr);
 			return true;
 		}
@@ -371,9 +371,10 @@ void ShaderMaterial::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "shader", PROPERTY_HINT_RESOURCE_TYPE, "Shader"), "set_shader", "get_shader");
 }
 
+#ifdef TOOLS_ENABLED
 void ShaderMaterial::get_argument_options(const StringName &p_function, int p_idx, List<String> *r_options) const {
-	String f = p_function.operator String();
-	if ((f == "get_shader_parameter" || f == "set_shader_parameter") && p_idx == 0) {
+	const String pf = p_function;
+	if (p_idx == 0 && (pf == "get_shader_parameter" || pf == "set_shader_parameter")) {
 		if (shader.is_valid()) {
 			List<PropertyInfo> pl;
 			shader->get_shader_uniform_list(&pl);
@@ -384,6 +385,7 @@ void ShaderMaterial::get_argument_options(const StringName &p_function, int p_id
 	}
 	Material::get_argument_options(p_function, p_idx, r_options);
 }
+#endif
 
 Shader::Mode ShaderMaterial::get_shader_mode() const {
 	if (shader.is_valid()) {

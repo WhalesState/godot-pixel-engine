@@ -2,10 +2,9 @@
 /*  register_server_types.cpp                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -35,6 +34,7 @@
 #include "core/config/project_settings.h"
 
 #include "debugger/servers_debugger.h"
+#include "display/native_menu.h"
 #include "display_server.h"
 #include "rendering/renderer_compositor.h"
 #include "rendering_server.h"
@@ -56,6 +56,8 @@ static bool has_server_feature_callback(const String &p_feature) {
 }
 
 void register_server_types() {
+	OS::get_singleton()->benchmark_begin_measure("Servers", "Register Extensions");
+
 	shader_types = memnew(ShaderTypes);
 
 	GDREGISTER_CLASS(TextServerManager);
@@ -73,15 +75,26 @@ void register_server_types() {
 	GDREGISTER_ABSTRACT_CLASS(DisplayServer);
 	GDREGISTER_ABSTRACT_CLASS(RenderingServer);
 
+	GDREGISTER_CLASS(NativeMenu);
+
 	ServersDebugger::initialize();
+	OS::get_singleton()->benchmark_end_measure("Servers", "Register Extensions");
 }
 
 void unregister_server_types() {
+	OS::get_singleton()->benchmark_begin_measure("Servers", "Unregister Extensions");
+
 	ServersDebugger::deinitialize();
 	memdelete(shader_types);
+
+	OS::get_singleton()->benchmark_end_measure("Servers", "Unregister Extensions");
 }
 
 void register_server_singletons() {
+	OS::get_singleton()->benchmark_begin_measure("Servers", "Register Singletons");
+
 	Engine::get_singleton()->add_singleton(Engine::Singleton("DisplayServer", DisplayServer::get_singleton(), "DisplayServer"));
+	Engine::get_singleton()->add_singleton(Engine::Singleton("NativeMenu", NativeMenu::get_singleton(), "NativeMenu"));
 	Engine::get_singleton()->add_singleton(Engine::Singleton("RenderingServer", RenderingServer::get_singleton(), "RenderingServer"));
+	OS::get_singleton()->benchmark_end_measure("Servers", "Register Singletons");
 }

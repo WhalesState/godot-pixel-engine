@@ -2,10 +2,9 @@
 /*  performance.cpp                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -80,22 +79,23 @@ int Performance::_get_node_count() const {
 String Performance::get_monitor_name(Monitor p_monitor) const {
 	ERR_FAIL_INDEX_V(p_monitor, MONITOR_MAX, String());
 	static const char *names[MONITOR_MAX] = {
-		"time/fps",
-		"time/process",
-		"time/physics_process",
-		"memory/static",
-		"memory/static_max",
-		"memory/msg_buf_max",
-		"object/objects",
-		"object/resources",
-		"object/nodes",
-		"object/orphan_nodes",
-		"raster/total_objects_drawn",
-		"raster/total_primitives_drawn",
-		"raster/total_draw_calls",
-		"video/video_mem",
-		"video/texture_mem",
-		"video/buffer_mem",
+		PNAME("time/fps"),
+		PNAME("time/process"),
+		PNAME("time/physics_process"),
+		PNAME("memory/static"),
+		PNAME("memory/static_max"),
+		PNAME("memory/msg_buf_max"),
+		PNAME("object/objects"),
+		PNAME("object/resources"),
+		PNAME("object/nodes"),
+		PNAME("object/orphan_nodes"),
+		PNAME("raster/total_objects_drawn"),
+		PNAME("raster/total_primitives_drawn"),
+		PNAME("raster/total_draw_calls"),
+		PNAME("video/video_mem"),
+		PNAME("video/texture_mem"),
+		PNAME("video/buffer_mem"),
+
 	};
 
 	return names[p_monitor];

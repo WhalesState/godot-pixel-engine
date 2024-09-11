@@ -2,10 +2,9 @@
 /*  editor_preview_plugins.h                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,9 +31,11 @@
 #ifndef EDITOR_PREVIEW_PLUGINS_H
 #define EDITOR_PREVIEW_PLUGINS_H
 
-#include "core/io/image.h"
 #include "core/templates/safe_refcount.h"
 #include "editor/editor_resource_preview.h"
+
+class ScriptLanguage;
+class Image;
 
 void post_process_preview(Ref<Image> p_image);
 
@@ -85,9 +86,12 @@ public:
 class EditorScriptPreviewPlugin : public EditorResourcePreviewGenerator {
 	GDCLASS(EditorScriptPreviewPlugin, EditorResourcePreviewGenerator);
 
+	Ref<Texture2D> _generate_from_source_code(const ScriptLanguage *p_language, const String &p_source_code, const Size2 &p_size, Dictionary &p_metadata) const;
+
 public:
 	virtual bool handles(const String &p_type) const override;
 	virtual Ref<Texture2D> generate(const Ref<Resource> &p_from, const Size2 &p_size, Dictionary &p_metadata) const override;
+	virtual Ref<Texture2D> generate_from_path(const String &p_path, const Size2 &p_size, Dictionary &p_metadata) const override;
 
 	EditorScriptPreviewPlugin();
 };
@@ -99,10 +103,7 @@ class EditorFontPreviewPlugin : public EditorResourcePreviewGenerator {
 	RID viewport_texture;
 	RID canvas;
 	RID canvas_item;
-	Semaphore preview_done;
-
-	void _generate_frame_started();
-	void _preview_done();
+	DrawRequester draw_requester;
 
 public:
 	virtual bool handles(const String &p_type) const override;

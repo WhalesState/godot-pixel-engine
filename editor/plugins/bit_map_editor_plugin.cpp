@@ -2,10 +2,9 @@
 /*  bit_map_editor_plugin.cpp                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -31,7 +30,7 @@
 
 #include "bit_map_editor_plugin.h"
 
-#include "editor/editor_scale.h"
+#include "editor/themes/editor_scale.h"
 #include "scene/gui/label.h"
 #include "scene/gui/texture_rect.h"
 #include "scene/resources/image_texture.h"
@@ -56,7 +55,7 @@ BitMapEditor::BitMapEditor() {
 	Ref<StyleBoxEmpty> stylebox;
 	stylebox.instantiate();
 	stylebox->set_content_margin(SIDE_RIGHT, 4 * EDSCALE);
-	size_label->add_theme_style_override("normal", stylebox);
+	size_label->add_theme_style_override(CoreStringName(normal), stylebox);
 }
 
 ///////////////////////

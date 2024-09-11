@@ -2,10 +2,9 @@
 /*  node_dock.cpp                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -31,9 +30,9 @@
 
 #include "node_dock.h"
 
-#include "connections_dialog.h"
+#include "editor/connections_dialog.h"
 #include "editor/editor_node.h"
-#include "editor/editor_scale.h"
+#include "editor/themes/editor_scale.h"
 
 void NodeDock::show_groups() {
 	groups_button->set_pressed(true);
@@ -47,9 +46,6 @@ void NodeDock::show_connections() {
 	connections_button->set_pressed(true);
 	groups->hide();
 	connections->show();
-}
-
-void NodeDock::_bind_methods() {
 }
 
 void NodeDock::_notification(int p_what) {
@@ -68,23 +64,11 @@ void NodeDock::update_lists() {
 	connections->update_tree();
 }
 
-void NodeDock::_on_node_tree_exited() {
-	set_node(nullptr);
-}
-
 void NodeDock::set_node(Node *p_node) {
-	if (last_valid_node) {
-		last_valid_node->disconnect(SceneStringName(tree_exited), callable_mp(this, &NodeDock::_on_node_tree_exited));
-		last_valid_node = nullptr;
-	}
-
 	connections->set_node(p_node);
 	groups->set_current(p_node);
 
 	if (p_node) {
-		last_valid_node = p_node;
-		last_valid_node->connect(SceneStringName(tree_exited), callable_mp(this, &NodeDock::_on_node_tree_exited));
-
 		if (connections_button->is_pressed()) {
 			connections->show();
 		} else {
@@ -101,10 +85,6 @@ void NodeDock::set_node(Node *p_node) {
 	}
 }
 
-void NodeDock::restore_last_valid_node() {
-	set_node(last_valid_node);
-}
-
 NodeDock::NodeDock() {
 	singleton = this;
 
@@ -114,7 +94,7 @@ NodeDock::NodeDock() {
 	mode_hb->hide();
 
 	connections_button = memnew(Button);
-	connections_button->set_flat(true);
+	connections_button->set_theme_type_variation("FlatButton");
 	connections_button->set_text(TTR("Signals"));
 	connections_button->set_toggle_mode(true);
 	connections_button->set_pressed(true);
@@ -124,7 +104,7 @@ NodeDock::NodeDock() {
 	connections_button->connect(SceneStringName(pressed), callable_mp(this, &NodeDock::show_connections));
 
 	groups_button = memnew(Button);
-	groups_button->set_flat(true);
+	groups_button->set_theme_type_variation("FlatButton");
 	groups_button->set_text(TTR("Groups"));
 	groups_button->set_toggle_mode(true);
 	groups_button->set_pressed(false);

@@ -2,10 +2,9 @@
 /*  editor_run_bar.cpp                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -55,7 +54,7 @@ void EditorRunBar::_notification(int p_what) {
 			_update_play_buttons();
 			pause_button->set_icon(get_editor_theme_icon(SNAME("Pause")));
 			stop_button->set_icon(get_editor_theme_icon(SNAME("Stop")));
-			main_panel->add_theme_style_override("panel", get_theme_stylebox(SNAME("LaunchPadNormal"), EditorStringName(EditorStyles)));
+			main_panel->add_theme_style_override(SceneStringName(panel), get_theme_stylebox(SNAME("LaunchPadNormal"), EditorStringName(EditorStyles)));
 		} break;
 	}
 }
@@ -212,11 +211,12 @@ void EditorRunBar::play_main_scene(bool p_from_native) {
 }
 
 void EditorRunBar::play_current_scene(bool p_reload) {
+	String last_current_scene = run_current_filename; // This is necessary to have a copy of the string.
+
 	stop_playing();
 
 	current_mode = RunMode::RUN_CURRENT;
 	if (p_reload) {
-		String last_current_scene = run_current_filename; // This is necessary to have a copy of the string.
 		_run_scene(last_current_scene);
 	} else {
 		_run_scene();
@@ -293,11 +293,10 @@ EditorRunBar::EditorRunBar() {
 
 	main_hbox = memnew(HBoxContainer);
 	main_panel->add_child(main_hbox);
-	main_hbox->add_theme_constant_override("separation", 0);
 
 	play_button = memnew(Button);
 	main_hbox->add_child(play_button);
-	play_button->set_flat(true);
+	play_button->set_theme_type_variation("RunBarButton");
 	play_button->set_toggle_mode(true);
 	play_button->set_focus_mode(Control::FOCUS_NONE);
 	play_button->set_tooltip_text(TTR("Run the project's default scene."));
@@ -309,7 +308,7 @@ EditorRunBar::EditorRunBar() {
 
 	pause_button = memnew(Button);
 	main_hbox->add_child(pause_button);
-	pause_button->set_flat(true);
+	pause_button->set_theme_type_variation("RunBarButton");
 	pause_button->set_toggle_mode(true);
 	pause_button->set_focus_mode(Control::FOCUS_NONE);
 	pause_button->set_tooltip_text(TTR("Pause the running project's execution for debugging."));
@@ -321,7 +320,7 @@ EditorRunBar::EditorRunBar() {
 
 	stop_button = memnew(Button);
 	main_hbox->add_child(stop_button);
-	stop_button->set_flat(true);
+	stop_button->set_theme_type_variation("RunBarButton");
 	stop_button->set_focus_mode(Control::FOCUS_NONE);
 	stop_button->set_tooltip_text(TTR("Stop the currently running project."));
 	stop_button->set_disabled(true);
@@ -337,7 +336,7 @@ EditorRunBar::EditorRunBar() {
 
 	play_scene_button = memnew(Button);
 	main_hbox->add_child(play_scene_button);
-	play_scene_button->set_flat(true);
+	play_scene_button->set_theme_type_variation("RunBarButton");
 	play_scene_button->set_toggle_mode(true);
 	play_scene_button->set_focus_mode(Control::FOCUS_NONE);
 	play_scene_button->set_tooltip_text(TTR("Run the currently edited scene."));
@@ -349,7 +348,7 @@ EditorRunBar::EditorRunBar() {
 
 	play_custom_scene_button = memnew(Button);
 	main_hbox->add_child(play_custom_scene_button);
-	play_custom_scene_button->set_flat(true);
+	play_custom_scene_button->set_theme_type_variation("RunBarButton");
 	play_custom_scene_button->set_toggle_mode(true);
 	play_custom_scene_button->set_focus_mode(Control::FOCUS_NONE);
 	play_custom_scene_button->set_tooltip_text(TTR("Run a specific scene."));

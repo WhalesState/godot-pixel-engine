@@ -2,10 +2,9 @@
 /*  editor_export_preset.h                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -55,6 +54,12 @@ public:
 		MODE_FILE_REMOVE,
 	};
 
+	enum ScriptExportMode {
+		MODE_SCRIPT_TEXT,
+		MODE_SCRIPT_BINARY_TOKENS,
+		MODE_SCRIPT_BINARY_TOKENS_COMPRESSED,
+	};
+
 private:
 	Ref<EditorExportPlatform> platform;
 	ExportFilter export_filter = EXPORT_ALL_RESOURCES;
@@ -66,6 +71,7 @@ private:
 	HashSet<String> selected_files;
 	HashMap<String, FileExportMode> customized_files;
 	bool runnable = false;
+	bool advanced_options_enabled = false;
 	bool dedicated_server = false;
 
 	friend class EditorExport;
@@ -73,6 +79,7 @@ private:
 
 	HashMap<StringName, PropertyInfo> properties;
 	HashMap<StringName, Variant> values;
+	HashMap<StringName, Variant> value_overrides;
 	HashMap<StringName, bool> update_visibility;
 
 	String name;
@@ -85,6 +92,7 @@ private:
 	bool enc_directory = false;
 
 	String script_key;
+	int script_mode = MODE_SCRIPT_BINARY_TOKENS_COMPRESSED;
 
 protected:
 	bool _set(const StringName &p_name, const Variant &p_value);
@@ -101,6 +109,7 @@ public:
 	bool has(const StringName &p_property) const { return values.has(p_property); }
 
 	void update_files();
+	void update_value_overrides();
 
 	Vector<String> get_files_to_export() const;
 	Dictionary get_customized_files() const;
@@ -119,6 +128,9 @@ public:
 
 	void set_runnable(bool p_enable);
 	bool is_runnable() const;
+
+	void set_advanced_options_enabled(bool p_enabled);
+	bool are_advanced_options_enabled() const;
 
 	void set_dedicated_server(bool p_enable);
 	bool is_dedicated_server() const;
@@ -153,6 +165,12 @@ public:
 	void set_script_encryption_key(const String &p_key);
 	String get_script_encryption_key() const;
 
+	void set_script_export_mode(int p_mode);
+	int get_script_export_mode() const;
+
+	Variant _get_or_env(const StringName &p_name, const String &p_env_var) const {
+		return get_or_env(p_name, p_env_var);
+	}
 	Variant get_or_env(const StringName &p_name, const String &p_env_var, bool *r_valid = nullptr) const;
 
 	// Return the preset's version number, or fall back to the
@@ -167,5 +185,9 @@ public:
 
 	EditorExportPreset();
 };
+
+VARIANT_ENUM_CAST(EditorExportPreset::ExportFilter);
+VARIANT_ENUM_CAST(EditorExportPreset::FileExportMode);
+VARIANT_ENUM_CAST(EditorExportPreset::ScriptExportMode);
 
 #endif // EDITOR_EXPORT_PRESET_H

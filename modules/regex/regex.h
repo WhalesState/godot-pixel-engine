@@ -2,10 +2,9 @@
 /*  regex.h                                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -83,10 +82,10 @@ protected:
 	static void _bind_methods();
 
 public:
-	static Ref<RegEx> create_from_string(const String &p_pattern);
+	static Ref<RegEx> create_from_string(const String &p_pattern, bool p_show_error = true);
 
 	void clear();
-	Error compile(const String &p_pattern);
+	Error compile(const String &p_pattern, bool p_show_error = true);
 
 	Ref<RegExMatch> search(const String &p_subject, int p_offset = 0, int p_end = -1) const;
 	TypedArray<RegExMatch> search_all(const String &p_subject, int p_offset = 0, int p_end = -1) const;

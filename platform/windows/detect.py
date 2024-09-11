@@ -1,50 +1,45 @@
-import methods
 import os
+import re
 import subprocess
 import sys
-from platform_methods import detect_arch
-
 from typing import TYPE_CHECKING
 
+import methods
+from methods import print_error, print_warning
+from platform_methods import detect_arch
+
 if TYPE_CHECKING:
-    from SCons import Environment
+    from SCons.Script.SConscript import SConsEnvironment
 
 # To match other platforms
 STACK_SIZE = 8388608
+STACK_SIZE_SANITIZERS = 30 * 1024 * 1024
 
 
 def get_name():
     return "Windows"
 
 
-def try_cmd(test, prefix, arch):
+def try_cmd(test, prefix, arch, check_clang=False):
+    archs = ["x86_64", "x86_32", "arm64", "arm32"]
     if arch:
+        archs = [arch]
+
+    for a in archs:
         try:
             out = subprocess.Popen(
-                get_mingw_bin_prefix(prefix, arch) + test,
+                get_mingw_bin_prefix(prefix, a) + test,
                 shell=True,
                 stderr=subprocess.PIPE,
                 stdout=subprocess.PIPE,
             )
-            out.communicate()
+            outs, errs = out.communicate()
             if out.returncode == 0:
+                if check_clang and not outs.startswith(b"clang"):
+                    return False
                 return True
         except Exception:
             pass
-    else:
-        for a in ["x86_64", "x86_32", "arm64", "arm32"]:
-            try:
-                out = subprocess.Popen(
-                    get_mingw_bin_prefix(prefix, a) + test,
-                    shell=True,
-                    stderr=subprocess.PIPE,
-                    stdout=subprocess.PIPE,
-                )
-                out.communicate()
-                if out.returncode == 0:
-                    return True
-            except Exception:
-                pass
 
     return False
 
@@ -140,8 +135,9 @@ def detect_build_env_arch():
         if os.getenv("VCTOOLSINSTALLDIR"):
             host_path_index = os.getenv("PATH").upper().find(os.getenv("VCTOOLSINSTALLDIR").upper() + "BIN\\HOST")
             if host_path_index > -1:
-                first_path_arch = os.getenv("PATH").split(";")[0].rsplit("\\", 1)[-1].lower()
-                return msvc_target_aliases[first_path_arch]
+                first_path_arch = os.getenv("PATH")[host_path_index:].split(";")[0].rsplit("\\", 1)[-1].lower()
+                if first_path_arch in msvc_target_aliases.keys():
+                    return msvc_target_aliases[first_path_arch]
 
     msys_target_aliases = {
         "mingw32": "x86_32",
@@ -184,8 +180,10 @@ def get_opts():
         BoolVariable("use_llvm", "Use the LLVM compiler", False),
         BoolVariable("use_static_cpp", "Link MinGW/MSVC C++ runtime libraries statically", True),
         BoolVariable("use_asan", "Use address sanitizer (ASAN)", False),
+        BoolVariable("use_ubsan", "Use LLVM compiler undefined behavior sanitizer (UBSAN)", False),
         BoolVariable("debug_crt", "Compile with MSVC's debug CRT (/MDd)", False),
         BoolVariable("incremental_link", "Use MSVC incremental linking. May increase or decrease build times.", False),
+        BoolVariable("silence_msvc", "Silence MSVC's cl/link stdout bloat, redirecting any errors to stderr.", True),
         ("angle_libs", "Path to the ANGLE static libraries", ""),
     ]
 
@@ -203,12 +201,10 @@ def get_doc_path():
 def get_flags():
     arch = detect_build_env_arch() or detect_arch()
 
-    return [
-        ("arch", arch),
-    ]
+    return { "arch": arch, "supported": [] }
 
 
-def build_res_file(target, source, env):
+def build_res_file(target, source, env: "SConsEnvironment"):
     arch_aliases = {
         "x86_32": "pe-i386",
         "x86_64": "pe-x86-64",
@@ -243,24 +239,22 @@ def build_res_file(target, source, env):
     return 0
 
 
-def setup_msvc_manual(env):
+def setup_msvc_manual(env: "SConsEnvironment"):
     """Running from VCVARS environment"""
 
     env_arch = detect_build_env_arch()
     if env["arch"] != env_arch:
-        print(
-            """
-            Arch argument (%s) is not matching Native/Cross Compile Tools Prompt/Developer Console (or Visual Studio settings) that is being used to run SCons (%s).
-            Run SCons again without arch argument (example: scons p=windows) and SCons will attempt to detect what MSVC compiler will be executed and inform you.
-            """
+        print_error(
+            "Arch argument (%s) is not matching Native/Cross Compile Tools Prompt/Developer Console (or Visual Studio settings) that is being used to run SCons (%s).\n"
+            "Run SCons again without arch argument (example: scons p=windows) and SCons will attempt to detect what MSVC compiler will be executed and inform you."
             % (env["arch"], env_arch)
         )
-        sys.exit(200)
+        sys.exit(255)
 
-    print("Found MSVC, arch %s" % (env_arch))
+    print("Using VCVARS-determined MSVC, arch %s" % (env_arch))
 
 
-def setup_msvc_auto(env):
+def setup_msvc_auto(env: "SConsEnvironment"):
     """Set up MSVC using SCons's auto-detection logic"""
 
     # If MSVC_VERSION is set by SCons, we know MSVC is installed.
@@ -292,46 +286,44 @@ def setup_msvc_auto(env):
     env.Tool("msvc")
     env.Tool("mssdk")  # we want the MS SDK
 
+    # Re-add potentially overwritten flags.
+    env.AppendUnique(CCFLAGS=env.get("ccflags", "").split())
+    env.AppendUnique(CXXFLAGS=env.get("cxxflags", "").split())
+    env.AppendUnique(CFLAGS=env.get("cflags", "").split())
+    env.AppendUnique(RCFLAGS=env.get("rcflags", "").split())
+
     # Note: actual compiler version can be found in env['MSVC_VERSION'], e.g. "14.1" for VS2015
-    print("Found MSVC version %s, arch %s" % (env["MSVC_VERSION"], env["arch"]))
+    print("Using SCons-detected MSVC version %s, arch %s" % (env["MSVC_VERSION"], env["arch"]))
 
 
-def setup_mingw(env):
+def setup_mingw(env: "SConsEnvironment"):
     """Set up env for use with mingw"""
 
     env_arch = detect_build_env_arch()
     if os.getenv("MSYSTEM") == "MSYS":
-        print(
-            """
-            Running from base MSYS2 console/environment, use target specific environment instead (e.g., mingw32, mingw64, clang32, clang64).
-            """
+        print_error(
+            "Running from base MSYS2 console/environment, use target specific environment instead (e.g., mingw32, mingw64, clang32, clang64)."
         )
-        sys.exit(201)
+        sys.exit(255)
 
     if env_arch != "" and env["arch"] != env_arch:
-        print(
-            """
-            Arch argument (%s) is not matching MSYS2 console/environment that is being used to run SCons (%s).
-            Run SCons again without arch argument (example: scons p=windows) and SCons will attempt to detect what MSYS2 compiler will be executed and inform you.
-            """
+        print_error(
+            "Arch argument (%s) is not matching MSYS2 console/environment that is being used to run SCons (%s).\n"
+            "Run SCons again without arch argument (example: scons p=windows) and SCons will attempt to detect what MSYS2 compiler will be executed and inform you."
             % (env["arch"], env_arch)
         )
-        sys.exit(202)
+        sys.exit(255)
 
     if not try_cmd("gcc --version", env["mingw_prefix"], env["arch"]) and not try_cmd(
         "clang --version", env["mingw_prefix"], env["arch"]
     ):
-        print(
-            """
-            No valid compilers found, use MINGW_PREFIX environment variable to set MinGW path.
-            """
-        )
-        sys.exit(202)
+        print_error("No valid compilers found, use MINGW_PREFIX environment variable to set MinGW path.")
+        sys.exit(255)
 
     print("Using MinGW, arch %s" % (env["arch"]))
 
 
-def configure_msvc(env, vcvars_msvc_config):
+def configure_msvc(env: "SConsEnvironment", vcvars_msvc_config):
     """Configure env to work with MSVC"""
 
     ## Build type
@@ -347,6 +339,79 @@ def configure_msvc(env, vcvars_msvc_config):
         env.AppendUnique(CPPDEFINES=["WINDOWS_SUBSYSTEM_CONSOLE"])
 
     ## Compile/link flags
+
+    if env["use_llvm"]:
+        env["CC"] = "clang-cl"
+        env["CXX"] = "clang-cl"
+        env["LINK"] = "lld-link"
+        env["AR"] = "llvm-lib"
+
+        env.AppendUnique(CPPDEFINES=["R128_STDC_ONLY"])
+        env.extra_suffix = ".llvm" + env.extra_suffix
+
+    env["MAXLINELENGTH"] = 8192  # Windows Vista and beyond, so always applicable.
+
+    if env["silence_msvc"] and not env.GetOption("clean"):
+        from tempfile import mkstemp
+
+        # Ensure we have a location to write captured output to, in case of false positives.
+        capture_path = methods.base_folder_path + "platform/windows/msvc_capture.log"
+        with open(capture_path, "wt", encoding="utf-8"):
+            pass
+
+        old_spawn = env["SPAWN"]
+        re_redirect_stream = re.compile(r"^[12]?>")
+        re_cl_capture = re.compile(r"^.+\.(c|cc|cpp|cxx|c[+]{2})$", re.IGNORECASE)
+        re_link_capture = re.compile(r'\s{3}\S.+\s(?:"[^"]+.lib"|\S+.lib)\s.+\s(?:"[^"]+.exp"|\S+.exp)')
+
+        def spawn_capture(sh, escape, cmd, args, env):
+            # We only care about cl/link, process everything else as normal.
+            if args[0] not in ["cl", "link"]:
+                return old_spawn(sh, escape, cmd, args, env)
+
+            # Process as normal if the user is manually rerouting output.
+            for arg in args:
+                if re_redirect_stream.match(arg):
+                    return old_spawn(sh, escape, cmd, args, env)
+
+            tmp_stdout, tmp_stdout_name = mkstemp()
+            os.close(tmp_stdout)
+            args.append(f">{tmp_stdout_name}")
+            ret = old_spawn(sh, escape, cmd, args, env)
+
+            try:
+                with open(tmp_stdout_name, "r", encoding=sys.stdout.encoding, errors="replace") as tmp_stdout:
+                    lines = tmp_stdout.read().splitlines()
+                os.remove(tmp_stdout_name)
+            except OSError:
+                pass
+
+            # Early process no lines (OSError)
+            if not lines:
+                return ret
+
+            is_cl = args[0] == "cl"
+            content = ""
+            caught = False
+            for line in lines:
+                # These conditions are far from all-encompassing, but are specialized
+                # for what can be reasonably expected to show up in the repository.
+                if not caught and (is_cl and re_cl_capture.match(line)) or (not is_cl and re_link_capture.match(line)):
+                    caught = True
+                    try:
+                        with open(capture_path, "a", encoding=sys.stdout.encoding) as log:
+                            log.write(line + "\n")
+                    except OSError:
+                        print_warning(f'Failed to log captured line: "{line}".')
+                    continue
+                content += line + "\n"
+            # Content remaining assumed to be an error/warning.
+            if content:
+                sys.stderr.write(content)
+
+            return ret
+
+        env["SPAWN"] = spawn_capture
 
     if env["debug_crt"]:
         # Always use dynamic runtime, static debug CRT breaks thread_local.
@@ -364,9 +429,10 @@ def configure_msvc(env, vcvars_msvc_config):
     if env["arch"] == "x86_32":
         env["x86_libtheora_opt_vc"] = True
 
+    env.Append(CCFLAGS=["/fp:strict"])
+
     env.AppendUnique(CCFLAGS=["/Gd", "/GR", "/nologo"])
     env.AppendUnique(CCFLAGS=["/utf-8"])  # Force to use Unicode encoding.
-    env.AppendUnique(CXXFLAGS=["/TP"])  # assume all sources are C++
     # Once it was thought that only debug builds would be too large,
     # but this has recently stopped being true. See the mingw function
     # for notes on why this shouldn't be enabled for gcc
@@ -374,9 +440,13 @@ def configure_msvc(env, vcvars_msvc_config):
 
     if vcvars_msvc_config:  # should be automatic if SCons found it
         if os.getenv("WindowsSdkDir") is not None:
-            env.Prepend(CPPPATH=[os.getenv("WindowsSdkDir") + "/Include"])
+            env.Prepend(CPPPATH=[str(os.getenv("WindowsSdkDir")) + "/Include"])
         else:
-            print("Missing environment variable: WindowsSdkDir")
+            print_warning("Missing environment variable: WindowsSdkDir")
+
+    if int(env["target_win_version"], 16) < 0x0601:
+        print_error("`target_win_version` should be 0x0601 or higher (Windows 7).")
+        sys.exit(255)
 
     env.AppendUnique(
         CPPDEFINES=[
@@ -390,6 +460,15 @@ def configure_msvc(env, vcvars_msvc_config):
     env.AppendUnique(CPPDEFINES=["NOMINMAX"])  # disable bogus min/max WinDef.h macros
     if env["arch"] == "x86_64":
         env.AppendUnique(CPPDEFINES=["_WIN64"])
+
+    # Sanitizers
+    prebuilt_lib_extra_suffix = ""
+    if env["use_asan"]:
+        env.extra_suffix += ".san"
+        prebuilt_lib_extra_suffix = ".san"
+        env.AppendUnique(CPPDEFINES=["SANITIZERS_ENABLED"])
+        env.Append(CCFLAGS=["/fsanitize=address"])
+        env.Append(LINKFLAGS=["/INFERASANLIBS"])
 
     ## Libs
 
@@ -429,20 +508,26 @@ def configure_msvc(env, vcvars_msvc_config):
             env.AppendUnique(CPPDEFINES=["EGL_STATIC"])
             env.Append(LIBPATH=[env["angle_libs"]])
             LIBS += [
-                "libANGLE.windows." + env["arch"],
-                "libEGL.windows." + env["arch"],
-                "libGLES.windows." + env["arch"],
+                "libANGLE.windows." + env["arch"] + prebuilt_lib_extra_suffix,
+                "libEGL.windows." + env["arch"] + prebuilt_lib_extra_suffix,
+                "libGLES.windows." + env["arch"] + prebuilt_lib_extra_suffix,
             ]
             LIBS += ["dxgi", "d3d9", "d3d11"]
         env.Prepend(CPPPATH=["#thirdparty/angle/include"])
+
+    if env["target"] in ["editor", "template_debug"]:
+        LIBS += ["psapi", "dbghelp"]
+
+    if env["use_llvm"]:
+        LIBS += [f"clang_rt.builtins-{env['arch']}"]
 
     env.Append(LINKFLAGS=[p + env["LIBSUFFIX"] for p in LIBS])
 
     if vcvars_msvc_config:
         if os.getenv("WindowsSdkDir") is not None:
-            env.Append(LIBPATH=[os.getenv("WindowsSdkDir") + "/Lib"])
+            env.Append(LIBPATH=[str(os.getenv("WindowsSdkDir")) + "/Lib"])
         else:
-            print("Missing environment variable: WindowsSdkDir")
+            print_warning("Missing environment variable: WindowsSdkDir")
 
     ## LTO
 
@@ -451,34 +536,95 @@ def configure_msvc(env, vcvars_msvc_config):
 
     if env["lto"] != "none":
         if env["lto"] == "thin":
-            print("ThinLTO is only compatible with LLVM, use `use_llvm=yes` or `lto=full`.")
-            sys.exit(255)
-        env.AppendUnique(CCFLAGS=["/GL"])
-        env.AppendUnique(ARFLAGS=["/LTCG"])
-        if env["progress"]:
-            env.AppendUnique(LINKFLAGS=["/LTCG:STATUS"])
+            if not env["use_llvm"]:
+                print("ThinLTO is only compatible with LLVM, use `use_llvm=yes` or `lto=full`.")
+                sys.exit(255)
+
+            env.Append(CCFLAGS=["-flto=thin"])
+            env.Append(LINKFLAGS=["-flto=thin"])
+        elif env["use_llvm"]:
+            env.Append(CCFLAGS=["-flto"])
+            env.Append(LINKFLAGS=["-flto"])
         else:
-            env.AppendUnique(LINKFLAGS=["/LTCG"])
+            env.AppendUnique(CCFLAGS=["/GL"])
+            env.AppendUnique(ARFLAGS=["/LTCG"])
+            if env["progress"]:
+                env.AppendUnique(LINKFLAGS=["/LTCG:STATUS"])
+            else:
+                env.AppendUnique(LINKFLAGS=["/LTCG"])
 
     if vcvars_msvc_config:
-        env.Prepend(CPPPATH=[p for p in os.getenv("INCLUDE").split(";")])
-        env.Append(LIBPATH=[p for p in os.getenv("LIB").split(";")])
-
-    # Sanitizers
-    if env["use_asan"]:
-        env.extra_suffix += ".san"
-        env.Append(LINKFLAGS=["/INFERASANLIBS"])
-        env.Append(CCFLAGS=["/fsanitize=address"])
+        env.Prepend(CPPPATH=[p for p in str(os.getenv("INCLUDE")).split(";")])
+        env.Append(LIBPATH=[p for p in str(os.getenv("LIB")).split(";")])
 
     # Incremental linking fix
     env["BUILDERS"]["ProgramOriginal"] = env["BUILDERS"]["Program"]
     env["BUILDERS"]["Program"] = methods.precious_program
 
     env.Append(LINKFLAGS=["/NATVIS:platform\\windows\\godot.natvis"])
-    env.AppendUnique(LINKFLAGS=["/STACK:" + str(STACK_SIZE)])
+
+    if env["use_asan"]:
+        env.AppendUnique(LINKFLAGS=["/STACK:" + str(STACK_SIZE_SANITIZERS)])
+    else:
+        env.AppendUnique(LINKFLAGS=["/STACK:" + str(STACK_SIZE)])
 
 
-def configure_mingw(env):
+def get_ar_version(env):
+    ret = {
+        "major": -1,
+        "minor": -1,
+        "patch": -1,
+        "is_llvm": False,
+    }
+    try:
+        output = (
+            subprocess.check_output([env.subst(env["AR"]), "--version"], shell=(os.name == "nt"))
+            .strip()
+            .decode("utf-8")
+        )
+    except (subprocess.CalledProcessError, OSError):
+        print_warning("Couldn't check version of `ar`.")
+        return ret
+
+    match = re.search(r"GNU ar \(GNU Binutils\) (\d+)\.(\d+)(:?\.(\d+))?", output)
+    if match:
+        ret["major"] = int(match[1])
+        ret["minor"] = int(match[2])
+        if match[3]:
+            ret["patch"] = int(match[3])
+        else:
+            ret["patch"] = 0
+        return ret
+
+    match = re.search(r"LLVM version (\d+)\.(\d+)\.(\d+)", output)
+    if match:
+        ret["major"] = int(match[1])
+        ret["minor"] = int(match[2])
+        ret["patch"] = int(match[3])
+        ret["is_llvm"] = True
+        return ret
+
+    print_warning("Couldn't parse version of `ar`.")
+    return ret
+
+
+def get_is_ar_thin_supported(env):
+    """Check whether `ar --thin` is supported. It is only supported since Binutils 2.38 or LLVM 14."""
+    ar_version = get_ar_version(env)
+    if ar_version["major"] == -1:
+        return False
+
+    if ar_version["is_llvm"]:
+        return ar_version["major"] >= 14
+
+    if ar_version["major"] == 2:
+        return ar_version["minor"] >= 38
+
+    print_warning("Unknown Binutils `ar` version.")
+    return False
+
+
+def configure_mingw(env: "SConsEnvironment"):
     # Workaround for MinGW. See:
     # https://www.scons.org/wiki/LongCmdLinesOnWin32
     env.use_windows_spawn_fix()
@@ -491,9 +637,14 @@ def configure_mingw(env):
     if env["use_llvm"] and not try_cmd("clang --version", env["mingw_prefix"], env["arch"]):
         env["use_llvm"] = False
 
+    if not env["use_llvm"] and try_cmd("gcc --version", env["mingw_prefix"], env["arch"], True):
+        print("Detected GCC to be a wrapper for Clang.")
+        env["use_llvm"] = True
+
     # TODO: Re-evaluate the need for this / streamline with common config.
     if env["target"] == "template_release":
-        env.Append(CCFLAGS=["-msse2"])
+        if env["arch"] != "arm64":
+            env.Append(CCFLAGS=["-msse2"])
     elif env.dev_build:
         # Allow big objects. It's supposed not to have drawbacks but seems to break
         # GCC LTO, so enabling for debug builds only (which are not built with LTO
@@ -523,6 +674,8 @@ def configure_mingw(env):
     if env["arch"] in ["x86_32", "x86_64"]:
         env["x86_libtheora_opt_gcc"] = True
 
+    env.Append(CCFLAGS=["-ffp-contract=off"])
+
     mingw_bin_prefix = get_mingw_bin_prefix(env["mingw_prefix"], env["arch"])
 
     if env["use_llvm"]:
@@ -530,6 +683,7 @@ def configure_mingw(env):
         env["CXX"] = mingw_bin_prefix + "clang++"
         if try_cmd("as --version", env["mingw_prefix"], env["arch"]):
             env["AS"] = mingw_bin_prefix + "as"
+            env.Append(ASFLAGS=["-c"])
         if try_cmd("ar --version", env["mingw_prefix"], env["arch"]):
             env["AR"] = mingw_bin_prefix + "ar"
         if try_cmd("ranlib --version", env["mingw_prefix"], env["arch"]):
@@ -564,12 +718,46 @@ def configure_mingw(env):
             env.Append(CCFLAGS=["-flto"])
             env.Append(LINKFLAGS=["-flto"])
 
-    env.Append(LINKFLAGS=["-Wl,--stack," + str(STACK_SIZE)])
+    if env["use_asan"]:
+        env.Append(LINKFLAGS=["-Wl,--stack," + str(STACK_SIZE_SANITIZERS)])
+    else:
+        env.Append(LINKFLAGS=["-Wl,--stack," + str(STACK_SIZE)])
 
     ## Compile flags
 
+    if int(env["target_win_version"], 16) < 0x0601:
+        print_error("`target_win_version` should be 0x0601 or higher (Windows 7).")
+        sys.exit(255)
+
     if not env["use_llvm"]:
         env.Append(CCFLAGS=["-mwindows"])
+
+    if env["use_asan"] or env["use_ubsan"]:
+        if not env["use_llvm"]:
+            print("GCC does not support sanitizers on Windows.")
+            sys.exit(255)
+        if env["arch"] not in ["x86_32", "x86_64"]:
+            print("Sanitizers are only supported for x86_32 and x86_64.")
+            sys.exit(255)
+
+        env.extra_suffix += ".san"
+        env.AppendUnique(CPPDEFINES=["SANITIZERS_ENABLED"])
+        san_flags = []
+        if env["use_asan"]:
+            san_flags.append("-fsanitize=address")
+        if env["use_ubsan"]:
+            san_flags.append("-fsanitize=undefined")
+            # Disable the vptr check since it gets triggered on any COM interface calls.
+            san_flags.append("-fno-sanitize=vptr")
+        env.Append(CFLAGS=san_flags)
+        env.Append(CCFLAGS=san_flags)
+        env.Append(LINKFLAGS=san_flags)
+
+    if env["use_llvm"] and os.name == "nt" and methods._colorize:
+        env.Append(CCFLAGS=["$(-fansi-escape-codes$)", "$(-fcolor-diagnostics$)"])
+
+    if get_is_ar_thin_supported(env):
+        env.Append(ARFLAGS=["--thin"])
 
     env.Append(CPPDEFINES=["WINDOWS_ENABLED"])
     env.Append(
@@ -632,15 +820,15 @@ def configure_mingw(env):
     env.Append(BUILDERS={"RES": env.Builder(action=build_res_file, suffix=".o", src_suffix=".rc")})
 
 
-def configure(env: "Environment"):
+def configure(env: "SConsEnvironment"):
     # Validate arch.
     supported_arches = ["x86_32", "x86_64", "arm32", "arm64"]
     if env["arch"] not in supported_arches:
-        print(
+        print_error(
             'Unsupported CPU architecture "%s" for Windows. Supported architectures are: %s.'
             % (env["arch"], ", ".join(supported_arches))
         )
-        sys.exit()
+        sys.exit(255)
 
     # At this point the env has been set up with basic tools/compilers.
     env.Prepend(CPPPATH=["#platform/windows"])

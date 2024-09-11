@@ -2,10 +2,9 @@
 /*  progress_dialog.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -57,8 +56,6 @@ protected:
 	void _task_step(const String &p_task, int p_step = -1);
 	void _end_task(const String &p_task);
 
-	static void _bind_methods();
-
 public:
 	void add_task(const String &p_task, const String &p_label, int p_steps);
 	void task_step(const String &p_task, int p_step = -1);
@@ -74,13 +71,13 @@ class ProgressDialog : public PopupPanel {
 		VBoxContainer *vb = nullptr;
 		ProgressBar *progress = nullptr;
 		Label *state = nullptr;
+		uint64_t last_progress_tick = 0;
 	};
 	HBoxContainer *cancel_hb = nullptr;
 	Button *cancel = nullptr;
 
 	HashMap<String, Task> tasks;
 	VBoxContainer *main = nullptr;
-	uint64_t last_progress_tick;
 
 	LocalVector<Window *> host_windows;
 
@@ -88,10 +85,9 @@ class ProgressDialog : public PopupPanel {
 	void _popup();
 
 	void _cancel_pressed();
-	bool canceled = false;
 
-protected:
-	static void _bind_methods();
+	void _update_ui();
+	bool canceled = false;
 
 public:
 	static ProgressDialog *get_singleton() { return singleton; }

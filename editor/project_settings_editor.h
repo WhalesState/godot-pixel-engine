@@ -2,10 +2,9 @@
 /*  project_settings_editor.h                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -36,10 +35,11 @@
 #include "editor/action_map_editor.h"
 #include "editor/editor_autoload_settings.h"
 #include "editor/editor_data.h"
-#include "editor/editor_plugin_settings.h"
 #include "editor/editor_sectioned_inspector.h"
+#include "editor/group_settings_editor.h"
 #include "editor/import_defaults_editor.h"
 #include "editor/localization_editor.h"
+#include "editor/plugins/editor_plugin_settings.h"
 #include "editor/shader_globals_editor.h"
 #include "scene/gui/tab_container.h"
 
@@ -59,6 +59,7 @@ class ProjectSettingsEditor : public AcceptDialog {
 	LocalizationEditor *localization_editor = nullptr;
 	EditorAutoloadSettings *autoload_settings = nullptr;
 	ShaderGlobalsEditor *shaders_global_shader_uniforms_editor = nullptr;
+	GroupSettingsEditor *group_settings = nullptr;
 	EditorPluginSettings *plugin_settings = nullptr;
 
 	LineEdit *search_box = nullptr;
@@ -94,6 +95,10 @@ class ProjectSettingsEditor : public AcceptDialog {
 	void _add_setting();
 	void _delete_setting();
 
+	void _tabs_tab_changed(int p_tab);
+	void _focus_current_search_box();
+	void _focus_current_path_box();
+
 	void _editor_restart_request();
 	void _editor_restart();
 	void _editor_restart_close();
@@ -108,9 +113,6 @@ class ProjectSettingsEditor : public AcceptDialog {
 	void _update_action_map_editor();
 	void _update_theme();
 
-	void _input_filter_focused();
-	void _input_filter_unfocused();
-
 protected:
 	void _notification(int p_what);
 	static void _bind_methods();
@@ -121,8 +123,10 @@ public:
 	void set_plugins_page();
 	void set_general_page(const String &p_category);
 	void update_plugins();
+	void init_autoloads();
 
 	EditorAutoloadSettings *get_autoload_settings() { return autoload_settings; }
+	GroupSettingsEditor *get_group_settings() { return group_settings; }
 	TabContainer *get_tabs() { return tab_container; }
 
 	void queue_save();

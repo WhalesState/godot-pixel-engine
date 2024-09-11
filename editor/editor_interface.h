@@ -2,10 +2,9 @@
 /*  editor_interface.h                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -46,8 +45,11 @@ class EditorPlugin;
 class EditorResourcePreview;
 class EditorSelection;
 class EditorSettings;
+class EditorUndoRedoManager;
 class FileSystemDock;
 class Node;
+class PropertySelector;
+class SceneTreeDialog;
 class ScriptEditor;
 class SubViewport;
 class Texture2D;
@@ -59,6 +61,17 @@ class EditorInterface : public Object {
 	GDCLASS(EditorInterface, Object);
 
 	static EditorInterface *singleton;
+
+	// Editor dialogs.
+
+	PropertySelector *property_selector = nullptr;
+	SceneTreeDialog *node_selector = nullptr;
+
+	void _node_selected(const NodePath &p_node_paths, const Callable &p_callback);
+	void _node_selection_canceled(const Callable &p_callback);
+	void _property_selected(const String &p_property_name, const Callable &p_callback);
+	void _property_selection_canceled(const Callable &p_callback);
+	void _call_dialog_callback(const Callable &p_callback, const Variant &p_selected, const String &p_context);
 
 protected:
 	static void _bind_methods();
@@ -76,6 +89,7 @@ public:
 	EditorResourcePreview *get_resource_previewer() const;
 	EditorSelection *get_selection() const;
 	Ref<EditorSettings> get_editor_settings() const;
+	EditorUndoRedoManager *get_editor_undo_redo() const;
 
 	void set_plugin_enabled(const String &p_plugin, bool p_enabled);
 	bool is_plugin_enabled(const String &p_plugin) const;
@@ -92,6 +106,7 @@ public:
 	void set_main_screen_editor(const String &p_name);
 	void set_distraction_free_mode(bool p_enter);
 	bool is_distraction_free_mode_enabled() const;
+	bool is_multi_window_enabled() const;
 
 	float get_editor_scale() const;
 
@@ -102,6 +117,12 @@ public:
 
 	String get_current_feature_profile() const;
 	void set_current_feature_profile(const String &p_profile_name);
+
+	// Editor dialogs.
+
+	void popup_node_selector(const Callable &p_callback, const TypedArray<StringName> &p_valid_types = TypedArray<StringName>(), Node *p_current_value = nullptr);
+	// Must use Vector<int> because exposing Vector<Variant::Type> is not supported.
+	void popup_property_selector(Object *p_object, const Callable &p_callback, const PackedInt32Array &p_type_filter = PackedInt32Array(), const String &p_current_value = String());
 
 	// Editor docks.
 
@@ -140,8 +161,11 @@ public:
 	bool is_playing_scene() const;
 	String get_playing_scene() const;
 
-	// Base.
+#ifdef TOOLS_ENABLED
+	virtual void get_argument_options(const StringName &p_function, int p_idx, List<String> *r_options) const override;
+#endif
 
+	// Base.
 	static void create();
 	static void free();
 

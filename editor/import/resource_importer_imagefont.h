@@ -2,10 +2,9 @@
 /*  resource_importer_imagefont.h                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -40,8 +39,6 @@ class ResourceImporterImageFont : public ResourceImporter {
 	GDCLASS(ResourceImporterImageFont, ResourceImporter);
 
 public:
-	static bool _decode_range(const String &p_token, int32_t &r_pos);
-
 	virtual String get_importer_name() const override;
 	virtual String get_visible_name() const override;
 	virtual void get_recognized_extensions(List<String> *p_extensions) const override;

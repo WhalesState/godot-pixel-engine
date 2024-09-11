@@ -2,10 +2,9 @@
 /*  simple_type.h                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,26 +31,9 @@
 #ifndef SIMPLE_TYPE_H
 #define SIMPLE_TYPE_H
 
-/* Batch of specializations to obtain the actual simple type */
+#include <type_traits>
 
-template <class T>
-struct GetSimpleTypeT {
-	typedef T type_t;
-};
-
-template <class T>
-struct GetSimpleTypeT<T &> {
-	typedef T type_t;
-};
-
-template <class T>
-struct GetSimpleTypeT<T const> {
-	typedef T type_t;
-};
-
-template <class T>
-struct GetSimpleTypeT<T const &> {
-	typedef T type_t;
-};
+template <typename T>
+using GetSimpleTypeT = typename std::remove_cv_t<std::remove_reference_t<T>>;
 
 #endif // SIMPLE_TYPE_H

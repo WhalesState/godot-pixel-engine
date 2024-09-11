@@ -2,10 +2,9 @@
 /*  http_client_tcp.cpp                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -29,13 +28,15 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
+#ifndef WEB_ENABLED
+
 #include "http_client_tcp.h"
 
 #include "core/io/stream_peer_tls.h"
 #include "core/version.h"
 
-HTTPClient *HTTPClientTCP::_create_func() {
-	return memnew(HTTPClientTCP);
+HTTPClient *HTTPClientTCP::_create_func(bool p_notify_postinitialize) {
+	return static_cast<HTTPClient *>(ClassDB::creator<HTTPClientTCP>(p_notify_postinitialize));
 }
 
 Error HTTPClientTCP::connect_to_host(const String &p_host, int p_port, Ref<TLSOptions> p_options) {
@@ -791,4 +792,6 @@ HTTPClientTCP::HTTPClientTCP() {
 	request_buffer.instantiate();
 }
 
-HTTPClient *(*HTTPClient::_create)() = HTTPClientTCP::_create_func;
+HTTPClient *(*HTTPClient::_create)(bool p_notify_postinitialize) = HTTPClientTCP::_create_func;
+
+#endif // WEB_ENABLED

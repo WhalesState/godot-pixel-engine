@@ -2,10 +2,9 @@
 /*  gdscript_translation_parser_plugin.cpp                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -72,7 +71,7 @@ Error GDScriptEditorTranslationParserPlugin::parse_file(const String &p_path, Ve
 
 bool GDScriptEditorTranslationParserPlugin::_is_constant_string(const GDScriptParser::ExpressionNode *p_expression) {
 	ERR_FAIL_NULL_V(p_expression, false);
-	return p_expression->is_constant && (p_expression->reduced_value.get_type() == Variant::STRING || p_expression->reduced_value.get_type() == Variant::STRING_NAME);
+	return p_expression->is_constant && p_expression->reduced_value.is_string();
 }
 
 void GDScriptEditorTranslationParserPlugin::_traverse_class(const GDScriptParser::ClassNode *p_class) {
@@ -277,8 +276,8 @@ void GDScriptEditorTranslationParserPlugin::_assess_call(const GDScriptParser::C
 	id_ctx_plural.resize(3);
 	bool extract_id_ctx_plural = true;
 
-	if (function_name == tr_func) {
-		// Extract from tr(id, ctx).
+	if (function_name == tr_func || function_name == atr_func) {
+		// Extract from `tr(id, ctx)` or `atr(id, ctx)`.
 		for (int i = 0; i < p_call->arguments.size(); i++) {
 			if (_is_constant_string(p_call->arguments[i])) {
 				id_ctx_plural.write[i] = p_call->arguments[i]->reduced_value;
@@ -290,8 +289,8 @@ void GDScriptEditorTranslationParserPlugin::_assess_call(const GDScriptParser::C
 		if (extract_id_ctx_plural) {
 			ids_ctx_plural->push_back(id_ctx_plural);
 		}
-	} else if (function_name == trn_func) {
-		// Extract from tr_n(id, plural, n, ctx).
+	} else if (function_name == trn_func || function_name == atrn_func) {
+		// Extract from `tr_n(id, plural, n, ctx)` or `atr_n(id, plural, n, ctx)`.
 		Vector<int> indices;
 		indices.push_back(0);
 		indices.push_back(3);

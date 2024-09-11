@@ -42,9 +42,8 @@ Upstream-Contact: Rémi Verschelde <contact@godotengine.org>
 Source: https://github.com/godotengine/godot
 
 Files: *
-Comment: Pixel Engine - Godot Engine
-Copyright: 2023-present, Pixel Engine contributors
- 2014-present, Godot Engine contributors
+Comment: Godot Engine
+Copyright: 2014-present, Godot Engine contributors
  2007-2014, Juan Linietsky, Ariel Manzur
 License: Expat
 
@@ -52,15 +51,105 @@ Files: ./icon.png
  ./icon.svg
  ./logo.png
  ./logo.svg
-Comment: Pixel Engine logo
-Copyright: 2023, Mounir Tohami
+Comment: Godot Engine logo
+Copyright: 2017, Andrea Calabró
 License: CC-BY-4.0
+
+Files: ./core/math/convex_hull.cpp
+ ./core/math/convex_hull.h
+Comment: Bullet Continuous Collision Detection and Physics Library
+Copyright: 2011, Ole Kniemeyer, MAXON, www.maxon.net
+ 2014-present, Godot Engine contributors
+ 2007-2014, Juan Linietsky, Ariel Manzur
+License: Expat and Zlib
+
+Files: ./platform/android/java/editor/src/main/java/com/android/*
+ ./platform/android/java/lib/aidl/com/android/*
+ ./platform/android/java/lib/res/layout/status_bar_ongoing_event_progress_bar.xml
+ ./platform/android/java/lib/src/com/google/android/*
+ ./platform/android/java/lib/src/org/godotengine/godot/input/InputManagerCompat.java
+ ./platform/android/java/lib/src/org/godotengine/godot/input/InputManagerV16.java
+Comment: The Android Open Source Project
+Copyright: 2008-2016, The Android Open Source Project
+ 2002, Google, Inc.
+License: Apache-2.0
+
+Files: ./platform/android/java/lib/src/org/godotengine/godot/utils/ProcessPhoenix.java
+Comment: ProcessPhoenix
+Copyright: 2015, Jake Wharton
+License: Apache-2.0
 
 Files: ./scene/animation/easing_equations.h
 Comment: Robert Penner's Easing Functions
 Copyright: 2001, Robert Penner
  2014-present, Godot Engine contributors
  2007-2014, Juan Linietsky, Ariel Manzur
+License: Expat
+
+Files: ./servers/physics_2d/godot_joints_2d.cpp
+Comment: Chipmunk2D Joint Constraints
+Copyright: 2007, Scott Lembcke
+License: Expat
+
+Files: ./servers/physics_3d/collision_solver_3d_sat.cpp
+Comment: Open Dynamics Engine
+Copyright: 2001-2003, Russell L. Smith, Alen Ladavac, Nguyen Binh
+License: BSD-3-clause
+
+Files: ./servers/physics_3d/gjk_epa.cpp
+ ./servers/physics_3d/joints/generic_6dof_joint_3d_sw.cpp
+ ./servers/physics_3d/joints/generic_6dof_joint_3d_sw.h
+ ./servers/physics_3d/joints/hinge_joint_3d_sw.cpp
+ ./servers/physics_3d/joints/hinge_joint_3d_sw.h
+ ./servers/physics_3d/joints/jacobian_entry_3d_sw.h
+ ./servers/physics_3d/joints/pin_joint_3d_sw.cpp
+ ./servers/physics_3d/joints/pin_joint_3d_sw.h
+ ./servers/physics_3d/joints/slider_joint_3d_sw.cpp
+ ./servers/physics_3d/joints/slider_joint_3d_sw.h
+ ./servers/physics_3d/soft_body_3d_sw.cpp
+ ./servers/physics_3d/soft_body_3d_sw.h
+ ./servers/physics_3d/shape_3d_sw.cpp
+ ./servers/physics_3d/shape_3d_sw.h
+Comment: Bullet Continuous Collision Detection and Physics Library
+Copyright: 2003-2008, Erwin Coumans
+ 2014-present, Godot Engine contributors
+ 2007-2014, Juan Linietsky, Ariel Manzur
+License: Expat and Zlib
+
+Files: ./servers/physics_3d/joints/cone_twist_joint_3d_sw.cpp
+ ./servers/physics_3d/joints/cone_twist_joint_3d_sw.h
+Comment: Bullet Continuous Collision Detection and Physics Library
+Copyright: 2007, Starbreeze Studios
+ 2014-present, Godot Engine contributors
+ 2007-2014, Juan Linietsky, Ariel Manzur
+License: Expat and Zlib
+
+Files: ./servers/rendering/renderer_rd/shaders/ss_effects_downsample.glsl
+ ./servers/rendering/renderer_rd/shaders/ssao_blur.glsl
+ ./servers/rendering/renderer_rd/shaders/ssao_importance_map.glsl
+ ./servers/rendering/renderer_rd/shaders/ssao_interleave.glsl
+ ./servers/rendering/renderer_rd/shaders/ssao.glsl
+ ./servers/rendering/renderer_rd/shaders/ssil_blur.glsl
+ ./servers/rendering/renderer_rd/shaders/ssil_importance_map.glsl
+ ./servers/rendering/renderer_rd/shaders/ssil_interleave.glsl
+ ./servers/rendering/renderer_rd/shaders/ssil.glsl
+Comment: Intel ASSAO and related files
+Copyright: 2016, Intel Corporation
+License: Expat
+
+Files: ./servers/rendering/renderer_rd/shaders/taa_resolve.glsl
+Comment: Temporal Anti-Aliasing resolve implementation
+Copyright: 2016, Panos Karabelas
+License: Expat
+
+Files: ./thirdparty/amd-fsr/
+Comment: AMD FidelityFX Super Resolution
+Copyright: 2021, Advanced Micro Devices, Inc.
+License: Expat
+
+Files: ./thirdparty/amd-fsr2/
+Comment: AMD FidelityFX Super Resolution 2
+Copyright: 2022-2023, Advanced Micro Devices, Inc.
 License: Expat
 
 Files: ./thirdparty/angle/
@@ -70,7 +159,12 @@ License: BSD-3-clause
 
 Files: ./thirdparty/astcenc/
 Comment: Arm ASTC Encoder
-Copyright: 2011-2023, Arm Limited
+Copyright: 2011-2024, Arm Limited
+License: Apache-2.0
+
+Files: ./thirdparty/basis_universal/
+Comment: Basis Universal
+Copyright: 2022, Binomial LLC.
 License: Apache-2.0
 
 Files: ./thirdparty/brotli/
@@ -83,10 +177,25 @@ Comment: CA certificates
 Copyright: Mozilla Contributors
 License: MPL-2.0
 
+Files: ./thirdparty/clipper2/
+Comment: Clipper2
+Copyright: 2010-2023, Angus Johnson
+License: BSL-1.0
+
 Files: ./thirdparty/cvtt/
 Comment: Convection Texture Tools Stand-Alone Kernels
 Copyright: 2018, Eric Lasota
  2018, Microsoft Corp.
+License: Expat
+
+Files: ./thirdparty/d3d12ma/
+Comment: D3D12 Memory Allocator
+Copyright: 2019-2022 Advanced Micro Devices, Inc.
+License: Expat
+
+Files: ./thirdparty/directx_headers/
+Comment: DirectX Headers
+Copyright: Microsoft Corporation
 License: Expat
 
 Files: ./thirdparty/doctest/
@@ -94,9 +203,14 @@ Comment: doctest
 Copyright: 2016-2023, Viktor Kirilov
 License: Expat
 
+Files: ./thirdparty/embree/
+Comment: Embree
+Copyright: 2009-2021 Intel Corporation
+License: Apache-2.0
+
 Files: ./thirdparty/enet/
 Comment: ENet
-Copyright: 2002-2020, Lee Salzman
+Copyright: 2002-2024, Lee Salzman
 License: Expat
 
 Files: ./thirdparty/etcpak/
@@ -130,6 +244,13 @@ Copyright: 2013-2022, David Herberth
  2013-2020, The Khronos Group Inc.
 License: CC0-1.0 and Apache-2.0
 
+Files: ./thirdparty/glslang/
+Comment: glslang
+Copyright: 2015-2020, Google, Inc.
+  2014-2020, The Khronos Group Inc
+  2002, NVIDIA Corporation.
+License: glslang
+
 Files: ./thirdparty/graphite/
 Comment: Graphite engine
 Copyright: 2010, SIL International
@@ -158,13 +279,24 @@ License: HarfBuzz
 
 Files: ./thirdparty/icu4c/
 Comment: International Components for Unicode
-Copyright: 1991-2021, Unicode
+Copyright: 2016-2024, Unicode, Inc.
 License: Unicode
 
 Files: ./thirdparty/jpeg-compressor/
 Comment: jpeg-compressor
 Copyright: 2012, Rich Geldreich
 License: public-domain or Apache-2.0
+
+Files: ./thirdparty/libbacktrace/
+Comment: libbacktrace
+Copyright: 2012-2021, Free Software Foundation, Inc.
+License: BSD-3-clause
+
+Files: ./thirdparty/libktx/
+Comment: KTX
+Copyright: 2013-2020, Mark Callow
+ 2010-2020 The Khronos Group, Inc.
+License: Apache-2.0
 
 Files: ./thirdparty/libogg/
 Comment: OggVorbis
@@ -200,6 +332,11 @@ Comment: Mbed TLS
 Copyright: The Mbed TLS Contributors
 License: Apache-2.0
 
+Files: ./thirdparty/meshoptimizer/
+Comment: meshoptimizer
+Copyright: 2016-2023, Arseny Kapoulkine
+License: Expat
+
 Files: ./thirdparty/mingw-std-threads/
 Comment: mingw-std-threads
 Copyright: 2016, Mega Limited
@@ -222,11 +359,10 @@ Copyright: 1998-2010, Gilles Vollant
  2009-2010, Mathias Svensson
 License: Zlib
 
-Files: ./thirdparty/misc/clipper.cpp
- ./thirdparty/misc/clipper.hpp
-Comment: Clipper
-Copyright: 2010-2017, Angus Johnson
-License: BSL-1.0
+Files: ./thirdparty/misc/cubemap_coeffs.h
+Comment: Fast Filtering of Reflection Probes
+Copyright: 2016, Activision Publishing, Inc.
+License: Expat
 
 Files: ./thirdparty/misc/fastlz.c
  ./thirdparty/misc/fastlz.h
@@ -254,7 +390,7 @@ License: Expat
 
 Files: ./thirdparty/noise/FastNoiseLite.h
 Comment: FastNoise Lite
-Copyright: 2020, Jordan Peck and contributors
+Copyright: 2023, Jordan Peck and contributors
 License: Expat
 
 Files: ./thirdparty/misc/pcg.cpp
@@ -269,6 +405,11 @@ Comment: PolyPartition / Triangulator
 Copyright: 2011-2021, Ivan Fratric and contributors
 License: Expat
 
+Files: ./thirdparty/misc/qoa.h
+Comment: Quite OK Audio Format
+Copyright: 2023, Dominic Szablewski
+License: Expat
+
 Files: ./thirdparty/misc/r128.c
  ./thirdparty/misc/r128.h
 Comment: r128 library
@@ -280,12 +421,6 @@ Files: ./thirdparty/misc/smaz.c
 Comment: SMAZ
 Copyright: 2006-2009, Salvatore Sanfilippo
 License: BSD-3-clause
-
-Files: ./thirdparty/misc/smolv.cpp
- ./thirdparty/misc/smolv.h
-Comment: SMOL-V
-Copyright: 2016-2020, Aras Pranckevicius
-License: public-domain or Unlicense or Expat
 
 Files: ./thirdparty/misc/stb_rect_pack.h
 Comment: stb libraries
@@ -314,18 +449,18 @@ License: Apache-2.0
 
 Files: ./thirdparty/pcre2/
 Comment: PCRE2
-Copyright: 1997-2022, University of Cambridge
- 2009-2022, Zoltan Herczeg
+Copyright: 1997-2024, University of Cambridge
+ 2009-2024, Zoltan Herczeg
 License: BSD-3-clause
+
+Files: ./thirdparty/recastnavigation/
+Comment: Recast
+Copyright: 2009, Mikko Mononen
+License: Zlib
 
 Files: ./thirdparty/rvo2/
 Comment: RVO2
 Copyright: 2016, University of North Carolina at Chapel Hill
-License: Apache-2.0
-
-Files: ./thirdparty/spirv-reflect/
-Comment: SPIRV-Reflect
-Copyright: 2017-2022, Google Inc.
 License: Apache-2.0
 
 Files: ./thirdparty/squish/
@@ -344,11 +479,36 @@ Copyright: 2014-2021, Syoyo Fujita
   2002, Industrial Light & Magic, a division of Lucas Digital Ltd. LLC
 License: BSD-3-clause
 
+Files: ./thirdparty/ufbx/
+Comment: ufbx
+Copyright: 2020, Samuli Raivio
+License: Expat
+
 Files: ./thirdparty/vhacd/
 Comment: V-HACD
 Copyright: 2011, Khaled Mamou
   2003-2009, Erwin Coumans
 License: BSD-3-clause
+
+Files: ./thirdparty/wayland/
+Comment: Wayland core protocol
+Copyright: 2008-2012, Kristian Høgsberg
+  2010-2012, Intel Corporation
+  2011, Benjamin Franzke
+  2012, Collabora, Ltd.
+License: Expat
+
+Files: ./thirdparty/wayland-protocols/
+Comment: Wayland protocols that add functionality not available in the core protocol
+Copyright: 2008-2013, Kristian Høgsberg
+  2010-2013, Intel Corporation
+  2013,      Rafael Antognolli
+  2013,      Jasper St. Pierre
+  2014,      Jonas Ådahl
+  2014,      Jason Ekstrand
+  2014-2015, Collabora, Ltd.
+  2015,      Red Hat Inc.
+License: Expat
 
 Files: ./thirdparty/wslay/
 Comment: Wslay
@@ -386,48 +546,6 @@ License: Apache-2.0
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-
-License: Bitstream Vera Fonts Copyright
- Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved. Bitstream Vera is a
- trademark of Bitstream, Inc.
- .
- Permission is hereby granted, free of charge, to any person obtaining a copy of
- the fonts accompanying this license ("Fonts") and associated documentation
- files (the "Font Software"), to reproduce and distribute the Font Software,
- including without limitation the rights to use, copy, merge, publish,
- distribute, and/or sell copies of the Font Software, and to permit persons to
- whom the Font Software is furnished to do so, subject to the following
- conditions:
- .
- The above copyright and trademark notices and this permission notice shall be
- included in all copies of one or more of the Font Software typefaces.
- .
- The Font Software may be modified, altered, or added to, and in particular the
- designs of glyphs or characters in the Fonts may be modified and additional
- glyphs or characters may be added to the Fonts, only if the fonts are renamed
- to names not containing either the words "Bitstream" or the word "Vera".
- .
- This License becomes null and void to the extent applicable to Fonts or Font
- Software that has been modified and is distributed under the "Bitstream Vera"
- names.
- .
- The Font Software may be sold as part of a larger software package but no copy
- of one or more of the Font Software typefaces may be sold by itself.
- .
- THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF COPYRIGHT, PATENT,
- TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL BITSTREAM OR THE GNOME FOUNDATION
- BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, INCLUDING ANY GENERAL,
- SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, WHETHER IN AN ACTION
- OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF THE USE OR INABILITY TO
- USE THE FONT SOFTWARE OR FROM OTHER DEALINGS IN THE FONT SOFTWARE.
- .
- Except as contained in this notice, the names of GNOME, the GNOME Foundation,
- and Bitstream Inc., shall not be used in advertising or otherwise to promote
- the sale, use or other dealings in this Font Software without prior written
- authorization from the GNOME Foundation or Bitstream Inc., respectively. For
- further information, contact: fonts at gnome dot org.
 
 License: BSD-2-clause
  Redistribution and use in source and binary forms, with or without

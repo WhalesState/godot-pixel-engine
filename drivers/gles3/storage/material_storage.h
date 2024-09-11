@@ -2,10 +2,9 @@
 /*  material_storage.h                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -86,14 +85,14 @@ struct Shader {
 
 struct MaterialData {
 	void update_uniform_buffer(const HashMap<StringName, ShaderLanguage::ShaderNode::Uniform> &p_uniforms, const uint32_t *p_uniform_offsets, const HashMap<StringName, Variant> &p_parameters, uint8_t *p_buffer, uint32_t p_buffer_size);
-	void update_textures(const HashMap<StringName, Variant> &p_parameters, const HashMap<StringName, HashMap<int, RID>> &p_default_textures, const Vector<ShaderCompiler::GeneratedCode::Texture> &p_texture_uniforms, RID *p_textures, bool p_use_linear_color);
+	void update_textures(const HashMap<StringName, Variant> &p_parameters, const HashMap<StringName, HashMap<int, RID>> &p_default_textures, const Vector<ShaderCompiler::GeneratedCode::Texture> &p_texture_uniforms, RID *p_textures);
 
 	virtual void update_parameters(const HashMap<StringName, Variant> &p_parameters, bool p_uniform_dirty, bool p_textures_dirty) = 0;
 	virtual void bind_uniforms() = 0;
 	virtual ~MaterialData();
 
 	// Used internally by all Materials
-	void update_parameters_internal(const HashMap<StringName, Variant> &p_parameters, bool p_uniform_dirty, bool p_textures_dirty, const HashMap<StringName, ShaderLanguage::ShaderNode::Uniform> &p_uniforms, const uint32_t *p_uniform_offsets, const Vector<ShaderCompiler::GeneratedCode::Texture> &p_texture_uniforms, const HashMap<StringName, HashMap<int, RID>> &p_default_texture_params, uint32_t p_ubo_size, bool p_is_3d_shader_type);
+	void update_parameters_internal(const HashMap<StringName, Variant> &p_parameters, bool p_uniform_dirty, bool p_textures_dirty, const HashMap<StringName, ShaderLanguage::ShaderNode::Uniform> &p_uniforms, const uint32_t *p_uniform_offsets, const Vector<ShaderCompiler::GeneratedCode::Texture> &p_texture_uniforms, const HashMap<StringName, HashMap<int, RID>> &p_default_texture_params, uint32_t p_ubo_size);
 
 protected:
 	Vector<uint8_t> ubo_data;
@@ -162,6 +161,10 @@ struct CanvasShaderData : public ShaderData {
 	bool uses_screen_texture_mipmaps;
 	bool uses_sdf;
 	bool uses_time;
+	bool uses_custom0;
+	bool uses_custom1;
+
+	uint64_t vertex_input_mask;
 
 	virtual void set_code(const String &p_Code);
 	virtual bool is_animated() const;
@@ -272,25 +275,6 @@ public:
 
 	MaterialStorage();
 	virtual ~MaterialStorage();
-
-	static _FORCE_INLINE_ void store_transform(const Transform3D &p_mtx, float *p_array) {
-		p_array[0] = p_mtx.basis.rows[0][0];
-		p_array[1] = p_mtx.basis.rows[1][0];
-		p_array[2] = p_mtx.basis.rows[2][0];
-		p_array[3] = 0;
-		p_array[4] = p_mtx.basis.rows[0][1];
-		p_array[5] = p_mtx.basis.rows[1][1];
-		p_array[6] = p_mtx.basis.rows[2][1];
-		p_array[7] = 0;
-		p_array[8] = p_mtx.basis.rows[0][2];
-		p_array[9] = p_mtx.basis.rows[1][2];
-		p_array[10] = p_mtx.basis.rows[2][2];
-		p_array[11] = 0;
-		p_array[12] = p_mtx.origin.x;
-		p_array[13] = p_mtx.origin.y;
-		p_array[14] = p_mtx.origin.z;
-		p_array[15] = 1;
-	}
 
 	static _FORCE_INLINE_ void store_transform_3x3(const Basis &p_mtx, float *p_array) {
 		p_array[0] = p_mtx.rows[0][0];

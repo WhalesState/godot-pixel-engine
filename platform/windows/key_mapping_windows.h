@@ -2,10 +2,9 @@
 /*  key_mapping_windows.h                                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -48,6 +47,7 @@ public:
 	static unsigned int get_scancode(Key p_keycode);
 	static Key get_scansym(unsigned int p_code, bool p_extended);
 	static bool is_extended_key(unsigned int p_code);
+	static KeyLocation get_location(unsigned int p_code, bool p_extended);
 };
 
 #endif // KEY_MAPPING_WINDOWS_H

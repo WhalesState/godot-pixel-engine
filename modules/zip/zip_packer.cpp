@@ -2,10 +2,9 @@
 /*  zip_packer.cpp                                                        */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -49,7 +48,7 @@ Error ZIPPacker::close() {
 
 	Error err = zipClose(zf, nullptr) == ZIP_OK ? OK : FAILED;
 	if (err == OK) {
-		DEV_ASSERT(fa == nullptr);
+		DEV_ASSERT(fa.is_null());
 		zf = nullptr;
 	}
 

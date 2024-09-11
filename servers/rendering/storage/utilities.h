@@ -2,10 +2,9 @@
 /*  utilities.h                                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -39,10 +38,7 @@ class DependencyTracker;
 class Dependency {
 public:
 	enum DependencyChangedNotification {
-		DEPENDENCY_CHANGED_AABB,
 		DEPENDENCY_CHANGED_MATERIAL,
-		DEPENDENCY_CHANGED_LIGHT,
-		DEPENDENCY_CHANGED_LIGHT_SOFT_SHADOW_AND_PROJECTOR,
 	};
 
 	void changed_notify(DependencyChangedNotification p_notification);
@@ -117,12 +113,7 @@ public:
 
 	/* INSTANCES */
 
-	virtual RS::InstanceType get_base_type(RID p_rid) const = 0;
 	virtual bool free(RID p_rid) = 0;
-
-	/* DEPENDENCIES */
-
-	virtual void base_update_dependency(RID p_base, DependencyTracker *p_instance) = 0;
 
 	/* TIMING */
 

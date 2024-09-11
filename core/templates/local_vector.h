@@ -2,10 +2,9 @@
 /*  local_vector.h                                                        */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -42,7 +41,7 @@
 
 // If tight, it grows strictly as much as needed.
 // Otherwise, it grows exponentially (the default and what you want in most cases).
-template <class T, class U = uint32_t, bool force_trivial = false, bool tight = false>
+template <typename T, typename U = uint32_t, bool force_trivial = false, bool tight = false>
 class LocalVector {
 private:
 	U count = 0;
@@ -65,7 +64,7 @@ public:
 			CRASH_COND_MSG(!data, "Out of memory");
 		}
 
-		if constexpr (!std::is_trivially_constructible<T>::value && !force_trivial) {
+		if constexpr (!std::is_trivially_constructible_v<T> && !force_trivial) {
 			memnew_placement(&data[count++], T(p_elem));
 		} else {
 			data[count++] = p_elem;
@@ -78,7 +77,7 @@ public:
 		for (U i = p_index; i < count; i++) {
 			data[i] = data[i + 1];
 		}
-		if constexpr (!std::is_trivially_destructible<T>::value && !force_trivial) {
+		if constexpr (!std::is_trivially_destructible_v<T> && !force_trivial) {
 			data[count].~T();
 		}
 	}
@@ -91,7 +90,7 @@ public:
 		if (count > p_index) {
 			data[p_index] = data[count];
 		}
-		if constexpr (!std::is_trivially_destructible<T>::value && !force_trivial) {
+		if constexpr (!std::is_trivially_destructible_v<T> && !force_trivial) {
 			data[count].~T();
 		}
 	}
@@ -103,6 +102,22 @@ public:
 			return true;
 		}
 		return false;
+	}
+
+	U erase_multiple_unordered(const T &p_val) {
+		U from = 0;
+		U occurrences = 0;
+		while (true) {
+			int64_t idx = find(p_val, from);
+
+			if (idx == -1) {
+				break;
+			}
+			remove_at_unordered(idx);
+			from = idx;
+			occurrences++;
+		}
+		return occurrences;
 	}
 
 	void invert() {
@@ -134,7 +149,7 @@ public:
 	_FORCE_INLINE_ U size() const { return count; }
 	void resize(U p_size) {
 		if (p_size < count) {
-			if constexpr (!std::is_trivially_destructible<T>::value && !force_trivial) {
+			if constexpr (!std::is_trivially_destructible_v<T> && !force_trivial) {
 				for (U i = p_size; i < count; i++) {
 					data[i].~T();
 				}
@@ -146,7 +161,7 @@ public:
 				data = (T *)memrealloc(data, capacity * sizeof(T));
 				CRASH_COND_MSG(!data, "Out of memory");
 			}
-			if constexpr (!std::is_trivially_constructible<T>::value && !force_trivial) {
+			if constexpr (!std::is_trivially_constructible_v<T> && !force_trivial) {
 				for (U i = count; i < p_size; i++) {
 					memnew_placement(&data[i], T);
 				}
@@ -249,7 +264,11 @@ public:
 		return -1;
 	}
 
-	template <class C>
+	bool has(const T &p_val) const {
+		return find(p_val) != -1;
+	}
+
+	template <typename C>
 	void sort_custom() {
 		U len = count;
 		if (len == 0) {
@@ -323,7 +342,7 @@ public:
 	}
 };
 
-template <class T, class U = uint32_t, bool force_trivial = false>
+template <typename T, typename U = uint32_t, bool force_trivial = false>
 using TightLocalVector = LocalVector<T, U, force_trivial, true>;
 
 #endif // LOCAL_VECTOR_H

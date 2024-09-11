@@ -2,10 +2,9 @@
 /*  editor_data.h                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -38,6 +37,8 @@
 class ConfigFile;
 class EditorPlugin;
 class EditorUndoRedoManager;
+class EditorContextMenuPlugin;
+class PopupMenu;
 
 /**
  * Stores the history of objects which have been selected for editing in the Editor & the Inspector.
@@ -75,6 +76,7 @@ public:
 	// Adds an object to the selection history. A property name can be passed if the target is a subresource of the given object.
 	// If the object should not change the main screen plugin, it can be set as inspector only.
 	void add_object(ObjectID p_object, const String &p_property = String(), bool p_inspector_only = false);
+	void replace_object(ObjectID p_old_object, ObjectID p_new_object);
 
 	int get_history_len();
 	int get_history_pos();
@@ -123,6 +125,22 @@ public:
 		uint64_t last_checked_version = 0;
 	};
 
+	enum ContextMenuSlot {
+		CONTEXT_SLOT_SCENE_TREE,
+		CONTEXT_SLOT_FILESYSTEM,
+		CONTEXT_SLOT_SCRIPT_EDITOR,
+		CONTEXT_SUBMENU_SLOT_FILESYSTEM_CREATE,
+	};
+
+	inline static constexpr int CONTEXT_MENU_ITEM_ID_BASE = 1000;
+
+	struct ContextMenu {
+		int p_slot;
+		Ref<EditorContextMenuPlugin> plugin;
+	};
+
+	Vector<ContextMenu> context_menu_plugins;
+
 private:
 	Vector<EditorPlugin *> editor_plugins;
 	HashMap<StringName, EditorPlugin *> extension_editor_plugins;
@@ -153,7 +171,7 @@ private:
 public:
 	EditorPlugin *get_handling_main_editor(Object *p_object);
 	Vector<EditorPlugin *> get_handling_sub_editors(Object *p_object);
-	EditorPlugin *get_editor_by_name(String p_name);
+	EditorPlugin *get_editor_by_name(const String &p_name);
 
 	void copy_object_params(Object *p_object);
 	void paste_object_params(Object *p_object);
@@ -176,6 +194,18 @@ public:
 	void remove_extension_editor_plugin(const StringName &p_class_name);
 	bool has_extension_editor_plugin(const StringName &p_class_name);
 	EditorPlugin *get_extension_editor_plugin(const StringName &p_class_name);
+
+	// Context menu plugin.
+	void add_context_menu_plugin(ContextMenuSlot p_slot, const Ref<EditorContextMenuPlugin> &p_plugin);
+	void remove_context_menu_plugin(ContextMenuSlot p_slot, const Ref<EditorContextMenuPlugin> &p_plugin);
+	int match_context_menu_shortcut(ContextMenuSlot p_slot, const Ref<InputEvent> &p_event);
+
+	void add_options_from_plugins(PopupMenu *p_popup, ContextMenuSlot p_slot, const Vector<String> &p_paths);
+	void filesystem_options_pressed(ContextMenuSlot p_slot, int p_option, const Vector<String> &p_selected);
+	void scene_tree_options_pressed(ContextMenuSlot p_slot, int p_option, const List<Node *> &p_selected);
+	void script_editor_options_pressed(ContextMenuSlot p_slot, int p_option, const Ref<Resource> &p_script);
+	template <typename T>
+	void invoke_plugin_callback(ContextMenuSlot p_slot, int p_option, const T &p_arg);
 
 	void add_undo_redo_inspector_hook_callback(Callable p_callable); // Callbacks should have this signature: void (Object* undo_redo, Object *modified_object, String property, Variant new_value)
 	void remove_undo_redo_inspector_hook_callback(Callable p_callable);
@@ -237,6 +267,7 @@ public:
 	Dictionary restore_edited_scene_state(EditorSelection *p_selection, EditorSelectionHistory *p_history);
 	void notify_edited_scene_changed();
 	void notify_resource_saved(const Ref<Resource> &p_resource);
+	void notify_scene_saved(const String &p_path);
 
 	bool script_class_is_parent(const String &p_class, const String &p_inherits);
 	StringName script_class_get_base(const String &p_class) const;
@@ -252,6 +283,8 @@ public:
 	void script_class_clear_icon_paths() { _script_class_icon_paths.clear(); }
 	void script_class_save_icon_paths();
 	void script_class_load_icon_paths();
+
+	Ref<Texture2D> extension_class_get_icon(const String &p_class) const;
 
 	Ref<Texture2D> get_script_icon(const Ref<Script> &p_script);
 	void clear_script_icon_cache();
@@ -298,7 +331,7 @@ public:
 	void remove_node(Node *p_node);
 	bool is_selected(Node *p_node) const;
 
-	template <class T>
+	template <typename T>
 	T *get_node_editor_data(Node *p_node) {
 		if (!selection.has(p_node)) {
 			return nullptr;

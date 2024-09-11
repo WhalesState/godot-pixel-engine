@@ -2,10 +2,9 @@
 /*  file_access_pack.cpp                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -120,6 +119,10 @@ void PackedData::_free_packed_dirs(PackedDir *p_dir) {
 }
 
 PackedData::~PackedData() {
+	if (singleton == this) {
+		singleton = nullptr;
+	}
+
 	for (int i = 0; i < sources.size(); i++) {
 		memdelete(sources[i]);
 	}
@@ -197,6 +200,8 @@ bool PackedSourcePCK::try_open_pack(const String &p_path, bool p_replace_files, 
 		return false;
 	}
 
+	int64_t pck_start_pos = f->get_position() - 4;
+
 	uint32_t version = f->get_32();
 	uint32_t ver_major = f->get_32();
 	uint32_t ver_minor = f->get_32();
@@ -209,6 +214,7 @@ bool PackedSourcePCK::try_open_pack(const String &p_path, bool p_replace_files, 
 	uint64_t file_base = f->get_64();
 
 	bool enc_directory = (pack_flags & PACK_DIR_ENCRYPTED);
+	bool rel_filebase = (pack_flags & PACK_REL_FILEBASE);
 
 	for (int i = 0; i < 16; i++) {
 		//reserved
@@ -216,6 +222,10 @@ bool PackedSourcePCK::try_open_pack(const String &p_path, bool p_replace_files, 
 	}
 
 	int file_count = f->get_32();
+
+	if (rel_filebase) {
+		file_base += pck_start_pos;
+	}
 
 	if (enc_directory) {
 		Ref<FileAccessEncrypted> fae;
@@ -303,17 +313,6 @@ bool FileAccessPack::eof_reached() const {
 	return eof;
 }
 
-uint8_t FileAccessPack::get_8() const {
-	ERR_FAIL_COND_V_MSG(f.is_null(), 0, "File must be opened before use.");
-	if (pos >= pf.size) {
-		eof = true;
-		return 0;
-	}
-
-	pos++;
-	return f->get_8();
-}
-
 uint64_t FileAccessPack::get_buffer(uint8_t *p_dst, uint64_t p_length) const {
 	ERR_FAIL_COND_V_MSG(f.is_null(), -1, "File must be opened before use.");
 	ERR_FAIL_COND_V(!p_dst && p_length > 0, -1);
@@ -353,10 +352,6 @@ Error FileAccessPack::get_error() const {
 }
 
 void FileAccessPack::flush() {
-	ERR_FAIL();
-}
-
-void FileAccessPack::store_8(uint8_t p_dest) {
 	ERR_FAIL();
 }
 
@@ -456,7 +451,7 @@ String DirAccessPack::get_drive(int p_drive) {
 	return "";
 }
 
-PackedData::PackedDir *DirAccessPack::_find_dir(String p_dir) {
+PackedData::PackedDir *DirAccessPack::_find_dir(const String &p_dir) {
 	String nd = p_dir.replace("\\", "/");
 
 	// Special handling since simplify_path() will forbid it
@@ -492,7 +487,7 @@ PackedData::PackedDir *DirAccessPack::_find_dir(String p_dir) {
 	}
 
 	for (int i = 0; i < paths.size(); i++) {
-		String p = paths[i];
+		const String &p = paths[i];
 		if (p == ".") {
 			continue;
 		} else if (p == "..") {

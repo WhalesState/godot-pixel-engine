@@ -2,10 +2,9 @@
 /*  style_box.h                                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -65,8 +64,6 @@ public:
 
 	float get_margin(Side p_side) const;
 	Point2 get_offset() const;
-	virtual Point2 get_expand_margin_begin() const { return Point2(0, 0); }
-	virtual Point2 get_expand_margin_end() const { return Point2(0, 0); }
 
 	virtual void draw(RID p_canvas_item, const Rect2 &p_rect) const;
 	virtual Rect2 get_draw_rect(const Rect2 &p_rect) const;

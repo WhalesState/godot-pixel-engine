@@ -2,10 +2,9 @@
 /*  net_socket.h                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -75,8 +74,8 @@ public:
 	virtual void set_ipv6_only_enabled(bool p_enabled) = 0;
 	virtual void set_tcp_no_delay_enabled(bool p_enabled) = 0;
 	virtual void set_reuse_address_enabled(bool p_enabled) = 0;
-	virtual Error join_multicast_group(const IPAddress &p_multi_address, String p_if_name) = 0;
-	virtual Error leave_multicast_group(const IPAddress &p_multi_address, String p_if_name) = 0;
+	virtual Error join_multicast_group(const IPAddress &p_multi_address, const String &p_if_name) = 0;
+	virtual Error leave_multicast_group(const IPAddress &p_multi_address, const String &p_if_name) = 0;
 };
 
 #endif // NET_SOCKET_H

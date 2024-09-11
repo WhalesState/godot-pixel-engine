@@ -2,10 +2,9 @@
 /*  packet_peer.cpp                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -153,6 +152,33 @@ void PacketPeer::_bind_methods() {
 
 /***************/
 
+Error PacketPeerExtension::get_packet(const uint8_t **r_buffer, int &r_buffer_size) {
+	Error err;
+	if (GDVIRTUAL_CALL(_get_packet, r_buffer, &r_buffer_size, err)) {
+		return err;
+	}
+	WARN_PRINT_ONCE("PacketPeerExtension::_get_packet_native is unimplemented!");
+	return FAILED;
+}
+
+Error PacketPeerExtension::put_packet(const uint8_t *p_buffer, int p_buffer_size) {
+	Error err;
+	if (GDVIRTUAL_CALL(_put_packet, p_buffer, p_buffer_size, err)) {
+		return err;
+	}
+	WARN_PRINT_ONCE("PacketPeerExtension::_put_packet_native is unimplemented!");
+	return FAILED;
+}
+
+void PacketPeerExtension::_bind_methods() {
+	GDVIRTUAL_BIND(_get_packet, "r_buffer", "r_buffer_size");
+	GDVIRTUAL_BIND(_put_packet, "p_buffer", "p_buffer_size");
+	GDVIRTUAL_BIND(_get_available_packet_count);
+	GDVIRTUAL_BIND(_get_max_packet_size);
+}
+
+/***************/
+
 void PacketPeerStream::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_stream_peer", "peer"), &PacketPeerStream::set_stream_peer);
 	ClassDB::bind_method(D_METHOD("get_stream_peer"), &PacketPeerStream::get_stream_peer);
@@ -292,9 +318,9 @@ int PacketPeerStream::get_output_buffer_max_size() const {
 }
 
 PacketPeerStream::PacketPeerStream() {
-	int rbsize = GLOBAL_GET("network/limits/packet_peer_stream/max_buffer_po2");
+	int64_t rbsize = GLOBAL_GET("network/limits/packet_peer_stream/max_buffer_po2");
 
 	ring_buffer.resize(rbsize);
-	input_buffer.resize(1 << rbsize);
-	output_buffer.resize(1 << rbsize);
+	input_buffer.resize(int64_t(1) << rbsize);
+	output_buffer.resize(int64_t(1) << rbsize);
 }

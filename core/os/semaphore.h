@@ -2,10 +2,9 @@
 /*  semaphore.h                                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -31,6 +30,10 @@
 
 #ifndef SEMAPHORE_H
 #define SEMAPHORE_H
+
+#include <cstdint>
+
+#ifdef THREADS_ENABLED
 
 #include "core/error/error_list.h"
 #include "core/typedefs.h"
@@ -59,10 +62,12 @@ private:
 #endif
 
 public:
-	_ALWAYS_INLINE_ void post() const {
+	_ALWAYS_INLINE_ void post(uint32_t p_count = 1) const {
 		std::lock_guard lock(mutex);
-		count++;
-		condition.notify_one();
+		count += p_count;
+		for (uint32_t i = 0; i < p_count; ++i) {
+			condition.notify_one();
+		}
 	}
 
 	_ALWAYS_INLINE_ void wait() const {
@@ -130,5 +135,18 @@ public:
 	}
 #endif
 };
+
+#else // No threads.
+
+class Semaphore {
+public:
+	void post(uint32_t p_count = 1) const {}
+	void wait() const {}
+	bool try_wait() const {
+		return true;
+	}
+};
+
+#endif // THREADS_ENABLED
 
 #endif // SEMAPHORE_H

@@ -2,10 +2,9 @@
 /*  godot_window_delegate.mm                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -269,7 +268,7 @@
 
 	ds->window_resize(window_id, wd.size.width, wd.size.height);
 
-	if (!wd.rect_changed_callback.is_null()) {
+	if (wd.rect_changed_callback.is_valid()) {
 		wd.rect_changed_callback.call(Rect2i(ds->window_get_position(window_id), ds->window_get_size(window_id)));
 	}
 }
@@ -292,7 +291,7 @@
 	DisplayServerMacOS::WindowData &wd = ds->get_window(window_id);
 	ds->release_pressed_events();
 
-	if (!wd.rect_changed_callback.is_null()) {
+	if (wd.rect_changed_callback.is_valid()) {
 		wd.rect_changed_callback.call(Rect2i(ds->window_get_position(window_id), ds->window_get_size(window_id)));
 	}
 }

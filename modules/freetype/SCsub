@@ -74,6 +74,14 @@ if env["builtin_freetype"]:
         env_freetype.Prepend(CPPPATH=["#thirdparty/libpng"])
 
     sfnt = thirdparty_dir + "src/sfnt/sfnt.c"
+    # Must be done after all CPPDEFINES are being set so we can copy them.
+    if env["platform"] == "web":
+        # Forcibly undefine this macro so SIMD is not used in this file,
+        # since currently unsupported in WASM
+        tmp_env = env_freetype.Clone()
+        tmp_env.disable_warnings()
+        tmp_env.Append(CPPFLAGS=["-U__OPTIMIZE__"])
+        sfnt = tmp_env.Object(sfnt)
     thirdparty_sources += [sfnt]
 
     env_thirdparty = env_freetype.Clone()

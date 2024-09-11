@@ -2,10 +2,9 @@
 /*  dir_access_unix.cpp                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -290,7 +289,7 @@ String DirAccessUnix::get_drive(int p_drive) {
 
 	ERR_FAIL_INDEX_V(p_drive, list.size(), "");
 
-	return list[p_drive];
+	return list.get(p_drive);
 }
 
 int DirAccessUnix::get_current_drive() {
@@ -398,12 +397,18 @@ Error DirAccessUnix::rename(String p_path, String p_new_path) {
 	}
 
 	p_path = fix_path(p_path);
+	if (p_path.ends_with("/")) {
+		p_path = p_path.left(-1);
+	}
 
 	if (p_new_path.is_relative_path()) {
 		p_new_path = get_current_dir().path_join(p_new_path);
 	}
 
 	p_new_path = fix_path(p_new_path);
+	if (p_new_path.ends_with("/")) {
+		p_new_path = p_new_path.left(-1);
+	}
 
 	return ::rename(p_path.utf8().get_data(), p_new_path.utf8().get_data()) == 0 ? OK : FAILED;
 }
@@ -420,7 +425,7 @@ Error DirAccessUnix::remove(String p_path) {
 		return FAILED;
 	}
 
-	if (S_ISDIR(flags.st_mode)) {
+	if (S_ISDIR(flags.st_mode) && !is_link(p_path)) {
 		return ::rmdir(p_path.utf8().get_data()) == 0 ? OK : FAILED;
 	} else {
 		return ::unlink(p_path.utf8().get_data()) == 0 ? OK : FAILED;
@@ -436,7 +441,7 @@ bool DirAccessUnix::is_link(String p_file) {
 
 	struct stat flags = {};
 	if ((lstat(p_file.utf8().get_data(), &flags) != 0)) {
-		return FAILED;
+		return false;
 	}
 
 	return S_ISLNK(flags.st_mode);

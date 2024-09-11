@@ -2,10 +2,9 @@
 /*  a_star.h                                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -60,6 +59,10 @@ class AStar2D : public RefCounted {
 		real_t f_score = 0;
 		uint64_t open_pass = 0;
 		uint64_t closed_pass = 0;
+
+		// Used for getting closest_point_of_last_pathing_call.
+		real_t abs_g_score = 0;
+		real_t abs_f_score = 0;
 	};
 
 	struct SortPoints {
@@ -109,13 +112,14 @@ class AStar2D : public RefCounted {
 
 	OAHashMap<int64_t, Point *> points;
 	HashSet<Segment, Segment> segments;
+	Point *last_closest_point = nullptr;
 
 	bool _solve(Point *begin_point, Point *end_point);
 
 protected:
 	static void _bind_methods();
 
-	virtual real_t _estimate_cost(int64_t p_from_id, int64_t p_to_id);
+	virtual real_t _estimate_cost(int64_t p_from_id, int64_t p_end_id);
 	virtual real_t _compute_cost(int64_t p_from_id, int64_t p_to_id);
 
 	GDVIRTUAL2RC(real_t, _estimate_cost, int64_t, int64_t)
@@ -149,8 +153,8 @@ public:
 	int64_t get_closest_point(const Vector2 &p_point, bool p_include_disabled = false) const;
 	Vector2 get_closest_position_in_segment(const Vector2 &p_point) const;
 
-	Vector<Vector2> get_point_path(int64_t p_from_id, int64_t p_to_id);
-	Vector<int64_t> get_id_path(int64_t p_from_id, int64_t p_to_id);
+	Vector<Vector2> get_point_path(int64_t p_from_id, int64_t p_to_id, bool p_allow_partial_path = false);
+	Vector<int64_t> get_id_path(int64_t p_from_id, int64_t p_to_id, bool p_allow_partial_path = false);
 
 	AStar2D() {}
 	~AStar2D();

@@ -2,10 +2,9 @@
 /*  theme.cpp                                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -323,7 +322,7 @@ void Theme::clear_icon(const StringName &p_name, const StringName &p_theme_type)
 	_emit_theme_changed(true);
 }
 
-void Theme::get_icon_list(StringName p_theme_type, List<StringName> *p_list) const {
+void Theme::get_icon_list(const StringName &p_theme_type, List<StringName> *p_list) const {
 	ERR_FAIL_NULL(p_list);
 
 	if (!icon_map.has(p_theme_type)) {
@@ -433,7 +432,7 @@ void Theme::clear_stylebox(const StringName &p_name, const StringName &p_theme_t
 	_emit_theme_changed(true);
 }
 
-void Theme::get_stylebox_list(StringName p_theme_type, List<StringName> *p_list) const {
+void Theme::get_stylebox_list(const StringName &p_theme_type, List<StringName> *p_list) const {
 	ERR_FAIL_NULL(p_list);
 
 	if (!style_map.has(p_theme_type)) {
@@ -545,7 +544,7 @@ void Theme::clear_font(const StringName &p_name, const StringName &p_theme_type)
 	_emit_theme_changed(true);
 }
 
-void Theme::get_font_list(StringName p_theme_type, List<StringName> *p_list) const {
+void Theme::get_font_list(const StringName &p_theme_type, List<StringName> *p_list) const {
 	ERR_FAIL_NULL(p_list);
 
 	if (!font_map.has(p_theme_type)) {
@@ -644,7 +643,7 @@ void Theme::clear_font_size(const StringName &p_name, const StringName &p_theme_
 	_emit_theme_changed(true);
 }
 
-void Theme::get_font_size_list(StringName p_theme_type, List<StringName> *p_list) const {
+void Theme::get_font_size_list(const StringName &p_theme_type, List<StringName> *p_list) const {
 	ERR_FAIL_NULL(p_list);
 
 	if (!font_size_map.has(p_theme_type)) {
@@ -730,7 +729,7 @@ void Theme::clear_color(const StringName &p_name, const StringName &p_theme_type
 	_emit_theme_changed(true);
 }
 
-void Theme::get_color_list(StringName p_theme_type, List<StringName> *p_list) const {
+void Theme::get_color_list(const StringName &p_theme_type, List<StringName> *p_list) const {
 	ERR_FAIL_NULL(p_list);
 
 	if (!color_map.has(p_theme_type)) {
@@ -816,7 +815,7 @@ void Theme::clear_constant(const StringName &p_name, const StringName &p_theme_t
 	_emit_theme_changed(true);
 }
 
-void Theme::get_constant_list(StringName p_theme_type, List<StringName> *p_list) const {
+void Theme::get_constant_list(const StringName &p_theme_type, List<StringName> *p_list) const {
 	ERR_FAIL_NULL(p_list);
 
 	if (!constant_map.has(p_theme_type)) {
@@ -1010,7 +1009,7 @@ void Theme::clear_theme_item(DataType p_data_type, const StringName &p_name, con
 	}
 }
 
-void Theme::get_theme_item_list(DataType p_data_type, StringName p_theme_type, List<StringName> *p_list) const {
+void Theme::get_theme_item_list(DataType p_data_type, const StringName &p_theme_type, List<StringName> *p_list) const {
 	switch (p_data_type) {
 		case DATA_TYPE_COLOR:
 			get_color_list(p_theme_type, p_list);
@@ -1251,14 +1250,12 @@ void Theme::get_type_list(List<StringName> *p_list) const {
 	}
 }
 
-void Theme::get_type_dependencies(const StringName &p_base_type, const StringName &p_type_variation, List<StringName> *p_list) {
-	ERR_FAIL_NULL(p_list);
-
+void Theme::get_type_dependencies(const StringName &p_base_type, const StringName &p_type_variation, Vector<StringName> &r_result) {
 	// Build the dependency chain for type variations.
 	if (p_type_variation != StringName()) {
 		StringName variation_name = p_type_variation;
 		while (variation_name != StringName()) {
-			p_list->push_back(variation_name);
+			r_result.push_back(variation_name);
 			variation_name = get_type_variation_base(variation_name);
 
 			// If we have reached the base type dependency, it's safe to stop (assuming no funny business was done to the Theme).
@@ -1269,7 +1266,7 @@ void Theme::get_type_dependencies(const StringName &p_base_type, const StringNam
 	}
 
 	// Continue building the chain using native class hierarchy.
-	ThemeDB::get_singleton()->get_native_type_dependencies(p_base_type, p_list);
+	ThemeDB::get_singleton()->get_native_type_dependencies(p_base_type, r_result);
 }
 
 // Internal methods for getting lists as a Vector of String (compatible with public API).
@@ -1612,6 +1609,17 @@ void Theme::merge_with(const Ref<Theme> &p_other) {
 		for (const KeyValue<StringName, StringName> &E : p_other->variation_map) {
 			set_type_variation(E.key, E.value);
 		}
+	}
+
+	// Defaults.
+	if (p_other->has_default_font()) {
+		set_default_font(p_other->default_font);
+	}
+	if (p_other->has_default_font_size()) {
+		set_default_font_size(p_other->default_font_size);
+	}
+	if (p_other->has_default_base_scale()) {
+		set_default_base_scale(p_other->default_base_scale);
 	}
 
 	_unfreeze_and_propagate_changes();

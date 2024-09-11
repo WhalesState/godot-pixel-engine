@@ -2,10 +2,9 @@
 /*  stream_peer.h                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -34,6 +33,7 @@
 
 #include "core/object/ref_counted.h"
 
+#include "core/extension/ext_wrappers.gen.inc"
 #include "core/object/gdvirtual.gen.inc"
 #include "core/variant/native_ptr.h"
 
@@ -94,6 +94,28 @@ public:
 	Variant get_var(bool p_allow_objects = false);
 
 	StreamPeer() {}
+};
+
+class StreamPeerExtension : public StreamPeer {
+	GDCLASS(StreamPeerExtension, StreamPeer);
+
+protected:
+	static void _bind_methods();
+
+public:
+	virtual Error put_data(const uint8_t *p_data, int p_bytes) override;
+	GDVIRTUAL3R(Error, _put_data, GDExtensionConstPtr<const uint8_t>, int, GDExtensionPtr<int>);
+
+	virtual Error put_partial_data(const uint8_t *p_data, int p_bytes, int &r_sent) override;
+	GDVIRTUAL3R(Error, _put_partial_data, GDExtensionConstPtr<const uint8_t>, int, GDExtensionPtr<int>);
+
+	virtual Error get_data(uint8_t *p_buffer, int p_bytes) override;
+	GDVIRTUAL3R(Error, _get_data, GDExtensionPtr<uint8_t>, int, GDExtensionPtr<int>);
+
+	virtual Error get_partial_data(uint8_t *p_buffer, int p_bytes, int &r_received) override;
+	GDVIRTUAL3R(Error, _get_partial_data, GDExtensionPtr<uint8_t>, int, GDExtensionPtr<int>);
+
+	EXBIND0RC(int, get_available_bytes);
 };
 
 class StreamPeerBuffer : public StreamPeer {

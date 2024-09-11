@@ -4,7 +4,7 @@
 		Abstract base class for viewports. Encapsulates drawing and interaction with a game world.
 	</brief_description>
 	<description>
-		A Viewport creates a different view into the screen, or a sub-view inside another viewport. Children 2D Nodes will display on it, and children Camera3D 3D nodes will render on it too.
+		A [Viewport] creates a different view into the screen, or a sub-view inside another viewport. Child 2D nodes will display on it, and child Camera3D 3D nodes will render on it too.
 		Optionally, a viewport can have its own 2D or 3D world, so it doesn't share what it draws with other viewports.
 		Viewports can also choose to be audio listeners, so they generate positional audio depending on a 2D or 3D camera child of it.
 		Also, viewports can be assigned to different screens in case the devices have multiple screens.
@@ -13,20 +13,18 @@
 	<tutorials>
 		<link title="Using Viewports">$DOCS_URL/tutorials/rendering/viewports.html</link>
 		<link title="Viewport and canvas transforms">$DOCS_URL/tutorials/2d/2d_transforms.html</link>
-		<link title="Screen Capture Demo">https://godotengine.org/asset-library/asset/130</link>
-		<link title="Dynamic Split Screen Demo">https://godotengine.org/asset-library/asset/541</link>
+		<link title="GUI in 3D Viewport Demo">https://godotengine.org/asset-library/asset/2807</link>
+		<link title="3D in 2D Viewport Demo">https://godotengine.org/asset-library/asset/2804</link>
+		<link title="2D in 3D Viewport Demo">https://godotengine.org/asset-library/asset/2803</link>
+		<link title="Screen Capture Demo">https://godotengine.org/asset-library/asset/2808</link>
+		<link title="Dynamic Split Screen Demo">https://godotengine.org/asset-library/asset/2806</link>
+		<link title="3D Resolution Scaling Demo">https://godotengine.org/asset-library/asset/2805</link>
 	</tutorials>
 	<methods>
 		<method name="find_world_2d" qualifiers="const">
 			<return type="World2D" />
 			<description>
 				Returns the first valid [World2D] for this viewport, searching the [member world_2d] property of itself and any Viewport ancestor.
-			</description>
-		</method>
-		<method name="get_camera_2d" qualifiers="const">
-			<return type="Camera2D" />
-			<description>
-				Returns the currently active 2D camera. Returns null if there are no active cameras.
 			</description>
 		</method>
 		<method name="get_canvas_cull_mask_bit" qualifiers="const">
@@ -79,6 +77,7 @@
 				    await RenderingServer.frame_post_draw
 				    $Viewport.get_texture().get_image().save_png("user://Screenshot.png")
 				[/codeblock]
+				[b]Note:[/b] When [member use_hdr_2d] is [code]true[/code] the returned texture will be an HDR image encoded in linear space.
 			</description>
 		</method>
 		<method name="get_viewport_rid" qualifiers="const">
@@ -93,6 +92,12 @@
 				Returns the visible rectangle in global screen coordinates.
 			</description>
 		</method>
+		<method name="gui_cancel_drag">
+			<return type="void" />
+			<description>
+				Cancels the drag operation that was previously started through [method Control._get_drag_data] or forced with [method Control.force_drag].
+			</description>
+		</method>
 		<method name="gui_get_drag_data" qualifiers="const">
 			<return type="Variant" />
 			<description>
@@ -103,6 +108,13 @@
 			<return type="Control" />
 			<description>
 				Returns the [Control] having the focus within this viewport. If no [Control] has the focus, returns null.
+			</description>
+		</method>
+		<method name="gui_get_hovered_control" qualifiers="const">
+			<return type="Control" />
+			<description>
+				Returns the [Control] that the mouse is currently hovering over in this viewport. If no [Control] has the cursor, returns null.
+				Typically the leaf [Control] node or deepest level of the subtree which claims hover. This is very useful when used together with [method Node.is_ancestor_of] to find if the mouse is within a control tree.
 			</description>
 		</method>
 		<method name="gui_is_drag_successful" qualifiers="const">
@@ -147,6 +159,7 @@
 				- [method Node._unhandled_key_input]
 				- [method Node._unhandled_input]
 				If an earlier method marks the input as handled via [method set_input_as_handled], any later method in this list will not be called.
+				If none of the methods handle the event and [member physics_object_picking] is [code]true[/code], the event is used for physics object picking.
 			</description>
 		</method>
 		<method name="push_text_input">
@@ -174,7 +187,7 @@
 		<method name="update_mouse_cursor_state">
 			<return type="void" />
 			<description>
-				Force instantly updating the display based on the current mouse cursor position. This includes updating the mouse cursor shape and sending necessary [signal Control.mouse_entered] and [signal Window.mouse_entered] signals and their respective [code]mouse_exited[/code] counterparts.
+				Force instantly updating the display based on the current mouse cursor position. This includes updating the mouse cursor shape and sending necessary [signal Control.mouse_entered], [signal CollisionObject2D.mouse_entered], [signal CollisionObject3D.mouse_entered] and [signal Window.mouse_entered] signals and their respective [code]mouse_exited[/code] counterparts.
 			</description>
 		</method>
 		<method name="warp_mouse">
@@ -190,7 +203,7 @@
 		<member name="canvas_cull_mask" type="int" setter="set_canvas_cull_mask" getter="get_canvas_cull_mask" default="4294967295">
 			The rendering layers in which this [Viewport] renders [CanvasItem] nodes.
 		</member>
-		<member name="canvas_item_default_texture_filter" type="int" setter="set_default_canvas_item_texture_filter" getter="get_default_canvas_item_texture_filter" enum="Viewport.DefaultCanvasItemTextureFilter" default="0">
+		<member name="canvas_item_default_texture_filter" type="int" setter="set_default_canvas_item_texture_filter" getter="get_default_canvas_item_texture_filter" enum="Viewport.DefaultCanvasItemTextureFilter" default="1">
 			Sets the default filter mode used by [CanvasItem]s in this Viewport. See [enum DefaultCanvasItemTextureFilter] for options.
 		</member>
 		<member name="canvas_item_default_texture_repeat" type="int" setter="set_default_canvas_item_texture_repeat" getter="get_default_canvas_item_texture_repeat" enum="Viewport.DefaultCanvasItemTextureRepeat" default="0">
@@ -199,8 +212,7 @@
 		<member name="canvas_transform" type="Transform2D" setter="set_canvas_transform" getter="get_canvas_transform">
 			The canvas transform of the viewport, useful for changing the on-screen positions of all child [CanvasItem]s. This is relative to the global canvas transform of the viewport.
 		</member>
-		<member name="clear_color" type="Color" setter="set_clear_color" getter="get_clear_color" default="Color(0.122, 0.114, 0.145, 1)">
-			The background color of the viewport.
+		<member name="clear_color" type="Color" setter="set_clear_color" getter="get_clear_color" default="Color(0.3, 0.3, 0.3, 1)">
 		</member>
 		<member name="global_canvas_transform" type="Transform2D" setter="set_global_canvas_transform" getter="get_global_canvas_transform">
 			The global canvas transform of the viewport. The canvas transform is relative to this.
@@ -222,13 +234,19 @@
 		<member name="msaa_2d" type="int" setter="set_msaa_2d" getter="get_msaa_2d" enum="Viewport.MSAA" default="0">
 			The multisample anti-aliasing mode for 2D/Canvas rendering. A higher number results in smoother edges at the cost of significantly worse performance. A value of 2 or 4 is best unless targeting very high-end systems. This has no effect on shader-induced aliasing or texture aliasing.
 		</member>
+		<member name="physics_interpolation_mode" type="int" setter="set_physics_interpolation_mode" getter="get_physics_interpolation_mode" overrides="Node" enum="Node.PhysicsInterpolationMode" default="1" />
 		<member name="sdf_oversize" type="int" setter="set_sdf_oversize" getter="get_sdf_oversize" enum="Viewport.SDFOversize" default="1">
+			Controls how much of the original viewport's size should be covered by the 2D signed distance field. This SDF can be sampled in [CanvasItem] shaders and is also used for [GPUParticles2D] collision. Higher values allow portions of occluders located outside the viewport to still be taken into account in the generated signed distance field, at the cost of performance. If you notice particles falling through [LightOccluder2D]s as the occluders leave the viewport, increase this setting.
+			The percentage is added on each axis and on both sides. For example, with the default [constant SDF_OVERSIZE_120_PERCENT], the signed distance field will cover 20% of the viewport's size outside the viewport on each side (top, right, bottom, left).
 		</member>
 		<member name="sdf_scale" type="int" setter="set_sdf_scale" getter="get_sdf_scale" enum="Viewport.SDFScale" default="1">
+			The resolution scale to use for the 2D signed distance field. Higher values lead to a more precise and more stable signed distance field as the camera moves, at the cost of performance.
 		</member>
 		<member name="snap_2d_transforms_to_pixel" type="bool" setter="set_snap_2d_transforms_to_pixel" getter="is_snap_2d_transforms_to_pixel_enabled" default="false">
+			If [code]true[/code], [CanvasItem] nodes will internally snap to full pixels. Their position can still be sub-pixel, but the decimals will not have effect. This can lead to a crisper appearance at the cost of less smooth movement, especially when [Camera2D] smoothing is enabled.
 		</member>
 		<member name="snap_2d_vertices_to_pixel" type="bool" setter="set_snap_2d_vertices_to_pixel" getter="is_snap_2d_vertices_to_pixel_enabled" default="false">
+			If [code]true[/code], vertices of [CanvasItem] nodes will snap to full pixels. Only affects the final vertex positions, not the transforms. This can lead to a crisper appearance at the cost of less smooth movement, especially when [Camera2D] smoothing is enabled.
 		</member>
 		<member name="transparent_bg" type="bool" setter="set_transparent_background" getter="has_transparent_background" default="true">
 			If [code]true[/code], the viewport should render its background as transparent.
@@ -242,6 +260,7 @@
 			<param index="0" name="node" type="Control" />
 			<description>
 				Emitted when a Control node grabs keyboard focus.
+				[b]Note:[/b] A Control node losing focus doesn't cause this signal to be emitted.
 			</description>
 		</signal>
 		<signal name="size_changed">
@@ -288,10 +307,16 @@
 			Represents the size of the [enum RenderInfo] enum.
 		</constant>
 		<constant name="RENDER_INFO_TYPE_VISIBLE" value="0" enum="RenderInfoType">
+			Visible render pass (excluding shadows).
 		</constant>
 		<constant name="RENDER_INFO_TYPE_SHADOW" value="1" enum="RenderInfoType">
+			Shadow render pass. Objects will be rendered several times depending on the number of amounts of lights with shadows and the number of directional shadow splits.
 		</constant>
-		<constant name="RENDER_INFO_TYPE_MAX" value="2" enum="RenderInfoType">
+		<constant name="RENDER_INFO_TYPE_CANVAS" value="2" enum="RenderInfoType">
+			Canvas item rendering. This includes all 2D rendering.
+		</constant>
+		<constant name="RENDER_INFO_TYPE_MAX" value="3" enum="RenderInfoType">
+			Represents the size of the [enum RenderInfoType] enum.
 		</constant>
 		<constant name="DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST" value="0" enum="DefaultCanvasItemTextureFilter">
 			The texture filter reads from the nearest pixel only. This makes the texture look pixelated from up close, and grainy from a distance (due to mipmaps not being sampled).
@@ -308,7 +333,7 @@
 			Use this for non-pixel art textures that may be viewed at a low scale (e.g. due to [Camera2D] zoom or sprite scaling), as mipmaps are important to smooth out pixels that are smaller than on-screen pixels.
 		</constant>
 		<constant name="DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_MAX" value="4" enum="DefaultCanvasItemTextureFilter">
-			Max value for [enum DefaultCanvasItemTextureFilter] enum.
+			Represents the size of the [enum DefaultCanvasItemTextureFilter] enum.
 		</constant>
 		<constant name="DEFAULT_CANVAS_ITEM_TEXTURE_REPEAT_DISABLED" value="0" enum="DefaultCanvasItemTextureRepeat">
 			Disables textures repeating. Instead, when reading UVs outside the 0-1 range, the value will be clamped to the edge of the texture, resulting in a stretched out look at the borders of the texture.
@@ -320,25 +345,34 @@
 			Flip the texture when repeating so that the edge lines up instead of abruptly changing.
 		</constant>
 		<constant name="DEFAULT_CANVAS_ITEM_TEXTURE_REPEAT_MAX" value="3" enum="DefaultCanvasItemTextureRepeat">
-			Max value for [enum DefaultCanvasItemTextureRepeat] enum.
+			Represents the size of the [enum DefaultCanvasItemTextureRepeat] enum.
 		</constant>
 		<constant name="SDF_OVERSIZE_100_PERCENT" value="0" enum="SDFOversize">
+			The signed distance field only covers the viewport's own rectangle.
 		</constant>
 		<constant name="SDF_OVERSIZE_120_PERCENT" value="1" enum="SDFOversize">
+			The signed distance field is expanded to cover 20% of the viewport's size around the borders.
 		</constant>
 		<constant name="SDF_OVERSIZE_150_PERCENT" value="2" enum="SDFOversize">
+			The signed distance field is expanded to cover 50% of the viewport's size around the borders.
 		</constant>
 		<constant name="SDF_OVERSIZE_200_PERCENT" value="3" enum="SDFOversize">
+			The signed distance field is expanded to cover 100% (double) of the viewport's size around the borders.
 		</constant>
 		<constant name="SDF_OVERSIZE_MAX" value="4" enum="SDFOversize">
+			Represents the size of the [enum SDFOversize] enum.
 		</constant>
 		<constant name="SDF_SCALE_100_PERCENT" value="0" enum="SDFScale">
+			The signed distance field is rendered at full resolution.
 		</constant>
 		<constant name="SDF_SCALE_50_PERCENT" value="1" enum="SDFScale">
+			The signed distance field is rendered at half the resolution of this viewport.
 		</constant>
 		<constant name="SDF_SCALE_25_PERCENT" value="2" enum="SDFScale">
+			The signed distance field is rendered at a quarter the resolution of this viewport.
 		</constant>
 		<constant name="SDF_SCALE_MAX" value="3" enum="SDFScale">
+			Represents the size of the [enum SDFScale] enum.
 		</constant>
 	</constants>
 </class>

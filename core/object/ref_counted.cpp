@@ -2,10 +2,9 @@
 /*  ref_counted.cpp                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -64,6 +63,11 @@ bool RefCounted::reference() {
 		if (get_script_instance()) {
 			get_script_instance()->refcount_incremented();
 		}
+		if (_get_extension() && _get_extension()->reference) {
+			_get_extension()->reference(_get_extension_instance());
+		}
+
+		_instance_binding_reference(true);
 	}
 
 	return success;
@@ -78,6 +82,12 @@ bool RefCounted::unreference() {
 			bool script_ret = get_script_instance()->refcount_decremented();
 			die = die && script_ret;
 		}
+		if (_get_extension() && _get_extension()->unreference) {
+			_get_extension()->unreference(_get_extension_instance());
+		}
+
+		bool binding_ret = _instance_binding_reference(false);
+		die = die && binding_ret;
 	}
 
 	return die;

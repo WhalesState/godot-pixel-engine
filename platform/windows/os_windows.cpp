@@ -2,10 +2,9 @@
 /*  os_windows.cpp                                                        */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -35,6 +34,7 @@
 #include "joypad_windows.h"
 #include "lang_table.h"
 #include "windows_terminal_logger.h"
+#include "windows_utils.h"
 
 #include "core/debugger/engine_debugger.h"
 #include "core/debugger/script_debugger.h"
@@ -43,6 +43,7 @@
 #include "drivers/unix/net_socket_posix.h"
 #include "drivers/windows/dir_access_windows.h"
 #include "drivers/windows/file_access_windows.h"
+#include "drivers/windows/file_access_windows_pipe.h"
 #include "main/main.h"
 #include "servers/rendering/rendering_server_default.h"
 #include "servers/text_server.h"
@@ -89,6 +90,23 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 #define GetProcAddress (void *)GetProcAddress
 #endif
 
+static String fix_path(const String &p_path) {
+	String path = p_path;
+	if (p_path.is_relative_path()) {
+		Char16String current_dir_name;
+		size_t str_len = GetCurrentDirectoryW(0, nullptr);
+		current_dir_name.resize(str_len + 1);
+		GetCurrentDirectoryW(current_dir_name.size(), (LPWSTR)current_dir_name.ptrw());
+		path = String::utf16((const char16_t *)current_dir_name.get_data()).trim_prefix(R"(\\?\)").replace("\\", "/").path_join(path);
+	}
+	path = path.simplify_path();
+	path = path.replace("/", "\\");
+	if (!path.is_network_share_path() && !path.begins_with(R"(\\?\)")) {
+		path = R"(\\?\)" + path;
+	}
+	return path;
+}
+
 static String format_error_message(DWORD id) {
 	LPWSTR messageBuffer = nullptr;
 	size_t size = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -114,7 +132,24 @@ void RedirectStream(const char *p_file_name, const char *p_mode, FILE *p_cpp_str
 }
 
 void RedirectIOToConsole() {
+	// Save current handles.
+	HANDLE h_stdin = GetStdHandle(STD_INPUT_HANDLE);
+	HANDLE h_stdout = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE h_stderr = GetStdHandle(STD_ERROR_HANDLE);
+
 	if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+		// Restore redirection (Note: if not redirected it's NULL handles not INVALID_HANDLE_VALUE).
+		if (h_stdin != 0) {
+			SetStdHandle(STD_INPUT_HANDLE, h_stdin);
+		}
+		if (h_stdout != 0) {
+			SetStdHandle(STD_OUTPUT_HANDLE, h_stdout);
+		}
+		if (h_stderr != 0) {
+			SetStdHandle(STD_ERROR_HANDLE, h_stderr);
+		}
+
+		// Update file handles.
 		RedirectStream("CONIN$", "r", stdin, STD_INPUT_HANDLE);
 		RedirectStream("CONOUT$", "w", stdout, STD_OUTPUT_HANDLE);
 		RedirectStream("CONOUT$", "w", stderr, STD_ERROR_HANDLE);
@@ -148,15 +183,9 @@ void OS_Windows::initialize_debugging() {
 static void _error_handler(void *p_self, const char *p_func, const char *p_file, int p_line, const char *p_error, const char *p_errorexp, bool p_editor_notify, ErrorHandlerType p_type) {
 	String err_str;
 	if (p_errorexp && p_errorexp[0]) {
-		err_str = String::utf8(p_errorexp);
+		err_str = String::utf8(p_errorexp) + "\n";
 	} else {
-		err_str = String::utf8(p_file) + ":" + itos(p_line) + " - " + String::utf8(p_error);
-	}
-
-	if (p_editor_notify) {
-		err_str += " (User)\n";
-	} else {
-		err_str += "\n";
+		err_str = String::utf8(p_file) + ":" + itos(p_line) + " - " + String::utf8(p_error) + "\n";
 	}
 
 	OutputDebugStringW((LPCWSTR)err_str.utf16().ptr());
@@ -172,13 +201,10 @@ void OS_Windows::initialize() {
 	add_error_handler(&error_handlers);
 #endif
 
-#ifndef WINDOWS_SUBSYSTEM_CONSOLE
-	RedirectIOToConsole();
-#endif
-
 	FileAccess::make_default<FileAccessWindows>(FileAccess::ACCESS_RESOURCES);
 	FileAccess::make_default<FileAccessWindows>(FileAccess::ACCESS_USERDATA);
 	FileAccess::make_default<FileAccessWindows>(FileAccess::ACCESS_FILESYSTEM);
+	FileAccess::make_default<FileAccessWindowsPipe>(FileAccess::ACCESS_PIPE);
 	DirAccess::make_default<DirAccessWindows>(DirAccess::ACCESS_RESOURCES);
 	DirAccess::make_default<DirAccessWindows>(DirAccess::ACCESS_USERDATA);
 	DirAccess::make_default<DirAccessWindows>(DirAccess::ACCESS_FILESYSTEM);
@@ -265,6 +291,10 @@ void OS_Windows::finalize() {
 }
 
 void OS_Windows::finalize_core() {
+	while (!temp_libraries.is_empty()) {
+		_remove_temp_library(temp_libraries.last()->key);
+	}
+
 	FileAccessWindows::finalize();
 
 	timeEndPeriod(1);
@@ -280,6 +310,205 @@ void OS_Windows::finalize_core() {
 Error OS_Windows::get_entropy(uint8_t *r_buffer, int p_bytes) {
 	NTSTATUS status = BCryptGenRandom(nullptr, r_buffer, p_bytes, BCRYPT_USE_SYSTEM_PREFERRED_RNG);
 	ERR_FAIL_COND_V(status, FAILED);
+	return OK;
+}
+
+#ifdef DEBUG_ENABLED
+void debug_dynamic_library_check_dependencies(const String &p_path, HashSet<String> &r_checked, HashSet<String> &r_missing) {
+	if (r_checked.has(p_path)) {
+		return;
+	}
+	r_checked.insert(p_path);
+
+	LOADED_IMAGE loaded_image;
+	HANDLE file = CreateFileW((LPCWSTR)p_path.utf16().get_data(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
+	if (file != INVALID_HANDLE_VALUE) {
+		HANDLE file_mapping = CreateFileMappingW(file, nullptr, PAGE_READONLY | SEC_COMMIT, 0, 0, nullptr);
+		if (file_mapping != INVALID_HANDLE_VALUE) {
+			PVOID mapping = MapViewOfFile(file_mapping, FILE_MAP_READ, 0, 0, 0);
+			if (mapping) {
+				PIMAGE_DOS_HEADER dos_header = (PIMAGE_DOS_HEADER)mapping;
+				PIMAGE_NT_HEADERS nt_header = nullptr;
+				if (dos_header->e_magic == IMAGE_DOS_SIGNATURE) {
+					PCHAR nt_header_ptr;
+					nt_header_ptr = ((PCHAR)mapping) + dos_header->e_lfanew;
+					nt_header = (PIMAGE_NT_HEADERS)nt_header_ptr;
+					if (nt_header->Signature != IMAGE_NT_SIGNATURE) {
+						nt_header = nullptr;
+					}
+				}
+				if (nt_header) {
+					loaded_image.ModuleName = nullptr;
+					loaded_image.hFile = file;
+					loaded_image.MappedAddress = (PUCHAR)mapping;
+					loaded_image.FileHeader = nt_header;
+					loaded_image.Sections = (PIMAGE_SECTION_HEADER)((LPBYTE)&nt_header->OptionalHeader + nt_header->FileHeader.SizeOfOptionalHeader);
+					loaded_image.NumberOfSections = nt_header->FileHeader.NumberOfSections;
+					loaded_image.SizeOfImage = GetFileSize(file, nullptr);
+					loaded_image.Characteristics = nt_header->FileHeader.Characteristics;
+					loaded_image.LastRvaSection = loaded_image.Sections;
+					loaded_image.fSystemImage = false;
+					loaded_image.fDOSImage = false;
+					loaded_image.Links.Flink = &loaded_image.Links;
+					loaded_image.Links.Blink = &loaded_image.Links;
+
+					ULONG size = 0;
+					const IMAGE_IMPORT_DESCRIPTOR *import_desc = (const IMAGE_IMPORT_DESCRIPTOR *)ImageDirectoryEntryToData((HMODULE)loaded_image.MappedAddress, false, IMAGE_DIRECTORY_ENTRY_IMPORT, &size);
+					if (import_desc) {
+						for (; import_desc->Name && import_desc->FirstThunk; import_desc++) {
+							char16_t full_name_wc[32767];
+							const char *name_cs = (const char *)ImageRvaToVa(loaded_image.FileHeader, loaded_image.MappedAddress, import_desc->Name, nullptr);
+							String name = String(name_cs);
+							if (name.begins_with("api-ms-win-")) {
+								r_checked.insert(name);
+							} else if (SearchPathW(nullptr, (LPCWSTR)name.utf16().get_data(), nullptr, 32767, (LPWSTR)full_name_wc, nullptr)) {
+								debug_dynamic_library_check_dependencies(String::utf16(full_name_wc), r_checked, r_missing);
+							} else if (SearchPathW((LPCWSTR)(p_path.get_base_dir().utf16().get_data()), (LPCWSTR)name.utf16().get_data(), nullptr, 32767, (LPWSTR)full_name_wc, nullptr)) {
+								debug_dynamic_library_check_dependencies(String::utf16(full_name_wc), r_checked, r_missing);
+							} else {
+								r_missing.insert(name);
+							}
+						}
+					}
+				}
+				UnmapViewOfFile(mapping);
+			}
+			CloseHandle(file_mapping);
+		}
+		CloseHandle(file);
+	}
+}
+#endif
+
+Error OS_Windows::open_dynamic_library(const String &p_path, void *&p_library_handle, GDExtensionData *p_data) {
+	String path = p_path;
+
+	if (!FileAccess::exists(path)) {
+		//this code exists so gdextension can load .dll files from within the executable path
+		path = get_executable_path().get_base_dir().path_join(p_path.get_file());
+	}
+	// Path to load from may be different from original if we make copies.
+	String load_path = path;
+
+	ERR_FAIL_COND_V(!FileAccess::exists(path), ERR_FILE_NOT_FOUND);
+
+	// Here we want a copy to be loaded.
+	// This is so the original file isn't locked and can be updated by a compiler.
+	if (p_data != nullptr && p_data->generate_temp_files) {
+		// Copy the file to the same directory as the original with a prefix in the name.
+		// This is so relative path to dependencies are satisfied.
+		load_path = path.get_base_dir().path_join("~" + path.get_file());
+
+		// If there's a left-over copy (possibly from a crash) then delete it first.
+		if (FileAccess::exists(load_path)) {
+			DirAccess::remove_absolute(load_path);
+		}
+
+		Error copy_err = DirAccess::copy_absolute(path, load_path);
+		if (copy_err) {
+			ERR_PRINT("Error copying library: " + path);
+			return ERR_CANT_CREATE;
+		}
+
+		FileAccess::set_hidden_attribute(load_path, true);
+
+		Error pdb_err = WindowsUtils::copy_and_rename_pdb(load_path);
+		if (pdb_err != OK && pdb_err != ERR_SKIP) {
+			WARN_PRINT(vformat("Failed to rename the PDB file. The original PDB file for '%s' will be loaded.", path));
+		}
+	}
+
+	typedef DLL_DIRECTORY_COOKIE(WINAPI * PAddDllDirectory)(PCWSTR);
+	typedef BOOL(WINAPI * PRemoveDllDirectory)(DLL_DIRECTORY_COOKIE);
+
+	PAddDllDirectory add_dll_directory = (PAddDllDirectory)GetProcAddress(GetModuleHandle("kernel32.dll"), "AddDllDirectory");
+	PRemoveDllDirectory remove_dll_directory = (PRemoveDllDirectory)GetProcAddress(GetModuleHandle("kernel32.dll"), "RemoveDllDirectory");
+
+	bool has_dll_directory_api = ((add_dll_directory != nullptr) && (remove_dll_directory != nullptr));
+	DLL_DIRECTORY_COOKIE cookie = nullptr;
+
+	String dll_path = fix_path(load_path);
+	String dll_dir = fix_path(ProjectSettings::get_singleton()->globalize_path(load_path.get_base_dir()));
+	if (p_data != nullptr && p_data->also_set_library_path && has_dll_directory_api) {
+		cookie = add_dll_directory((LPCWSTR)(dll_dir.utf16().get_data()));
+	}
+
+	p_library_handle = (void *)LoadLibraryExW((LPCWSTR)(dll_path.utf16().get_data()), nullptr, (p_data != nullptr && p_data->also_set_library_path && has_dll_directory_api) ? LOAD_LIBRARY_SEARCH_DEFAULT_DIRS : 0);
+	if (!p_library_handle) {
+		if (p_data != nullptr && p_data->generate_temp_files) {
+			DirAccess::remove_absolute(load_path);
+		}
+
+#ifdef DEBUG_ENABLED
+		DWORD err_code = GetLastError();
+
+		HashSet<String> checked_libs;
+		HashSet<String> missing_libs;
+		debug_dynamic_library_check_dependencies(dll_path, checked_libs, missing_libs);
+		if (!missing_libs.is_empty()) {
+			String missing;
+			for (const String &E : missing_libs) {
+				if (!missing.is_empty()) {
+					missing += ", ";
+				}
+				missing += E;
+			}
+			ERR_FAIL_V_MSG(ERR_CANT_OPEN, vformat("Can't open dynamic library: %s. Missing dependencies: %s. Error: %s.", p_path, missing, format_error_message(err_code)));
+		} else {
+			ERR_FAIL_V_MSG(ERR_CANT_OPEN, vformat("Can't open dynamic library: %s. Error: %s.", p_path, format_error_message(err_code)));
+		}
+#endif
+	}
+
+#ifndef DEBUG_ENABLED
+	ERR_FAIL_NULL_V_MSG(p_library_handle, ERR_CANT_OPEN, vformat("Can't open dynamic library: %s. Error: %s.", p_path, format_error_message(GetLastError())));
+#endif
+
+	if (cookie) {
+		remove_dll_directory(cookie);
+	}
+
+	if (p_data != nullptr && p_data->r_resolved_path != nullptr) {
+		*p_data->r_resolved_path = path;
+	}
+
+	if (p_data != nullptr && p_data->generate_temp_files) {
+		// Save the copied path so it can be deleted later.
+		temp_libraries[p_library_handle] = load_path;
+	}
+
+	return OK;
+}
+
+Error OS_Windows::close_dynamic_library(void *p_library_handle) {
+	if (!FreeLibrary((HMODULE)p_library_handle)) {
+		return FAILED;
+	}
+
+	// Delete temporary copy of library if it exists.
+	_remove_temp_library(p_library_handle);
+
+	return OK;
+}
+
+void OS_Windows::_remove_temp_library(void *p_library_handle) {
+	if (temp_libraries.has(p_library_handle)) {
+		String path = temp_libraries[p_library_handle];
+		DirAccess::remove_absolute(path);
+		WindowsUtils::remove_temp_pdbs(path);
+		temp_libraries.erase(p_library_handle);
+	}
+}
+
+Error OS_Windows::get_dynamic_library_symbol_handle(void *p_library_handle, const String &p_name, void *&p_symbol_handle, bool p_optional) {
+	p_symbol_handle = (void *)GetProcAddress((HMODULE)p_library_handle, p_name.utf8().get_data());
+	if (!p_symbol_handle) {
+		if (!p_optional) {
+			ERR_FAIL_V_MSG(ERR_CANT_RESOLVE, vformat("Can't resolve symbol %s, error: \"%s\".", p_name, format_error_message(GetLastError())));
+		} else {
+			return ERR_CANT_RESOLVE;
+		}
+	}
 	return OK;
 }
 
@@ -316,9 +545,9 @@ Vector<String> OS_Windows::get_video_adapter_driver_info() const {
 
 	REFCLSID clsid = CLSID_WbemLocator; // Unmarshaler CLSID
 	REFIID uuid = IID_IWbemLocator; // Interface UUID
-	IWbemLocator *wbemLocator = NULL; // to get the services
-	IWbemServices *wbemServices = NULL; // to get the class
-	IEnumWbemClassObject *iter = NULL;
+	IWbemLocator *wbemLocator = nullptr; // to get the services
+	IWbemServices *wbemServices = nullptr; // to get the class
+	IEnumWbemClassObject *iter = nullptr;
 	IWbemClassObject *pnpSDriverObject[1]; // contains driver name, version, etc.
 	String driver_name;
 	String driver_version;
@@ -328,12 +557,12 @@ Vector<String> OS_Windows::get_video_adapter_driver_info() const {
 		return Vector<String>();
 	}
 
-	HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER, uuid, (LPVOID *)&wbemLocator);
+	HRESULT hr = CoCreateInstance(clsid, nullptr, CLSCTX_INPROC_SERVER, uuid, (LPVOID *)&wbemLocator);
 	if (hr != S_OK) {
 		return Vector<String>();
 	}
 	BSTR resource_name = SysAllocString(L"root\\CIMV2");
-	hr = wbemLocator->ConnectServer(resource_name, NULL, NULL, NULL, 0, NULL, NULL, &wbemServices);
+	hr = wbemLocator->ConnectServer(resource_name, nullptr, nullptr, nullptr, 0, nullptr, nullptr, &wbemServices);
 	SysFreeString(resource_name);
 
 	SAFE_RELEASE(wbemLocator) // from now on, use `wbemServices`
@@ -345,7 +574,7 @@ Vector<String> OS_Windows::get_video_adapter_driver_info() const {
 	const String gpu_device_class_query = vformat("SELECT * FROM Win32_PnPSignedDriver WHERE DeviceName = \"%s\"", device_name);
 	BSTR query = SysAllocString((const WCHAR *)gpu_device_class_query.utf16().get_data());
 	BSTR query_lang = SysAllocString(L"WQL");
-	hr = wbemServices->ExecQuery(query_lang, query, WBEM_FLAG_RETURN_IMMEDIATELY | WBEM_FLAG_FORWARD_ONLY, NULL, &iter);
+	hr = wbemServices->ExecQuery(query_lang, query, WBEM_FLAG_RETURN_IMMEDIATELY | WBEM_FLAG_FORWARD_ONLY, nullptr, &iter);
 	SysFreeString(query_lang);
 	SysFreeString(query);
 	if (hr == S_OK) {
@@ -357,13 +586,13 @@ Vector<String> OS_Windows::get_video_adapter_driver_info() const {
 			VariantInit(&dn);
 
 			BSTR object_name = SysAllocString(L"DriverName");
-			hr = pnpSDriverObject[0]->Get(object_name, 0, &dn, NULL, NULL);
+			hr = pnpSDriverObject[0]->Get(object_name, 0, &dn, nullptr, nullptr);
 			SysFreeString(object_name);
 			if (hr == S_OK) {
 				String d_name = String(V_BSTR(&dn));
 				if (d_name.is_empty()) {
 					object_name = SysAllocString(L"DriverProviderName");
-					hr = pnpSDriverObject[0]->Get(object_name, 0, &dn, NULL, NULL);
+					hr = pnpSDriverObject[0]->Get(object_name, 0, &dn, nullptr, nullptr);
 					SysFreeString(object_name);
 					if (hr == S_OK) {
 						driver_name = String(V_BSTR(&dn));
@@ -373,7 +602,7 @@ Vector<String> OS_Windows::get_video_adapter_driver_info() const {
 				}
 			} else {
 				object_name = SysAllocString(L"DriverProviderName");
-				hr = pnpSDriverObject[0]->Get(object_name, 0, &dn, NULL, NULL);
+				hr = pnpSDriverObject[0]->Get(object_name, 0, &dn, nullptr, nullptr);
 				SysFreeString(object_name);
 				if (hr == S_OK) {
 					driver_name = String(V_BSTR(&dn));
@@ -383,7 +612,7 @@ Vector<String> OS_Windows::get_video_adapter_driver_info() const {
 			VARIANT dv;
 			VariantInit(&dv);
 			object_name = SysAllocString(L"DriverVersion");
-			hr = pnpSDriverObject[0]->Get(object_name, 0, &dv, NULL, NULL);
+			hr = pnpSDriverObject[0]->Get(object_name, 0, &dv, nullptr, nullptr);
 			SysFreeString(object_name);
 			if (hr == S_OK) {
 				driver_version = String(V_BSTR(&dv));
@@ -401,6 +630,72 @@ Vector<String> OS_Windows::get_video_adapter_driver_info() const {
 	info.push_back(driver_version);
 
 	return info;
+}
+
+bool OS_Windows::get_user_prefers_integrated_gpu() const {
+	// On Windows 10, the preferred GPU configured in Windows Settings is
+	// stored in the registry under the key
+	// `HKEY_CURRENT_USER\SOFTWARE\Microsoft\DirectX\UserGpuPreferences`
+	// with the name being the app ID or EXE path. The value is in the form of
+	// `GpuPreference=1;`, with the value being 1 for integrated GPU and 2
+	// for discrete GPU. On Windows 11, there may be more flags, separated
+	// by semicolons.
+
+	// If this is a packaged app, use the "application user model ID".
+	// Otherwise, use the EXE path.
+	WCHAR value_name[32768];
+	bool is_packaged = false;
+	{
+		HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll");
+		if (kernel32) {
+			using GetCurrentApplicationUserModelIdPtr = LONG(WINAPI *)(UINT32 * length, PWSTR id);
+			GetCurrentApplicationUserModelIdPtr GetCurrentApplicationUserModelId = (GetCurrentApplicationUserModelIdPtr)GetProcAddress(kernel32, "GetCurrentApplicationUserModelId");
+
+			if (GetCurrentApplicationUserModelId) {
+				UINT32 length = sizeof(value_name) / sizeof(value_name[0]);
+				LONG result = GetCurrentApplicationUserModelId(&length, value_name);
+				if (result == ERROR_SUCCESS) {
+					is_packaged = true;
+				}
+			}
+		}
+	}
+	if (!is_packaged && GetModuleFileNameW(nullptr, value_name, sizeof(value_name) / sizeof(value_name[0])) >= sizeof(value_name) / sizeof(value_name[0])) {
+		// Paths should never be longer than 32767, but just in case.
+		return false;
+	}
+
+	LPCWSTR subkey = L"SOFTWARE\\Microsoft\\DirectX\\UserGpuPreferences";
+	HKEY hkey = nullptr;
+	LSTATUS result = RegOpenKeyExW(HKEY_CURRENT_USER, subkey, 0, KEY_READ, &hkey);
+	if (result != ERROR_SUCCESS) {
+		return false;
+	}
+
+	DWORD size = 0;
+	result = RegGetValueW(hkey, nullptr, value_name, RRF_RT_REG_SZ, nullptr, nullptr, &size);
+	if (result != ERROR_SUCCESS || size == 0) {
+		RegCloseKey(hkey);
+		return false;
+	}
+
+	Vector<WCHAR> buffer;
+	buffer.resize(size / sizeof(WCHAR));
+	result = RegGetValueW(hkey, nullptr, value_name, RRF_RT_REG_SZ, nullptr, (LPBYTE)buffer.ptrw(), &size);
+	if (result != ERROR_SUCCESS) {
+		RegCloseKey(hkey);
+		return false;
+	}
+
+	RegCloseKey(hkey);
+	const String flags = String::utf16((const char16_t *)buffer.ptr(), size / sizeof(WCHAR));
+
+	for (const String &flag : flags.split(";", false)) {
+		if (flag == "GpuPreference=1") {
+			return true;
+		}
+	}
+	return false;
 }
 
 OS::DateTime OS_Windows::get_datetime(bool p_utc) const {
@@ -580,8 +875,121 @@ Dictionary OS_Windows::get_memory_info() const {
 	return meminfo;
 }
 
+Dictionary OS_Windows::execute_with_pipe(const String &p_path, const List<String> &p_arguments, bool p_blocking) {
+#define CLEAN_PIPES               \
+	if (pipe_in[0] != 0) {        \
+		CloseHandle(pipe_in[0]);  \
+	}                             \
+	if (pipe_in[1] != 0) {        \
+		CloseHandle(pipe_in[1]);  \
+	}                             \
+	if (pipe_out[0] != 0) {       \
+		CloseHandle(pipe_out[0]); \
+	}                             \
+	if (pipe_out[1] != 0) {       \
+		CloseHandle(pipe_out[1]); \
+	}                             \
+	if (pipe_err[0] != 0) {       \
+		CloseHandle(pipe_err[0]); \
+	}                             \
+	if (pipe_err[1] != 0) {       \
+		CloseHandle(pipe_err[1]); \
+	}
+
+	Dictionary ret;
+
+	String path = p_path.is_absolute_path() ? fix_path(p_path) : p_path;
+	String command = _quote_command_line_argument(path);
+	for (const String &E : p_arguments) {
+		command += " " + _quote_command_line_argument(E);
+	}
+
+	// Create pipes.
+	HANDLE pipe_in[2] = { 0, 0 };
+	HANDLE pipe_out[2] = { 0, 0 };
+	HANDLE pipe_err[2] = { 0, 0 };
+
+	SECURITY_ATTRIBUTES sa;
+	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+	sa.bInheritHandle = true;
+	sa.lpSecurityDescriptor = nullptr;
+
+	ERR_FAIL_COND_V(!CreatePipe(&pipe_in[0], &pipe_in[1], &sa, 0), ret);
+	if (!SetHandleInformation(pipe_in[1], HANDLE_FLAG_INHERIT, 0)) {
+		CLEAN_PIPES
+		ERR_FAIL_V(ret);
+	}
+	if (!CreatePipe(&pipe_out[0], &pipe_out[1], &sa, 0)) {
+		CLEAN_PIPES
+		ERR_FAIL_V(ret);
+	}
+	if (!SetHandleInformation(pipe_out[0], HANDLE_FLAG_INHERIT, 0)) {
+		CLEAN_PIPES
+		ERR_FAIL_V(ret);
+	}
+	if (!CreatePipe(&pipe_err[0], &pipe_err[1], &sa, 0)) {
+		CLEAN_PIPES
+		ERR_FAIL_V(ret);
+	}
+	ERR_FAIL_COND_V(!SetHandleInformation(pipe_err[0], HANDLE_FLAG_INHERIT, 0), ret);
+
+	// Create process.
+	ProcessInfo pi;
+	ZeroMemory(&pi.si, sizeof(pi.si));
+	pi.si.cb = sizeof(pi.si);
+	ZeroMemory(&pi.pi, sizeof(pi.pi));
+	LPSTARTUPINFOW si_w = (LPSTARTUPINFOW)&pi.si;
+
+	pi.si.dwFlags |= STARTF_USESTDHANDLES;
+	pi.si.hStdInput = pipe_in[0];
+	pi.si.hStdOutput = pipe_out[1];
+	pi.si.hStdError = pipe_err[1];
+
+	DWORD creation_flags = NORMAL_PRIORITY_CLASS | CREATE_NO_WINDOW;
+
+	Char16String current_dir_name;
+	size_t str_len = GetCurrentDirectoryW(0, nullptr);
+	current_dir_name.resize(str_len + 1);
+	GetCurrentDirectoryW(current_dir_name.size(), (LPWSTR)current_dir_name.ptrw());
+	if (current_dir_name.size() >= MAX_PATH) {
+		Char16String current_short_dir_name;
+		str_len = GetShortPathNameW((LPCWSTR)current_dir_name.ptr(), nullptr, 0);
+		current_short_dir_name.resize(str_len);
+		GetShortPathNameW((LPCWSTR)current_dir_name.ptr(), (LPWSTR)current_short_dir_name.ptrw(), current_short_dir_name.size());
+		current_dir_name = current_short_dir_name;
+	}
+
+	if (!CreateProcessW(nullptr, (LPWSTR)(command.utf16().ptrw()), nullptr, nullptr, true, creation_flags, nullptr, (LPWSTR)current_dir_name.ptr(), si_w, &pi.pi)) {
+		CLEAN_PIPES
+		ERR_FAIL_V_MSG(ret, "Could not create child process: " + command);
+	}
+	CloseHandle(pipe_in[0]);
+	CloseHandle(pipe_out[1]);
+	CloseHandle(pipe_err[1]);
+
+	ProcessID pid = pi.pi.dwProcessId;
+	process_map_mutex.lock();
+	process_map->insert(pid, pi);
+	process_map_mutex.unlock();
+
+	Ref<FileAccessWindowsPipe> main_pipe;
+	main_pipe.instantiate();
+	main_pipe->open_existing(pipe_out[0], pipe_in[1], p_blocking);
+
+	Ref<FileAccessWindowsPipe> err_pipe;
+	err_pipe.instantiate();
+	err_pipe->open_existing(pipe_err[0], 0, p_blocking);
+
+	ret["stdio"] = main_pipe;
+	ret["stderr"] = err_pipe;
+	ret["pid"] = pid;
+
+#undef CLEAN_PIPES
+	return ret;
+}
+
 Error OS_Windows::execute(const String &p_path, const List<String> &p_arguments, String *r_pipe, int *r_exitcode, bool read_stderr, Mutex *p_pipe_mutex, bool p_open_console) {
-	String path = p_path.replace("/", "\\");
+	String path = p_path.is_absolute_path() ? fix_path(p_path) : p_path;
 	String command = _quote_command_line_argument(path);
 	for (const String &E : p_arguments) {
 		command += " " + _quote_command_line_argument(E);
@@ -619,7 +1027,19 @@ Error OS_Windows::execute(const String &p_path, const List<String> &p_arguments,
 		creation_flags |= CREATE_NO_WINDOW;
 	}
 
-	int ret = CreateProcessW(nullptr, (LPWSTR)(command.utf16().ptrw()), nullptr, nullptr, inherit_handles, creation_flags, nullptr, nullptr, si_w, &pi.pi);
+	Char16String current_dir_name;
+	size_t str_len = GetCurrentDirectoryW(0, nullptr);
+	current_dir_name.resize(str_len + 1);
+	GetCurrentDirectoryW(current_dir_name.size(), (LPWSTR)current_dir_name.ptrw());
+	if (current_dir_name.size() >= MAX_PATH) {
+		Char16String current_short_dir_name;
+		str_len = GetShortPathNameW((LPCWSTR)current_dir_name.ptr(), nullptr, 0);
+		current_short_dir_name.resize(str_len);
+		GetShortPathNameW((LPCWSTR)current_dir_name.ptr(), (LPWSTR)current_short_dir_name.ptrw(), current_short_dir_name.size());
+		current_dir_name = current_short_dir_name;
+	}
+
+	int ret = CreateProcessW(nullptr, (LPWSTR)(command.utf16().ptrw()), nullptr, nullptr, inherit_handles, creation_flags, nullptr, (LPWSTR)current_dir_name.ptr(), si_w, &pi.pi);
 	if (!ret && r_pipe) {
 		CloseHandle(pipe[0]); // Cleanup pipe handles.
 		CloseHandle(pipe[1]);
@@ -636,7 +1056,7 @@ Error OS_Windows::execute(const String &p_path, const List<String> &p_arguments,
 		DWORD read = 0;
 		for (;;) { // Read StdOut and StdErr from pipe.
 			bytes.resize(bytes_in_buffer + CHUNK_SIZE);
-			const bool success = ReadFile(pipe[0], bytes.ptr() + bytes_in_buffer, CHUNK_SIZE, &read, NULL);
+			const bool success = ReadFile(pipe[0], bytes.ptr() + bytes_in_buffer, CHUNK_SIZE, &read, nullptr);
 			if (!success || read == 0) {
 				break;
 			}
@@ -683,7 +1103,7 @@ Error OS_Windows::execute(const String &p_path, const List<String> &p_arguments,
 }
 
 Error OS_Windows::create_process(const String &p_path, const List<String> &p_arguments, ProcessID *r_child_id, bool p_open_console) {
-	String path = p_path.replace("/", "\\");
+	String path = p_path.is_absolute_path() ? fix_path(p_path) : p_path;
 	String command = _quote_command_line_argument(path);
 	for (const String &E : p_arguments) {
 		command += " " + _quote_command_line_argument(E);
@@ -702,20 +1122,35 @@ Error OS_Windows::create_process(const String &p_path, const List<String> &p_arg
 		creation_flags |= CREATE_NO_WINDOW;
 	}
 
-	int ret = CreateProcessW(nullptr, (LPWSTR)(command.utf16().ptrw()), nullptr, nullptr, false, creation_flags, nullptr, nullptr, si_w, &pi.pi);
+	Char16String current_dir_name;
+	size_t str_len = GetCurrentDirectoryW(0, nullptr);
+	current_dir_name.resize(str_len + 1);
+	GetCurrentDirectoryW(current_dir_name.size(), (LPWSTR)current_dir_name.ptrw());
+	if (current_dir_name.size() >= MAX_PATH) {
+		Char16String current_short_dir_name;
+		str_len = GetShortPathNameW((LPCWSTR)current_dir_name.ptr(), nullptr, 0);
+		current_short_dir_name.resize(str_len);
+		GetShortPathNameW((LPCWSTR)current_dir_name.ptr(), (LPWSTR)current_short_dir_name.ptrw(), current_short_dir_name.size());
+		current_dir_name = current_short_dir_name;
+	}
+
+	int ret = CreateProcessW(nullptr, (LPWSTR)(command.utf16().ptrw()), nullptr, nullptr, false, creation_flags, nullptr, (LPWSTR)current_dir_name.ptr(), si_w, &pi.pi);
 	ERR_FAIL_COND_V_MSG(ret == 0, ERR_CANT_FORK, "Could not create child process: " + command);
 
 	ProcessID pid = pi.pi.dwProcessId;
 	if (r_child_id) {
 		*r_child_id = pid;
 	}
+	process_map_mutex.lock();
 	process_map->insert(pid, pi);
+	process_map_mutex.unlock();
 
 	return OK;
 }
 
 Error OS_Windows::kill(const ProcessID &p_pid) {
 	int ret = 0;
+	MutexLock lock(process_map_mutex);
 	if (process_map->has(p_pid)) {
 		const PROCESS_INFORMATION pi = (*process_map)[p_pid].pi;
 		process_map->erase(p_pid);
@@ -726,7 +1161,7 @@ Error OS_Windows::kill(const ProcessID &p_pid) {
 		CloseHandle(pi.hThread);
 	} else {
 		HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, false, (DWORD)p_pid);
-		if (hProcess != NULL) {
+		if (hProcess != nullptr) {
 			ret = TerminateProcess(hProcess, 0);
 
 			CloseHandle(hProcess);
@@ -741,22 +1176,56 @@ int OS_Windows::get_process_id() const {
 }
 
 bool OS_Windows::is_process_running(const ProcessID &p_pid) const {
+	MutexLock lock(process_map_mutex);
 	if (!process_map->has(p_pid)) {
 		return false;
 	}
 
-	const PROCESS_INFORMATION &pi = (*process_map)[p_pid].pi;
+	const ProcessInfo &info = (*process_map)[p_pid];
+	if (!info.is_running) {
+		return false;
+	}
 
+	const PROCESS_INFORMATION &pi = info.pi;
 	DWORD dw_exit_code = 0;
 	if (!GetExitCodeProcess(pi.hProcess, &dw_exit_code)) {
 		return false;
 	}
 
 	if (dw_exit_code != STILL_ACTIVE) {
+		info.is_running = false;
+		info.exit_code = dw_exit_code;
 		return false;
 	}
 
 	return true;
+}
+
+int OS_Windows::get_process_exit_code(const ProcessID &p_pid) const {
+	MutexLock lock(process_map_mutex);
+	if (!process_map->has(p_pid)) {
+		return -1;
+	}
+
+	const ProcessInfo &info = (*process_map)[p_pid];
+	if (!info.is_running) {
+		return info.exit_code;
+	}
+
+	const PROCESS_INFORMATION &pi = info.pi;
+
+	DWORD dw_exit_code = 0;
+	if (!GetExitCodeProcess(pi.hProcess, &dw_exit_code)) {
+		return -1;
+	}
+
+	if (dw_exit_code == STILL_ACTIVE) {
+		return -1;
+	}
+
+	info.is_running = false;
+	info.exit_code = dw_exit_code;
+	return dw_exit_code;
 }
 
 Error OS_Windows::set_cwd(const String &p_cwd) {
@@ -1030,8 +1499,8 @@ Vector<String> OS_Windows::get_system_font_path_for_text(const String &p_font_na
 			continue;
 		}
 
-		WCHAR file_path[MAX_PATH];
-		hr = loader->GetFilePathFromKey(reference_key, reference_key_size, &file_path[0], MAX_PATH);
+		WCHAR file_path[32767];
+		hr = loader->GetFilePathFromKey(reference_key, reference_key_size, &file_path[0], 32767);
 		if (FAILED(hr)) {
 			continue;
 		}
@@ -1109,8 +1578,8 @@ String OS_Windows::get_system_font_path(const String &p_font_name, int p_weight,
 			continue;
 		}
 
-		WCHAR file_path[MAX_PATH];
-		hr = loader->GetFilePathFromKey(reference_key, reference_key_size, &file_path[0], MAX_PATH);
+		WCHAR file_path[32767];
+		hr = loader->GetFilePathFromKey(reference_key, reference_key_size, &file_path[0], 32767);
 		if (FAILED(hr)) {
 			continue;
 		}
@@ -1139,16 +1608,7 @@ String OS_Windows::get_executable_path() const {
 }
 
 bool OS_Windows::has_environment(const String &p_var) const {
-#ifdef MINGW_ENABLED
-	return _wgetenv((LPCWSTR)(p_var.utf16().get_data())) != nullptr;
-#else
-	WCHAR *env;
-	size_t len;
-	_wdupenv_s(&env, &len, (LPCWSTR)(p_var.utf16().get_data()));
-	const bool has_env = env != nullptr;
-	free(env);
-	return has_env;
-#endif
+	return GetEnvironmentVariableW((LPCWSTR)(p_var.utf16().get_data()), nullptr, 0) > 0;
 }
 
 String OS_Windows::get_environment(const String &p_var) const {
@@ -1174,16 +1634,16 @@ void OS_Windows::unset_environment(const String &p_var) const {
 }
 
 String OS_Windows::get_stdin_string() {
-	WCHAR buff[1024];
+	char buff[1024];
 	DWORD count = 0;
-	if (ReadConsoleW(GetStdHandle(STD_INPUT_HANDLE), buff, 1024, &count, nullptr)) {
-		return String::utf16((const char16_t *)buff, count);
+	if (ReadFile(GetStdHandle(STD_INPUT_HANDLE), buff, 1024, &count, nullptr)) {
+		return String::utf8((const char *)buff, count);
 	}
 
 	return String();
 }
 
-Error OS_Windows::shell_open(String p_uri) {
+Error OS_Windows::shell_open(const String &p_uri) {
 	INT_PTR ret = (INT_PTR)ShellExecuteW(nullptr, nullptr, (LPCWSTR)(p_uri.utf16().get_data()), nullptr, nullptr, SW_SHOWNORMAL);
 	if (ret > 32) {
 		return OK;
@@ -1216,7 +1676,7 @@ Error OS_Windows::shell_show_in_file_manager(String p_path, bool p_open_folder) 
 	if (!p_path.is_quoted()) {
 		p_path = p_path.quote();
 	}
-	p_path = p_path.replace("/", "\\");
+	p_path = fix_path(p_path);
 
 	INT_PTR ret = OK;
 	if (open_folder) {
@@ -1274,26 +1734,6 @@ String OS_Windows::get_locale() const {
 	return "en";
 }
 
-// We need this because GetSystemInfo() is unreliable on WOW64
-// see https://msdn.microsoft.com/en-us/library/windows/desktop/ms724381(v=vs.85).aspx
-// Taken from MSDN
-typedef BOOL(WINAPI *LPFN_ISWOW64PROCESS)(HANDLE, PBOOL);
-LPFN_ISWOW64PROCESS fnIsWow64Process;
-
-BOOL is_wow64() {
-	BOOL wow64 = FALSE;
-
-	fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandle(TEXT("kernel32")), "IsWow64Process");
-
-	if (fnIsWow64Process) {
-		if (!fnIsWow64Process(GetCurrentProcess(), &wow64)) {
-			wow64 = FALSE;
-		}
-	}
-
-	return wow64;
-}
-
 String OS_Windows::get_processor_name() const {
 	const String id = "Hardware\\Description\\System\\CentralProcessor\\0";
 
@@ -1305,7 +1745,7 @@ String OS_Windows::get_processor_name() const {
 	WCHAR buffer[256];
 	DWORD buffer_len = 256;
 	DWORD vtype = REG_SZ;
-	if (RegQueryValueExW(hkey, L"ProcessorNameString", NULL, &vtype, (LPBYTE)buffer, &buffer_len) == ERROR_SUCCESS) {
+	if (RegQueryValueExW(hkey, L"ProcessorNameString", nullptr, &vtype, (LPBYTE)buffer, &buffer_len) == ERROR_SUCCESS) {
 		RegCloseKey(hkey);
 		return String::utf16((const char16_t *)buffer, buffer_len).strip_edges();
 	} else {
@@ -1560,6 +2000,26 @@ String OS_Windows::get_system_ca_certificates() {
 
 OS_Windows::OS_Windows(HINSTANCE _hInstance) {
 	hInstance = _hInstance;
+
+	// Reset CWD to ensure long path is used.
+	Char16String current_dir_name;
+	size_t str_len = GetCurrentDirectoryW(0, nullptr);
+	current_dir_name.resize(str_len + 1);
+	GetCurrentDirectoryW(current_dir_name.size(), (LPWSTR)current_dir_name.ptrw());
+
+	Char16String new_current_dir_name;
+	str_len = GetLongPathNameW((LPCWSTR)current_dir_name.get_data(), nullptr, 0);
+	new_current_dir_name.resize(str_len + 1);
+	GetLongPathNameW((LPCWSTR)current_dir_name.get_data(), (LPWSTR)new_current_dir_name.ptrw(), new_current_dir_name.size());
+
+	SetCurrentDirectoryW((LPCWSTR)new_current_dir_name.get_data());
+
+#ifndef WINDOWS_SUBSYSTEM_CONSOLE
+	RedirectIOToConsole();
+#endif
+
+	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleCP(CP_UTF8);
 
 	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 

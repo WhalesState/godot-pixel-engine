@@ -2,10 +2,9 @@
 /*  variant_utility.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -53,13 +52,13 @@ struct VariantUtilityFunctions {
 	static double fmod(double b, double r);
 	static double fposmod(double b, double r);
 	static int64_t posmod(int64_t b, int64_t r);
-	static Variant floor(Variant x, Callable::CallError &r_error);
+	static Variant floor(const Variant &x, Callable::CallError &r_error);
 	static double floorf(double x);
 	static int64_t floori(double x);
-	static Variant ceil(Variant x, Callable::CallError &r_error);
+	static Variant ceil(const Variant &x, Callable::CallError &r_error);
 	static double ceilf(double x);
 	static int64_t ceili(double x);
-	static Variant round(Variant x, Callable::CallError &r_error);
+	static Variant round(const Variant &x, Callable::CallError &r_error);
 	static double roundf(double x);
 	static int64_t roundi(double x);
 	static Variant abs(const Variant &x, Callable::CallError &r_error);

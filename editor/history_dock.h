@@ -2,10 +2,9 @@
 /*  history_dock.h                                                        */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -54,6 +53,7 @@ class HistoryDock : public VBoxContainer {
 	void refresh_history();
 	void on_version_changed();
 	void refresh_version();
+	void save_options();
 
 protected:
 	void _notification(int p_notification);

@@ -2,10 +2,9 @@
 /*  callable_bind.cpp                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -90,6 +89,14 @@ ObjectID CallableCustomBind::get_object() const {
 
 const Callable *CallableCustomBind::get_base_comparator() const {
 	return callable.get_base_comparator();
+}
+
+int CallableCustomBind::get_argument_count(bool &r_is_valid) const {
+	int ret = callable.get_argument_count(&r_is_valid);
+	if (r_is_valid) {
+		return ret - binds.size();
+	}
+	return 0;
 }
 
 int CallableCustomBind::get_bound_arguments_count() const {
@@ -212,6 +219,14 @@ ObjectID CallableCustomUnbind::get_object() const {
 
 const Callable *CallableCustomUnbind::get_base_comparator() const {
 	return callable.get_base_comparator();
+}
+
+int CallableCustomUnbind::get_argument_count(bool &r_is_valid) const {
+	int ret = callable.get_argument_count(&r_is_valid);
+	if (r_is_valid) {
+		return ret + argcount;
+	}
+	return 0;
 }
 
 int CallableCustomUnbind::get_bound_arguments_count() const {

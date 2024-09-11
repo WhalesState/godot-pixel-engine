@@ -2,10 +2,9 @@
 /*  shader_globals_editor.h                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -34,8 +33,8 @@
 
 #include "editor/editor_autoload_settings.h"
 #include "editor/editor_data.h"
-#include "editor/editor_plugin_settings.h"
 #include "editor/editor_sectioned_inspector.h"
+#include "editor/plugins/editor_plugin_settings.h"
 #include "scene/gui/tab_container.h"
 
 class ShaderGlobalsEditorInterface;
@@ -50,6 +49,9 @@ class ShaderGlobalsEditor : public VBoxContainer {
 	OptionButton *variable_type = nullptr;
 	Button *variable_add = nullptr;
 
+	String _check_new_variable_name(const String &p_variable_name);
+
+	void _variable_name_text_changed(const String &p_variable_name);
 	void _variable_added();
 	void _variable_deleted(const String &p_variable);
 	void _changed();
@@ -59,6 +61,8 @@ protected:
 	void _notification(int p_what);
 
 public:
+	LineEdit *get_name_box() const;
+
 	ShaderGlobalsEditor();
 	~ShaderGlobalsEditor();
 };

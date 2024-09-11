@@ -2,10 +2,9 @@
 /*  gdscript_lambda_callable.h                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -60,6 +59,7 @@ public:
 	CompareLessFunc get_compare_less_func() const override;
 	ObjectID get_object() const override;
 	StringName get_method() const override;
+	int get_argument_count(bool &r_is_valid) const override;
 	void call(const Variant **p_arguments, int p_argcount, Variant &r_return_value, Callable::CallError &r_call_error) const override;
 
 	GDScriptLambdaCallable(GDScriptLambdaCallable &) = delete;
@@ -87,6 +87,8 @@ public:
 	CompareEqualFunc get_compare_equal_func() const override;
 	CompareLessFunc get_compare_less_func() const override;
 	ObjectID get_object() const override;
+	StringName get_method() const override;
+	int get_argument_count(bool &r_is_valid) const override;
 	void call(const Variant **p_arguments, int p_argcount, Variant &r_return_value, Callable::CallError &r_call_error) const override;
 
 	GDScriptLambdaSelfCallable(GDScriptLambdaSelfCallable &) = delete;

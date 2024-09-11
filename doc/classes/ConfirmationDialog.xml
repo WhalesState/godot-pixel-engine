@@ -8,7 +8,7 @@
 		To get cancel action, you can use:
 		[codeblocks]
 		[gdscript]
-		get_cancel_button().pressed.connect(self.canceled)
+		get_cancel_button().pressed.connect(_on_canceled)
 		[/gdscript]
 		[/codeblocks]
 	</description>

@@ -2,10 +2,9 @@
 /*  noise_editor_plugin.cpp                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -37,7 +36,7 @@
 #include "../noise_texture_2d.h"
 
 #include "editor/editor_inspector.h"
-#include "editor/editor_scale.h"
+#include "editor/themes/editor_scale.h"
 #include "scene/gui/button.h"
 #include "scene/gui/texture_rect.h"
 
@@ -45,13 +44,11 @@ class NoisePreview : public Control {
 	GDCLASS(NoisePreview, Control)
 
 	static const int PREVIEW_HEIGHT = 150;
-	static const int PADDING_3D_SPACE_SWITCH = 2;
 
 	Ref<Noise> _noise;
 	Size2i _preview_texture_size;
 
 	TextureRect *_texture_rect = nullptr;
-	Button *_3d_space_switch = nullptr;
 
 public:
 	NoisePreview() {
@@ -61,15 +58,6 @@ public:
 		_texture_rect->set_anchors_and_offsets_preset(Control::PRESET_FULL_RECT);
 		_texture_rect->set_stretch_mode(TextureRect::STRETCH_KEEP_ASPECT_COVERED);
 		add_child(_texture_rect);
-
-		_3d_space_switch = memnew(Button);
-		_3d_space_switch->set_text(TTR("3D"));
-		_3d_space_switch->set_tooltip_text(TTR("Toggles whether the noise preview is computed in 3D space."));
-		_3d_space_switch->set_toggle_mode(true);
-		_3d_space_switch->set_offset(SIDE_LEFT, PADDING_3D_SPACE_SWITCH);
-		_3d_space_switch->set_offset(SIDE_TOP, PADDING_3D_SPACE_SWITCH);
-		_3d_space_switch->connect(SceneStringName(pressed), callable_mp(this, &NoisePreview::_on_3d_button_pressed));
-		add_child(_3d_space_switch);
 	}
 
 	void set_noise(Ref<Noise> noise) {
@@ -78,23 +66,11 @@ public:
 		}
 		_noise = noise;
 		if (_noise.is_valid()) {
-			if (_noise->has_meta("_preview_in_3d_space_")) {
-				_3d_space_switch->set_pressed(true);
-			}
-
 			update_preview();
 		}
 	}
 
 private:
-	void _on_3d_button_pressed() {
-		if (_3d_space_switch->is_pressed()) {
-			_noise->set_meta("_preview_in_3d_space_", true);
-		} else {
-			_noise->remove_meta("_preview_in_3d_space_");
-		}
-	}
-
 	void _notification(int p_what) {
 		switch (p_what) {
 			case NOTIFICATION_RESIZED: {
@@ -110,7 +86,6 @@ private:
 			tex.instantiate();
 			tex->set_width(_preview_texture_size.width);
 			tex->set_height(_preview_texture_size.height);
-			tex->set_in_3d_space(_3d_space_switch->is_pressed());
 			tex->set_noise(_noise);
 			_texture_rect->set_texture(tex);
 		}

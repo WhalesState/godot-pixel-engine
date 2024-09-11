@@ -2,10 +2,9 @@
 /*  editor_undo_redo_manager.h                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -68,6 +67,7 @@ private:
 	HashMap<int, History> history_map;
 	Action pending_action;
 
+	bool forced_history = false;
 	bool is_committing = false;
 
 	History *_get_newest_undo();
@@ -80,6 +80,7 @@ public:
 	UndoRedo *get_history_undo_redo(int p_idx) const;
 	int get_history_id_for_object(Object *p_object) const;
 	History &get_history_for_object(Object *p_object);
+	void force_fixed_history();
 
 	void create_action_for_history(const String &p_name, int p_history_id, UndoRedo::MergeMode p_mode = UndoRedo::MERGE_DISABLE, bool p_backward_undo_ops = false);
 	void create_action(const String &p_name = "", UndoRedo::MergeMode p_mode = UndoRedo::MERGE_DISABLE, Object *p_custom_context = nullptr, bool p_backward_undo_ops = false);
@@ -124,13 +125,14 @@ public:
 	bool undo_history(int p_id);
 	bool redo();
 	bool redo_history(int p_id);
-	void clear_history(bool p_increase_version = true, int p_idx = INVALID_HISTORY);
+	void clear_history(int p_idx = INVALID_HISTORY, bool p_increase_version = true);
 
 	void set_history_as_saved(int p_idx);
 	void set_history_as_unsaved(int p_idx);
 	bool is_history_unsaved(int p_idx);
 	bool has_undo();
 	bool has_redo();
+	bool has_history(int p_idx) const;
 
 	String get_current_action_name();
 	int get_current_action_history_id();

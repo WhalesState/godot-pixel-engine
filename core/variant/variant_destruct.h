@@ -2,10 +2,9 @@
 /*  variant_destruct.h                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -36,7 +35,7 @@
 
 #include "core/object/class_db.h"
 
-template <class T>
+template <typename T>
 struct VariantDestruct {};
 
 #define MAKE_PTRDESTRUCT(m_type)                               \

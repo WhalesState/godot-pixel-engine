@@ -2,10 +2,9 @@
 /*  editor_toaster.h                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -101,20 +100,19 @@ private:
 
 	void _set_notifications_enabled(bool p_enabled);
 	void _repop_old();
-	void _popup_str(String p_message, Severity p_severity, String p_tooltip);
+	void _popup_str(const String &p_message, Severity p_severity, const String &p_tooltip);
 	void _close_button_theme_changed(Control *p_close_button);
 
 protected:
 	static EditorToaster *singleton;
-	static void _bind_methods();
 
 	void _notification(int p_what);
 
 public:
 	static EditorToaster *get_singleton();
 
-	Control *popup(Control *p_control, Severity p_severity = SEVERITY_INFO, double p_time = 0.0, String p_tooltip = String());
-	void popup_str(String p_message, Severity p_severity = SEVERITY_INFO, String p_tooltip = String());
+	Control *popup(Control *p_control, Severity p_severity = SEVERITY_INFO, double p_time = 0.0, const String &p_tooltip = String());
+	void popup_str(const String &p_message, Severity p_severity = SEVERITY_INFO, const String &p_tooltip = String());
 	void close(Control *p_control);
 
 	EditorToaster();

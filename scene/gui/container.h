@@ -2,10 +2,9 @@
 /*  container.h                                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -42,7 +41,15 @@ class Container : public Control {
 	void _child_minsize_changed();
 
 protected:
+	enum class SortableVisbilityMode {
+		VISIBLE,
+		VISIBLE_IN_TREE,
+		IGNORE,
+	};
+
 	void queue_sort();
+	Control *as_sortable_control(Node *p_node, SortableVisbilityMode p_visibility_mode = SortableVisbilityMode::VISIBLE_IN_TREE) const;
+
 	virtual void add_child_notify(Node *p_child) override;
 	virtual void move_child_notify(Node *p_child) override;
 	virtual void remove_child_notify(Node *p_child) override;

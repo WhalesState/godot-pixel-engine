@@ -2,10 +2,9 @@
 /*  shader_warnings.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -52,6 +51,7 @@ public:
 		UNUSED_LOCAL_VARIABLE,
 		FORMATTING_ERROR,
 		DEVICE_LIMIT_EXCEEDED,
+		MAGIC_POSITION_WRITE,
 		WARNING_MAX,
 	};
 
@@ -66,6 +66,7 @@ public:
 		UNUSED_LOCAL_VARIABLE_FLAG = 64U,
 		FORMATTING_ERROR_FLAG = 128U,
 		DEVICE_LIMIT_EXCEEDED_FLAG = 256U,
+		MAGIC_POSITION_WRITE_FLAG = 512U,
 	};
 
 private:

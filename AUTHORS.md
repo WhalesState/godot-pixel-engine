@@ -1,8 +1,3 @@
-# Pixel Engine
-
-Pixel Engine is built and updated from Godot Engine, the main focus is
-to provide support to godot while focusing on 2D game/tool development.
-
 # Godot Engine authors
 
 Godot Engine is developed by a community of voluntary contributors who
@@ -15,34 +10,28 @@ source code. "Significant" is arbitrarily decided, but should be fair :)
 GitHub usernames are indicated in parentheses, or as sole entry when no other
 name is available.
 
-## Godot Project Founders
+## Project Founders
 
     Juan Linietsky (reduz)
     Ariel Manzur (punto-)
 
-## Godot Lead Developer
+## Lead Developer
 
     Juan Linietsky (reduz)
 
-## Pixel Engine Lead Developer
-
-    Mounir Tohami (whalesstate)
-
-## Godot Project Manager
+## Project Manager
 
     Rémi Verschelde (akien-mga)
 
-## Pixel Engine Project Manager
-
-    Soon..
-
-## Godot Developers
+## Developers
 
 (in alphabetical order, with over 10 commits excluding merges)
 
     Aaron Franke (aaronfranke)
+    Aaron Pagano (aaronp64)
     Aaron Record (LightningAA)
     Adam Scott (adamscott)
+    Alexander Hartmann (Alex2782)
     Alexander Holland (AlexHolly)
     Alex Drozd (brno32)
     Alexey Khoroshavin (allkhor)
@@ -61,6 +50,7 @@ name is available.
     Anutrix
     Aren Villanueva (kurikaesu)
     Ariel Manzur (punto-)
+    Arman Elgudzhyan (puchik)
     AThousandShips
     aXu-AP
     Bartłomiej T. Listwon (Listwon)
@@ -70,8 +60,8 @@ name is available.
     Bernhard Liebl (poke1024)
     Bhuvan Vemula (Bhu1-V)
     bitsawer
-    BlueCube3310
     Błażej Szczygieł (zaps166)
+    BlueCube3310
     Bojidar Marinov (bojidar-bg)
     Brian Semrau (briansemrau)
     Bruno Lourenço (MadEqua)
@@ -82,8 +72,10 @@ name is available.
     Carter Anderson (cart)
     ChibiDenDen
     Chris Bradfield (cbscribe)
+    Christian Kaiser (ckaiser)
     Clay John (clayjohn)
     ConteZero
+    CookieBadger
     Dana Olson (adolson)
     Daniel J. Ramirez (djrm)
     Daniel Rakos (aqnuep)
@@ -101,6 +93,7 @@ name is available.
     Douglas Leão (DeeJayLSP)
     DualMatrix
     Ellen Poe (ellenhp)
+    Emilio Coppola (coppolaemilio)
     Emmanuel Barroga (codecustard)
     Emmanuel Leblond (touilleMan)
     Eoin O'Neill (Eoin-ONeill-Yokai)
@@ -132,6 +125,7 @@ name is available.
     Haoyu Qiu (timothyqiu)
     Hein-Pieter van Braam-Stewart (hpvb)
     Hendrik Brucker (Geometror)
+    Hilderin
     hilfazer
     Hiroshi Ogawa (hi-ogawa)
     HolonProduction
@@ -140,10 +134,11 @@ name is available.
     Hugo Locurcio (Calinou)
     Ian Bishop (ianb96)
     Ibrahn Sahir (ibrahn)
-    Ignacio Etcheverry (neikeq)
+    Ignacio Roldán Etcheverry (neikeq)
     Igor Kordiukiewicz (IgorKordiukiewicz)
     Ilaria Cislaghi (QbieShay)
     Indah Sylvia (ISylvox)
+    Ivan Šachov (van800)
     J08nY
     Jake Young (Duroxxigar)
     Jakub Grzesik (kubecz3k)
@@ -154,6 +149,7 @@ name is available.
     Jean-Michel Bernard (jmb462)
     Jérôme Gully (Nutriz)
     Jia Jun Chai (SkyLucilfer)
+    jitspoe
     Joan Fons Sanchez (JFonS)
     Johan Manuel (29jm)
     Johannes Witt (HaSa1002)
@@ -178,6 +174,8 @@ name is available.
     Lucien Menassol (Kanabenki)
     Lyuma
     Maganty Rushyendra (mrushyendra)
+    Magian (magian1127)
+    Mai Lavelle (maiself)
     Malcolm Nixon (Malcolmnixon)
     Manuele Finocchiaro (m4nu3lf)
     Marcel Admiraal (madmiraal)
@@ -190,6 +188,7 @@ name is available.
     Mario Schlack (hurikhan)
     Marios Staikopoulos (marstaik)
     Marius Hanl (Maran23)
+    Mark DiBarry (markdibarry)
     Mark Riedesel (klowner)
     Markus Sauermann (Sauermann)
     Martin Capitanio (capnm)
@@ -217,6 +216,7 @@ name is available.
     Muhammad Huri (CakHuri)
     muiroc
     myaaaaaaaaa
+    Nathalie Galla (MurderVeggie)
     Nathan Franke (nathanfranke)
     Nathan Lovato (NathanLovato)
     Nathan Warden (NathanWarden)
@@ -230,6 +230,7 @@ name is available.
     Omar El Sheikh (The-O-King)
     Ovnuniarchos
     Pascal Richter (ShyRed)
+    passivestar
     Patrick Dawson (pkdawson)
     Patrick Exner (FlameLizard)
     Patrick (firefly2442)
@@ -246,6 +247,7 @@ name is available.
     Przemysław Gołąb (n-pigeon)
     Rafael M. G. (rafallus)
     Rafał Mikrut (qarmin)
+    Raffaele Picca (RPicster)
     Ralf Hölzemer (rollenrolm)
     Ramesh Ravone (RameshRavone)
     Raphael2048
@@ -311,10 +313,9 @@ name is available.
     Zae Chao (zaevi)
     Zak Stam (zaksnet)
     Zher Huei Lee (leezh)
+    Zi Ye (MajorMcDoom)
     ZuBsPaCe
+    Дмитрий Сальников (DmitriySalnikov)
+    忘忧の (Daylily-Zeleen)
     谢天 (jsjtxietian)
     风青山 (Rindbee)
-
-## Pixel Engine Developers
-
-    Mounir Tohami (whalesstate)

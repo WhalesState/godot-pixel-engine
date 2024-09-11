@@ -2,10 +2,9 @@
 /*  text_paragraph.cpp                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -90,6 +89,10 @@ void TextParagraph::_bind_methods() {
 
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "text_overrun_behavior", PROPERTY_HINT_ENUM, "Trim Nothing,Trim Characters,Trim Words,Ellipsis,Word Ellipsis"), "set_text_overrun_behavior", "get_text_overrun_behavior");
 
+	ClassDB::bind_method(D_METHOD("set_ellipsis_char", "char"), &TextParagraph::set_ellipsis_char);
+	ClassDB::bind_method(D_METHOD("get_ellipsis_char"), &TextParagraph::get_ellipsis_char);
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "ellipsis_char"), "set_ellipsis_char", "get_ellipsis_char");
+
 	ClassDB::bind_method(D_METHOD("set_width", "width"), &TextParagraph::set_width);
 	ClassDB::bind_method(D_METHOD("get_width"), &TextParagraph::get_width);
 
@@ -170,6 +173,7 @@ void TextParagraph::_shape_lines() {
 			v_offset = TS->shaped_text_get_size(dropcap_rid).x + dropcap_margins.size.x + dropcap_margins.position.x;
 		}
 
+Size2i range = TS->shaped_text_get_range(rid);
 		if (h_offset > 0) {
 			// Dropcap, flow around.
 			PackedInt32Array line_breaks = TS->shaped_text_get_line_breaks(rid, width - h_offset, 0, brk_flags);
@@ -179,7 +183,7 @@ void TextParagraph::_shape_lines() {
 				if (!tab_stops.is_empty()) {
 					TS->shaped_text_tab_align(line, tab_stops);
 				}
-				start = line_breaks[i + 1];
+				start = (i < line_breaks.size() - 2) ? line_breaks[i + 2] : range.y;
 				lines_rid.push_back(line);
 				if (v_offset < h) {
 					break;
@@ -189,6 +193,7 @@ void TextParagraph::_shape_lines() {
 			}
 		}
 		// Use fixed for the rest of lines.
+if (start == 0 || start < range.y) {
 		PackedInt32Array line_breaks = TS->shaped_text_get_line_breaks(rid, width, start, brk_flags);
 		for (int i = 0; i < line_breaks.size(); i = i + 2) {
 			RID line = TS->shaped_text_substr(rid, line_breaks[i], line_breaks[i + 1] - line_breaks[i]);
@@ -197,6 +202,7 @@ void TextParagraph::_shape_lines() {
 			}
 			lines_rid.push_back(line);
 		}
+}
 
 		BitField<TextServer::TextOverrunFlag> overrun_flags = TextServer::OVERRUN_NO_TRIM;
 		if (overrun_behavior != TextServer::OVERRUN_NO_TRIMMING) {
@@ -253,10 +259,12 @@ void TextParagraph::_shape_lines() {
 					if (i < jst_to_line) {
 						TS->shaped_text_fit_to_width(lines_rid[i], line_w, jst_flags);
 					} else if (i == (visible_lines - 1)) {
+						TS->shaped_text_set_custom_ellipsis(lines_rid[visible_lines - 1], (el_char.length() > 0) ? el_char[0] : 0x2026);
 						TS->shaped_text_overrun_trim_to_width(lines_rid[visible_lines - 1], line_w, overrun_flags);
 					}
 				}
 			} else if (lines_hidden) {
+				TS->shaped_text_set_custom_ellipsis(lines_rid[visible_lines - 1], (el_char.length() > 0) ? el_char[0] : 0x2026);
 				TS->shaped_text_overrun_trim_to_width(lines_rid[visible_lines - 1], (visible_lines - 1 <= dropcap_lines) ? (width - h_offset) : width, overrun_flags);
 			}
 		} else {
@@ -282,9 +290,11 @@ void TextParagraph::_shape_lines() {
 				if (i < jst_to_line && alignment == HORIZONTAL_ALIGNMENT_FILL) {
 					TS->shaped_text_fit_to_width(lines_rid[i], line_w, jst_flags);
 					overrun_flags.set_flag(TextServer::OVERRUN_JUSTIFICATION_AWARE);
+					TS->shaped_text_set_custom_ellipsis(lines_rid[i], (el_char.length() > 0) ? el_char[0] : 0x2026);
 					TS->shaped_text_overrun_trim_to_width(lines_rid[i], line_w, overrun_flags);
 					TS->shaped_text_fit_to_width(lines_rid[i], line_w, jst_flags | TextServer::JUSTIFICATION_CONSTRAIN_ELLIPSIS);
 				} else {
+					TS->shaped_text_set_custom_ellipsis(lines_rid[i], (el_char.length() > 0) ? el_char[0] : 0x2026);
 					TS->shaped_text_overrun_trim_to_width(lines_rid[i], line_w, overrun_flags);
 				}
 			}
@@ -502,6 +512,23 @@ TextServer::OverrunBehavior TextParagraph::get_text_overrun_behavior() const {
 	return overrun_behavior;
 }
 
+void TextParagraph::set_ellipsis_char(const String &p_char) {
+	String c = p_char;
+	if (c.length() > 1) {
+		WARN_PRINT("Ellipsis must be exactly one character long (" + itos(c.length()) + " characters given).");
+		c = c.left(1);
+	}
+	if (el_char == c) {
+		return;
+	}
+	el_char = c;
+	lines_dirty = true;
+}
+
+String TextParagraph::get_ellipsis_char() const {
+	return el_char;
+}
+
 void TextParagraph::set_width(float p_width) {
 	_THREAD_SAFE_METHOD_
 
@@ -526,16 +553,40 @@ Size2 TextParagraph::get_size() const {
 	_THREAD_SAFE_METHOD_
 
 	const_cast<TextParagraph *>(this)->_shape_lines();
+
+	float h_offset = 0.f;
+	float v_offset = 0.f;
+	if (TS->shaped_text_get_orientation(dropcap_rid) == TextServer::ORIENTATION_HORIZONTAL) {
+		h_offset = TS->shaped_text_get_size(dropcap_rid).x + dropcap_margins.size.x + dropcap_margins.position.x;
+		v_offset = TS->shaped_text_get_size(dropcap_rid).y + dropcap_margins.size.y + dropcap_margins.position.y;
+	} else {
+		h_offset = TS->shaped_text_get_size(dropcap_rid).y + dropcap_margins.size.y + dropcap_margins.position.y;
+		v_offset = TS->shaped_text_get_size(dropcap_rid).x + dropcap_margins.size.x + dropcap_margins.position.x;
+	}
+
 	Size2 size;
 	int visible_lines = (max_lines_visible >= 0) ? MIN(max_lines_visible, (int)lines_rid.size()) : (int)lines_rid.size();
 	for (int i = 0; i < visible_lines; i++) {
 		Size2 lsize = TS->shaped_text_get_size(lines_rid[i]);
 		if (TS->shaped_text_get_orientation(lines_rid[i]) == TextServer::ORIENTATION_HORIZONTAL) {
+if (h_offset > 0 && i <= dropcap_lines) {
+				lsize.x += h_offset;
+			}
 			size.x = MAX(size.x, lsize.x);
 			size.y += lsize.y;
 		} else {
+if (h_offset > 0 && i <= dropcap_lines) {
+				lsize.y += h_offset;
+			}
 			size.x += lsize.x;
 			size.y = MAX(size.y, lsize.y);
+		}
+	}
+if (h_offset > 0) {
+		if (TS->shaped_text_get_orientation(dropcap_rid) == TextServer::ORIENTATION_HORIZONTAL) {
+			size.y = MAX(size.y, v_offset);
+		} else {
+			size.x = MAX(size.x, v_offset);
 		}
 	}
 	return size;
@@ -600,7 +651,7 @@ Rect2 TextParagraph::get_line_object_rect(int p_line, Variant p_key) const {
 			ofs.x += TS->shaped_text_get_ascent(lines_rid[i]);
 			if (i <= dropcap_lines) {
 				if (TS->shaped_text_get_inferred_direction(dropcap_rid) == TextServer::DIRECTION_LTR) {
-					ofs.x -= h_offset;
+					ofs.y -= h_offset;
 				}
 				l_width -= h_offset;
 			}
@@ -769,7 +820,7 @@ void TextParagraph::draw(RID p_canvas, const Vector2 &p_pos, const Color &p_colo
 			ofs.x += TS->shaped_text_get_ascent(lines_rid[i]);
 			if (i <= dropcap_lines) {
 				if (TS->shaped_text_get_inferred_direction(dropcap_rid) == TextServer::DIRECTION_LTR) {
-					ofs.x -= h_offset;
+					ofs.y -= h_offset;
 				}
 				l_width -= h_offset;
 			}
@@ -871,7 +922,7 @@ void TextParagraph::draw_outline(RID p_canvas, const Vector2 &p_pos, int p_outli
 			ofs.x += TS->shaped_text_get_ascent(lines_rid[i]);
 			if (i <= dropcap_lines) {
 				if (TS->shaped_text_get_inferred_direction(dropcap_rid) == TextServer::DIRECTION_LTR) {
-					ofs.x -= h_offset;
+					ofs.y -= h_offset;
 				}
 				l_width -= h_offset;
 			}

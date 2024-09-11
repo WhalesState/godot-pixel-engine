@@ -2,10 +2,9 @@
 /*  editor_debugger_inspector.cpp                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -147,12 +146,12 @@ ObjectID EditorDebuggerInspector::add_object(const Array &p_arr) {
 	debug_obj->prop_list.clear();
 	int new_props_added = 0;
 	HashSet<String> changed;
-	for (int i = 0; i < obj.properties.size(); i++) {
-		PropertyInfo &pinfo = obj.properties[i].first;
-		Variant &var = obj.properties[i].second;
+	for (SceneDebuggerObject::SceneDebuggerProperty &property : obj.properties) {
+		PropertyInfo &pinfo = property.first;
+		Variant &var = property.second;
 
 		if (pinfo.type == Variant::OBJECT) {
-			if (var.get_type() == Variant::STRING) {
+			if (var.is_string()) {
 				String path = var;
 				if (path.contains("::")) {
 					// built-in resource

@@ -2,10 +2,9 @@
 /*  viewport.h                                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -113,6 +112,7 @@ public:
 	enum RenderInfoType {
 		RENDER_INFO_TYPE_VISIBLE,
 		RENDER_INFO_TYPE_SHADOW,
+		RENDER_INFO_TYPE_CANVAS,
 		RENDER_INFO_TYPE_MAX
 	};
 
@@ -156,7 +156,6 @@ private:
 	Viewport *parent = nullptr;
 	Viewport *gui_parent = nullptr; // Whose gui.tooltip_popup it is.
 
-	Camera2D *camera_2d = nullptr;
 	HashSet<CanvasLayer *> canvas_layers;
 
 	RID viewport;
@@ -188,10 +187,10 @@ private:
 
 	bool handle_input_locally = true;
 	bool local_input_handled = false;
+
 	Ref<World2D> world_2d;
 
 	StringName input_group;
-	StringName gui_input_group;
 	StringName shortcut_input_group;
 	StringName unhandled_input_group;
 	StringName unhandled_key_input_group;
@@ -238,15 +237,14 @@ private:
 		Window *window = nullptr;
 		RID canvas_item;
 		Rect2i parent_safe_rect;
+		bool pending_window_update = false;
 	};
 
 	struct GUI {
-		bool forced_mouse_focus = false; //used for menu buttons
-		bool mouse_in_viewport = true;
+		bool mouse_in_viewport = false;
 		bool key_event_accepted = false;
 		HashMap<int, ObjectID> touch_focus;
 		Control *mouse_focus = nullptr;
-		Control *last_mouse_focus = nullptr;
 		Control *mouse_click_grabber = nullptr;
 		BitField<MouseButtonMask> mouse_focus_mask;
 		Control *key_focus = nullptr;
@@ -290,7 +288,7 @@ private:
 		Vector<SubWindow> sub_windows; // Don't obtain references or pointers to the elements, as their location can change.
 	} gui;
 
-	DefaultCanvasItemTextureFilter default_canvas_item_texture_filter = DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST;
+	DefaultCanvasItemTextureFilter default_canvas_item_texture_filter = DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_LINEAR;
 	DefaultCanvasItemTextureRepeat default_canvas_item_texture_repeat = DEFAULT_CANVAS_ITEM_TEXTURE_REPEAT_DISABLED;
 
 	bool disable_input = false;
@@ -337,9 +335,6 @@ private:
 
 	bool _gui_drop(Control *p_at_control, Point2 p_at_pos, bool p_just_check);
 
-	friend class Camera2D;
-	void _camera_2d_set(Camera2D *p_camera_2d);
-
 	friend class CanvasLayer;
 	void _canvas_layer_add(CanvasLayer *p_canvas_layer);
 	void _canvas_layer_remove(CanvasLayer *p_canvas_layer);
@@ -368,9 +363,10 @@ private:
 	uint64_t event_count = 0;
 
 	void _process_dirty_canvas_parent_orders();
+	void _propagate_world_2d_changed(Node *p_node);
 
 protected:
-	void _set_size(const Size2i &p_size, const Size2i &p_size_2d_override, bool p_allocated);
+	bool _set_size(const Size2i &p_size, const Size2i &p_size_2d_override, bool p_allocated);
 
 	Size2i _get_size() const;
 	Size2i _get_size_2d_override() const;
@@ -384,8 +380,6 @@ public:
 	void canvas_item_top_level_changed();
 
 	uint64_t get_processed_events_count() const { return event_count; }
-
-	Camera2D *get_camera_2d() const;
 
 	void update_canvas_items();
 
@@ -409,7 +403,6 @@ public:
 	Transform2D get_global_canvas_transform() const;
 
 	virtual Transform2D get_final_transform() const;
-	void assign_next_enabled_camera_2d(const StringName &p_camera_group);
 
 	void gui_set_root_order_dirty();
 
@@ -444,6 +437,7 @@ public:
 
 	void gui_release_focus();
 	Control *gui_get_focus_owner() const;
+	Control *gui_get_hovered_control() const;
 
 	PackedStringArray get_configuration_warnings() const override;
 
@@ -466,6 +460,7 @@ public:
 
 	bool gui_is_dragging() const;
 	bool gui_is_drag_successful() const;
+	void gui_cancel_drag();
 
 	Control *gui_find_control(const Point2 &p_global);
 
@@ -492,8 +487,6 @@ public:
 	Viewport *get_parent_viewport() const;
 	Window *get_base_window() const;
 
-	void pass_mouse_focus_to(Viewport *p_viewport, Control *p_control);
-
 	void set_canvas_cull_mask(uint32_t p_layers);
 	uint32_t get_canvas_cull_mask() const;
 
@@ -509,9 +502,16 @@ public:
 	virtual bool is_attached_in_viewport() const { return false; };
 	virtual bool is_sub_viewport() const { return false; };
 
-	void _propagate_world_2d_changed(Node *p_node);
+private:
+	friend class Camera2D; // Needs _camera_2d_set
+	Camera2D *camera_2d = nullptr;
+	void _camera_2d_set(Camera2D *p_camera_2d);
 
-	void _validate_property(PropertyInfo &p_property) const;
+public:
+	Camera2D *get_camera_2d() const;
+	void assign_next_enabled_camera_2d(const StringName &p_camera_group);
+
+
 	Viewport();
 	~Viewport();
 };

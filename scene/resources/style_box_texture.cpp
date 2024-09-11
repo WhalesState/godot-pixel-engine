@@ -2,10 +2,9 @@
 /*  style_box_texture.cpp                                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -101,14 +100,6 @@ void StyleBoxTexture::set_expand_margin_individual(float p_left, float p_top, fl
 float StyleBoxTexture::get_expand_margin(Side p_side) const {
 	ERR_FAIL_INDEX_V((int)p_side, 4, 0);
 	return expand_margin[p_side];
-}
-
-Point2 StyleBoxTexture::get_expand_margin_begin() const {
-	return Point2(expand_margin[SIDE_LEFT], expand_margin[SIDE_TOP]);
-}
-
-Point2 StyleBoxTexture::get_expand_margin_end() const {
-	return Point2(expand_margin[SIDE_RIGHT], expand_margin[SIDE_BOTTOM]);
 }
 
 void StyleBoxTexture::set_region_rect(const Rect2 &p_region_rect) {

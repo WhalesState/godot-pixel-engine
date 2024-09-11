@@ -2,10 +2,9 @@
 /*  register_types.h                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,7 +31,12 @@
 #ifndef TEXT_SERVER_ADV_REGISTER_TYPES_H
 #define TEXT_SERVER_ADV_REGISTER_TYPES_H
 
+#ifdef GDEXTENSION
+#include <godot_cpp/core/class_db.hpp>
+using namespace godot;
+#elif defined(GODOT_MODULE)
 #include "modules/register_module_types.h"
+#endif
 
 void initialize_text_server_adv_module(ModuleInitializationLevel p_level);
 void uninitialize_text_server_adv_module(ModuleInitializationLevel p_level);

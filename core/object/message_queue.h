@@ -2,10 +2,9 @@
 /*  message_queue.h                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -99,8 +98,6 @@ private:
 		}
 	}
 
-	Error _transfer_messages_to_main_queue();
-
 	void _add_page();
 
 	void _call_function(const Callable &p_callable, const Variant *p_args, int p_argcount, bool p_show_error);
@@ -167,6 +164,7 @@ class MessageQueue : public CallQueue {
 
 public:
 	_FORCE_INLINE_ static CallQueue *get_singleton() { return thread_singleton ? thread_singleton : main_singleton; }
+	_FORCE_INLINE_ static CallQueue *get_main_singleton() { return main_singleton; }
 
 	static void set_thread_singleton_override(CallQueue *p_thread_singleton);
 

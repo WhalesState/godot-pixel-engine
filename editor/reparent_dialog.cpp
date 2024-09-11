@@ -2,10 +2,9 @@
 /*  reparent_dialog.cpp                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -39,11 +38,11 @@
 void ReparentDialog::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE: {
-			connect("confirmed", callable_mp(this, &ReparentDialog::_reparent));
+			connect(SceneStringName(confirmed), callable_mp(this, &ReparentDialog::_reparent));
 		} break;
 
 		case NOTIFICATION_EXIT_TREE: {
-			disconnect("confirmed", callable_mp(this, &ReparentDialog::_reparent));
+			disconnect(SceneStringName(confirmed), callable_mp(this, &ReparentDialog::_reparent));
 		} break;
 	}
 }
@@ -61,7 +60,7 @@ void ReparentDialog::_reparent() {
 
 void ReparentDialog::set_current(const HashSet<Node *> &p_selection) {
 	tree->set_marked(p_selection, false, false);
-	//tree->set_selected(p_node->get_parent());
+	tree->set_selected(nullptr);
 }
 
 void ReparentDialog::_bind_methods() {
@@ -75,7 +74,6 @@ ReparentDialog::ReparentDialog() {
 
 	VBoxContainer *vbc = memnew(VBoxContainer);
 	add_child(vbc);
-	//set_child_rect(vbc);
 
 	tree = memnew(SceneTreeEditor(false));
 	tree->set_show_enabled_subscene(true);
@@ -86,10 +84,6 @@ ReparentDialog::ReparentDialog() {
 	keep_transform->set_text(TTR("Keep Global Transform"));
 	keep_transform->set_pressed(true);
 	vbc->add_child(keep_transform);
-
-	//vbc->add_margin_child("Options:",node_only);
-
-	//cancel->connect(SceneStringName(pressed), this,"_cancel");
 
 	set_ok_button_text(TTR("Reparent"));
 }

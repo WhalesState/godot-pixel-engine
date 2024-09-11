@@ -2,10 +2,9 @@
 /*  input_event_editor_plugin.cpp                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -33,9 +32,6 @@
 
 #include "editor/event_listener_line_edit.h"
 #include "editor/input_event_configuration_dialog.h"
-
-void InputEventConfigContainer::_bind_methods() {
-}
 
 void InputEventConfigContainer::_notification(int p_what) {
 	switch (p_what) {
@@ -95,7 +91,7 @@ InputEventConfigContainer::InputEventConfigContainer() {
 	add_child(memnew(Control));
 
 	config_dialog = memnew(InputEventConfigurationDialog);
-	config_dialog->connect("confirmed", callable_mp(this, &InputEventConfigContainer::_config_dialog_confirmed));
+	config_dialog->connect(SceneStringName(confirmed), callable_mp(this, &InputEventConfigContainer::_config_dialog_confirmed));
 	add_child(config_dialog);
 }
 

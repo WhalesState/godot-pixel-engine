@@ -2,10 +2,9 @@
 /*  renderer_compositor.cpp                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,8 +31,6 @@
 #include "renderer_compositor.h"
 
 #include "core/config/project_settings.h"
-#include "core/os/os.h"
-#include "core/string/print_string.h"
 
 RendererCompositor *RendererCompositor::singleton = nullptr;
 
@@ -45,5 +42,10 @@ RendererCompositor *RendererCompositor::create() {
 }
 
 RendererCompositor::RendererCompositor() {
+	ERR_FAIL_COND_MSG(singleton != nullptr, "A RendererCompositor singleton already exists.");
 	singleton = this;
+}
+
+RendererCompositor::~RendererCompositor() {
+	singleton = nullptr;
 }

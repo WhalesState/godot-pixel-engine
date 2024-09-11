@@ -2,10 +2,9 @@
 /*  test_resource.h                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -38,6 +37,8 @@
 #include "core/os/os.h"
 
 #include "thirdparty/doctest/doctest.h"
+
+#include "tests/test_macros.h"
 
 namespace TestResource {
 
@@ -75,8 +76,8 @@ TEST_CASE("[Resource] Saving and loading") {
 	Ref<Resource> child_resource = memnew(Resource);
 	child_resource->set_name("I'm a child resource");
 	resource->set_meta("other_resource", child_resource);
-	const String save_path_binary = OS::get_singleton()->get_cache_path().path_join("resource.res");
-	const String save_path_text = OS::get_singleton()->get_cache_path().path_join("resource.tres");
+	const String save_path_binary = TestUtils::get_temp_path("resource.res");
+	const String save_path_text = TestUtils::get_temp_path("resource.tres");
 	ResourceSaver::save(resource, save_path_binary);
 	ResourceSaver::save(resource, save_path_text);
 
@@ -122,12 +123,15 @@ TEST_CASE("[Resource] Breaking circular references on save") {
 	resource_b->set_meta("next", resource_c);
 	resource_c->set_meta("next", resource_b);
 
-	const String save_path_binary = OS::get_singleton()->get_cache_path().path_join("resource.res");
-	const String save_path_text = OS::get_singleton()->get_cache_path().path_join("resource.tres");
+	const String save_path_binary = TestUtils::get_temp_path("resource.res");
+	const String save_path_text = TestUtils::get_temp_path("resource.tres");
 	ResourceSaver::save(resource_a, save_path_binary);
+	// Suppress expected errors caused by the resources above being uncached.
+	ERR_PRINT_OFF;
 	ResourceSaver::save(resource_a, save_path_text);
 
 	const Ref<Resource> &loaded_resource_a_binary = ResourceLoader::load(save_path_binary);
+	ERR_PRINT_ON;
 	CHECK_MESSAGE(
 			loaded_resource_a_binary->get_name() == "A",
 			"The loaded resource name should be equal to the expected value.");

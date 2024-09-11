@@ -15,6 +15,7 @@ SCsub                               @godotengine/buildsystem
 /core/                              @godotengine/core
 /core/crypto/                       @godotengine/network
 /core/debugger/                     @godotengine/debugger
+/core/extension/                    @godotengine/gdextension
 /core/input/                        @godotengine/input
 
 # Doc
@@ -22,13 +23,9 @@ SCsub                               @godotengine/buildsystem
 /doc/                               @godotengine/documentation
 doc_classes/*                       @godotengine/documentation
 
-# Drivers
-
 ## Rendering
 /drivers/dummy/                     @godotengine/rendering
 /drivers/gles3/                     @godotengine/rendering
-/drivers/spirv-reflect/             @godotengine/rendering
-/drivers/vulkan/                    @godotengine/rendering
 
 ## OS
 /drivers/unix/                      @godotengine/_platforms
@@ -40,12 +37,13 @@ doc_classes/*                       @godotengine/documentation
 # Editor
 
 /editor/*debugger*                  @godotengine/debugger
+/editor/gui/                        @godotengine/usability @godotengine/gui-nodes
 /editor/icons/                      @godotengine/usability
 /editor/import/                     @godotengine/import
 /editor/plugins/*2d_*.*             @godotengine/2d-editor
-/editor/plugins/*3d_*.*             @godotengine/3d-editor
 /editor/plugins/script_*.*          @godotengine/script-editor
 /editor/plugins/*shader*.*          @godotengine/shaders
+/editor/themes/                     @godotengine/usability @godotengine/gui-nodes
 /editor/code_editor.*               @godotengine/script-editor
 /editor/*dock*.*                    @godotengine/docks
 /editor/*shader*.*                  @godotengine/shaders
@@ -57,6 +55,7 @@ doc_classes/*                       @godotengine/documentation
 # Misc
 
 /misc/                              @godotengine/buildsystem
+/misc/extension_api_validation/     @godotengine/gdextension @godotengine/dotnet
 
 # Modules
 
@@ -65,11 +64,7 @@ doc_classes/*                       @godotengine/documentation
 /modules/cvtt/                      @godotengine/import
 /modules/dds/                       @godotengine/import
 /modules/etc/                       @godotengine/import
-/modules/fbx/                       @godotengine/import
-/modules/gltf/                      @godotengine/import
-/modules/hdr/                       @godotengine/import
 /modules/jpg/                       @godotengine/import
-/modules/pvr/                       @godotengine/import
 /modules/squish/                    @godotengine/import
 /modules/svg/                       @godotengine/import
 /modules/tga/                       @godotengine/import
@@ -77,19 +72,8 @@ doc_classes/*                       @godotengine/documentation
 /modules/webp/                      @godotengine/import
 
 ## Network
-/modules/enet/                      @godotengine/network
 /modules/mbedtls/                   @godotengine/network
-/modules/upnp/                      @godotengine/network
-/modules/webrtc/                    @godotengine/network
 /modules/websocket/                 @godotengine/network
-
-## Rendering
-/modules/denoise/                   @godotengine/rendering
-/modules/glslang/                   @godotengine/rendering
-/modules/lightmapper_rd/            @godotengine/rendering
-/modules/meshoptimizer/             @godotengine/rendering
-/modules/vhacd/                     @godotengine/rendering
-/modules/xatlas_unwrap/             @godotengine/rendering
 
 ## Scripting
 /modules/gdscript/                  @godotengine/gdscript
@@ -101,23 +85,18 @@ doc_classes/*                       @godotengine/documentation
 /modules/text_server_fb/            @godotengine/gui-nodes
 
 ## Misc
-/modules/bullet/                    @godotengine/physics
-/modules/csg/                       @godotengine/3d-nodes
-/modules/gdnavigation/              @godotengine/navigation
-/modules/gridmap/                   @godotengine/3d-nodes
-/modules/opensimplex/               @godotengine/3d-nodes
 /modules/regex/                     @godotengine/core
 
 # Platform
 
 /platform/linuxbsd/                 @godotengine/linux-bsd
 /platform/macos/                    @godotengine/macos
+/platform/web/                      @godotengine/web
 /platform/windows/                  @godotengine/windows
 
 # Scene
 
 /scene/2d/                          @godotengine/2d-nodes
-/scene/3d/                          @godotengine/3d-nodes
 /scene/animation/                   @godotengine/animation
 /scene/debugger/                    @godotengine/debugger
 /scene/gui/                         @godotengine/gui-nodes
@@ -125,6 +104,7 @@ doc_classes/*                       @godotengine/documentation
 /scene/resources/font.*             @godotengine/gui-nodes
 /scene/resources/text_line.*        @godotengine/gui-nodes
 /scene/resources/text_paragraph.*   @godotengine/gui-nodes
+/scene/resources/visual_shader*.*   @godotengine/shaders
 /scene/theme/                       @godotengine/gui-nodes
 
 # Servers

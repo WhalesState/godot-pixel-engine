@@ -2,10 +2,9 @@
 /*  image_compress_etcpak.h                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -38,14 +37,20 @@ enum class EtcpakType {
 	ETCPAK_TYPE_ETC1,
 	ETCPAK_TYPE_ETC2,
 	ETCPAK_TYPE_ETC2_ALPHA,
+	ETCPAK_TYPE_ETC2_RA_AS_RG,
+	ETCPAK_TYPE_ETC2_R,
+	ETCPAK_TYPE_ETC2_RG,
 	ETCPAK_TYPE_DXT1,
 	ETCPAK_TYPE_DXT5,
+	ETCPAK_TYPE_DXT5_RA_AS_RG,
+	ETCPAK_TYPE_RGTC_R,
+	ETCPAK_TYPE_RGTC_RG,
 };
 
 void _compress_etc1(Image *r_img);
 void _compress_etc2(Image *r_img, Image::UsedChannels p_channels);
 void _compress_bc(Image *r_img, Image::UsedChannels p_channels);
 
-void _compress_etcpak(EtcpakType p_compresstype, Image *r_img);
+void _compress_etcpak(EtcpakType p_compress_type, Image *r_img);
 
 #endif // IMAGE_COMPRESS_ETCPAK_H

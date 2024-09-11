@@ -2,10 +2,9 @@
 /*  editor_scene_tabs.h                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -64,7 +63,9 @@ class EditorSceneTabs : public MarginContainer {
 	void _scene_tab_hovered(int p_tab);
 	void _scene_tab_exit();
 	void _scene_tab_input(const Ref<InputEvent> &p_input);
+	void _scene_tabs_resized();
 
+	void _update_tab_titles();
 	void _reposition_active_tab(int p_to_index);
 	void _update_context_menu();
 	void _disable_menu_option_if(int p_option, bool p_condition);
@@ -78,6 +79,7 @@ class EditorSceneTabs : public MarginContainer {
 
 protected:
 	void _notification(int p_what);
+	virtual void unhandled_key_input(const Ref<InputEvent> &p_event) override;
 	static void _bind_methods();
 
 public:

@@ -2,10 +2,9 @@
 /*  editor_data.cpp                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,15 +31,19 @@
 #include "editor_data.h"
 
 #include "core/config/project_settings.h"
+#include "core/extension/gdextension_manager.h"
 #include "core/io/file_access.h"
 #include "core/io/image_loader.h"
 #include "core/io/resource_loader.h"
 #include "editor/editor_node.h"
-#include "editor/editor_plugin.h"
-#include "editor/editor_scale.h"
+#include "editor/editor_string_names.h"
 #include "editor/editor_undo_redo_manager.h"
 #include "editor/multi_node_edit.h"
+#include "editor/plugins/editor_context_menu_plugin.h"
+#include "editor/plugins/editor_plugin.h"
 #include "editor/plugins/script_editor_plugin.h"
+#include "editor/themes/editor_scale.h"
+#include "scene/gui/popup_menu.h"
 #include "scene/resources/packed_scene.h"
 
 void EditorSelectionHistory::cleanup_history() {
@@ -139,6 +142,16 @@ void EditorSelectionHistory::add_object(ObjectID p_object, const String &p_prope
 
 	history.push_back(h);
 	current_elem_idx++;
+}
+
+void EditorSelectionHistory::replace_object(ObjectID p_old_object, ObjectID p_new_object) {
+	for (HistoryElement &element : history) {
+		for (int index = 0; index < element.path.size(); index++) {
+			if (element.path[index].object == p_old_object) {
+				element.path.write[index].object = p_new_object;
+			}
+		}
+	}
 }
 
 int EditorSelectionHistory::get_history_len() {
@@ -266,7 +279,7 @@ Vector<EditorPlugin *> EditorData::get_handling_sub_editors(Object *p_object) {
 	return sub_plugins;
 }
 
-EditorPlugin *EditorData::get_editor_by_name(String p_name) {
+EditorPlugin *EditorData::get_editor_by_name(const String &p_name) {
 	for (int i = editor_plugins.size() - 1; i > -1; i--) {
 		if (editor_plugins[i]->get_name() == p_name) {
 			return editor_plugins[i];
@@ -283,7 +296,7 @@ void EditorData::copy_object_params(Object *p_object) {
 	p_object->get_property_list(&pinfo);
 
 	for (const PropertyInfo &E : pinfo) {
-		if (!(E.usage & PROPERTY_USAGE_EDITOR) || E.name == "script" || E.name == "scripts") {
+		if (!(E.usage & PROPERTY_USAGE_EDITOR) || E.name == "script" || E.name == "scripts" || E.name == "resource_path") {
 			continue;
 		}
 
@@ -358,6 +371,12 @@ void EditorData::notify_edited_scene_changed() {
 void EditorData::notify_resource_saved(const Ref<Resource> &p_resource) {
 	for (int i = 0; i < editor_plugins.size(); i++) {
 		editor_plugins[i]->notify_resource_saved(p_resource);
+	}
+}
+
+void EditorData::notify_scene_saved(const String &p_path) {
+	for (int i = 0; i < editor_plugins.size(); i++) {
+		editor_plugins[i]->notify_scene_saved(p_path);
 	}
 }
 
@@ -503,6 +522,138 @@ EditorPlugin *EditorData::get_extension_editor_plugin(const StringName &p_class_
 	return plugin == nullptr ? nullptr : *plugin;
 }
 
+void EditorData::add_context_menu_plugin(ContextMenuSlot p_slot, const Ref<EditorContextMenuPlugin> &p_plugin) {
+	ContextMenu cm;
+	cm.p_slot = p_slot;
+	cm.plugin = p_plugin;
+	p_plugin->start_idx = context_menu_plugins.size() * EditorContextMenuPlugin::MAX_ITEMS;
+	context_menu_plugins.push_back(cm);
+}
+
+void EditorData::remove_context_menu_plugin(ContextMenuSlot p_slot, const Ref<EditorContextMenuPlugin> &p_plugin) {
+	for (int i = context_menu_plugins.size() - 1; i > -1; i--) {
+		if (context_menu_plugins[i].p_slot == p_slot && context_menu_plugins[i].plugin == p_plugin) {
+			context_menu_plugins.remove_at(i);
+		}
+	}
+}
+
+int EditorData::match_context_menu_shortcut(ContextMenuSlot p_slot, const Ref<InputEvent> &p_event) {
+	for (ContextMenu &cm : context_menu_plugins) {
+		if (cm.p_slot != p_slot) {
+			continue;
+		}
+		HashMap<Ref<Shortcut>, Callable> &cms = cm.plugin->context_menu_shortcuts;
+		int shortcut_idx = 0;
+		for (KeyValue<Ref<Shortcut>, Callable> &E : cms) {
+			const Ref<Shortcut> &p_shortcut = E.key;
+			if (p_shortcut->matches_event(p_event)) {
+				return EditorData::CONTEXT_MENU_ITEM_ID_BASE + cm.plugin->start_idx + shortcut_idx;
+			}
+			shortcut_idx++;
+		}
+	}
+	return 0;
+}
+
+void EditorData::add_options_from_plugins(PopupMenu *p_popup, ContextMenuSlot p_slot, const Vector<String> &p_paths) {
+	bool add_separator = false;
+
+	for (ContextMenu &cm : context_menu_plugins) {
+		if (cm.p_slot != p_slot) {
+			continue;
+		}
+		cm.plugin->clear_context_menu_items();
+		cm.plugin->add_options(p_paths);
+		HashMap<String, EditorContextMenuPlugin::ContextMenuItem> &items = cm.plugin->context_menu_items;
+		if (items.size() > 0 && !add_separator) {
+			add_separator = true;
+			p_popup->add_separator();
+		}
+		for (KeyValue<String, EditorContextMenuPlugin::ContextMenuItem> &E : items) {
+			EditorContextMenuPlugin::ContextMenuItem &item = E.value;
+
+			if (item.icon.is_valid()) {
+				p_popup->add_icon_item(item.icon, item.item_name, item.idx);
+				const int icon_size = p_popup->get_theme_constant(SNAME("class_icon_size"), EditorStringName(Editor));
+				p_popup->set_item_icon_max_width(-1, icon_size);
+			} else {
+				p_popup->add_item(item.item_name, item.idx);
+			}
+			if (item.shortcut.is_valid()) {
+				p_popup->set_item_shortcut(-1, item.shortcut, true);
+			}
+		}
+	}
+}
+
+template <typename T>
+void EditorData::invoke_plugin_callback(ContextMenuSlot p_slot, int p_option, const T &p_arg) {
+	Variant arg = p_arg;
+	Variant *argptr = &arg;
+
+	for (int i = 0; i < context_menu_plugins.size(); i++) {
+		if (context_menu_plugins[i].p_slot != p_slot || context_menu_plugins[i].plugin.is_null()) {
+			continue;
+		}
+		Ref<EditorContextMenuPlugin> plugin = context_menu_plugins[i].plugin;
+
+		// Shortcut callback.
+		int shortcut_idx = 0;
+		int shortcut_base_idx = EditorData::CONTEXT_MENU_ITEM_ID_BASE + plugin->start_idx;
+		for (KeyValue<Ref<Shortcut>, Callable> &E : plugin->context_menu_shortcuts) {
+			if (shortcut_base_idx + shortcut_idx == p_option) {
+				const Callable &callable = E.value;
+				Callable::CallError ce;
+				Variant result;
+				callable.callp((const Variant **)&argptr, 1, result, ce);
+			}
+			shortcut_idx++;
+		}
+		if (p_option < shortcut_base_idx + shortcut_idx) {
+			return;
+		}
+
+		HashMap<String, EditorContextMenuPlugin::ContextMenuItem> &items = plugin->context_menu_items;
+		for (KeyValue<String, EditorContextMenuPlugin::ContextMenuItem> &E : items) {
+			EditorContextMenuPlugin::ContextMenuItem &item = E.value;
+
+			if (p_option != item.idx || !item.callable.is_valid()) {
+				continue;
+			}
+
+			Callable::CallError ce;
+			Variant result;
+			item.callable.callp((const Variant **)&argptr, 1, result, ce);
+
+			if (ce.error != Callable::CallError::CALL_OK) {
+				String err = Variant::get_callable_error_text(item.callable, nullptr, 0, ce);
+				ERR_PRINT("Error calling function from context menu: " + err);
+			}
+		}
+	}
+	// Invoke submenu items.
+	if (p_slot == CONTEXT_SLOT_FILESYSTEM) {
+		invoke_plugin_callback(CONTEXT_SUBMENU_SLOT_FILESYSTEM_CREATE, p_option, p_arg);
+	}
+}
+
+void EditorData::filesystem_options_pressed(ContextMenuSlot p_slot, int p_option, const Vector<String> &p_selected) {
+	invoke_plugin_callback(p_slot, p_option, p_selected);
+}
+
+void EditorData::scene_tree_options_pressed(ContextMenuSlot p_slot, int p_option, const List<Node *> &p_selected) {
+	TypedArray<Node> nodes;
+	for (Node *selected : p_selected) {
+		nodes.append(selected);
+	}
+	invoke_plugin_callback(p_slot, p_option, nodes);
+}
+
+void EditorData::script_editor_options_pressed(ContextMenuSlot p_slot, int p_option, const Ref<Resource> &p_script) {
+	invoke_plugin_callback(p_slot, p_option, p_script);
+}
+
 void EditorData::add_custom_type(const String &p_type, const String &p_inherits, const Ref<Script> &p_script, const Ref<Texture2D> &p_icon) {
 	ERR_FAIL_COND_MSG(p_script.is_null(), "It's not a reference to a valid Script object.");
 	CustomType ct;
@@ -640,10 +791,12 @@ void EditorData::remove_scene(int p_idx) {
 	}
 
 	if (!edited_scene[p_idx].path.is_empty()) {
-		EditorNode::get_singleton()->emit_signal(SNAME("scene_closed"), edited_scene[p_idx].path);
+		EditorNode::get_singleton()->emit_signal("scene_closed", edited_scene[p_idx].path);
 	}
 
-	undo_redo_manager->discard_history(edited_scene[p_idx].history_id);
+	if (undo_redo_manager->has_history(edited_scene[p_idx].history_id)) { // Might not exist if scene failed to load.
+		undo_redo_manager->discard_history(edited_scene[p_idx].history_id);
+	}
 	edited_scene.remove_at(p_idx);
 }
 
@@ -713,12 +866,9 @@ bool EditorData::check_and_update_scene(int p_idx) {
 		}
 
 		new_scene->set_scene_file_path(edited_scene[p_idx].root->get_scene_file_path());
-
-		memdelete(edited_scene[p_idx].root);
-		edited_scene.write[p_idx].root = new_scene;
-		if (!new_scene->get_scene_file_path().is_empty()) {
-			edited_scene.write[p_idx].path = new_scene->get_scene_file_path();
-		}
+		Node *old_root = edited_scene[p_idx].root;
+		EditorNode::get_singleton()->set_edited_scene(new_scene);
+		memdelete(old_root);
 		edited_scene.write[p_idx].selection = new_selection;
 
 		return true;
@@ -1073,6 +1223,17 @@ void EditorData::script_class_load_icon_paths() {
 	}
 }
 
+Ref<Texture2D> EditorData::extension_class_get_icon(const String &p_class) const {
+	if (GDExtensionManager::get_singleton()->class_has_icon_path(p_class)) {
+		String icon_path = GDExtensionManager::get_singleton()->class_get_icon_path(p_class);
+		Ref<Texture2D> icon = _load_script_icon(icon_path);
+		if (icon.is_valid()) {
+			return icon;
+		}
+	}
+	return nullptr;
+}
+
 Ref<Texture2D> EditorData::_load_script_icon(const String &p_path) const {
 	if (!p_path.is_empty() && ResourceLoader::exists(p_path)) {
 		Ref<Texture2D> icon = ResourceLoader::load(p_path);
@@ -1124,6 +1285,13 @@ Ref<Texture2D> EditorData::get_script_icon(const Ref<Script> &p_script) {
 	// class of the script instead.
 	String base_type;
 	p_script->get_language()->get_global_class_name(p_script->get_path(), &base_type);
+
+	// Check if the base type is an extension-defined type.
+	Ref<Texture2D> ext_icon = extension_class_get_icon(base_type);
+	if (ext_icon.is_valid()) {
+		_script_icon_cache[p_script] = ext_icon;
+		return ext_icon;
+	}
 
 	// If no icon found, cache it as null.
 	_script_icon_cache[p_script] = Ref<Texture>();
@@ -1207,7 +1375,6 @@ void EditorSelection::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("remove_node", "node"), &EditorSelection::remove_node);
 	ClassDB::bind_method(D_METHOD("get_selected_nodes"), &EditorSelection::get_selected_nodes);
 	ClassDB::bind_method(D_METHOD("get_transformable_selected_nodes"), &EditorSelection::_get_transformable_selected_nodes);
-	ClassDB::bind_method(D_METHOD("_emit_change"), &EditorSelection::_emit_change);
 	ADD_SIGNAL(MethodInfo("selection_changed"));
 }
 
@@ -1255,7 +1422,7 @@ void EditorSelection::update() {
 	changed = false;
 	if (!emitted) {
 		emitted = true;
-		call_deferred(SNAME("_emit_change"));
+		callable_mp(this, &EditorSelection::_emit_change).call_deferred();
 	}
 }
 

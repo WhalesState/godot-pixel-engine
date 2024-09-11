@@ -2,10 +2,9 @@
 /*  editor_file_server.cpp                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -81,7 +80,7 @@ void EditorFileServer::_scan_files_changed(EditorFileSystemDirectory *efd, const
 					_add_file(remapped_path, mt, files_to_send, cached_files);
 				} else if (remap.begins_with("path.")) {
 					String feature = remap.get_slice(".", 1);
-					if (p_tags.find(feature) != -1) {
+					if (p_tags.has(feature)) {
 						String remapped_path = cf->get_value("remap", remap);
 						uint64_t mt = FileAccess::get_modified_time(remapped_path);
 						_add_file(remapped_path, mt, files_to_send, cached_files);
@@ -99,7 +98,7 @@ void EditorFileServer::_scan_files_changed(EditorFileSystemDirectory *efd, const
 	}
 }
 
-static void _add_custom_file(const String f, HashMap<String, uint64_t> &files_to_send, HashMap<String, uint64_t> &cached_files) {
+static void _add_custom_file(const String &f, HashMap<String, uint64_t> &files_to_send, HashMap<String, uint64_t> &cached_files) {
 	if (!FileAccess::exists(f)) {
 		return;
 	}
@@ -207,7 +206,7 @@ void EditorFileServer::poll() {
 		_add_custom_file(forced_export[i], files_to_send, cached_files);
 	}
 
-	_add_custom_file("res://project.pixel_designer", files_to_send, cached_files);
+	_add_custom_file("res://project.godot", files_to_send, cached_files);
 	// Check which files were removed and also add them
 	for (KeyValue<String, uint64_t> K : cached_files) {
 		if (!files_to_send.has(K.key)) {

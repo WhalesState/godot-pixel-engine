@@ -2,10 +2,9 @@
 /*  fastnoise_lite.h                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -212,9 +211,6 @@ public:
 
 	real_t get_noise_2dv(Vector2 p_v) const override;
 	real_t get_noise_2d(real_t p_x, real_t p_y) const override;
-
-	real_t get_noise_3dv(Vector3 p_v) const override;
-	real_t get_noise_3d(real_t p_x, real_t p_y, real_t p_z) const override;
 
 	void _changed();
 };

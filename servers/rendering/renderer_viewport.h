@@ -2,10 +2,9 @@
 /*  renderer_viewport.h                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -78,17 +77,13 @@ public:
 
 		RS::ViewportClearMode clear_mode = RenderingServer::VIEWPORT_CLEAR_ALWAYS;
 
-		RS::CanvasItemTextureFilter texture_filter = RS::CANVAS_ITEM_TEXTURE_FILTER_NEAREST;
+		RS::CanvasItemTextureFilter texture_filter = RS::CANVAS_ITEM_TEXTURE_FILTER_LINEAR;
 		RS::CanvasItemTextureRepeat texture_repeat = RS::CANVAS_ITEM_TEXTURE_REPEAT_DISABLED;
 
 		Color clear_color = Color(0.0, 0.0, 0.0, 1.0);
 		bool transparent_bg = false;
 
 		uint32_t canvas_cull_mask = 0xffffffff;
-
-		struct RenderInfo {
-			int info[RS::VIEWPORT_RENDER_INFO_TYPE_MAX][RS::VIEWPORT_RENDER_INFO_MAX] = {};
-		};
 
 		struct CanvasKey {
 			int64_t stacking;
@@ -121,7 +116,7 @@ public:
 
 		HashMap<RID, CanvasData> canvas_map;
 
-		RenderInfo render_info;
+		RS::RenderInfo render_info;
 
 		Viewport() {
 			update_mode = RS::VIEWPORT_UPDATE_WHEN_VISIBLE;
@@ -180,6 +175,7 @@ public:
 	void viewport_set_parent_viewport(RID p_viewport, RID p_parent_viewport);
 
 	void viewport_set_update_mode(RID p_viewport, RS::ViewportUpdateMode p_mode);
+	RS::ViewportUpdateMode viewport_get_update_mode(RID p_viewport) const;
 	void viewport_set_vflip(RID p_viewport, bool p_enable);
 
 	void viewport_set_clear_mode(RID p_viewport, RS::ViewportClearMode p_clear_mode);

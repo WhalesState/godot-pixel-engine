@@ -2,10 +2,9 @@
 /*  debug_adapter_protocol.cpp                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -348,25 +347,6 @@ int DebugAdapterProtocol::parse_variant(const Variant &p_var) {
 			variable_list.insert(id, arr);
 			return id;
 		}
-		case Variant::TRANSFORM3D: {
-			int id = variable_id++;
-			Transform3D transform = p_var;
-			DAP::Variable basis, origin;
-			basis.name = "basis";
-			origin.name = "origin";
-			basis.type = Variant::get_type_name(Variant::BASIS);
-			origin.type = Variant::get_type_name(Variant::VECTOR3);
-			basis.value = transform.basis;
-			origin.value = transform.origin;
-			basis.variablesReference = parse_variant(transform.basis);
-			origin.variablesReference = parse_variant(transform.origin);
-
-			Array arr;
-			arr.push_back(basis.to_json());
-			arr.push_back(origin.to_json());
-			variable_list.insert(id, arr);
-			return id;
-		}
 		case Variant::COLOR: {
 			int id = variable_id++;
 			Color color = p_var;
@@ -582,7 +562,7 @@ int DebugAdapterProtocol::parse_variant(const Variant &p_var) {
 		}
 		case Variant::PACKED_VECTOR3_ARRAY: {
 			int id = variable_id++;
-			PackedVector2Array array = p_var;
+			PackedVector3Array array = p_var;
 			DAP::Variable size;
 			size.name = "size";
 			size.type = Variant::get_type_name(Variant::INT);
@@ -738,8 +718,8 @@ void DebugAdapterProtocol::notify_continued() {
 	reset_stack_info();
 }
 
-void DebugAdapterProtocol::notify_output(const String &p_message) {
-	Dictionary event = parser->ev_output(p_message);
+void DebugAdapterProtocol::notify_output(const String &p_message, RemoteDebugger::MessageType p_type) {
+	Dictionary event = parser->ev_output(p_message, p_type);
 	for (List<Ref<DAPeer>>::Element *E = clients.front(); E; E = E->next()) {
 		E->get()->res_queue.push_back(event);
 	}
@@ -803,8 +783,8 @@ void DebugAdapterProtocol::on_debug_stopped() {
 	notify_terminated();
 }
 
-void DebugAdapterProtocol::on_debug_output(const String &p_message) {
-	notify_output(p_message);
+void DebugAdapterProtocol::on_debug_output(const String &p_message, int p_type) {
+	notify_output(p_message, RemoteDebugger::MessageType(p_type));
 }
 
 void DebugAdapterProtocol::on_debug_breaked(const bool &p_reallydid, const bool &p_can_debug, const String &p_reason, const bool &p_has_stackdump) {
@@ -920,7 +900,7 @@ void DebugAdapterProtocol::on_debug_stack_frame_var(const Array &p_data) {
 	List<int> scope_ids = stackframe_list.find(frame)->value;
 	ERR_FAIL_COND(scope_ids.size() != 3);
 	ERR_FAIL_INDEX(stack_var.type, 3);
-	int var_id = scope_ids[stack_var.type];
+	int var_id = scope_ids.get(stack_var.type);
 
 	DAP::Variable variable;
 

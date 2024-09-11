@@ -2,10 +2,9 @@
 /*  editor_settings.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -94,6 +93,7 @@ private:
 
 	bool save_changed_setting = true;
 	bool optimize_save = true; //do not save stuff that came from config but was not set from engine
+	bool initialized = false;
 
 	bool _set(const StringName &p_name, const Variant &p_value);
 	bool _set_only(const StringName &p_name, const Variant &p_value);
@@ -104,10 +104,14 @@ private:
 	bool _property_can_revert(const StringName &p_name) const;
 	bool _property_get_revert(const StringName &p_name, Variant &r_property) const;
 
+	void _set_initialized();
 	void _load_defaults(Ref<ConfigFile> p_extra_config = Ref<ConfigFile>());
 	void _load_godot2_text_editor_theme();
-	bool _save_text_editor_theme(String p_file);
-	bool _is_default_text_editor_theme(String p_theme_name);
+#ifndef VISUAL_SHADER_DISABLED
+	void _load_default_visual_shader_editor_theme();
+#endif
+	bool _save_text_editor_theme(const String &p_file);
+	bool _is_default_text_editor_theme(const String &p_theme_name);
 	const String _get_project_metadata_path() const;
 
 protected:
@@ -119,6 +123,8 @@ public:
 	};
 
 	static EditorSettings *get_singleton();
+	static String get_existing_settings_path();
+	static String get_newest_settings_path();
 
 	static void create();
 	void setup_language();
@@ -150,8 +156,8 @@ public:
 	void set_resource_clipboard(const Ref<Resource> &p_resource) { clipboard = p_resource; }
 	Ref<Resource> get_resource_clipboard() const { return clipboard; }
 
-	void set_project_metadata(const String &p_section, const String &p_key, Variant p_data);
-	Variant get_project_metadata(const String &p_section, const String &p_key, Variant p_default) const;
+	void set_project_metadata(const String &p_section, const String &p_key, const Variant &p_data);
+	Variant get_project_metadata(const String &p_section, const String &p_key, const Variant &p_default) const;
 
 	void set_favorites(const Vector<String> &p_favorites);
 	Vector<String> get_favorites() const;
@@ -159,11 +165,9 @@ public:
 	Vector<String> get_recent_dirs() const;
 	void load_favorites_and_recent_dirs();
 
-	bool is_dark_theme();
-
 	void list_text_editor_themes();
 	void load_text_editor_theme();
-	bool import_text_editor_theme(String p_file);
+	bool import_text_editor_theme(const String &p_file);
 	bool save_text_editor_theme();
 	bool save_text_editor_theme_as(String p_file);
 	bool is_default_text_editor_theme();
@@ -183,8 +187,11 @@ public:
 
 	void notify_changes();
 
+#ifdef TOOLS_ENABLED
+	virtual void get_argument_options(const StringName &p_function, int p_idx, List<String> *r_options) const override;
+#endif
+
 	EditorSettings();
-	~EditorSettings();
 };
 
 //not a macro any longer

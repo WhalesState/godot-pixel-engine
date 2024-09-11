@@ -2,10 +2,9 @@
 /*  random_pcg.h                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -60,6 +59,9 @@ static int __bsr_clz32(uint32_t x) {
 #define LDEXPF(s, e) ldexp(s, e)
 #endif
 
+template <typename T>
+class Vector;
+
 class RandomPCG {
 	pcg32_random_t pcg;
 	uint64_t current_seed = 0; // The seed the current generator state started from.
@@ -87,6 +89,8 @@ public:
 	_FORCE_INLINE_ uint32_t rand(uint32_t bounds) {
 		return pcg32_boundedrand_r(&pcg, bounds);
 	}
+
+	int64_t rand_weighted(const Vector<float> &p_weights);
 
 	// Obtaining floating point numbers in [0, 1] range with "good enough" uniformity.
 	// These functions sample the output of rand() as the fraction part of an infinite binary number,

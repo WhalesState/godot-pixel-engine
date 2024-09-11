@@ -2,10 +2,9 @@
 /*  delaunay_2d.h                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -65,7 +64,7 @@ public:
 		}
 	};
 
-	static Triangle create_triangle(const Vector<Vector2> &p_vertices, const int &p_a, const int &p_b, const int &p_c) {
+	static Triangle create_triangle(const Vector<Vector2> &p_vertices, int p_a, int p_b, int p_c) {
 		Triangle triangle = Triangle(p_a, p_b, p_c);
 
 		// Get the values of the circumcircle and store them inside the triangle object.

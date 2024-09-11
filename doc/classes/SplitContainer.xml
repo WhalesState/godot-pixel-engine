@@ -53,24 +53,20 @@
 	</constants>
 	<theme_items>
 		<theme_item name="grabber_hovered" data_type="color" type="Color" default="Color(0.8, 0.8, 0.8, 1)">
-			The grabber color hovered color.
 		</theme_item>
 		<theme_item name="grabber_normal" data_type="color" type="Color" default="Color(0.6, 0.6, 0.6, 1)">
-			The grabber color normal color, when autohide is 0 ([code]false[/code]).
 		</theme_item>
 		<theme_item name="grabber_pressed" data_type="color" type="Color" default="Color(1, 1, 1, 1)">
-			The grabber pressed color.
 		</theme_item>
 		<theme_item name="autohide" data_type="constant" type="int" default="1">
 			Boolean value. If 1 ([code]true[/code]), the grabber will hide automatically when it isn't under the cursor. If 0 ([code]false[/code]), it's always visible.
 		</theme_item>
 		<theme_item name="grabber_thickness" data_type="constant" type="int" default="4">
-			The thickness of the grabber line.
 		</theme_item>
 		<theme_item name="minimum_grab_thickness" data_type="constant" type="int" default="6">
 			The minimum thickness of the area users can click on to grab the splitting line. If [theme_item separation] or [theme_item h_grabber] / [theme_item v_grabber]'s thickness are too small, this ensure that the splitting line can still be dragged.
 		</theme_item>
-		<theme_item name="separation" data_type="constant" type="int" default="8">
+		<theme_item name="separation" data_type="constant" type="int" default="12">
 			The space between sides of the container.
 		</theme_item>
 	</theme_items>

@@ -2,10 +2,9 @@
 /*  wsl_peer.h                                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,6 +31,8 @@
 #ifndef WSL_PEER_H
 #define WSL_PEER_H
 
+#ifndef WEB_ENABLED
+
 #include "packet_buffer.h"
 #include "websocket_peer.h"
 
@@ -48,7 +49,7 @@
 class WSLPeer : public WebSocketPeer {
 private:
 	static CryptoCore::RandomGenerator *_static_rng;
-	static WebSocketPeer *_create() { return memnew(WSLPeer); }
+	static WebSocketPeer *_create(bool p_notify_postinitialize) { return static_cast<WebSocketPeer *>(ClassDB::creator<WSLPeer>(p_notify_postinitialize)); }
 
 	// Callbacks.
 	static ssize_t _wsl_recv_callback(wslay_event_context_ptr ctx, uint8_t *data, size_t len, int flags, void *user_data);
@@ -151,5 +152,7 @@ public:
 	WSLPeer();
 	~WSLPeer();
 };
+
+#endif // WEB_ENABLED
 
 #endif // WSL_PEER_H

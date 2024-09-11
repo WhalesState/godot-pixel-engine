@@ -2,10 +2,9 @@
 /*  editor_debugger_tree.cpp                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,6 +31,7 @@
 #include "editor_debugger_tree.h"
 
 #include "editor/editor_node.h"
+#include "editor/editor_string_names.h"
 #include "editor/gui/editor_file_dialog.h"
 #include "editor/scene_tree_dock.h"
 #include "scene/debugger/scene_debugger.h"
@@ -57,9 +57,15 @@ EditorDebuggerTree::EditorDebuggerTree() {
 void EditorDebuggerTree::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_POSTINITIALIZE: {
+			set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
+
 			connect("cell_selected", callable_mp(this, &EditorDebuggerTree::_scene_tree_selected));
 			connect("item_collapsed", callable_mp(this, &EditorDebuggerTree::_scene_tree_folded));
 			connect("item_mouse_selected", callable_mp(this, &EditorDebuggerTree::_scene_tree_rmb_selected));
+		} break;
+
+		case NOTIFICATION_ENTER_TREE: {
+			update_icon_max_width();
 		} break;
 	}
 }
@@ -118,6 +124,7 @@ void EditorDebuggerTree::_scene_tree_rmb_selected(const Vector2 &p_position, Mou
 	item_menu->clear();
 	item_menu->add_icon_item(get_editor_theme_icon(SNAME("CreateNewSceneFrom")), TTR("Save Branch as Scene"), ITEM_MENU_SAVE_REMOTE_NODE);
 	item_menu->add_icon_item(get_editor_theme_icon(SNAME("CopyNodePath")), TTR("Copy Node Path"), ITEM_MENU_COPY_NODE_PATH);
+	item_menu->add_icon_item(get_editor_theme_icon(SNAME("Collapse")), TTR("Expand/Collapse Branch"), ITEM_MENU_EXPAND_COLLAPSE);
 	item_menu->set_position(get_screen_position() + get_local_mouse_position());
 	item_menu->reset_size();
 	item_menu->popup();
@@ -146,17 +153,16 @@ void EditorDebuggerTree::update_scene_tree(const SceneDebuggerTree *p_tree, int 
 
 	// Nodes are in a flatten list, depth first. Use a stack of parents, avoid recursion.
 	List<Pair<TreeItem *, int>> parents;
-	for (int i = 0; i < p_tree->nodes.size(); i++) {
+	for (const SceneDebuggerTree::RemoteNode &node : p_tree->nodes) {
 		TreeItem *parent = nullptr;
 		if (parents.size()) { // Find last parent.
-			Pair<TreeItem *, int> &p = parents[0];
+			Pair<TreeItem *, int> &p = parents.front()->get();
 			parent = p.first;
 			if (!(--p.second)) { // If no child left, remove it.
 				parents.pop_front();
 			}
 		}
 		// Add this node.
-		const SceneDebuggerTree::RemoteNode &node = p_tree->nodes[i];
 		TreeItem *item = create_item(parent);
 		item->set_text(0, node.name);
 		if (node.scene_file_path.is_empty()) {
@@ -243,8 +249,8 @@ void EditorDebuggerTree::update_scene_tree(const SceneDebuggerTree *p_tree, int 
 				item = parent;
 				parent = item->get_parent();
 				// Check if parent expects more children.
-				for (int j = 0; j < parents.size(); j++) {
-					if (parents[j].first == item) {
+				for (const Pair<TreeItem *, int> &pair : parents) {
+					if (pair.first == item) {
 						parent = nullptr;
 						break; // Might have more children.
 					}
@@ -254,7 +260,7 @@ void EditorDebuggerTree::update_scene_tree(const SceneDebuggerTree *p_tree, int 
 	}
 	debugger_id = p_debugger; // Needed by hook, could be avoided if every debugger had its own tree
 	if (scroll_item) {
-		call_deferred(SNAME("scroll_to_item"), scroll_item);
+		callable_mp((Tree *)this, &Tree::scroll_to_item).call_deferred(scroll_item, false);
 	}
 	last_filter = filter;
 	updating_scene_tree = false;
@@ -293,6 +299,10 @@ Variant EditorDebuggerTree::get_drag_data(const Point2 &p_point) {
 	return vformat("\"%s\"", path);
 }
 
+void EditorDebuggerTree::update_icon_max_width() {
+	add_theme_constant_override("icon_max_width", get_theme_constant("class_icon_size", EditorStringName(Editor)));
+}
+
 String EditorDebuggerTree::get_selected_path() {
 	if (!get_selected()) {
 		return "";
@@ -325,8 +335,8 @@ void EditorDebuggerTree::_item_menu_id_pressed(int p_option) {
 			Ref<PackedScene> sd = memnew(PackedScene);
 			ResourceSaver::get_recognized_extensions(sd, &extensions);
 			file_dialog->clear_filters();
-			for (int i = 0; i < extensions.size(); i++) {
-				file_dialog->add_filter("*." + extensions[i], extensions[i].to_upper());
+			for (const String &extension : extensions) {
+				file_dialog->add_filter("*." + extension, extension.to_upper());
 			}
 
 			String filename = get_selected_path().get_file() + "." + extensions.front()->get().to_lower();
@@ -350,6 +360,21 @@ void EditorDebuggerTree::_item_menu_id_pressed(int p_option) {
 			}
 			DisplayServer::get_singleton()->clipboard_set(text);
 		} break;
+		case ITEM_MENU_EXPAND_COLLAPSE: {
+			TreeItem *s_item = get_selected();
+
+			if (!s_item) {
+				s_item = get_root();
+				if (!s_item) {
+					break;
+				}
+			}
+
+			bool collapsed = s_item->is_any_collapsed();
+			s_item->set_collapsed_recursive(!collapsed);
+
+			ensure_cursor_is_visible();
+		}
 	}
 }
 

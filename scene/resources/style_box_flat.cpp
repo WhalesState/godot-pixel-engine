@@ -2,10 +2,9 @@
 /*  style_box_flat.cpp                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -157,14 +156,6 @@ float StyleBoxFlat::get_expand_margin(Side p_side) const {
 	return expand_margin[p_side];
 }
 
-Point2 StyleBoxFlat::get_expand_margin_begin() const {
-	return Point2(expand_margin[SIDE_LEFT], expand_margin[SIDE_TOP]);
-}
-
-Point2 StyleBoxFlat::get_expand_margin_end() const {
-	return Point2(expand_margin[SIDE_RIGHT], expand_margin[SIDE_BOTTOM]);
-}
-
 void StyleBoxFlat::set_draw_center(bool p_enabled) {
 	draw_center = p_enabled;
 	emit_changed();
@@ -309,8 +300,8 @@ inline void draw_rounded_rectangle(Vector<Vector2> &verts, Vector<int> &indices,
 
 				const real_t x = radius * (real_t)cos((corner_index + detail / (double)adapted_corner_detail) * (Math_TAU / 4.0) + Math_PI) + corner_point.x;
 				const real_t y = radius * (real_t)sin((corner_index + detail / (double)adapted_corner_detail) * (Math_TAU / 4.0) + Math_PI) + corner_point.y;
-				const float x_skew = -skew.x * (y - ring_rect.get_center().y);
-				const float y_skew = -skew.y * (x - ring_rect.get_center().x);
+				const float x_skew = -skew.x * (y - style_rect.get_center().y);
+				const float y_skew = -skew.y * (x - style_rect.get_center().x);
 				verts.push_back(Vector2(x + x_skew, y + y_skew));
 				colors.push_back(color);
 			}

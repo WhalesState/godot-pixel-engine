@@ -1,2 +1,2 @@
 func test():
-	var _bad = BoxContainer.AlignmentMode.THIS_DOES_NOT_EXIST
+	var _bad = TileSet.TileShape.THIS_DOES_NOT_EXIST

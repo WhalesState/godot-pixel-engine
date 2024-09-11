@@ -2,10 +2,9 @@
 /*  file_access_pack.h                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -45,7 +44,8 @@
 #define PACK_FORMAT_VERSION 2
 
 enum PackFlags {
-	PACK_DIR_ENCRYPTED = 1 << 0
+	PACK_DIR_ENCRYPTED = 1 << 0,
+	PACK_REL_FILEBASE = 1 << 1,
 };
 
 enum PackFileFlags {
@@ -169,17 +169,14 @@ public:
 
 	virtual bool eof_reached() const override;
 
-	virtual uint8_t get_8() const override;
-
 	virtual uint64_t get_buffer(uint8_t *p_dst, uint64_t p_length) const override;
 
 	virtual void set_big_endian(bool p_big_endian) override;
 
 	virtual Error get_error() const override;
 
+	virtual Error resize(int64_t p_length) override { return ERR_UNAVAILABLE; }
 	virtual void flush() override;
-	virtual void store_8(uint8_t p_dest) override;
-
 	virtual void store_buffer(const uint8_t *p_src, uint64_t p_length) override;
 
 	virtual bool file_exists(const String &p_name) override;
@@ -223,7 +220,7 @@ class DirAccessPack : public DirAccess {
 	List<String> list_files;
 	bool cdir = false;
 
-	PackedData::PackedDir *_find_dir(String p_dir);
+	PackedData::PackedDir *_find_dir(const String &p_dir);
 
 public:
 	virtual Error list_dir_begin() override;

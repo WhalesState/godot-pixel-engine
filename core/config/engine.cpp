@@ -2,10 +2,9 @@
 /*  engine.cpp                                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -75,6 +74,17 @@ int Engine::get_max_fps() const {
 	return _max_fps;
 }
 
+void Engine::increment_frames_drawn() {
+	if (frame_server_synced) {
+		server_syncs++;
+	} else {
+		server_syncs = 0;
+	}
+	frame_server_synced = false;
+
+	frames_drawn++;
+}
+
 uint64_t Engine::get_frames_drawn() {
 	return frames_drawn;
 }
@@ -103,10 +113,11 @@ Dictionary Engine::get_version_info() const {
 	dict["hex"] = VERSION_HEX;
 	dict["status"] = VERSION_STATUS;
 	dict["build"] = VERSION_BUILD;
-	dict["year"] = VERSION_YEAR;
 
 	String hash = String(VERSION_HASH);
 	dict["hash"] = hash.is_empty() ? String("unknown") : hash;
+
+	dict["timestamp"] = VERSION_TIMESTAMP;
 
 	String stringver = String(dict["major"]) + "." + String(dict["minor"]);
 	if ((int)dict["patch"] != 0) {
@@ -137,13 +148,10 @@ static Array array_from_info_count(const char *const *info_list, int info_count)
 Dictionary Engine::get_author_info() const {
 	Dictionary dict;
 
-	dict["godot_lead_developers"] = array_from_info(GODOT_AUTHORS_LEAD_DEVELOPERS);
-	dict["pixel_engine_lead_developers"] = array_from_info(PIXEL_ENGINE_AUTHORS_LEAD_DEVELOPERS);
-	dict["godot_project_managers"] = array_from_info(GODOT_AUTHORS_PROJECT_MANAGERS);
-	dict["pixel_engine_project_managers"] = array_from_info(PIXEL_ENGINE_AUTHORS_PROJECT_MANAGERS);
-	dict["founders"] = array_from_info(GODOT_AUTHORS_FOUNDERS);
-	dict["godot_developers"] = array_from_info(GODOT_AUTHORS_DEVELOPERS);
-	dict["pixel_engine_developers"] = array_from_info(PIXEL_ENGINE_AUTHORS_DEVELOPERS);
+	dict["lead_developers"] = array_from_info(AUTHORS_LEAD_DEVELOPERS);
+	dict["project_managers"] = array_from_info(AUTHORS_PROJECT_MANAGERS);
+	dict["founders"] = array_from_info(AUTHORS_FOUNDERS);
+	dict["developers"] = array_from_info(AUTHORS_DEVELOPERS);
 
 	return dict;
 }
@@ -172,14 +180,14 @@ TypedArray<Dictionary> Engine::get_copyright_info() const {
 
 Dictionary Engine::get_donor_info() const {
 	Dictionary donors;
-	donors["godot_engine_patrons"] = array_from_info(GODOT_ENGINE_DONORS_PATRONS);
-	donors["godot_engine_platinum_sponsors"] = array_from_info(GODOT_ENGINE_DONORS_SPONSORS_PLATINUM);
-	donors["godot_engine_gold_sponsors"] = array_from_info(GODOT_ENGINE_DONORS_SPONSORS_GOLD);
-	donors["godot_engine_silver_sponsors"] = array_from_info(GODOT_ENGINE_DONORS_SPONSORS_SILVER);
-	donors["godot_engine_diamond_members"] = array_from_info(GODOT_ENGINE_DONORS_MEMBERS_DIAMOND);
-	donors["godot_engine_titanium_members"] = array_from_info(GODOT_ENGINE_DONORS_MEMBERS_TITANIUM);
-	donors["godot_engine_platinum_members"] = array_from_info(GODOT_ENGINE_DONORS_MEMBERS_PLATINUM);
-	donors["godot_engine_gold_members"] = array_from_info(GODOT_ENGINE_DONORS_MEMBERS_GOLD);
+	donors["patrons"] = array_from_info(DONORS_PATRONS);
+	donors["platinum_sponsors"] = array_from_info(DONORS_SPONSORS_PLATINUM);
+	donors["gold_sponsors"] = array_from_info(DONORS_SPONSORS_GOLD);
+	donors["silver_sponsors"] = array_from_info(DONORS_SPONSORS_SILVER);
+	donors["diamond_members"] = array_from_info(DONORS_MEMBERS_DIAMOND);
+	donors["titanium_members"] = array_from_info(DONORS_MEMBERS_TITANIUM);
+	donors["platinum_members"] = array_from_info(DONORS_MEMBERS_PLATINUM);
+	donors["gold_members"] = array_from_info(DONORS_MEMBERS_GOLD);
 	return donors;
 }
 
@@ -192,7 +200,7 @@ Dictionary Engine::get_license_info() const {
 }
 
 String Engine::get_license_text() const {
-	return String(PIXEL_ENGINE_LICENSE_TEXT);
+	return String(GODOT_LICENSE_TEXT);
 }
 
 String Engine::get_architecture_name() const {
@@ -243,8 +251,8 @@ bool Engine::is_validation_layers_enabled() const {
 	return use_validation_layers;
 }
 
-bool Engine::is_generate_spirv_debug_info_enabled() const {
-	return generate_spirv_debug_info;
+bool Engine::is_extra_gpu_memory_tracking_enabled() const {
+	return extra_gpu_memory_tracking;
 }
 
 void Engine::set_print_error_messages(bool p_enabled) {
@@ -253,6 +261,18 @@ void Engine::set_print_error_messages(bool p_enabled) {
 
 bool Engine::is_printing_error_messages() const {
 	return CoreGlobals::print_error_enabled;
+}
+
+void Engine::print_header(const String &p_string) const {
+	if (_print_header) {
+		print_line(p_string);
+	}
+}
+
+void Engine::print_header_rich(const String &p_string) const {
+	if (_print_header) {
+		print_line_rich(p_string);
+	}
 }
 
 void Engine::add_singleton(const Singleton &p_singleton) {
@@ -339,8 +359,19 @@ Engine *Engine::get_singleton() {
 	return singleton;
 }
 
+bool Engine::notify_frame_server_synced() {
+	frame_server_synced = true;
+	return server_syncs > SERVER_SYNC_FRAME_COUNT_WARNING;
+}
+
 Engine::Engine() {
 	singleton = this;
+}
+
+Engine::~Engine() {
+	if (singleton == this) {
+		singleton = nullptr;
+	}
 }
 
 Engine::Singleton::Singleton(const StringName &p_name, Object *p_ptr, const StringName &p_class_name) :

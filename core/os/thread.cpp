@@ -2,10 +2,9 @@
 /*  thread.cpp                                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -34,19 +33,22 @@
 
 #include "thread.h"
 
+#ifdef THREADS_ENABLED
 #include "core/object/script_language.h"
 #include "core/templates/safe_refcount.h"
-
-Thread::PlatformFunctions Thread::platform_functions;
 
 SafeNumeric<uint64_t> Thread::id_counter(1); // The first value after .increment() is 2, hence by default the main thread ID should be 1.
 
 thread_local Thread::ID Thread::caller_id = Thread::UNASSIGNED_ID;
+#endif
+
+Thread::PlatformFunctions Thread::platform_functions;
 
 void Thread::_set_platform_functions(const PlatformFunctions &p_functions) {
 	platform_functions = p_functions;
 }
 
+#ifdef THREADS_ENABLED
 void Thread::callback(ID p_caller_id, const Settings &p_settings, Callback p_callback, void *p_userdata) {
 	Thread::caller_id = p_caller_id;
 	if (platform_functions.set_priority) {
@@ -107,5 +109,7 @@ Thread::~Thread() {
 		thread.detach();
 	}
 }
+
+#endif // THREADS_ENABLED
 
 #endif // PLATFORM_THREAD_OVERRIDE

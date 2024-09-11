@@ -2,10 +2,9 @@
 /*  undo_redo.h                                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -81,9 +80,11 @@ private:
 	int current_action = -1;
 	bool force_keep_in_merge_ends = false;
 	int action_level = 0;
+	int max_steps = 0;
 	MergeMode merge_mode = MERGE_DISABLE;
 	bool merging = false;
 	uint64_t version = 1;
+	int merge_total = 0;
 
 	void _pop_history_tail();
 	void _process_operation_list(List<Operation>::Element *E, bool p_execute);
@@ -135,6 +136,9 @@ public:
 	bool is_merging() const;
 
 	uint64_t get_version() const;
+
+	void set_max_steps(int p_max_steps);
+	int get_max_steps() const;
 
 	void set_commit_notify_callback(CommitNotifyCallback p_callback, void *p_ud);
 

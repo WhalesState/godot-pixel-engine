@@ -2,10 +2,9 @@
 /*  scene_debugger.cpp                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -74,11 +73,6 @@ void SceneDebugger::deinitialize() {
 	}
 }
 
-#ifdef MINGW_ENABLED
-#undef near
-#undef far
-#endif
-
 #ifdef DEBUG_ENABLED
 Error SceneDebugger::parse_message(void *p_user, const String &p_msg, const Array &p_args, bool &r_captured) {
 	SceneTree *scene_tree = SceneTree::get_singleton();
@@ -102,17 +96,17 @@ Error SceneDebugger::parse_message(void *p_user, const String &p_msg, const Arra
 		EngineDebugger::get_singleton()->send_message("filesystem:update_file", { arr });
 
 	} else if (p_msg == "inspect_object") { // Object Inspect
-		ERR_FAIL_COND_V(p_args.size() < 1, ERR_INVALID_DATA);
+		ERR_FAIL_COND_V(p_args.is_empty(), ERR_INVALID_DATA);
 		ObjectID id = p_args[0];
 		_send_object_id(id);
 
 	} else if (p_msg == "override_camera_2D:set") { // Camera
-		ERR_FAIL_COND_V(p_args.size() < 1, ERR_INVALID_DATA);
+		ERR_FAIL_COND_V(p_args.is_empty(), ERR_INVALID_DATA);
 		bool enforce = p_args[0];
 		scene_tree->get_root()->enable_canvas_transform_override(enforce);
 
 	} else if (p_msg == "override_camera_2D:transform") {
-		ERR_FAIL_COND_V(p_args.size() < 1, ERR_INVALID_DATA);
+		ERR_FAIL_COND_V(p_args.is_empty(), ERR_INVALID_DATA);
 		Transform2D transform = p_args[0];
 		scene_tree->get_root()->set_canvas_transform_override(transform);
 	} else if (p_msg == "set_object_property") {
@@ -182,7 +176,7 @@ Error SceneDebugger::parse_message(void *p_user, const String &p_msg, const Arra
 		live_editor->_instance_node_func(p_args[0], p_args[1], p_args[2]);
 
 	} else if (p_msg == "live_remove_node") {
-		ERR_FAIL_COND_V(p_args.size() < 1, ERR_INVALID_DATA);
+		ERR_FAIL_COND_V(p_args.is_empty(), ERR_INVALID_DATA);
 		live_editor->_remove_node_func(p_args[0]);
 
 	} else if (p_msg == "live_remove_and_keep_node") {
@@ -402,9 +396,9 @@ void SceneDebuggerObject::_parse_script_properties(Script *p_script, ScriptInsta
 
 void SceneDebuggerObject::serialize(Array &r_arr, int p_max_size) {
 	Array send_props;
-	for (int i = 0; i < properties.size(); i++) {
-		const PropertyInfo &pi = properties[i].first;
-		Variant &var = properties[i].second;
+	for (SceneDebuggerObject::SceneDebuggerProperty &property : properties) {
+		const PropertyInfo &pi = property.first;
+		Variant &var = property.second;
 
 		Ref<Resource> res = var;
 
@@ -491,7 +485,7 @@ SceneDebuggerTree::SceneDebuggerTree(Node *p_root) {
 	const StringName &is_visible_sn = SNAME("is_visible");
 	const StringName &is_visible_in_tree_sn = SNAME("is_visible_in_tree");
 	while (stack.size()) {
-		Node *n = stack[0];
+		Node *n = stack.front()->get();
 		stack.pop_front();
 
 		int count = n->get_child_count();
@@ -606,7 +600,27 @@ void LiveEditor::_node_set_func(int p_id, const StringName &p_prop, const Varian
 		}
 		Node *n2 = n->get_node(np);
 
+		// Do not change transform of edited scene root, unless it's the scene being played.
+		// See GH-86659 for additional context.
+		bool keep_transform = (n2 == n) && (n2->get_parent() != scene_tree->root);
+		Variant orig_tf;
+
+		if (keep_transform) {
+			if (n2->is_class("CanvasItem")) {
+				orig_tf = n2->call("_edit_get_state");
+			}
+		}
+
 		n2->set(p_prop, p_value);
+
+		if (keep_transform) {
+			if (n2->is_class("CanvasItem")) {
+				Variant new_tf = n2->call("_edit_get_state");
+				if (new_tf != orig_tf) {
+					n2->call("_edit_set_state", orig_tf);
+				}
+			}
+		}
 	}
 }
 
@@ -650,8 +664,28 @@ void LiveEditor::_node_call_func(int p_id, const StringName &p_method, const Var
 		}
 		Node *n2 = n->get_node(np);
 
+		// Do not change transform of edited scene root, unless it's the scene being played.
+		// See GH-86659 for additional context.
+		bool keep_transform = (n2 == n) && (n2->get_parent() != scene_tree->root);
+		Variant orig_tf;
+
+		if (keep_transform) {
+			if (n2->is_class("CanvasItem")) {
+				orig_tf = n2->call("_edit_get_state");
+			}
+		}
+
 		Callable::CallError ce;
 		n2->callp(p_method, p_args, p_argcount, ce);
+
+		if (keep_transform) {
+			if (n2->is_class("CanvasItem")) {
+				Variant new_tf = n2->call("_edit_get_state");
+				if (new_tf != orig_tf) {
+					n2->call("_edit_set_state", orig_tf);
+				}
+			}
+		}
 	}
 }
 

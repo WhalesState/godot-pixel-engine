@@ -2,10 +2,9 @@
 /*  directory_create_dialog.cpp                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -33,8 +32,8 @@
 
 #include "core/io/dir_access.h"
 #include "editor/editor_node.h"
-#include "editor/editor_scale.h"
 #include "editor/gui/editor_validation_panel.h"
+#include "editor/themes/editor_scale.h"
 #include "scene/gui/box_container.h"
 #include "scene/gui/label.h"
 #include "scene/gui/line_edit.h"
@@ -111,7 +110,7 @@ void DirectoryCreateDialog::ok_pressed() {
 	err = da->make_dir_recursive(path);
 
 	if (err == OK) {
-		emit_signal(SNAME("dir_created"));
+		emit_signal(SNAME("dir_created"), base_dir.path_join(path));
 	} else {
 		EditorNode::get_singleton()->show_warning(TTR("Could not create folder."));
 	}
@@ -120,7 +119,7 @@ void DirectoryCreateDialog::ok_pressed() {
 
 void DirectoryCreateDialog::_post_popup() {
 	ConfirmationDialog::_post_popup();
-	dir_path->edit();
+	dir_path->grab_focus();
 }
 
 void DirectoryCreateDialog::config(const String &p_base_dir) {
@@ -132,7 +131,7 @@ void DirectoryCreateDialog::config(const String &p_base_dir) {
 }
 
 void DirectoryCreateDialog::_bind_methods() {
-	ADD_SIGNAL(MethodInfo("dir_created"));
+	ADD_SIGNAL(MethodInfo("dir_created", PropertyInfo(Variant::STRING, "path")));
 }
 
 DirectoryCreateDialog::DirectoryCreateDialog() {
@@ -160,5 +159,5 @@ DirectoryCreateDialog::DirectoryCreateDialog() {
 	validation_panel->set_update_callback(callable_mp(this, &DirectoryCreateDialog::_on_dir_path_changed));
 	validation_panel->set_accept_button(get_ok_button());
 
-	dir_path->connect("text_changed", callable_mp(validation_panel, &EditorValidationPanel::update).unbind(1));
+	dir_path->connect(SceneStringName(text_changed), callable_mp(validation_panel, &EditorValidationPanel::update).unbind(1));
 }

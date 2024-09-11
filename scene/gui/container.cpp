@@ -2,10 +2,9 @@
 /*  container.cpp                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -30,8 +29,6 @@
 /**************************************************************************/
 
 #include "container.h"
-
-#include "core/object/message_queue.h"
 
 void Container::_child_minsize_changed() {
 	update_minimum_size();
@@ -139,8 +136,22 @@ void Container::queue_sort() {
 		return;
 	}
 
-	MessageQueue::get_singleton()->push_callable(callable_mp(this, &Container::_sort_children));
+	callable_mp(this, &Container::_sort_children).call_deferred();
 	pending_sort = true;
+}
+
+Control *Container::as_sortable_control(Node *p_node, SortableVisbilityMode p_visibility_mode) const {
+	Control *c = Object::cast_to<Control>(p_node);
+	if (!c || c->is_set_as_top_level()) {
+		return nullptr;
+	}
+	if (p_visibility_mode == SortableVisbilityMode::VISIBLE && !c->is_visible()) {
+		return nullptr;
+	}
+	if (p_visibility_mode == SortableVisbilityMode::VISIBLE_IN_TREE && !c->is_visible_in_tree()) {
+		return nullptr;
+	}
+	return c;
 }
 
 Vector<int> Container::get_allowed_size_flags_horizontal() const {

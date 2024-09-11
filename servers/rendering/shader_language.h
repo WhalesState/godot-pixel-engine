@@ -2,10 +2,9 @@
 /*  shader_language.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -60,6 +59,7 @@ public:
 		TK_FLOAT_CONSTANT,
 		TK_INT_CONSTANT,
 		TK_UINT_CONSTANT,
+		TK_STRING_CONSTANT,
 		TK_TYPE_VOID,
 		TK_TYPE_BOOL,
 		TK_TYPE_BVEC2,
@@ -168,9 +168,9 @@ public:
 		TK_HINT_ANISOTROPY_TEXTURE,
 		TK_HINT_SOURCE_COLOR,
 		TK_HINT_RANGE,
+		TK_HINT_ENUM,
 		TK_HINT_INSTANCE_INDEX,
 		TK_HINT_SCREEN_TEXTURE,
-		TK_HINT_NORMAL_ROUGHNESS_TEXTURE,
 		TK_HINT_DEPTH_TEXTURE,
 		TK_FILTER_NEAREST,
 		TK_FILTER_LINEAR,
@@ -368,7 +368,7 @@ public:
 		virtual ~Node() {}
 	};
 
-	template <class T>
+	template <typename T>
 	T *alloc_node() {
 		T *node = memnew(T);
 		node->next = nodes;
@@ -563,49 +563,13 @@ public:
 				Node(NODE_TYPE_STRUCT) {}
 	};
 
-	struct FunctionNode : public Node {
-		struct Argument {
-			ArgumentQualifier qualifier;
-			StringName name;
-			DataType type;
-			StringName type_str;
-			DataPrecision precision;
-			//for passing textures as arguments
-			bool tex_argument_check;
-			TextureFilter tex_argument_filter;
-			TextureRepeat tex_argument_repeat;
-			bool tex_builtin_check;
-			StringName tex_builtin;
-			bool is_const;
-			int array_size;
-
-			HashMap<StringName, HashSet<int>> tex_argument_connect;
-		};
-
-		StringName name;
-		DataType return_type = TYPE_VOID;
-		StringName return_struct_name;
-		DataPrecision return_precision = PRECISION_DEFAULT;
-		int return_array_size = 0;
-		Vector<Argument> arguments;
-		BlockNode *body = nullptr;
-		bool can_discard = false;
-
-		virtual DataType get_datatype() const override { return return_type; }
-		virtual String get_datatype_name() const override { return String(return_struct_name); }
-		virtual int get_array_size() const override { return return_array_size; }
-
-		FunctionNode() :
-				Node(NODE_TYPE_FUNCTION) {}
-	};
-
 	struct ShaderNode : public Node {
 		struct Constant {
 			StringName name;
 			DataType type;
-			StringName type_str;
+			StringName struct_name;
 			DataPrecision precision;
-			ConstantNode *initializer = nullptr;
+			Node *initializer = nullptr;
 			int array_size;
 		};
 
@@ -644,6 +608,7 @@ public:
 			enum Hint {
 				HINT_NONE,
 				HINT_RANGE,
+				HINT_ENUM,
 				HINT_SOURCE_COLOR,
 				HINT_NORMAL,
 				HINT_ROUGHNESS_NORMAL,
@@ -657,7 +622,6 @@ public:
 				HINT_DEFAULT_TRANSPARENT,
 				HINT_ANISOTROPY,
 				HINT_SCREEN_TEXTURE,
-				HINT_NORMAL_ROUGHNESS_TEXTURE,
 				HINT_DEPTH_TEXTURE,
 				HINT_MAX
 			};
@@ -669,6 +633,7 @@ public:
 			};
 
 			int order = 0;
+			int prop_order = 0;
 			int texture_order = 0;
 			int texture_binding = 0;
 			DataType type = TYPE_VOID;
@@ -681,9 +646,15 @@ public:
 			TextureFilter filter = FILTER_DEFAULT;
 			TextureRepeat repeat = REPEAT_DEFAULT;
 			float hint_range[3];
+			PackedStringArray hint_enum_names;
 			int instance_index = 0;
 			String group;
 			String subgroup;
+
+			_FORCE_INLINE_ bool is_texture() const {
+				// Order is assigned to -1 for texture uniforms.
+				return order < 0;
+			}
 
 			Uniform() {
 				hint_range[0] = 0.0f;
@@ -707,6 +678,43 @@ public:
 				Node(NODE_TYPE_SHADER) {}
 	};
 
+	struct FunctionNode : public Node {
+		struct Argument {
+			ArgumentQualifier qualifier;
+			StringName name;
+			DataType type;
+			StringName struct_name;
+			DataPrecision precision;
+			//for passing textures as arguments
+			bool tex_argument_check;
+			TextureFilter tex_argument_filter;
+			TextureRepeat tex_argument_repeat;
+			bool tex_builtin_check;
+			StringName tex_builtin;
+			ShaderNode::Uniform::Hint tex_hint;
+			bool is_const;
+			int array_size;
+
+			HashMap<StringName, HashSet<int>> tex_argument_connect;
+		};
+
+		StringName name;
+		DataType return_type = TYPE_VOID;
+		StringName return_struct_name;
+		DataPrecision return_precision = PRECISION_DEFAULT;
+		int return_array_size = 0;
+		Vector<Argument> arguments;
+		BlockNode *body = nullptr;
+		bool can_discard = false;
+
+		virtual DataType get_datatype() const override { return return_type; }
+		virtual String get_datatype_name() const override { return String(return_struct_name); }
+		virtual int get_array_size() const override { return return_array_size; }
+
+		FunctionNode() :
+				Node(NODE_TYPE_FUNCTION) {}
+	};
+
 	struct UniformOrderComparator {
 		_FORCE_INLINE_ bool operator()(const Pair<StringName, int> &A, const Pair<StringName, int> &B) const {
 			return A.second < B.second;
@@ -719,6 +727,12 @@ public:
 			Operator op;
 			Node *node = nullptr;
 		};
+	};
+
+	struct ExpressionInfo {
+		Vector<Expression> *expression = nullptr;
+		TokenType tt_break = TK_EMPTY;
+		bool is_last_expr = false;
 	};
 
 	struct VarInfo {
@@ -784,6 +798,8 @@ public:
 	static void get_keyword_list(List<String> *r_keywords);
 	static bool is_control_flow_keyword(String p_keyword);
 	static void get_builtin_funcs(List<String> *r_keywords);
+
+	static int instance_counter;
 
 	struct BuiltInInfo {
 		DataType type = TYPE_VOID;
@@ -869,7 +885,7 @@ public:
 		bool can_discard = false;
 		bool main_function = false;
 	};
-	static bool has_builtin(const HashMap<StringName, ShaderLanguage::FunctionInfo> &p_functions, const StringName &p_name);
+	static bool has_builtin(const HashMap<StringName, ShaderLanguage::FunctionInfo> &p_functions, const StringName &p_name, bool p_check_global_funcs = false);
 
 	typedef DataType (*GlobalShaderUniformGetTypeFunc)(const StringName &p_name);
 
@@ -897,6 +913,28 @@ private:
 
 	Vector<FilePosition> include_positions;
 	HashSet<String> include_markers_handled;
+
+	// Additional function information (eg. call hierarchy). No need to expose it to compiler.
+	struct CallInfo {
+		struct Item {
+			enum ItemType {
+				ITEM_TYPE_BUILTIN,
+				ITEM_TYPE_VARYING,
+			} type;
+
+			TkPos pos;
+
+			Item() {}
+			Item(ItemType p_type, TkPos p_pos) :
+					type(p_type), pos(p_pos) {}
+		};
+
+		StringName name;
+		List<Pair<StringName, Item>> uses_restricted_items;
+		List<CallInfo *> calls;
+	};
+
+	RBMap<StringName, CallInfo> calls_info;
 
 #ifdef DEBUG_ENABLED
 	struct Usage {
@@ -997,6 +1035,7 @@ private:
 	Token _make_token(TokenType p_type, const StringName &p_text = StringName());
 	Token _get_token();
 	bool _lookup_next(Token &r_tk);
+	Token _peek();
 
 	ShaderNode *shader = nullptr;
 
@@ -1020,6 +1059,10 @@ private:
 	bool _is_operator_assign(Operator p_op) const;
 	bool _validate_assign(Node *p_node, const FunctionInfo &p_function_info, String *r_message = nullptr);
 	bool _validate_operator(OperatorNode *p_op, DataType *r_ret_type = nullptr, int *r_ret_size = nullptr);
+
+	struct BuiltinEntry {
+		const char *name;
+	};
 
 	struct BuiltinFuncDef {
 		enum { MAX_ARGS = 5 };
@@ -1063,11 +1106,13 @@ private:
 #endif // DEBUG_ENABLED
 
 	const HashMap<StringName, FunctionInfo> *stages = nullptr;
+	bool is_supported_frag_only_funcs = false;
 
 	bool _get_completable_identifier(BlockNode *p_block, CompletionType p_type, StringName &identifier);
 	static const BuiltinFuncDef builtin_func_defs[];
 	static const BuiltinFuncOutArgs builtin_func_out_args[];
 	static const BuiltinFuncConstArgs builtin_func_const_args[];
+	static const BuiltinEntry frag_only_func_defs[];
 
 	static bool is_const_suffix_lut_initialized;
 
@@ -1077,18 +1122,22 @@ private:
 
 	bool _validate_function_call(BlockNode *p_block, const FunctionInfo &p_function_info, OperatorNode *p_func, DataType *r_ret_type, StringName *r_ret_type_str, bool *r_is_custom_function = nullptr);
 	bool _parse_function_arguments(BlockNode *p_block, const FunctionInfo &p_function_info, OperatorNode *p_func, int *r_complete_arg = nullptr);
-	bool _propagate_function_call_sampler_uniform_settings(StringName p_name, int p_argument, TextureFilter p_filter, TextureRepeat p_repeat);
-	bool _propagate_function_call_sampler_builtin_reference(StringName p_name, int p_argument, const StringName &p_builtin);
+	ShaderNode::Uniform::Hint _sanitize_hint(ShaderNode::Uniform::Hint p_hint);
+	bool _propagate_function_call_sampler_uniform_settings(const StringName &p_name, int p_argument, TextureFilter p_filter, TextureRepeat p_repeat, ShaderNode::Uniform::Hint p_hint);
+	bool _propagate_function_call_sampler_builtin_reference(const StringName &p_name, int p_argument, const StringName &p_builtin);
 	bool _validate_varying_assign(ShaderNode::Varying &p_varying, String *r_message);
 	bool _check_node_constness(const Node *p_node) const;
 
-	Node *_parse_expression(BlockNode *p_block, const FunctionInfo &p_function_info);
+	bool _check_restricted_func(const StringName &p_name, const StringName &p_current_function) const;
+	bool _validate_restricted_func(const StringName &p_call_name, const CallInfo *p_func_info, bool p_is_builtin_hint = false);
+
+	Node *_parse_expression(BlockNode *p_block, const FunctionInfo &p_function_info, const ExpressionInfo *p_previous_expression_info = nullptr);
 	Error _parse_array_size(BlockNode *p_block, const FunctionInfo &p_function_info, bool p_forbid_unknown_size, Node **r_size_expression, int *r_array_size, bool *r_unknown_size);
 	Node *_parse_array_constructor(BlockNode *p_block, const FunctionInfo &p_function_info);
 	Node *_parse_array_constructor(BlockNode *p_block, const FunctionInfo &p_function_info, DataType p_type, const StringName &p_struct_name, int p_array_size);
 	ShaderLanguage::Node *_reduce_expression(BlockNode *p_block, ShaderLanguage::Node *p_node);
 
-	Node *_parse_and_reduce_expression(BlockNode *p_block, const FunctionInfo &p_function_info);
+	Node *_parse_and_reduce_expression(BlockNode *p_block, const FunctionInfo &p_function_info, const ExpressionInfo *p_previous_expression_info = nullptr);
 	Error _parse_block(BlockNode *p_block, const FunctionInfo &p_function_info, bool p_just_one = false, bool p_can_break = false, bool p_can_continue = false);
 	String _get_shader_type_list(const HashSet<String> &p_shader_types) const;
 	String _get_qualifier_str(ArgumentQualifier p_qualifier) const;

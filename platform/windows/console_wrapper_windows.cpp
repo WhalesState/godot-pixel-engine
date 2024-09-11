@@ -2,10 +2,9 @@
 /*  console_wrapper_windows.cpp                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -41,8 +40,8 @@
 
 int main(int argc, char *argv[]) {
 	// Get executable name.
-	WCHAR exe_name[MAX_PATH] = {};
-	if (!GetModuleFileNameW(nullptr, exe_name, MAX_PATH)) {
+	WCHAR exe_name[32767] = {};
+	if (!GetModuleFileNameW(nullptr, exe_name, 32767)) {
 		wprintf(L"GetModuleFileName failed, error %d\n", GetLastError());
 		return -1;
 	}
@@ -137,6 +136,10 @@ int main(int argc, char *argv[]) {
 	STARTUPINFOW si;
 	ZeroMemory(&si, sizeof(si));
 	si.cb = sizeof(si);
+	si.dwFlags = STARTF_USESTDHANDLES;
+	si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+	si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+	si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
 	WCHAR new_command_line[32767];
 	_snwprintf_s(new_command_line, 32767, _TRUNCATE, L"%ls %ls", exe_name, PathGetArgsW(GetCommandLineW()));

@@ -33,7 +33,6 @@
 			<return type="float" />
 			<param index="0" name="side" type="int" enum="Side" />
 			<description>
-				Override how the side margins are calculated if [method get_margin] returns -1.
 			</description>
 		</method>
 		<method name="_test_mask" qualifiers="virtual const">
@@ -63,16 +62,6 @@
 			<return type="CanvasItem" />
 			<description>
 				Returns the [CanvasItem] that handles its [constant CanvasItem.NOTIFICATION_DRAW] or [method CanvasItem._draw] callback at this moment.
-			</description>
-		</method>
-		<method name="get_expand_margin_begin" qualifiers="const">
-			<return type="Vector2" />
-			<description>
-			</description>
-		</method>
-		<method name="get_expand_margin_end" qualifiers="const">
-			<return type="Vector2" />
-			<description>
 			</description>
 		</method>
 		<method name="get_margin" qualifiers="const">

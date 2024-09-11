@@ -2,10 +2,9 @@
 /*  gradient_texture.h                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -42,7 +41,6 @@ private:
 	bool update_pending = false;
 	mutable RID texture;
 	int width = 256;
-	bool use_hdr = false;
 
 	void _queue_update();
 	void _update();
@@ -56,9 +54,6 @@ public:
 
 	void set_width(int p_width);
 	int get_width() const override;
-
-	void set_use_hdr(bool p_enabled);
-	bool is_using_hdr() const;
 
 	virtual RID get_rid() const override;
 	virtual int get_height() const override { return 1; }
@@ -93,8 +88,6 @@ private:
 	int width = 64;
 	int height = 64;
 
-	bool use_hdr = false;
-
 	Vector2 fill_from;
 	Vector2 fill_to = Vector2(1, 0);
 
@@ -118,9 +111,6 @@ public:
 	virtual int get_width() const override;
 	void set_height(int p_height);
 	virtual int get_height() const override;
-
-	void set_use_hdr(bool p_enabled);
-	bool is_using_hdr() const;
 
 	void set_fill(Fill p_fill);
 	Fill get_fill() const;

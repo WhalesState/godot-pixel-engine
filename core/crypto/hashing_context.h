@@ -2,10 +2,9 @@
 /*  hashing_context.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -55,7 +54,7 @@ protected:
 
 public:
 	Error start(HashType p_type);
-	Error update(PackedByteArray p_chunk);
+	Error update(const PackedByteArray &p_chunk);
 	PackedByteArray finish();
 
 	HashingContext() {}

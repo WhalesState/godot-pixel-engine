@@ -2,10 +2,9 @@
 /*  stream_peer.cpp                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -407,6 +406,54 @@ void StreamPeer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_var", "allow_objects"), &StreamPeer::get_var, DEFVAL(false));
 
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "big_endian"), "set_big_endian", "is_big_endian_enabled");
+}
+
+////////////////////////////////
+
+Error StreamPeerExtension::get_data(uint8_t *r_buffer, int p_bytes) {
+	Error err;
+	int received = 0;
+	if (GDVIRTUAL_CALL(_get_data, r_buffer, p_bytes, &received, err)) {
+		return err;
+	}
+	WARN_PRINT_ONCE("StreamPeerExtension::_get_data is unimplemented!");
+	return FAILED;
+}
+
+Error StreamPeerExtension::get_partial_data(uint8_t *r_buffer, int p_bytes, int &r_received) {
+	Error err;
+	if (GDVIRTUAL_CALL(_get_partial_data, r_buffer, p_bytes, &r_received, err)) {
+		return err;
+	}
+	WARN_PRINT_ONCE("StreamPeerExtension::_get_partial_data is unimplemented!");
+	return FAILED;
+}
+
+Error StreamPeerExtension::put_data(const uint8_t *p_data, int p_bytes) {
+	Error err;
+	int sent = 0;
+	if (GDVIRTUAL_CALL(_put_data, p_data, p_bytes, &sent, err)) {
+		return err;
+	}
+	WARN_PRINT_ONCE("StreamPeerExtension::_put_data is unimplemented!");
+	return FAILED;
+}
+
+Error StreamPeerExtension::put_partial_data(const uint8_t *p_data, int p_bytes, int &r_sent) {
+	Error err;
+	if (GDVIRTUAL_CALL(_put_data, p_data, p_bytes, &r_sent, err)) {
+		return err;
+	}
+	WARN_PRINT_ONCE("StreamPeerExtension::_put_partial_data is unimplemented!");
+	return FAILED;
+}
+
+void StreamPeerExtension::_bind_methods() {
+	GDVIRTUAL_BIND(_get_data, "r_buffer", "r_bytes", "r_received");
+	GDVIRTUAL_BIND(_get_partial_data, "r_buffer", "r_bytes", "r_received");
+	GDVIRTUAL_BIND(_put_data, "p_data", "p_bytes", "r_sent");
+	GDVIRTUAL_BIND(_put_partial_data, "p_data", "p_bytes", "r_sent");
+	GDVIRTUAL_BIND(_get_available_bytes);
 }
 
 ////////////////////////////////

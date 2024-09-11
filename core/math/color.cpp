@@ -2,10 +2,9 @@
 /*  color.cpp                                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -34,7 +33,7 @@
 #include "color_names.inc"
 #include "core/math/math_funcs.h"
 #include "core/string/ustring.h"
-#include "core/templates/rb_map.h"
+#include "core/templates/hash_map.h"
 
 #include "thirdparty/misc/ok_color.h"
 
@@ -415,7 +414,7 @@ Color Color::named(const String &p_name, const Color &p_default) {
 
 int Color::find_named_color(const String &p_name) {
 	String name = p_name;
-	// Normalize name
+	// Normalize name.
 	name = name.replace(" ", "");
 	name = name.replace("-", "");
 	name = name.replace("_", "");
@@ -423,23 +422,24 @@ int Color::find_named_color(const String &p_name) {
 	name = name.replace(".", "");
 	name = name.to_upper();
 
-	int idx = 0;
-	while (named_colors[idx].name != nullptr) {
-		if (name == String(named_colors[idx].name).replace("_", "")) {
-			return idx;
+	static HashMap<String, int> named_colors_hashmap;
+	if (unlikely(named_colors_hashmap.is_empty())) {
+		const int named_color_count = get_named_color_count();
+		for (int i = 0; i < named_color_count; i++) {
+			named_colors_hashmap[String(named_colors[i].name).replace("_", "")] = i;
 		}
-		idx++;
+	}
+
+	const HashMap<String, int>::ConstIterator E = named_colors_hashmap.find(name);
+	if (E) {
+		return E->value;
 	}
 
 	return -1;
 }
 
 int Color::get_named_color_count() {
-	int idx = 0;
-	while (named_colors[idx].name != nullptr) {
-		idx++;
-	}
-	return idx;
+	return sizeof(named_colors) / sizeof(NamedColor);
 }
 
 String Color::get_named_color_name(int p_idx) {

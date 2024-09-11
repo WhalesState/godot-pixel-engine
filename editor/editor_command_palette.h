@@ -2,10 +2,9 @@
 /*  editor_command_palette.h                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -47,7 +46,8 @@ class EditorCommandPalette : public ConfirmationDialog {
 	struct Command {
 		Callable callable;
 		String name;
-		String shortcut;
+		Ref<Shortcut> shortcut;
+		String shortcut_text;
 		int last_used = 0; // Store time as int, because doubles have problems with text serialization.
 	};
 
@@ -78,8 +78,6 @@ class EditorCommandPalette : public ConfirmationDialog {
 	HashMap<String, Command> commands;
 	HashMap<String, Pair<String, Ref<Shortcut>>> unregistered_shortcuts;
 
-	List<String> command_keys;
-
 	void _update_command_search(const String &search_text);
 	float _score_path(const String &p_search, const String &p_path);
 	void _sbox_input(const Ref<InputEvent> &p_ie);
@@ -96,7 +94,7 @@ protected:
 public:
 	void open_popup();
 	void get_actions_list(List<String> *p_list) const;
-	void add_command(String p_command_name, String p_key_name, Callable p_action, Vector<Variant> arguments, String p_shortcut_text = "None");
+	void add_command(String p_command_name, String p_key_name, Callable p_action, Vector<Variant> arguments, const Ref<Shortcut> &p_shortcut);
 	void execute_command(const String &p_command_name);
 	void register_shortcuts_as_command();
 	Ref<Shortcut> add_shortcut_command(const String &p_command, const String &p_key, Ref<Shortcut> p_shortcut);

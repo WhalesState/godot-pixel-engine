@@ -2,10 +2,9 @@
 /*  style_box_texture.h                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -72,8 +71,6 @@ public:
 	void set_expand_margin_all(float p_expand_margin_size);
 	void set_expand_margin_individual(float p_left, float p_top, float p_right, float p_bottom);
 	float get_expand_margin(Side p_expand_side) const;
-	Point2 get_expand_margin_begin() const override;
-	Point2 get_expand_margin_end() const override;
 
 	void set_region_rect(const Rect2 &p_region_rect);
 	Rect2 get_region_rect() const;

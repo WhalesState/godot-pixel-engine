@@ -2,10 +2,9 @@
 /*  array.h                                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -47,6 +46,70 @@ class Array {
 	void _unref() const;
 
 public:
+	struct ConstIterator {
+		_FORCE_INLINE_ const Variant &operator*() const;
+		_FORCE_INLINE_ const Variant *operator->() const;
+
+		_FORCE_INLINE_ ConstIterator &operator++();
+		_FORCE_INLINE_ ConstIterator &operator--();
+
+		_FORCE_INLINE_ bool operator==(const ConstIterator &p_other) const { return element_ptr == p_other.element_ptr; }
+		_FORCE_INLINE_ bool operator!=(const ConstIterator &p_other) const { return element_ptr != p_other.element_ptr; }
+
+		_FORCE_INLINE_ ConstIterator(const Variant *p_element_ptr, Variant *p_read_only = nullptr) :
+				element_ptr(p_element_ptr), read_only(p_read_only) {}
+		_FORCE_INLINE_ ConstIterator() {}
+		_FORCE_INLINE_ ConstIterator(const ConstIterator &p_other) :
+				element_ptr(p_other.element_ptr), read_only(p_other.read_only) {}
+
+		_FORCE_INLINE_ ConstIterator &operator=(const ConstIterator &p_other) {
+			element_ptr = p_other.element_ptr;
+			read_only = p_other.read_only;
+			return *this;
+		}
+
+	private:
+		const Variant *element_ptr = nullptr;
+		Variant *read_only = nullptr;
+	};
+
+	struct Iterator {
+		_FORCE_INLINE_ Variant &operator*() const;
+		_FORCE_INLINE_ Variant *operator->() const;
+
+		_FORCE_INLINE_ Iterator &operator++();
+		_FORCE_INLINE_ Iterator &operator--();
+
+		_FORCE_INLINE_ bool operator==(const Iterator &p_other) const { return element_ptr == p_other.element_ptr; }
+		_FORCE_INLINE_ bool operator!=(const Iterator &p_other) const { return element_ptr != p_other.element_ptr; }
+
+		_FORCE_INLINE_ Iterator(Variant *p_element_ptr, Variant *p_read_only = nullptr) :
+				element_ptr(p_element_ptr), read_only(p_read_only) {}
+		_FORCE_INLINE_ Iterator() {}
+		_FORCE_INLINE_ Iterator(const Iterator &p_other) :
+				element_ptr(p_other.element_ptr), read_only(p_other.read_only) {}
+
+		_FORCE_INLINE_ Iterator &operator=(const Iterator &p_other) {
+			element_ptr = p_other.element_ptr;
+			read_only = p_other.read_only;
+			return *this;
+		}
+
+		operator ConstIterator() const {
+			return ConstIterator(element_ptr, read_only);
+		}
+
+	private:
+		Variant *element_ptr = nullptr;
+		Variant *read_only = nullptr;
+	};
+
+	Iterator begin();
+	Iterator end();
+
+	ConstIterator begin() const;
+	ConstIterator end() const;
+
 	void _ref(const Array &p_from) const;
 
 	Variant &operator[](int p_idx);

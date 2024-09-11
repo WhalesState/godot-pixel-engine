@@ -1,2 +1,2 @@
 func test():
-	BoxContainer.this_does_not_exist # Does not exist
+	TileSet.this_does_not_exist # Does not exist

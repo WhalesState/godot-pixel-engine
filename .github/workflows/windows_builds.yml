@@ -6,8 +6,8 @@ on:
 # SCONS_CACHE for windows must be set in the build environment
 env:
   # Used for the cache key. Add version suffix to force clean build.
-  GODOT_BASE_BRANCH: 4.2
-  SCONSFLAGS: verbose=yes debug_symbols=no use_static_cpp=yes lto=auto
+  GODOT_BASE_BRANCH: master
+  SCONSFLAGS: verbose=yes warnings=extra werror=yes module_text_server_fb_enabled=yes "angle_libs=${{github.workspace}}/"
   SCONS_CACHE_MSVC_CONFIG: true
 
 concurrency:
@@ -23,36 +23,54 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Editor
+          - name: Editor (target=editor, tests=yes)
             cache-name: windows-editor
             target: editor
-            tests: false
-            sconsflags: optimize=speed_trace
-            # bin: "./bin/godot.windows.editor.x86_64.exe"
+            # tests: true
+            # Skip debug symbols, they're way too big with MSVC.
+            sconsflags: debug_symbols=no vsproj=yes vsproj_gen_only=no windows_subsystem=console
+            bin: "./bin/godot.windows.editor.x86_64.exe"
+            artifact: true
 
-          - name: Release Template
-            cache-name: windows-release-template
+          - name: Editor w/ clang-cl (target=editor, tests=yes, use_llvm=yes)
+            cache-name: windows-editor-clang
+            target: editor
+            # tests: true
+            sconsflags: debug_symbols=no windows_subsystem=console use_llvm=yes
+            bin: ./bin/godot.windows.editor.x86_64.llvm.exe
+
+          - name: Template (target=template_release)
+            cache-name: windows-template
             target: template_release
-            tests: false
-            sconsflags: optimize=speed_trace
-
-          - name: Debug Template
-            cache-name: windows-debug-template
-            target: template_debug
-            tests: false
-            sconsflags: optimize=speed_trace
+            # tests: true
+            sconsflags: debug_symbols=no tests=yes
+            bin: "./bin/godot.windows.template_release.x86_64.console.exe"
+            artifact: true
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-      - name: Setup Godot build cache
-        uses: ./.github/actions/godot-cache
+      - name: Restore Godot build cache
+        uses: ./.github/actions/godot-cache-restore
         with:
           cache-name: ${{ matrix.cache-name }}
         continue-on-error: true
 
-      - name: Setup python and scons
+      - name: Setup Python and SCons
         uses: ./.github/actions/godot-deps
+
+      - name: Download pre-built ANGLE static libraries
+        uses: dsaltares/fetch-gh-release-asset@1.1.2
+        with:
+          repo: godotengine/godot-angle-static
+          version: tags/chromium/6029
+          file: Windows.6029-1.MSVC_17.x86_64.x86_32.zip
+          target: angle/angle.zip
+
+      - name: Extract pre-built ANGLE static libraries
+        run: Expand-Archive -Force angle/angle.zip ${{github.workspace}}/
 
       - name: Setup MSVC problem matcher
         uses: ammaraskar/msvc-problem-matcher@master
@@ -65,24 +83,26 @@ jobs:
           target: ${{ matrix.target }}
           tests: ${{ matrix.tests }}
 
-      # # Execute unit tests for the editor
+      - name: Save Godot build cache
+        uses: ./.github/actions/godot-cache-save
+        with:
+          cache-name: ${{ matrix.cache-name }}
+        continue-on-error: true
+
+      - name: Prepare artifact
+        if: ${{ matrix.artifact }}
+        run: |
+          Remove-Item bin/* -Include *.exp,*.lib,*.pdb -Force
+
+      - name: Upload artifact
+        if: ${{ matrix.artifact }}
+        uses: ./.github/actions/upload-artifact
+        with:
+          name: ${{ matrix.cache-name }}
+
       # - name: Unit tests
       #   if: ${{ matrix.tests }}
       #   run: |
       #     ${{ matrix.bin }} --version
       #     ${{ matrix.bin }} --help
-      #     ${{ matrix.bin }} --test
-
-      - name: Prepare artifact
-        run: |
-          Remove-Item bin/* -Include *.exp,*.lib,*.pdb -Force
-
-      - name: Upload artifact
-        uses: ./.github/actions/upload-artifact
-        with:
-          name: ${{ matrix.cache-name }}
-
-      # - name: Upload release
-      #   uses: ./.github/actions/upload-release
-      #   with:
-      #     name: ${{ matrix.cache-name }}
+      #     ${{ matrix.bin }} --test --force-colors

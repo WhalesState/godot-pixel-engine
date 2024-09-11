@@ -2,10 +2,9 @@
 /*  canvas_item_material.h                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -89,12 +88,11 @@ private:
 	}
 
 	static Mutex material_mutex;
-	static SelfList<CanvasItemMaterial>::List *dirty_materials;
+	static SelfList<CanvasItemMaterial>::List dirty_materials;
 	SelfList<CanvasItemMaterial> element;
 
 	void _update_shader();
 	_FORCE_INLINE_ void _queue_shader_change();
-	_FORCE_INLINE_ bool _is_shader_dirty() const;
 
 	BlendMode blend_mode = BLEND_MODE_MIX;
 	LightMode light_mode = LIGHT_MODE_NORMAL;

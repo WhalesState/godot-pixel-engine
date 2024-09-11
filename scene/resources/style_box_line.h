@@ -2,10 +2,9 @@
 /*  style_box_line.h                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -61,9 +60,6 @@ public:
 
 	void set_grow_end(float p_grow);
 	float get_grow_end() const;
-
-	Point2 get_expand_margin_begin() const override;
-	Point2 get_expand_margin_end() const override;
 
 	virtual void draw(RID p_canvas_item, const Rect2 &p_rect) const override;
 

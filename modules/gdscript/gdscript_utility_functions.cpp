@@ -2,10 +2,9 @@
 /*  gdscript_utility_functions.cpp                                        */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -174,9 +173,9 @@ struct GDScriptUtilityFunctionsDefinitions {
 				// Calculate how many.
 				int count = 0;
 				if (incr > 0) {
-					count = ((to - from - 1) / incr) + 1;
+					count = Math::division_round_up(to - from, incr);
 				} else {
-					count = ((from - to - 1) / -incr) + 1;
+					count = Math::division_round_up(from - to, -incr);
 				}
 
 				Error err = arr.resize(count);
@@ -212,7 +211,7 @@ struct GDScriptUtilityFunctionsDefinitions {
 
 	static inline void load(Variant *r_ret, const Variant **p_args, int p_arg_count, Callable::CallError &r_error) {
 		VALIDATE_ARG_COUNT(1);
-		if (p_args[0]->get_type() != Variant::STRING) {
+		if (!p_args[0]->is_string()) {
 			r_error.error = Callable::CallError::CALL_ERROR_INVALID_ARGUMENT;
 			r_error.argument = 0;
 			r_error.expected = Variant::STRING;
@@ -450,7 +449,8 @@ struct GDScriptUtilityFunctionsDefinitions {
 	static inline void len(Variant *r_ret, const Variant **p_args, int p_arg_count, Callable::CallError &r_error) {
 		VALIDATE_ARG_COUNT(1);
 		switch (p_args[0]->get_type()) {
-			case Variant::STRING: {
+			case Variant::STRING:
+			case Variant::STRING_NAME: {
 				String d = *p_args[0];
 				*r_ret = d.length();
 			} break;
@@ -732,10 +732,10 @@ Variant::Type GDScriptUtilityFunctions::get_function_argument_type(const StringN
 	GDScriptUtilityFunctionInfo *info = utility_function_table.lookup_ptr(p_function);
 	ERR_FAIL_NULL_V(info, Variant::NIL);
 	ERR_FAIL_COND_V(p_arg >= info->info.arguments.size(), Variant::NIL);
-	return info->info.arguments[p_arg].type;
+	return info->info.arguments.get(p_arg).type;
 }
 
-int GDScriptUtilityFunctions::get_function_argument_count(const StringName &p_function, int p_arg) {
+int GDScriptUtilityFunctions::get_function_argument_count(const StringName &p_function) {
 	GDScriptUtilityFunctionInfo *info = utility_function_table.lookup_ptr(p_function);
 	ERR_FAIL_NULL_V(info, 0);
 	return info->info.arguments.size();

@@ -2,10 +2,9 @@
 /*  debugger_marshalls.cpp                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -39,10 +38,10 @@
 Array DebuggerMarshalls::ScriptStackDump::serialize() {
 	Array arr;
 	arr.push_back(frames.size() * 3);
-	for (int i = 0; i < frames.size(); i++) {
-		arr.push_back(frames[i].file);
-		arr.push_back(frames[i].line);
-		arr.push_back(frames[i].func);
+	for (const ScriptLanguage::StackInfo &frame : frames) {
+		arr.push_back(frame.file);
+		arr.push_back(frame.line);
+		arr.push_back(frame.func);
 	}
 	return arr;
 }

@@ -2,10 +2,9 @@
 /*  resource_importer_texture.cpp                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -37,9 +36,10 @@
 #include "core/version.h"
 #include "editor/editor_file_system.h"
 #include "editor/editor_node.h"
-#include "editor/editor_scale.h"
-#include "editor/editor_settings.h"
+#include "editor/gui/editor_toaster.h"
 #include "editor/import/resource_importer_texture_settings.h"
+#include "editor/themes/editor_scale.h"
+#include "editor/themes/editor_theme_manager.h"
 #include "scene/resources/compressed_texture.h"
 
 void ResourceImporterTexture::_texture_reimport_roughness(const Ref<CompressedTexture2D> &p_tex, const String &p_normal_path, RS::TextureDetectRoughnessChannel p_channel) {
@@ -56,20 +56,6 @@ void ResourceImporterTexture::_texture_reimport_roughness(const Ref<CompressedTe
 	singleton->make_flags[path].flags |= MAKE_ROUGHNESS_FLAG;
 	singleton->make_flags[path].channel_for_roughness = p_channel;
 	singleton->make_flags[path].normal_path_for_roughness = p_normal_path;
-}
-
-void ResourceImporterTexture::_texture_reimport_3d(const Ref<CompressedTexture2D> &p_tex) {
-	ERR_FAIL_COND(p_tex.is_null());
-
-	MutexLock lock(singleton->mutex);
-
-	StringName path = p_tex->get_path();
-
-	if (!singleton->make_flags.has(path)) {
-		singleton->make_flags[path] = MakeInfo();
-	}
-
-	singleton->make_flags[path].flags |= MAKE_3D_FLAG;
 }
 
 void ResourceImporterTexture::_texture_reimport_normal(const Ref<CompressedTexture2D> &p_tex) {
@@ -109,28 +95,23 @@ void ResourceImporterTexture::update_imports() {
 			bool changed = false;
 
 			if (E.value.flags & MAKE_NORMAL_FLAG && int(cf->get_value("params", "compress/normal_map")) == 0) {
-				print_line(vformat(TTR("%s: Texture detected as used as a normal map in 3D. Enabling red-green texture compression to reduce memory usage (blue channel is discarded)."), String(E.key)));
+				String message = vformat(TTR("%s: Texture detected as used as a normal map in 3D. Enabling red-green texture compression to reduce memory usage (blue channel is discarded)."), String(E.key));
+#ifdef TOOLS_ENABLED
+				EditorToaster::get_singleton()->popup_str(message);
+#endif
+				print_line(message);
 				cf->set_value("params", "compress/normal_map", 1);
 				changed = true;
 			}
 
 			if (E.value.flags & MAKE_ROUGHNESS_FLAG && int(cf->get_value("params", "roughness/mode")) == 0) {
-				print_line(vformat(TTR("%s: Texture detected as used as a roughness map in 3D. Enabling roughness limiter based on the detected associated normal map at %s."), String(E.key), E.value.normal_path_for_roughness));
+				String message = vformat(TTR("%s: Texture detected as used as a roughness map in 3D. Enabling roughness limiter based on the detected associated normal map at %s."), String(E.key), E.value.normal_path_for_roughness);
+#ifdef TOOLS_ENABLED
+				EditorToaster::get_singleton()->popup_str(message);
+#endif
+				print_line(message);
 				cf->set_value("params", "roughness/mode", E.value.channel_for_roughness + 2);
 				cf->set_value("params", "roughness/src_normal", E.value.normal_path_for_roughness);
-				changed = true;
-			}
-
-			if (E.value.flags & MAKE_3D_FLAG && bool(cf->get_value("params", "detect_3d/compress_to"))) {
-				const int compress_to = cf->get_value("params", "detect_3d/compress_to");
-				String compress_string;
-				cf->set_value("params", "detect_3d/compress_to", 0);
-				if (compress_to == 1) {
-					cf->set_value("params", "compress/mode", COMPRESS_VRAM_COMPRESSED);
-					compress_string = "VRAM Compressed (S3TC/ETC/BPTC)";
-				}
-				print_line(vformat(TTR("%s: Texture detected as used in 3D. Enabling mipmap generation and setting the texture compression mode to %s."), String(E.key), compress_string));
-				cf->set_value("params", "mipmaps/generate", true);
 				changed = true;
 			}
 
@@ -179,11 +160,6 @@ bool ResourceImporterTexture::get_option_visibility(const String &p_path, const 
 		if (compress_mode != COMPRESS_LOSSY) {
 			return false;
 		}
-	} else if (p_option == "compress/hdr_mode") {
-		int compress_mode = int(p_options["compress/mode"]);
-		if (compress_mode < COMPRESS_VRAM_COMPRESSED) {
-			return false;
-		}
 	} else if (p_option == "compress/normal_map") {
 		int compress_mode = int(p_options["compress/mode"]);
 		if (compress_mode == COMPRESS_LOSSLESS) {
@@ -204,29 +180,25 @@ String ResourceImporterTexture::get_preset_name(int p_idx) const {
 	static const char *preset_names[] = {
 		TTRC("2D/3D (Auto-Detect)"),
 		TTRC("2D"),
-		TTRC("3D"),
 	};
 
 	return TTRGET(preset_names[p_idx]);
 }
 
 void ResourceImporterTexture::get_import_options(const String &p_path, List<ImportOption> *r_options, int p_preset) const {
-	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "compress/mode", PROPERTY_HINT_ENUM, "Lossless,Lossy,VRAM Compressed,VRAM Uncompressed", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_UPDATE_ALL_IF_MODIFIED), p_preset == PRESET_3D ? 2 : 0));
+	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "compress/mode", PROPERTY_HINT_ENUM, "Lossless,Lossy,VRAM Compressed,VRAM Uncompressed,Basis Universal", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_UPDATE_ALL_IF_MODIFIED), 0));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "compress/high_quality"), false));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::FLOAT, "compress/lossy_quality", PROPERTY_HINT_RANGE, "0,1,0.01"), 0.7));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "compress/normal_map", PROPERTY_HINT_ENUM, "Detect,Enable,Disabled"), 0));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "compress/channel_pack", PROPERTY_HINT_ENUM, "sRGB Friendly,Optimized"), 0));
-	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "mipmaps/generate"), (p_preset == PRESET_3D ? true : false)));
+	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "mipmaps/generate"), (false)));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "mipmaps/limit", PROPERTY_HINT_RANGE, "-1,256"), -1));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "roughness/mode", PROPERTY_HINT_ENUM, "Detect,Disabled,Red,Green,Blue,Alpha,Gray"), 0));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::STRING, "roughness/src_normal", PROPERTY_HINT_FILE, "*.bmp,*.dds,*.exr,*.jpeg,*.jpg,*.png,*.svg,*.tga,*.webp"), ""));
-	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "process/fix_alpha_border"), p_preset != PRESET_3D));
+	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "process/fix_alpha_border"), true));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "process/premult_alpha"), false));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "process/normal_map_invert_y"), false));
-	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "process/hdr_as_srgb"), false));
-	r_options->push_back(ImportOption(PropertyInfo(Variant::BOOL, "process/hdr_clamp_exposure"), false));
 	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "process/size_limit", PROPERTY_HINT_RANGE, "0,4096,1"), 0));
-	r_options->push_back(ImportOption(PropertyInfo(Variant::INT, "detect_3d/compress_to", PROPERTY_HINT_ENUM, "Disabled,VRAM Compressed"), (p_preset == PRESET_DETECT) ? 1 : 0));
 
 	// Do path based customization only if a path was passed.
 	if (p_path.is_empty() || p_path.get_extension() == "svg") {
@@ -253,9 +225,9 @@ void ResourceImporterTexture::save_to_ctex_format(Ref<FileAccess> f, const Ref<I
 			for (int i = 0; i < p_image->get_mipmap_count() + 1; i++) {
 				Vector<uint8_t> data;
 				if (use_webp) {
-					data = Image::webp_lossless_packer(p_image->get_image_from_mipmap(i));
+					data = Image::webp_lossless_packer(i ? p_image->get_image_from_mipmap(i) : p_image);
 				} else {
-					data = Image::png_packer(p_image->get_image_from_mipmap(i));
+					data = Image::png_packer(i ? p_image->get_image_from_mipmap(i) : p_image);
 				}
 				int data_len = data.size();
 				f->store_32(data_len);
@@ -273,7 +245,7 @@ void ResourceImporterTexture::save_to_ctex_format(Ref<FileAccess> f, const Ref<I
 			f->store_32(p_image->get_format());
 
 			for (int i = 0; i < p_image->get_mipmap_count() + 1; i++) {
-				Vector<uint8_t> data = Image::webp_lossy_packer(p_image->get_image_from_mipmap(i), p_lossy_quality);
+				Vector<uint8_t> data = Image::webp_lossy_packer(i ? p_image->get_image_from_mipmap(i) : p_image, p_lossy_quality);
 				int data_len = data.size();
 				f->store_32(data_len);
 
@@ -311,10 +283,22 @@ void ResourceImporterTexture::save_to_ctex_format(Ref<FileAccess> f, const Ref<I
 			f->store_buffer(r, dl);
 
 		} break;
+		case COMPRESS_BASIS_UNIVERSAL: {
+			f->store_32(CompressedTexture2D::DATA_FORMAT_BASIS_UNIVERSAL);
+			f->store_16(p_image->get_width());
+			f->store_16(p_image->get_height());
+			f->store_32(p_image->get_mipmap_count());
+			f->store_32(p_image->get_format());
+			Vector<uint8_t> data = Image::basis_universal_packer(p_image, p_channels);
+			int data_len = data.size();
+			f->store_32(data_len);
+			const uint8_t *r = data.ptr();
+			f->store_buffer(r, data_len);
+		} break;
 	}
 }
 
-void ResourceImporterTexture::_save_ctex(const Ref<Image> &p_image, const String &p_to_path, CompressMode p_compress_mode, float p_lossy_quality, Image::CompressMode p_vram_compression, bool p_mipmaps, bool p_streamable, bool p_detect_3d, bool p_detect_roughness, bool p_detect_normal, bool p_force_normal, bool p_srgb_friendly, bool p_force_po2_for_compressed, uint32_t p_limit_mipmap, const Ref<Image> &p_normal, Image::RoughnessChannel p_roughness_channel) {
+void ResourceImporterTexture::_save_ctex(const Ref<Image> &p_image, const String &p_to_path, CompressMode p_compress_mode, float p_lossy_quality, Image::CompressMode p_vram_compression, bool p_mipmaps, bool p_streamable, bool p_detect_roughness, bool p_detect_normal, bool p_force_normal, bool p_srgb_friendly, bool p_force_po2_for_compressed, uint32_t p_limit_mipmap, const Ref<Image> &p_normal, Image::RoughnessChannel p_roughness_channel) {
 	Ref<FileAccess> f = FileAccess::open(p_to_path, FileAccess::WRITE);
 	ERR_FAIL_COND(f.is_null());
 	f->store_8('G');
@@ -334,9 +318,6 @@ void ResourceImporterTexture::_save_ctex(const Ref<Image> &p_image, const String
 	}
 	if (p_mipmaps) {
 		flags |= CompressedTexture2D::FORMAT_BIT_HAS_MIPMAPS; //mipmaps bit
-	}
-	if (p_detect_3d) {
-		flags |= CompressedTexture2D::FORMAT_BIT_DETECT_3D;
 	}
 	if (p_detect_roughness) {
 		flags |= CompressedTexture2D::FORMAT_BIT_DETECT_ROUGNESS;
@@ -358,7 +339,7 @@ void ResourceImporterTexture::_save_ctex(const Ref<Image> &p_image, const String
 
 	Ref<Image> image = p_image->duplicate();
 
-	if (p_force_po2_for_compressed && p_mipmaps && p_compress_mode == COMPRESS_VRAM_COMPRESSED) {
+	if (p_force_po2_for_compressed && p_mipmaps && ((p_compress_mode == COMPRESS_BASIS_UNIVERSAL) || (p_compress_mode == COMPRESS_VRAM_COMPRESSED))) {
 		image->resize_to_po2();
 	}
 
@@ -426,10 +407,6 @@ Error ResourceImporterTexture::import(const String &p_source_file, const String 
 	// Support for texture streaming is not implemented yet.
 	const bool stream = false;
 	const int size_limit = p_options["process/size_limit"];
-	const bool hdr_as_srgb = p_options["process/hdr_as_srgb"];
-	if (hdr_as_srgb) {
-		loader_flags |= ImageFormatLoader::FLAG_FORCE_LINEAR;
-	}
 
 	float scale = 1.0;
 	// SVG-specific options.
@@ -534,7 +511,11 @@ Error ResourceImporterTexture::import(const String &p_source_file, const String 
 		}
 	}
 
-	bool detect_3d = int(p_options["detect_3d/compress_to"]) > 0;
+	if (compress_mode == COMPRESS_BASIS_UNIVERSAL && image->get_format() >= Image::FORMAT_RF) {
+		// Basis universal does not support float formats, fallback.
+		compress_mode = COMPRESS_VRAM_COMPRESSED;
+	}
+
 	bool detect_roughness = roughness == 0;
 	bool detect_normal = normal == 0;
 	bool force_normal = normal == 1;
@@ -546,45 +527,58 @@ Error ResourceImporterTexture::import(const String &p_source_file, const String 
 		// Must import in all formats, in order of priority (so platform choses the best supported one. IE, etc2 over etc).
 		// Android, GLES 2.x
 
-		const bool is_hdr = (image->get_format() >= Image::FORMAT_RF && image->get_format() <= Image::FORMAT_RGBE9995);
 		const bool can_s3tc_bptc = ResourceImporterTextureSettings::should_import_s3tc_bptc();
 		const bool can_etc2_astc = ResourceImporterTextureSettings::should_import_etc2_astc();
 
+		// Add list of formats imported
 		if (can_s3tc_bptc) {
 			formats_imported.push_back("s3tc_bptc");
-			Image::CompressMode image_compress_mode;
-			String image_compress_format;
-			if (high_quality || is_hdr) {
-				image_compress_mode = Image::COMPRESS_BPTC;
-				image_compress_format = "bptc";
-			} else {
-				image_compress_mode = Image::COMPRESS_S3TC;
-				image_compress_format = "s3tc";
-			}
-			_save_ctex(image, p_save_path + "." + image_compress_format + ".ctex", compress_mode, lossy, image_compress_mode, mipmaps, stream, detect_3d, detect_roughness, detect_normal, force_normal, srgb_friendly_pack, false, mipmap_limit, normal_image, roughness_channel);
-			r_platform_variants->push_back(image_compress_format);
 		}
 		if (can_etc2_astc) {
 			formats_imported.push_back("etc2_astc");
-			Image::CompressMode image_compress_mode;
-			String image_compress_format;
-			if (high_quality || is_hdr) {
-				image_compress_mode = Image::COMPRESS_ASTC;
-				image_compress_format = "astc";
-			} else {
-				image_compress_mode = Image::COMPRESS_ETC2;
-				image_compress_format = "etc2";
+		}
+
+		bool has_alpha = image->detect_alpha() != Image::ALPHA_NONE;
+		bool use_uncompressed = false;
+
+		if (use_uncompressed) {
+			_save_ctex(image, p_save_path + ".ctex", COMPRESS_VRAM_UNCOMPRESSED, lossy, Image::COMPRESS_S3TC /*this is ignored */, mipmaps, stream, detect_roughness, detect_normal, force_normal, srgb_friendly_pack, false, mipmap_limit, normal_image, roughness_channel);
+		} else {
+			if (can_s3tc_bptc) {
+				Image::CompressMode image_compress_mode;
+				String image_compress_format;
+				if (high_quality) {
+					image_compress_mode = Image::COMPRESS_BPTC;
+					image_compress_format = "bptc";
+				} else {
+					image_compress_mode = Image::COMPRESS_S3TC;
+					image_compress_format = "s3tc";
+				}
+				_save_ctex(image, p_save_path + "." + image_compress_format + ".ctex", compress_mode, lossy, image_compress_mode, mipmaps, stream, detect_roughness, detect_normal, force_normal, srgb_friendly_pack, false, mipmap_limit, normal_image, roughness_channel);
+				r_platform_variants->push_back(image_compress_format);
 			}
-			_save_ctex(image, p_save_path + "." + image_compress_format + ".ctex", compress_mode, lossy, image_compress_mode, mipmaps, stream, detect_3d, detect_roughness, detect_normal, force_normal, srgb_friendly_pack, false, mipmap_limit, normal_image, roughness_channel);
-			r_platform_variants->push_back(image_compress_format);
+
+			if (can_etc2_astc) {
+				Image::CompressMode image_compress_mode;
+				String image_compress_format;
+				if (high_quality) {
+					image_compress_mode = Image::COMPRESS_ASTC;
+					image_compress_format = "astc";
+				} else {
+					image_compress_mode = Image::COMPRESS_ETC2;
+					image_compress_format = "etc2";
+				}
+				_save_ctex(image, p_save_path + "." + image_compress_format + ".ctex", compress_mode, lossy, image_compress_mode, mipmaps, stream, detect_roughness, detect_normal, force_normal, srgb_friendly_pack, false, mipmap_limit, normal_image, roughness_channel);
+				r_platform_variants->push_back(image_compress_format);
+			}
 		}
 	} else {
 		// Import normally.
-		_save_ctex(image, p_save_path + ".ctex", compress_mode, lossy, Image::COMPRESS_S3TC /*this is ignored */, mipmaps, stream, detect_3d, detect_roughness, detect_normal, force_normal, srgb_friendly_pack, false, mipmap_limit, normal_image, roughness_channel);
+		_save_ctex(image, p_save_path + ".ctex", compress_mode, lossy, Image::COMPRESS_S3TC /*this is ignored */, mipmaps, stream, detect_roughness, detect_normal, force_normal, srgb_friendly_pack, false, mipmap_limit, normal_image, roughness_channel);
 	}
 
 	if (editor_image.is_valid()) {
-		_save_ctex(editor_image, p_save_path + ".editor.ctex", compress_mode, lossy, Image::COMPRESS_S3TC /*this is ignored */, mipmaps, stream, detect_3d, detect_roughness, detect_normal, force_normal, srgb_friendly_pack, false, mipmap_limit, normal_image, roughness_channel);
+		_save_ctex(editor_image, p_save_path + ".editor.ctex", compress_mode, lossy, Image::COMPRESS_S3TC /*this is ignored */, mipmaps, stream, detect_roughness, detect_normal, force_normal, srgb_friendly_pack, false, mipmap_limit, normal_image, roughness_channel);
 
 		// Generate and save editor-specific metadata, which we cannot save to the .import file.
 		Dictionary editor_meta;
@@ -593,7 +587,7 @@ Error ResourceImporterTexture::import(const String &p_source_file, const String 
 			editor_meta["editor_scale"] = EDSCALE;
 		}
 		if (convert_editor_colors) {
-			editor_meta["editor_dark_theme"] = EditorSettings::get_singleton()->is_dark_theme();
+			editor_meta["editor_dark_theme"] = EditorThemeManager::is_dark_theme();
 		}
 
 		_save_editor_meta(editor_meta, p_save_path + ".editor.meta");
@@ -642,13 +636,17 @@ bool ResourceImporterTexture::are_import_settings_valid(const String &p_path) co
 
 	if (meta.has("has_editor_variant")) {
 		String imported_path = ResourceFormatImporter::get_singleton()->get_internal_resource_path(p_path);
+		if (!FileAccess::exists(imported_path)) {
+			return false;
+		}
+
 		String editor_meta_path = imported_path.replace(".editor.ctex", ".editor.meta");
 		Dictionary editor_meta = _load_editor_meta(editor_meta_path);
 
 		if (editor_meta.has("editor_scale") && (float)editor_meta["editor_scale"] != EDSCALE) {
 			return false;
 		}
-		if (editor_meta.has("editor_dark_theme") && (bool)editor_meta["editor_dark_theme"] != EditorSettings::get_singleton()->is_dark_theme()) {
+		if (editor_meta.has("editor_dark_theme") && (bool)editor_meta["editor_dark_theme"] != EditorThemeManager::is_dark_theme()) {
 			return false;
 		}
 	}
@@ -697,7 +695,6 @@ ResourceImporterTexture::ResourceImporterTexture(bool p_singleton) {
 		singleton = this;
 	}
 
-	CompressedTexture2D::request_3d_callback = _texture_reimport_3d;
 	CompressedTexture2D::request_roughness_callback = _texture_reimport_roughness;
 	CompressedTexture2D::request_normal_callback = _texture_reimport_normal;
 }

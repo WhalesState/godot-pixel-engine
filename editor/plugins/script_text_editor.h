@@ -2,10 +2,9 @@
 /*  script_text_editor.h                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -50,7 +49,7 @@ class ConnectionInfoDialog : public AcceptDialog {
 	virtual void ok_pressed() override;
 
 public:
-	void popup_connections(String p_method, Vector<Node *> p_nodes);
+	void popup_connections(const String &p_method, const Vector<Node *> &p_nodes);
 
 	ConnectionInfoDialog();
 };
@@ -100,6 +99,7 @@ class ScriptTextEditor : public ScriptEditorBase {
 
 	Color marked_line_color = Color(1, 1, 1);
 	Color folded_code_region_color = Color(1, 1, 1);
+	int previous_line = 0;
 
 	PopupPanel *color_panel = nullptr;
 	ColorPicker *color_picker = nullptr;
@@ -118,6 +118,7 @@ class ScriptTextEditor : public ScriptEditorBase {
 		EDIT_COMPLETE,
 		EDIT_AUTO_INDENT,
 		EDIT_TRIM_TRAILING_WHITESAPCE,
+		EDIT_TRIM_FINAL_NEWLINES,
 		EDIT_CONVERT_INDENT_TO_SPACES,
 		EDIT_CONVERT_INDENT_TO_TABS,
 		EDIT_TOGGLE_COMMENT,
@@ -165,6 +166,8 @@ protected:
 	void _breakpoint_item_pressed(int p_idx);
 	void _breakpoint_toggled(int p_row);
 
+	void _on_caret_moved();
+
 	void _validate_script(); // No longer virtual.
 	void _update_warnings();
 	void _update_errors();
@@ -178,8 +181,8 @@ protected:
 	void _set_theme_for_script();
 	void _show_errors_panel(bool p_show);
 	void _show_warnings_panel(bool p_show);
-	void _error_clicked(Variant p_line);
-	void _warning_clicked(Variant p_line);
+	void _error_clicked(const Variant &p_line);
+	void _warning_clicked(const Variant &p_line);
 
 	void _notification(int p_what);
 
@@ -226,13 +229,14 @@ public:
 	virtual Variant get_navigation_state() override;
 	virtual void ensure_focus() override;
 	virtual void trim_trailing_whitespace() override;
+	virtual void trim_final_newlines() override;
 	virtual void insert_final_newline() override;
 	virtual void convert_indent() override;
 	virtual void tag_saved_version() override;
 
-	virtual void goto_line(int p_line, bool p_with_error = false) override;
+	virtual void goto_line(int p_line, int p_column = 0) override;
 	void goto_line_selection(int p_line, int p_begin, int p_end);
-	void goto_line_centered(int p_line);
+	void goto_line_centered(int p_line, int p_column = 0);
 	virtual void set_executing_line(int p_line) override;
 	virtual void clear_executing_line() override;
 
@@ -241,7 +245,7 @@ public:
 	virtual void set_breakpoint(int p_line, bool p_enabled) override;
 	virtual void clear_breakpoints() override;
 
-	virtual void add_callback(const String &p_function, PackedStringArray p_args) override;
+	virtual void add_callback(const String &p_function, const PackedStringArray &p_args) override;
 	virtual void update_settings() override;
 
 	virtual bool show_members_overview() override;
@@ -257,8 +261,12 @@ public:
 	static void register_editor();
 
 	virtual Control *get_base_editor() const override;
+	virtual CodeTextEditor *get_code_editor() const override;
 
 	virtual void validate() override;
+
+	Variant get_previous_state();
+	void store_previous_state();
 
 	ScriptTextEditor();
 	~ScriptTextEditor();

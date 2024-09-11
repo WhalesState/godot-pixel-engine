@@ -2,10 +2,9 @@
 /*  color_names.inc                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -39,6 +38,9 @@ struct NamedColor {
 	const char *name;
 	Color color;
 };
+
+// NOTE: This data is duplicated in the file:
+// modules/mono/glue/GodotSharp/GodotSharp/Core/Colors.cs
 
 static NamedColor named_colors[] = {
 	{ "ALICE_BLUE", Color::hex(0xF0F8FFFF) },
@@ -187,5 +189,4 @@ static NamedColor named_colors[] = {
 	{ "WHITE_SMOKE", Color::hex(0xF5F5F5FF) },
 	{ "YELLOW", Color::hex(0xFFFF00FF) },
 	{ "YELLOW_GREEN", Color::hex(0x9ACD32FF) },
-	{ nullptr, Color() },
 };

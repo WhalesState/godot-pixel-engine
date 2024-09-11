@@ -2,10 +2,9 @@
 /*  websocket_peer.h                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -60,7 +59,7 @@ private:
 	virtual Error _send_bind(const PackedByteArray &p_data, WriteMode p_mode = WRITE_MODE_BINARY);
 
 protected:
-	static WebSocketPeer *(*_create)();
+	static WebSocketPeer *(*_create)(bool p_notify_postinitialize);
 
 	static void _bind_methods();
 
@@ -75,11 +74,11 @@ protected:
 	int max_queued_packets = 2048;
 
 public:
-	static WebSocketPeer *create() {
+	static WebSocketPeer *create(bool p_notify_postinitialize = true) {
 		if (!_create) {
 			return nullptr;
 		}
-		return _create();
+		return _create(p_notify_postinitialize);
 	}
 
 	virtual Error connect_to_url(const String &p_url, Ref<TLSOptions> p_options = Ref<TLSOptions>()) = 0;

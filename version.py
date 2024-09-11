@@ -1,10 +1,9 @@
-short_name = "pixel"
-name = "Pixel Engine"
+short_name = "godot"
+name = "Godot Engine"
 major = 4
-minor = 2
-patch = 2
-status = "stable"
+minor = 4
+patch = 0
+status = "dev"
 module_config = ""
-year = 2024
-website = ""
-docs = "4.2"
+website = "https://godotengine.org"
+docs = "latest"

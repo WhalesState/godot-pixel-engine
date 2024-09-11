@@ -2,10 +2,9 @@
 /*  packet_peer_udp.cpp                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -46,7 +45,7 @@ void PacketPeerUDP::set_broadcast_enabled(bool p_enabled) {
 	}
 }
 
-Error PacketPeerUDP::join_multicast_group(IPAddress p_multi_address, String p_if_name) {
+Error PacketPeerUDP::join_multicast_group(IPAddress p_multi_address, const String &p_if_name) {
 	ERR_FAIL_COND_V(udp_server, ERR_LOCKED);
 	ERR_FAIL_COND_V(!_sock.is_valid(), ERR_UNAVAILABLE);
 	ERR_FAIL_COND_V(!p_multi_address.is_valid(), ERR_INVALID_PARAMETER);
@@ -61,7 +60,7 @@ Error PacketPeerUDP::join_multicast_group(IPAddress p_multi_address, String p_if
 	return _sock->join_multicast_group(p_multi_address, p_if_name);
 }
 
-Error PacketPeerUDP::leave_multicast_group(IPAddress p_multi_address, String p_if_name) {
+Error PacketPeerUDP::leave_multicast_group(IPAddress p_multi_address, const String &p_if_name) {
 	ERR_FAIL_COND_V(udp_server, ERR_LOCKED);
 	ERR_FAIL_COND_V(!_sock.is_valid(), ERR_UNAVAILABLE);
 	ERR_FAIL_COND_V(!_sock->is_open(), ERR_UNCONFIGURED);
@@ -107,7 +106,7 @@ Error PacketPeerUDP::get_packet(const uint8_t **r_buffer, int &r_buffer_size) {
 	}
 
 	uint32_t size = 0;
-	uint8_t ipv6[16];
+	uint8_t ipv6[16] = {};
 	rb.read(ipv6, 16, true);
 	packet_ip.set_ipv6(ipv6);
 	rb.read((uint8_t *)&packet_port, 4, true);

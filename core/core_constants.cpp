@@ -2,10 +2,9 @@
 /*  core_constants.cpp                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -508,6 +507,10 @@ void register_global_constants() {
 	BIND_CORE_BITFIELD_CLASS_FLAG(KeyModifierMask, KEY_MASK, KPAD);
 	BIND_CORE_BITFIELD_CLASS_FLAG(KeyModifierMask, KEY_MASK, GROUP_SWITCH);
 
+	BIND_CORE_ENUM_CLASS_CONSTANT(KeyLocation, KEY_LOCATION, UNSPECIFIED);
+	BIND_CORE_ENUM_CLASS_CONSTANT(KeyLocation, KEY_LOCATION, LEFT);
+	BIND_CORE_ENUM_CLASS_CONSTANT(KeyLocation, KEY_LOCATION, RIGHT);
+
 	BIND_CORE_ENUM_CLASS_CONSTANT(MouseButton, MOUSE_BUTTON, NONE);
 	BIND_CORE_ENUM_CLASS_CONSTANT(MouseButton, MOUSE_BUTTON, LEFT);
 	BIND_CORE_ENUM_CLASS_CONSTANT(MouseButton, MOUSE_BUTTON, RIGHT);
@@ -642,6 +645,7 @@ void register_global_constants() {
 	BIND_CORE_ENUM_CONSTANT(PROPERTY_HINT_INT_IS_OBJECTID);
 	BIND_CORE_ENUM_CONSTANT(PROPERTY_HINT_INT_IS_POINTER);
 	BIND_CORE_ENUM_CONSTANT(PROPERTY_HINT_ARRAY_TYPE);
+	BIND_CORE_ENUM_CONSTANT(PROPERTY_HINT_DICTIONARY_TYPE);
 	BIND_CORE_ENUM_CONSTANT(PROPERTY_HINT_LOCALE_ID);
 	BIND_CORE_ENUM_CONSTANT(PROPERTY_HINT_LOCALIZABLE_STRING);
 	BIND_CORE_ENUM_CONSTANT(PROPERTY_HINT_NODE_TYPE);
@@ -710,7 +714,6 @@ void register_global_constants() {
 	BIND_CORE_ENUM_CONSTANT_CUSTOM("TYPE_PLANE", Variant::PLANE);
 	BIND_CORE_ENUM_CONSTANT_CUSTOM("TYPE_AABB", Variant::AABB);
 	BIND_CORE_ENUM_CONSTANT_CUSTOM("TYPE_BASIS", Variant::BASIS);
-	BIND_CORE_ENUM_CONSTANT_CUSTOM("TYPE_TRANSFORM3D", Variant::TRANSFORM3D);
 	BIND_CORE_ENUM_CONSTANT_CUSTOM("TYPE_PROJECTION", Variant::PROJECTION);
 	BIND_CORE_ENUM_CONSTANT_CUSTOM("TYPE_COLOR", Variant::COLOR);
 	BIND_CORE_ENUM_CONSTANT_CUSTOM("TYPE_STRING_NAME", Variant::STRING_NAME);
@@ -818,7 +821,7 @@ bool CoreConstants::is_global_enum(const StringName &p_enum) {
 	return _global_enums.has(p_enum);
 }
 
-void CoreConstants::get_enum_values(StringName p_enum, HashMap<StringName, int64_t> *p_values) {
+void CoreConstants::get_enum_values(const StringName &p_enum, HashMap<StringName, int64_t> *p_values) {
 	ERR_FAIL_NULL_MSG(p_values, "Trying to get enum values with null map.");
 	ERR_FAIL_COND_MSG(!_global_enums.has(p_enum), "Trying to get values of non-existing enum.");
 	for (const _CoreConstant &constant : _global_enums[p_enum]) {

@@ -2,10 +2,9 @@
 /*  editor_folding.cpp                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -94,7 +93,7 @@ void EditorFolding::_fill_folds(const Node *p_root, const Node *p_node, Array &p
 		if (!p_node->get_owner()) {
 			return; //not owned, bye
 		}
-		if (p_node->get_owner() != p_root && !p_root->is_editable_instance(p_node)) {
+		if (p_node->get_owner() != p_root && !p_root->is_editable_instance(p_node->get_owner())) {
 			return;
 		}
 	}

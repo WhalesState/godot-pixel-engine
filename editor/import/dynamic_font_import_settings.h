@@ -2,10 +2,9 @@
 /*  dynamic_font_import_settings.h                                        */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -46,16 +45,16 @@
 #include "scene/resources/font.h"
 #include "servers/text_server.h"
 
-class DynamicFontImportSettings;
+class DynamicFontImportSettingsDialog;
 
 class DynamicFontImportSettingsData : public RefCounted {
 	GDCLASS(DynamicFontImportSettingsData, RefCounted)
-	friend class DynamicFontImportSettings;
+	friend class DynamicFontImportSettingsDialog;
 
 	HashMap<StringName, Variant> settings;
 	HashMap<StringName, Variant> defaults;
 	List<ResourceImporter::ImportOption> options;
-	DynamicFontImportSettings *owner = nullptr;
+	DynamicFontImportSettingsDialog *owner = nullptr;
 
 	HashSet<char32_t> selected_chars;
 	HashSet<int32_t> selected_glyphs;
@@ -74,8 +73,8 @@ class EditorFileDialog;
 class EditorInspector;
 class EditorLocaleDialog;
 
-class DynamicFontImportSettings : public ConfirmationDialog {
-	GDCLASS(DynamicFontImportSettings, ConfirmationDialog)
+class DynamicFontImportSettingsDialog : public ConfirmationDialog {
+	GDCLASS(DynamicFontImportSettingsDialog, ConfirmationDialog)
 	friend class DynamicFontImportSettingsData;
 
 	enum ItemButton {
@@ -83,7 +82,7 @@ class DynamicFontImportSettings : public ConfirmationDialog {
 		BUTTON_REMOVE_VAR,
 	};
 
-	static DynamicFontImportSettings *singleton;
+	static DynamicFontImportSettingsDialog *singleton;
 
 	String base_path;
 
@@ -173,9 +172,9 @@ protected:
 
 public:
 	void open_settings(const String &p_path);
-	static DynamicFontImportSettings *get_singleton();
+	static DynamicFontImportSettingsDialog *get_singleton();
 
-	DynamicFontImportSettings();
+	DynamicFontImportSettingsDialog();
 };
 
 #endif // DYNAMIC_FONT_IMPORT_SETTINGS_H

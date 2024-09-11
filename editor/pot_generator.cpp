@@ -2,10 +2,9 @@
 /*  pot_generator.cpp                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -33,8 +32,8 @@
 
 #include "core/config/project_settings.h"
 #include "core/error/error_macros.h"
+#include "editor/editor_translation.h"
 #include "editor/editor_translation_parser.h"
-#include "plugins/packed_scene_translation_parser_plugin.h"
 
 POTGenerator *POTGenerator::singleton = nullptr;
 
@@ -70,7 +69,7 @@ void POTGenerator::generate_pot(const String &p_file) {
 	for (int i = 0; i < files.size(); i++) {
 		Vector<String> msgids;
 		Vector<Vector<String>> msgids_context_plural;
-		String file_path = files[i];
+		const String &file_path = files[i];
 		String file_extension = file_path.get_extension();
 
 		if (EditorTranslationParser::get_singleton()->can_parse(file_extension)) {
@@ -81,11 +80,17 @@ void POTGenerator::generate_pot(const String &p_file) {
 		}
 
 		for (int j = 0; j < msgids_context_plural.size(); j++) {
-			Vector<String> entry = msgids_context_plural[j];
+			const Vector<String> &entry = msgids_context_plural[j];
 			_add_new_msgid(entry[0], entry[1], entry[2], file_path);
 		}
 		for (int j = 0; j < msgids.size(); j++) {
 			_add_new_msgid(msgids[j], "", "", file_path);
+		}
+	}
+
+	if (GLOBAL_GET("internationalization/locale/translation_add_builtin_strings_to_pot")) {
+		for (const Vector<String> &extractable_msgids : get_extractable_message_list()) {
+			_add_new_msgid(extractable_msgids[0], extractable_msgids[1], extractable_msgids[2], "");
 		}
 	}
 
@@ -137,7 +142,9 @@ void POTGenerator::_write_to_pot(const String &p_file) {
 
 			// Write file locations.
 			for (const String &E : locations) {
-				file->store_line("#: " + E.trim_prefix("res://").replace("\n", "\\n"));
+				if (!E.is_empty()) {
+					file->store_line("#: " + E.trim_prefix("res://").replace("\n", "\\n"));
+				}
 			}
 
 			// Write context.

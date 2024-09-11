@@ -2,10 +2,9 @@
 /*  renderer_viewport.cpp                                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,6 +31,7 @@
 #include "renderer_viewport.h"
 
 #include "core/config/project_settings.h"
+#include "core/math/transform_interpolator.h"
 #include "core/object/worker_thread_pool.h"
 #include "renderer_canvas_cull.h"
 #include "rendering_server_globals.h"
@@ -43,19 +43,11 @@ static Transform2D _canvas_get_transform(RendererViewport::Viewport *p_viewport,
 	float scale = 1.0;
 	if (p_viewport->canvas_map.has(p_canvas->parent)) {
 		Transform2D c_xform = p_viewport->canvas_map[p_canvas->parent].transform;
-		if (p_viewport->snap_2d_transforms_to_pixel) {
-			c_xform.columns[2] = c_xform.columns[2].floor();
-		}
 		xf = xf * c_xform;
 		scale = p_canvas->parent_scale;
 	}
 
 	Transform2D c_xform = p_canvas_data->transform;
-
-	if (p_viewport->snap_2d_transforms_to_pixel) {
-		c_xform.columns[2] = c_xform.columns[2].floor();
-	}
-
 	xf = xf * c_xform;
 
 	if (scale != 1.0 && !RSG::canvas->disable_scale) {
@@ -92,7 +84,7 @@ Vector<RendererViewport::Viewport *> RendererViewport::_sort_active_viewports() 
 	}
 
 	while (!nodes.is_empty()) {
-		const Viewport *node = nodes[0];
+		const Viewport *node = nodes.front()->get();
 		nodes.pop_front();
 
 		for (int i = active_viewports.size() - 1; i >= 0; --i) {
@@ -118,10 +110,7 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 		timestamp_vp_map[rt_id] = p_viewport->self;
 	}
 
-	if (OS::get_singleton()->get_current_rendering_method() == "gl_compatibility") {
-		// This is currently needed for GLES to keep the current window being rendered to up to date
-		DisplayServer::get_singleton()->gl_window_make_current(p_viewport->viewport_to_screen);
-	}
+	DisplayServer::get_singleton()->gl_window_make_current(p_viewport->viewport_to_screen);
 
 	for (int i = 0; i < RS::VIEWPORT_RENDER_INFO_TYPE_MAX; i++) {
 		for (int j = 0; j < RS::VIEWPORT_RENDER_INFO_MAX; j++) {
@@ -164,7 +153,14 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 					if (!F->enabled) {
 						continue;
 					}
-					F->xform_cache = xf * F->xform;
+
+					if (!RSG::canvas->_interpolation_data.interpolation_enabled || !F->interpolated) {
+						F->xform_cache = xf * F->xform_curr;
+					} else {
+						real_t f = Engine::get_singleton()->get_physics_interpolation_fraction();
+						TransformInterpolator::interpolate_transform_2d(F->xform_prev, F->xform_curr, F->xform_cache, f);
+						F->xform_cache = xf * F->xform_cache;
+					}
 
 					if (sdf_rect.intersects_transformed(F->xform_cache, F->aabb_cache)) {
 						F->next = occluders;
@@ -203,7 +199,14 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 
 					Vector2 offset = tsize / 2.0;
 					cl->rect_cache = Rect2(-offset + cl->texture_offset, tsize);
-					cl->xform_cache = xf * cl->xform;
+
+					if (!RSG::canvas->_interpolation_data.interpolation_enabled || !cl->interpolated) {
+						cl->xform_cache = xf * cl->xform_curr;
+					} else {
+						real_t f = Engine::get_singleton()->get_physics_interpolation_fraction();
+						TransformInterpolator::interpolate_transform_2d(cl->xform_prev, cl->xform_curr, cl->xform_cache, f);
+						cl->xform_cache = xf * cl->xform_cache;
+					}
 
 					if (clip_rect.intersects_transformed(cl->xform_cache, cl->rect_cache)) {
 						cl->filter_next_ptr = lights;
@@ -211,7 +214,7 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 						Transform2D scale;
 						scale.scale(cl->rect_cache.size);
 						scale.columns[2] = cl->rect_cache.position;
-						cl->light_shader_xform = xf * cl->xform * scale;
+						cl->light_shader_xform = cl->xform_cache * scale;
 						if (cl->use_shadow) {
 							cl->shadows_next_ptr = lights_with_shadow;
 							if (lights_with_shadow == nullptr) {
@@ -231,7 +234,13 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 				if (cl->enabled) {
 					cl->filter_next_ptr = directional_lights;
 					directional_lights = cl;
-					cl->xform_cache = xf * cl->xform;
+					if (!RSG::canvas->_interpolation_data.interpolation_enabled || !cl->interpolated) {
+						cl->xform_cache = xf * cl->xform_curr;
+					} else {
+						real_t f = Engine::get_singleton()->get_physics_interpolation_fraction();
+						TransformInterpolator::interpolate_transform_2d(cl->xform_prev, cl->xform_curr, cl->xform_cache, f);
+						cl->xform_cache = xf * cl->xform_cache;
+					}
 					cl->xform_cache.columns[2] = Vector2(); //translation is pointless
 					if (cl->use_shadow) {
 						cl->shadows_next_ptr = directional_lights_with_shadow;
@@ -266,7 +275,13 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 					if (!F->enabled) {
 						continue;
 					}
-					F->xform_cache = xf * F->xform;
+					if (!RSG::canvas->_interpolation_data.interpolation_enabled || !F->interpolated) {
+						F->xform_cache = xf * F->xform_curr;
+					} else {
+						real_t f = Engine::get_singleton()->get_physics_interpolation_fraction();
+						TransformInterpolator::interpolate_transform_2d(F->xform_prev, F->xform_curr, F->xform_cache, f);
+						F->xform_cache = xf * F->xform_cache;
+					}
 					if (shadow_rect.intersects_transformed(F->xform_cache, F->aabb_cache)) {
 						F->next = occluders;
 						occluders = F;
@@ -346,7 +361,13 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 						if (!F->enabled) {
 							continue;
 						}
-						F->xform_cache = xf * F->xform;
+						if (!RSG::canvas->_interpolation_data.interpolation_enabled || !F->interpolated) {
+							F->xform_cache = xf * F->xform_curr;
+						} else {
+							real_t f = Engine::get_singleton()->get_physics_interpolation_fraction();
+							TransformInterpolator::interpolate_transform_2d(F->xform_prev, F->xform_curr, F->xform_cache, f);
+							F->xform_cache = xf * F->xform_cache;
+						}
 						Transform2D localizer = F->xform_cache.affine_inverse();
 
 						for (int j = 0; j < point_count; j++) {
@@ -393,7 +414,7 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 				ptr = ptr->filter_next_ptr;
 			}
 
-			RSG::canvas->render_canvas(p_viewport->render_target, canvas, xform, canvas_lights, canvas_directional_lights, clip_rect, p_viewport->texture_filter, p_viewport->texture_repeat, p_viewport->snap_2d_transforms_to_pixel, p_viewport->snap_2d_vertices_to_pixel, p_viewport->canvas_cull_mask);
+			RSG::canvas->render_canvas(p_viewport->render_target, canvas, xform, canvas_lights, canvas_directional_lights, clip_rect, p_viewport->texture_filter, p_viewport->texture_repeat, p_viewport->snap_2d_transforms_to_pixel, p_viewport->snap_2d_vertices_to_pixel, p_viewport->canvas_cull_mask, &p_viewport->render_info);
 			if (RSG::canvas->was_sdf_used()) {
 				p_viewport->sdf_active = true;
 			}
@@ -502,7 +523,7 @@ void RendererViewport::draw_viewports(bool p_swap_buffers) {
 				Vector<BlitToScreen> blit_to_screen_vec;
 				blit_to_screen_vec.push_back(blit);
 				RSG::rasterizer->blit_render_targets_to_screen(vp->viewport_to_screen, blit_to_screen_vec.ptr(), 1);
-				RSG::rasterizer->end_frame(true);
+				RSG::rasterizer->gl_end_frame(p_swap_buffers);
 			} else {
 				blit_to_screen_list[vp->viewport_to_screen].push_back(blit);
 			}
@@ -514,9 +535,10 @@ void RendererViewport::draw_viewports(bool p_swap_buffers) {
 
 		RENDER_TIMESTAMP("< Render Viewport " + itos(i));
 
-		objects_drawn += vp->render_info.info[RS::VIEWPORT_RENDER_INFO_TYPE_VISIBLE][RS::VIEWPORT_RENDER_INFO_OBJECTS_IN_FRAME] + vp->render_info.info[RS::VIEWPORT_RENDER_INFO_TYPE_SHADOW][RS::VIEWPORT_RENDER_INFO_OBJECTS_IN_FRAME];
-		vertices_drawn += vp->render_info.info[RS::VIEWPORT_RENDER_INFO_TYPE_VISIBLE][RS::VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME] + vp->render_info.info[RS::VIEWPORT_RENDER_INFO_TYPE_SHADOW][RS::VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME];
-		draw_calls_used += vp->render_info.info[RS::VIEWPORT_RENDER_INFO_TYPE_VISIBLE][RS::VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME] + vp->render_info.info[RS::VIEWPORT_RENDER_INFO_TYPE_SHADOW][RS::VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME];
+		// 2D render info.
+		objects_drawn += vp->render_info.info[RS::VIEWPORT_RENDER_INFO_TYPE_CANVAS][RS::VIEWPORT_RENDER_INFO_OBJECTS_IN_FRAME];
+		vertices_drawn += vp->render_info.info[RS::VIEWPORT_RENDER_INFO_TYPE_CANVAS][RS::VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME];
+		draw_calls_used += vp->render_info.info[RS::VIEWPORT_RENDER_INFO_TYPE_CANVAS][RS::VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME];
 	}
 
 	total_objects_drawn = objects_drawn;
@@ -525,10 +547,7 @@ void RendererViewport::draw_viewports(bool p_swap_buffers) {
 
 	RENDER_TIMESTAMP("< Render Viewports");
 
-	if (p_swap_buffers) {
-		//this needs to be called to make screen swapping more efficient
-		RSG::rasterizer->prepare_for_blitting_render_targets();
-
+	if (p_swap_buffers && !blit_to_screen_list.is_empty()) {
 		for (const KeyValue<int, Vector<BlitToScreen>> &E : blit_to_screen_list) {
 			RSG::rasterizer->blit_render_targets_to_screen(E.key, E.value.ptr(), E.value.size());
 		}
@@ -648,6 +667,13 @@ void RendererViewport::viewport_set_update_mode(RID p_viewport, RS::ViewportUpda
 	ERR_FAIL_NULL(viewport);
 
 	viewport->update_mode = p_mode;
+}
+
+RS::ViewportUpdateMode RendererViewport::viewport_get_update_mode(RID p_viewport) const {
+	Viewport *viewport = viewport_owner.get_or_null(p_viewport);
+	ERR_FAIL_NULL_V(viewport, RS::VIEWPORT_UPDATE_DISABLED);
+
+	return viewport->update_mode;
 }
 
 RID RendererViewport::viewport_get_render_target(RID p_viewport) const {

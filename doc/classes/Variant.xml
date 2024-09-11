@@ -11,7 +11,7 @@
 		foo = "Now foo is a string!"
 		foo = RefCounted.new() # foo is an Object
 		var bar: int = 2 # bar is a statically typed integer.
-		# bar = "Uh oh! I can't make static variables become a different type!"
+		# bar = "Uh oh! I can't make statically typed variables become a different type!"
 		[/gdscript]
 		[/codeblocks]
 		Godot tracks all scripting API variables within Variants. Without even realizing it, you use Variants all the time. When a particular language enforces its own rules for keeping data typed, then that language is applying its own custom logic over the base Variant scripting API.
@@ -24,14 +24,14 @@
 		match typeof(foo):
 		    TYPE_NIL:
 		        print("foo is null")
-		    TYPE_INTEGER:
+		    TYPE_INT:
 		        print("foo is an integer")
 		    TYPE_OBJECT:
 		        # Note that Objects are their own special category.
 		        # To get the name of the underlying Object type, you need the `get_class()` method.
 		        print("foo is a(n) %s" % foo.get_class()) # inject the class name into a formatted string.
-		        # Note also that there is not yet any way to get a script's `class_name` string easily.
-		        # To fetch that value, you can use ProjectSettings.get_global_class_list().
+		        # Note that this does not get the script's `class_name` global identifier.
+		        # If the `class_name` is needed, use `foo.get_script().get_global_name()` instead.
 		[/gdscript]
 		[/codeblocks]
 		A Variant takes up only 20 bytes and can store almost any engine datatype inside of it. Variants are rarely used to hold information for long periods of time. Instead, they are used mainly for communication, editing, serialization and moving data around.

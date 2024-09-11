@@ -2,10 +2,9 @@
 /*  texture_region_editor_plugin.h                                        */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,17 +31,16 @@
 #ifndef TEXTURE_REGION_EDITOR_PLUGIN_H
 #define TEXTURE_REGION_EDITOR_PLUGIN_H
 
-#include "canvas_item_editor_plugin.h"
 #include "editor/editor_inspector.h"
-#include "editor/editor_plugin.h"
-#include "scene/2d/sprite_2d.h"
+#include "editor/plugins/editor_plugin.h"
 #include "scene/gui/dialogs.h"
-#include "scene/gui/nine_patch_rect.h"
-#include "scene/resources/style_box_texture.h"
 
 class AtlasTexture;
+class NinePatchRect;
 class OptionButton;
 class PanelContainer;
+class Sprite2D;
+class StyleBoxTexture;
 class ViewPanner;
 
 class TextureRegionEditor : public AcceptDialog {
@@ -76,6 +74,8 @@ class TextureRegionEditor : public AcceptDialog {
 
 	Vector2 draw_ofs;
 	float draw_zoom = 1.0;
+	float min_draw_zoom = 1.0;
+	float max_draw_zoom = 1.0;
 	bool updating_scroll = false;
 
 	SnapMode snap_mode = SNAP_NONE;
@@ -134,6 +134,8 @@ class TextureRegionEditor : public AcceptDialog {
 	void _clear_edited_object();
 
 	void _draw_margin_line(Vector2 p_from, Vector2 p_to);
+
+	void _set_grid_parameters_clamping(bool p_enabled);
 
 protected:
 	void _notification(int p_what);

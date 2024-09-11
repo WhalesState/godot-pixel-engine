@@ -2,10 +2,9 @@
 /*  editor_debugger_tree.h                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -44,6 +43,7 @@ private:
 	enum ItemMenu {
 		ITEM_MENU_SAVE_REMOTE_NODE,
 		ITEM_MENU_COPY_NODE_PATH,
+		ITEM_MENU_EXPAND_COLLAPSE,
 	};
 
 	ObjectID inspected_object_id;
@@ -73,6 +73,7 @@ public:
 
 	virtual Variant get_drag_data(const Point2 &p_point) override;
 
+	void update_icon_max_width();
 	String get_selected_path();
 	ObjectID get_selected_object();
 	int get_current_debugger(); // Would love to have one tree for every debugger.

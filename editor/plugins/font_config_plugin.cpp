@@ -2,10 +2,9 @@
 /*  font_config_plugin.cpp                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -31,9 +30,10 @@
 
 #include "font_config_plugin.h"
 
-#include "editor/editor_scale.h"
+#include "core/string/translation_server.h"
 #include "editor/editor_settings.h"
 #include "editor/import/dynamic_font_import_settings.h"
+#include "editor/themes/editor_scale.h"
 #include "scene/gui/margin_container.h"
 
 /*************************************************************************/
@@ -62,9 +62,6 @@ bool EditorPropertyFontMetaObject::_get(const StringName &p_name, Variant &r_ret
 	}
 
 	return false;
-}
-
-void EditorPropertyFontMetaObject::_bind_methods() {
 }
 
 void EditorPropertyFontMetaObject::set_dict(const Dictionary &p_dict) {
@@ -164,7 +161,7 @@ void EditorPropertyFontMetaOverride::_notification(int p_what) {
 	}
 }
 
-void EditorPropertyFontMetaOverride::_property_changed(const String &p_property, Variant p_value, const String &p_name, bool p_changing) {
+void EditorPropertyFontMetaOverride::_property_changed(const String &p_property, const Variant &p_value, const String &p_name, bool p_changing) {
 	if (p_property.begins_with("keys")) {
 		Dictionary dict = object->get_dict();
 		String key = p_property.get_slice("/", 1);
@@ -384,26 +381,11 @@ EditorPropertyFontMetaOverride::EditorPropertyFontMetaOverride(bool p_script) {
 /* EditorPropertyOTVariation                                             */
 /*************************************************************************/
 
-void EditorPropertyOTVariation::_notification(int p_what) {
-	switch (p_what) {
-		case NOTIFICATION_ENTER_TREE:
-		case NOTIFICATION_THEME_CHANGED: {
-		} break;
-	}
-}
-
-void EditorPropertyOTVariation::_property_changed(const String &p_property, Variant p_value, const String &p_name, bool p_changing) {
+void EditorPropertyOTVariation::_property_changed(const String &p_property, const Variant &p_value, const String &p_name, bool p_changing) {
 	if (p_property.begins_with("keys")) {
 		Dictionary dict = object->get_dict();
-		Dictionary defaults_dict = object->get_defaults();
 		int key = p_property.get_slice("/", 1).to_int();
 		dict[key] = (int)p_value;
-		if (defaults_dict.has(key)) {
-			Vector3i range = defaults_dict[key];
-			if (range.z == (int)p_value) {
-				dict.erase(key);
-			}
-		}
 
 		emit_changed(get_edited_property(), dict, "", true);
 
@@ -430,6 +412,14 @@ void EditorPropertyOTVariation::update_property() {
 	}
 
 	Dictionary supported = (fd.is_valid()) ? fd->get_supported_variation_list() : Dictionary();
+
+	for (int i = 0; i < supported.size(); i++) {
+		int name_tag = supported.get_key_at_index(i);
+		Vector3i range = supported.get_value_at_index(i);
+		if ((dict.has(name_tag) && dict[name_tag].get_type() == Variant::NIL) || !dict.has(name_tag)) {
+			dict[name_tag] = range.z;
+		}
+	}
 
 	edit->set_text(vformat(TTR("Variation Coordinates (%d)"), supported.size()));
 
@@ -490,7 +480,21 @@ void EditorPropertyOTVariation::update_property() {
 			prop->set_object_and_property(object.ptr(), "keys/" + itos(name_tag));
 
 			String name = TS->tag_to_name(name_tag);
-			prop->set_label(name.capitalize());
+			String name_cap;
+			{
+				String aux = name.replace("_", " ").strip_edges();
+				for (int j = 0; j < aux.get_slice_count(" "); j++) {
+					String slice = aux.get_slicec(' ', j);
+					if (slice.length() > 0) {
+						slice[0] = String::char_uppercase(slice[0]);
+						if (i > 0) {
+							name_cap += " ";
+						}
+						name_cap += slice;
+					}
+				}
+			}
+			prop->set_label(name_cap);
 			prop->set_tooltip_text(name);
 			prop->set_selectable(false);
 
@@ -560,7 +564,7 @@ void EditorPropertyOTFeatures::_notification(int p_what) {
 	}
 }
 
-void EditorPropertyOTFeatures::_property_changed(const String &p_property, Variant p_value, const String &p_name, bool p_changing) {
+void EditorPropertyOTFeatures::_property_changed(const String &p_property, const Variant &p_value, const String &p_name, bool p_changing) {
 	if (p_property.begins_with("keys")) {
 		Dictionary dict = object->get_dict();
 		int key = p_property.get_slice("/", 1).to_int();
@@ -725,7 +729,7 @@ void EditorPropertyOTFeatures::update_property() {
 		}
 		for (int i = 0; i < FGRP_MAX; i++) {
 			if (have_sub[i]) {
-				menu->add_submenu_item(RTR(group_names[i]), "FTRMenu_" + itos(i));
+				menu->add_submenu_node_item(TTRGET(group_names[i]), menu_sub[i]);
 			}
 		}
 
@@ -853,20 +857,19 @@ EditorPropertyOTFeatures::EditorPropertyOTFeatures() {
 
 	for (int i = 0; i < FGRP_MAX; i++) {
 		menu_sub[i] = memnew(PopupMenu);
-		menu_sub[i]->set_name("FTRMenu_" + itos(i));
 		menu->add_child(menu_sub[i]);
 		menu_sub[i]->connect(SceneStringName(id_pressed), callable_mp(this, &EditorPropertyOTFeatures::_add_feature));
 	}
 
-	group_names[FGRP_STYLISTIC_SET] = "Stylistic Sets";
-	group_names[FGRP_CHARACTER_VARIANT] = "Character Variants";
-	group_names[FGRP_CAPITLS] = "Capitals";
-	group_names[FGRP_LIGATURES] = "Ligatures";
-	group_names[FGRP_ALTERNATES] = "Alternates";
-	group_names[FGRP_EAL] = "East Asian Language";
-	group_names[FGRP_EAW] = "East Asian Widths";
-	group_names[FGRP_NUMAL] = "Numeral Alignment";
-	group_names[FGRP_CUSTOM] = "Custom";
+	group_names[FGRP_STYLISTIC_SET] = TTRC("Stylistic Sets");
+	group_names[FGRP_CHARACTER_VARIANT] = TTRC("Character Variants");
+	group_names[FGRP_CAPITLS] = TTRC("Capitals");
+	group_names[FGRP_LIGATURES] = TTRC("Ligatures");
+	group_names[FGRP_ALTERNATES] = TTRC("Alternates");
+	group_names[FGRP_EAL] = TTRC("East Asian Language");
+	group_names[FGRP_EAW] = TTRC("East Asian Widths");
+	group_names[FGRP_NUMAL] = TTRC("Numeral Alignment");
+	group_names[FGRP_CUSTOM] = TTRC("Custom");
 }
 
 /*************************************************************************/
@@ -902,9 +905,9 @@ void FontPreview::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_DRAW: {
 			// Draw font name (style).
-			Ref<Font> font = get_theme_font(SNAME("font"), SNAME("Label"));
-			int font_size = get_theme_font_size(SNAME("font_size"), SNAME("Label"));
-			Color text_color = get_theme_color(SNAME("font_color"), SNAME("Label"));
+			Ref<Font> font = get_theme_font(SceneStringName(font), SNAME("Label"));
+			int font_size = get_theme_font_size(SceneStringName(font_size), SNAME("Label"));
+			Color text_color = get_theme_color(SceneStringName(font_color), SNAME("Label"));
 
 			// Draw font preview.
 			bool prev_ok = true;
@@ -919,7 +922,8 @@ void FontPreview::_notification(int p_what) {
 						name = vformat("%s (%s)", prev_font->get_font_name(), prev_font->get_font_style_name());
 					}
 					if (prev_font->is_class("FontVariation")) {
-						name += " " + TTR(" - Variation");
+						// TRANSLATORS: This refers to variable font config, appended to the font name.
+						name += " - " + TTR("Variation");
 					}
 					font->draw_string(get_canvas_item(), Point2(0, font->get_height(font_size) + 2 * EDSCALE), name, HORIZONTAL_ALIGNMENT_CENTER, get_size().x, font_size, text_color);
 
@@ -945,6 +949,12 @@ void FontPreview::_notification(int p_what) {
 				font->draw_string(get_canvas_item(), Point2(0, font->get_height(font_size) + 2 * EDSCALE), TTR("Unable to preview font"), HORIZONTAL_ALIGNMENT_CENTER, get_size().x, font_size, text_color);
 			}
 		} break;
+
+		case NOTIFICATION_EXIT_TREE: {
+			if (prev_font.is_valid()) {
+				prev_font->disconnect_changed(callable_mp(this, &FontPreview::_preview_changed));
+			}
+		} break;
 	}
 }
 
@@ -955,7 +965,17 @@ Size2 FontPreview::get_minimum_size() const {
 }
 
 void FontPreview::set_data(const Ref<Font> &p_f) {
+	if (prev_font.is_valid()) {
+		prev_font->disconnect_changed(callable_mp(this, &FontPreview::_preview_changed));
+	}
 	prev_font = p_f;
+	if (prev_font.is_valid()) {
+		prev_font->connect_changed(callable_mp(this, &FontPreview::_preview_changed));
+	}
+	queue_redraw();
+}
+
+void FontPreview::_preview_changed() {
 	queue_redraw();
 }
 

@@ -2,10 +2,9 @@
 /*  export_plugin.cpp                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -37,9 +36,9 @@
 #include "core/config/project_settings.h"
 #include "editor/editor_node.h"
 #include "editor/editor_paths.h"
-#include "editor/editor_scale.h"
 #include "editor/editor_string_names.h"
 #include "editor/export/editor_export.h"
+#include "editor/themes/editor_scale.h"
 
 #include "modules/modules_enabled.gen.h" // For svg.
 #ifdef MODULE_SVG_ENABLED
@@ -61,7 +60,21 @@ Error EditorExportPlatformLinuxBSD::_export_debug_script(const Ref<EditorExportP
 	return OK;
 }
 
-Error EditorExportPlatformLinuxBSD::export_project(const Ref<EditorExportPreset> &p_preset, bool p_debug, const String &p_path, int p_flags) {
+Error EditorExportPlatformLinuxBSD::export_project(const Ref<EditorExportPreset> &p_preset, bool p_debug, const String &p_path, BitField<EditorExportPlatform::DebugFlags> p_flags) {
+	String custom_debug = p_preset->get("custom_template/debug");
+	String custom_release = p_preset->get("custom_template/release");
+	String arch = p_preset->get("binary_format/architecture");
+
+	String template_path = p_debug ? custom_debug : custom_release;
+	template_path = template_path.strip_edges();
+	if (!template_path.is_empty()) {
+		String exe_arch = _get_exe_arch(template_path);
+		if (arch != exe_arch) {
+			add_message(EXPORT_MESSAGE_ERROR, TTR("Prepare Templates"), vformat(TTR("Mismatching custom export template executable architecture, found \"%s\", expected \"%s\"."), exe_arch, arch));
+			return ERR_CANT_CREATE;
+		}
+	}
+
 	bool export_as_zip = p_path.ends_with("zip");
 
 	String pkg_name;
@@ -80,6 +93,7 @@ Error EditorExportPlatformLinuxBSD::export_project(const Ref<EditorExportPreset>
 	Ref<DirAccess> tmp_app_dir = DirAccess::create_for_path(tmp_dir_path);
 	if (export_as_zip) {
 		if (tmp_app_dir.is_null()) {
+			add_message(EXPORT_MESSAGE_ERROR, TTR("Prepare Templates"), vformat(TTR("Could not create and open the directory: \"%s\""), tmp_dir_path));
 			return ERR_CANT_CREATE;
 		}
 		if (DirAccess::exists(tmp_dir_path)) {
@@ -94,19 +108,18 @@ Error EditorExportPlatformLinuxBSD::export_project(const Ref<EditorExportPreset>
 	// Export project.
 	Error err = EditorExportPlatformPC::export_project(p_preset, p_debug, path, p_flags);
 	if (err != OK) {
+		// Message is supplied by the subroutine method.
 		return err;
 	}
 
 	// Save console wrapper.
-	if (err == OK) {
-		int con_scr = p_preset->get("debug/export_console_wrapper");
-		if ((con_scr == 1 && p_debug) || (con_scr == 2)) {
-			String scr_path = path.get_basename() + ".sh";
-			err = _export_debug_script(p_preset, pkg_name, path.get_file(), scr_path);
-			FileAccess::set_unix_permissions(scr_path, 0755);
-			if (err != OK) {
-				add_message(EXPORT_MESSAGE_ERROR, TTR("Debug Console Export"), TTR("Could not create console wrapper."));
-			}
+	int con_scr = p_preset->get("debug/export_console_wrapper");
+	if ((con_scr == 1 && p_debug) || (con_scr == 2)) {
+		String scr_path = path.get_basename() + ".sh";
+		err = _export_debug_script(p_preset, pkg_name, path.get_file(), scr_path);
+		FileAccess::set_unix_permissions(scr_path, 0755);
+		if (err != OK) {
+			add_message(EXPORT_MESSAGE_ERROR, TTR("Debug Console Export"), TTR("Could not create console wrapper."));
 		}
 	}
 
@@ -147,12 +160,19 @@ List<String> EditorExportPlatformLinuxBSD::get_binary_extensions(const Ref<Edito
 }
 
 bool EditorExportPlatformLinuxBSD::get_export_option_visibility(const EditorExportPreset *p_preset, const String &p_option) const {
-	if (p_preset) {
-		// Hide SSH options.
-		bool ssh = p_preset->get("ssh_remote_deploy/enabled");
-		if (!ssh && p_option != "ssh_remote_deploy/enabled" && p_option.begins_with("ssh_remote_deploy/")) {
-			return false;
-		}
+	if (p_preset == nullptr) {
+		return true;
+	}
+
+	bool advanced_options_enabled = p_preset->are_advanced_options_enabled();
+
+	// Hide SSH options.
+	bool ssh = p_preset->get("ssh_remote_deploy/enabled");
+	if (!ssh && p_option != "ssh_remote_deploy/enabled" && p_option.begins_with("ssh_remote_deploy/")) {
+		return false;
+	}
+	if (p_option == "dotnet/embed_build_outputs") {
+		return advanced_options_enabled;
 	}
 	return true;
 }
@@ -199,8 +219,76 @@ bool EditorExportPlatformLinuxBSD::is_executable(const String &p_path) const {
 	return is_elf(p_path) || is_shebang(p_path);
 }
 
+bool EditorExportPlatformLinuxBSD::has_valid_export_configuration(const Ref<EditorExportPreset> &p_preset, String &r_error, bool &r_missing_templates, bool p_debug) const {
+	String err;
+	bool valid = EditorExportPlatformPC::has_valid_export_configuration(p_preset, err, r_missing_templates, p_debug);
+
+	String custom_debug = p_preset->get("custom_template/debug").operator String().strip_edges();
+	String custom_release = p_preset->get("custom_template/release").operator String().strip_edges();
+	String arch = p_preset->get("binary_format/architecture");
+
+	if (!custom_debug.is_empty() && FileAccess::exists(custom_debug)) {
+		String exe_arch = _get_exe_arch(custom_debug);
+		if (arch != exe_arch) {
+			err += vformat(TTR("Mismatching custom debug export template executable architecture: found \"%s\", expected \"%s\"."), exe_arch, arch) + "\n";
+		}
+	}
+	if (!custom_release.is_empty() && FileAccess::exists(custom_release)) {
+		String exe_arch = _get_exe_arch(custom_release);
+		if (arch != exe_arch) {
+			err += vformat(TTR("Mismatching custom release export template executable architecture: found \"%s\", expected \"%s\"."), exe_arch, arch) + "\n";
+		}
+	}
+
+	if (!err.is_empty()) {
+		r_error = err;
+	}
+
+	return valid;
+}
+
+String EditorExportPlatformLinuxBSD::_get_exe_arch(const String &p_path) const {
+	Ref<FileAccess> f = FileAccess::open(p_path, FileAccess::READ);
+	if (f.is_null()) {
+		return "invalid";
+	}
+
+	// Read and check ELF magic number.
+	{
+		uint32_t magic = f->get_32();
+		if (magic != 0x464c457f) { // 0x7F + "ELF"
+			return "invalid";
+		}
+	}
+
+	// Process header.
+	int64_t header_pos = f->get_position();
+	f->seek(header_pos + 14);
+	uint16_t machine = f->get_16();
+	f->close();
+
+	switch (machine) {
+		case 0x0003:
+			return "x86_32";
+		case 0x003e:
+			return "x86_64";
+		case 0x0014:
+			return "ppc32";
+		case 0x0015:
+			return "ppc64";
+		case 0x0028:
+			return "arm32";
+		case 0x00b7:
+			return "arm64";
+		case 0x00f3:
+			return "rv64";
+		default:
+			return "unknown";
+	}
+}
+
 Error EditorExportPlatformLinuxBSD::fixup_embedded_pck(const String &p_path, int64_t p_embedded_start, int64_t p_embedded_size) {
-	// Patch the header of the "pck" section in the ELF file so that it corresponds to the embedded data
+	// Patch the header of the "pck" section in the ELF file so that it corresponds to the embedded data.
 
 	Ref<FileAccess> f = FileAccess::open(p_path, FileAccess::READ_WRITE);
 	if (f.is_null()) {
@@ -208,7 +296,7 @@ Error EditorExportPlatformLinuxBSD::fixup_embedded_pck(const String &p_path, int
 		return ERR_CANT_OPEN;
 	}
 
-	// Read and check ELF magic number
+	// Read and check ELF magic number.
 	{
 		uint32_t magic = f->get_32();
 		if (magic != 0x464c457f) { // 0x7F + "ELF"
@@ -217,7 +305,7 @@ Error EditorExportPlatformLinuxBSD::fixup_embedded_pck(const String &p_path, int
 		}
 	}
 
-	// Read program architecture bits from class field
+	// Read program architecture bits from class field.
 
 	int bits = f->get_8() * 32;
 
@@ -225,7 +313,7 @@ Error EditorExportPlatformLinuxBSD::fixup_embedded_pck(const String &p_path, int
 		add_message(EXPORT_MESSAGE_ERROR, TTR("PCK Embedding"), TTR("32-bit executables cannot have embedded data >= 4 GiB."));
 	}
 
-	// Get info about the section header table
+	// Get info about the section header table.
 
 	int64_t section_table_pos;
 	int64_t section_header_size;
@@ -243,13 +331,13 @@ Error EditorExportPlatformLinuxBSD::fixup_embedded_pck(const String &p_path, int
 	int num_sections = f->get_16();
 	int string_section_idx = f->get_16();
 
-	// Load the strings table
+	// Load the strings table.
 	uint8_t *strings;
 	{
-		// Jump to the strings section header
+		// Jump to the strings section header.
 		f->seek(section_table_pos + string_section_idx * section_header_size);
 
-		// Read strings data size and offset
+		// Read strings data size and offset.
 		int64_t string_data_pos;
 		int64_t string_data_size;
 		if (bits == 32) {
@@ -262,7 +350,7 @@ Error EditorExportPlatformLinuxBSD::fixup_embedded_pck(const String &p_path, int
 			string_data_size = f->get_64();
 		}
 
-		// Read strings data
+		// Read strings data.
 		f->seek(string_data_pos);
 		strings = (uint8_t *)memalloc(string_data_size);
 		if (!strings) {
@@ -271,7 +359,7 @@ Error EditorExportPlatformLinuxBSD::fixup_embedded_pck(const String &p_path, int
 		f->get_buffer(strings, string_data_size);
 	}
 
-	// Search for the "pck" section
+	// Search for the "pck" section.
 
 	bool found = false;
 	for (int i = 0; i < num_sections; ++i) {
@@ -370,7 +458,7 @@ void EditorExportPlatformLinuxBSD::cleanup() {
 	cleanup_commands.clear();
 }
 
-Error EditorExportPlatformLinuxBSD::run(const Ref<EditorExportPreset> &p_preset, int p_device, int p_debug_flags) {
+Error EditorExportPlatformLinuxBSD::run(const Ref<EditorExportPreset> &p_preset, int p_device, BitField<EditorExportPlatform::DebugFlags> p_debug_flags) {
 	cleanup();
 	if (p_device) { // Stop command, cleanup only.
 		return OK;
@@ -424,8 +512,7 @@ Error EditorExportPlatformLinuxBSD::run(const Ref<EditorExportPreset> &p_preset,
 
 	String cmd_args;
 	{
-		Vector<String> cmd_args_list;
-		gen_debug_flags(cmd_args_list, p_debug_flags);
+		Vector<String> cmd_args_list = gen_export_flags(p_debug_flags);
 		for (int i = 0; i < cmd_args_list.size(); i++) {
 			if (i != 0) {
 				cmd_args += " ";
@@ -434,7 +521,7 @@ Error EditorExportPlatformLinuxBSD::run(const Ref<EditorExportPreset> &p_preset,
 		}
 	}
 
-	const bool use_remote = (p_debug_flags & DEBUG_FLAG_REMOTE_DEBUG) || (p_debug_flags & DEBUG_FLAG_DUMB_CLIENT);
+	const bool use_remote = p_debug_flags.has_flag(DEBUG_FLAG_REMOTE_DEBUG) || p_debug_flags.has_flag(DEBUG_FLAG_DUMB_CLIENT);
 	int dbg_port = EditorSettings::get_singleton()->get("network/debug/remote_port");
 
 	print_line("Creating temporary directory...");

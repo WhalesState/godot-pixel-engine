@@ -2,10 +2,9 @@
 /*  split_container.cpp                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -38,7 +37,7 @@ void SplitContainerDragger::gui_input(const Ref<InputEvent> &p_event) {
 
 	SplitContainer *sc = Object::cast_to<SplitContainer>(get_parent());
 
-	if (sc->collapsed || !sc->_getch(0) || !sc->_getch(1) || sc->dragger_visibility != SplitContainer::DRAGGER_VISIBLE) {
+	if (sc->collapsed || !sc->_get_sortable_child(0) || !sc->_get_sortable_child(1) || sc->dragger_visibility != SplitContainer::DRAGGER_VISIBLE) {
 		return;
 	}
 
@@ -134,15 +133,12 @@ void SplitContainerDragger::_notification(int p_what) {
 	}
 }
 
-Control *SplitContainer::_getch(int p_idx) const {
+Control *SplitContainer::_get_sortable_child(int p_idx, SortableVisbilityMode p_visibility_mode) const {
 	int idx = 0;
 
 	for (int i = 0; i < get_child_count(false); i++) {
-		Control *c = Object::cast_to<Control>(get_child(i, false));
-		if (!c || !c->is_visible()) {
-			continue;
-		}
-		if (c->is_set_as_top_level()) {
+		Control *c = as_sortable_control(get_child(i, false), p_visibility_mode);
+		if (!c) {
 			continue;
 		}
 
@@ -157,8 +153,8 @@ Control *SplitContainer::_getch(int p_idx) const {
 }
 
 void SplitContainer::_compute_middle_sep(bool p_clamp) {
-	Control *first = _getch(0);
-	Control *second = _getch(1);
+	Control *first = _get_sortable_child(0);
+	Control *second = _get_sortable_child(1);
 
 	// Determine expanded children.
 	bool first_expanded = (vertical ? first->get_v_size_flags() : first->get_h_size_flags()) & SIZE_EXPAND;
@@ -198,8 +194,8 @@ void SplitContainer::_compute_middle_sep(bool p_clamp) {
 }
 
 void SplitContainer::_resort() {
-	Control *first = _getch(0);
-	Control *second = _getch(1);
+	Control *first = _get_sortable_child(0);
+	Control *second = _get_sortable_child(1);
 
 	// If we have only one element.
 	if (!first || !second) {
@@ -258,7 +254,8 @@ Size2 SplitContainer::get_minimum_size() const {
 	int sep = (dragger_visibility == DRAGGER_HIDDEN_COLLAPSED) ? 0 : theme_cache.separation;
 
 	for (int i = 0; i < 2; i++) {
-		if (!_getch(i)) {
+		Control *child = _get_sortable_child(i, SortableVisbilityMode::VISIBLE);
+		if (!child) {
 			break;
 		}
 
@@ -270,7 +267,7 @@ Size2 SplitContainer::get_minimum_size() const {
 			}
 		}
 
-		Size2 ms = _getch(i)->get_combined_minimum_size();
+		Size2 ms = child->get_combined_minimum_size();
 
 		if (vertical) {
 			minimum.height += ms.height;
@@ -322,7 +319,7 @@ int SplitContainer::get_split_offset() const {
 }
 
 void SplitContainer::clamp_split_offset() {
-	if (!_getch(0) || !_getch(1)) {
+	if (!_get_sortable_child(0) || !_get_sortable_child(1)) {
 		return;
 	}
 

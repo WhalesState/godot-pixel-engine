@@ -2,10 +2,9 @@
 /*  rename_dialog.cpp                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -36,12 +35,11 @@
 
 #include "core/string/print_string.h"
 #include "editor/editor_node.h"
-#include "editor/editor_scale.h"
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
-#include "editor/editor_themes.h"
 #include "editor/editor_undo_redo_manager.h"
 #include "editor/plugins/script_editor_plugin.h"
+#include "editor/themes/editor_scale.h"
 #include "modules/regex/regex.h"
 #include "scene/gui/check_box.h"
 #include "scene/gui/check_button.h"
@@ -291,6 +289,7 @@ RenameDialog::RenameDialog(SceneTreeEditor *p_scene_tree_editor) {
 	vbc->add_child(lbl_preview_title);
 
 	lbl_preview = memnew(Label);
+	lbl_preview->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 	lbl_preview->set_autowrap_mode(TextServer::AUTOWRAP_WORD_SMART);
 	vbc->add_child(lbl_preview);
 
@@ -305,7 +304,7 @@ RenameDialog::RenameDialog(SceneTreeEditor *p_scene_tree_editor) {
 
 	// ---- Connections
 
-	cbut_collapse_features->connect("toggled", callable_mp(this, &RenameDialog::_features_toggled));
+	cbut_collapse_features->connect(SceneStringName(toggled), callable_mp(this, &RenameDialog::_features_toggled));
 
 	// Substitute Buttons
 
@@ -320,15 +319,15 @@ RenameDialog::RenameDialog(SceneTreeEditor *p_scene_tree_editor) {
 
 	// Preview
 
-	lne_prefix->connect("text_changed", callable_mp(this, &RenameDialog::_update_preview));
-	lne_suffix->connect("text_changed", callable_mp(this, &RenameDialog::_update_preview));
-	lne_search->connect("text_changed", callable_mp(this, &RenameDialog::_update_preview));
-	lne_replace->connect("text_changed", callable_mp(this, &RenameDialog::_update_preview));
-	spn_count_start->connect("value_changed", callable_mp(this, &RenameDialog::_update_preview_int));
-	spn_count_step->connect("value_changed", callable_mp(this, &RenameDialog::_update_preview_int));
-	spn_count_padding->connect("value_changed", callable_mp(this, &RenameDialog::_update_preview_int));
-	opt_style->connect("item_selected", callable_mp(this, &RenameDialog::_update_preview_int));
-	opt_case->connect("item_selected", callable_mp(this, &RenameDialog::_update_preview_int));
+	lne_prefix->connect(SceneStringName(text_changed), callable_mp(this, &RenameDialog::_update_preview));
+	lne_suffix->connect(SceneStringName(text_changed), callable_mp(this, &RenameDialog::_update_preview));
+	lne_search->connect(SceneStringName(text_changed), callable_mp(this, &RenameDialog::_update_preview));
+	lne_replace->connect(SceneStringName(text_changed), callable_mp(this, &RenameDialog::_update_preview));
+	spn_count_start->connect(SceneStringName(value_changed), callable_mp(this, &RenameDialog::_update_preview_int));
+	spn_count_step->connect(SceneStringName(value_changed), callable_mp(this, &RenameDialog::_update_preview_int));
+	spn_count_padding->connect(SceneStringName(value_changed), callable_mp(this, &RenameDialog::_update_preview_int));
+	opt_style->connect(SceneStringName(item_selected), callable_mp(this, &RenameDialog::_update_preview_int));
+	opt_case->connect(SceneStringName(item_selected), callable_mp(this, &RenameDialog::_update_preview_int));
 	cbut_substitute->connect(SceneStringName(pressed), callable_mp(this, &RenameDialog::_update_preview).bind(""));
 	cbut_regex->connect(SceneStringName(pressed), callable_mp(this, &RenameDialog::_update_preview).bind(""));
 	cbut_process->connect(SceneStringName(pressed), callable_mp(this, &RenameDialog::_update_preview).bind(""));
@@ -370,7 +369,7 @@ void RenameDialog::_post_popup() {
 	preview_node = nullptr;
 
 	Array selected_node_list = editor_selection->get_selected_nodes();
-	ERR_FAIL_COND(selected_node_list.size() == 0);
+	ERR_FAIL_COND(selected_node_list.is_empty());
 
 	preview_node = Object::cast_to<Node>(selected_node_list[0]);
 
@@ -382,7 +381,7 @@ void RenameDialog::_update_preview_int(int new_value) {
 	_update_preview();
 }
 
-void RenameDialog::_update_preview(String new_text) {
+void RenameDialog::_update_preview(const String &new_text) {
 	if (lock_preview_update || preview_node == nullptr) {
 		return;
 	}
@@ -400,9 +399,9 @@ void RenameDialog::_update_preview(String new_text) {
 			// New name is identical to the old one. Don't color it as much to avoid distracting the user.
 			const Color accent_color = EditorNode::get_singleton()->get_editor_theme()->get_color(SNAME("accent_color"), EditorStringName(Editor));
 			const Color text_color = EditorNode::get_singleton()->get_editor_theme()->get_color(SNAME("default_color"), SNAME("RichTextLabel"));
-			lbl_preview->add_theme_color_override("font_color", accent_color.lerp(text_color, 0.5));
+			lbl_preview->add_theme_color_override(SceneStringName(font_color), accent_color.lerp(text_color, 0.5));
 		} else {
-			lbl_preview->add_theme_color_override("font_color", EditorNode::get_singleton()->get_editor_theme()->get_color(SNAME("success_color"), EditorStringName(Editor)));
+			lbl_preview->add_theme_color_override(SceneStringName(font_color), EditorNode::get_singleton()->get_editor_theme()->get_color(SNAME("success_color"), EditorStringName(Editor)));
 		}
 	}
 
@@ -475,7 +474,7 @@ void RenameDialog::_error_handler(void *p_self, const char *p_func, const char *
 	String source_file = String::utf8(p_file);
 
 	// Only show first error that is related to "regex"
-	if (self->has_errors || source_file.find("regex") < 0) {
+	if (self->has_errors || !source_file.contains("regex")) {
 		return;
 	}
 
@@ -488,7 +487,7 @@ void RenameDialog::_error_handler(void *p_self, const char *p_func, const char *
 
 	self->has_errors = true;
 	self->lbl_preview_title->set_text(TTR("Regular Expression Error:"));
-	self->lbl_preview->add_theme_color_override("font_color", EditorNode::get_singleton()->get_editor_theme()->get_color(SNAME("error_color"), EditorStringName(Editor)));
+	self->lbl_preview->add_theme_color_override(SceneStringName(font_color), EditorNode::get_singleton()->get_editor_theme()->get_color(SNAME("error_color"), EditorStringName(Editor)));
 	self->lbl_preview->set_text(vformat(TTR("At character %s"), err_str));
 }
 
@@ -593,16 +592,15 @@ void RenameDialog::rename() {
 		undo_redo->create_action(TTR("Batch Rename"), UndoRedo::MERGE_DISABLE, root_node, true);
 
 		// Make sure to iterate reversed so that child nodes will find parents.
-		for (int i = to_rename.size() - 1; i >= 0; --i) {
-			Node *n = root_node->get_node(to_rename[i].first);
-			const String &new_name = to_rename[i].second;
+		for (List<Pair<NodePath, String>>::Element *E = to_rename.back(); E; E = E->prev()) {
+			Node *n = root_node->get_node(E->get().first);
+			const String &new_name = E->get().second;
 
 			if (!n) {
-				ERR_PRINT("Skipping missing node: " + to_rename[i].first.get_concatenated_subnames());
+				ERR_PRINT("Skipping missing node: " + E->get().first.get_concatenated_subnames());
 				continue;
 			}
-
-			scene_tree_editor->call("_rename_node", n, new_name);
+			scene_tree_editor->rename_node(n, new_name);
 		}
 
 		undo_redo->commit_action();
@@ -639,7 +637,7 @@ bool RenameDialog::_is_main_field(LineEdit *line_edit) {
 			(line_edit == lne_search || line_edit == lne_replace || line_edit == lne_prefix || line_edit == lne_suffix);
 }
 
-void RenameDialog::_insert_text(String text) {
+void RenameDialog::_insert_text(const String &text) {
 	LineEdit *focus_owner = Object::cast_to<LineEdit>(get_viewport()->gui_get_focus_owner());
 
 	if (_is_main_field(focus_owner)) {

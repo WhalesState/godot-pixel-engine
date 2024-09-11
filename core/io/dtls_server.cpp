@@ -2,10 +2,9 @@
 /*  dtls_server.cpp                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -34,12 +33,12 @@
 #include "core/config/project_settings.h"
 #include "core/io/file_access.h"
 
-DTLSServer *(*DTLSServer::_create)() = nullptr;
+DTLSServer *(*DTLSServer::_create)(bool p_notify_postinitialize) = nullptr;
 bool DTLSServer::available = false;
 
-DTLSServer *DTLSServer::create() {
+DTLSServer *DTLSServer::create(bool p_notify_postinitialize) {
 	if (_create) {
-		return _create();
+		return _create(p_notify_postinitialize);
 	}
 	return nullptr;
 }

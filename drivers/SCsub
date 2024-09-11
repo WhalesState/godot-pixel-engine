@@ -3,6 +3,7 @@
 Import("env")
 
 env.drivers_sources = []
+supported = env.get("supported", [])
 
 # OS drivers
 SConscript("unix/SCsub")

@@ -2,10 +2,9 @@
 /*  pair.h                                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -34,7 +33,7 @@
 
 #include "core/templates/hashfuncs.h"
 #include "core/typedefs.h"
-template <class F, class S>
+template <typename F, typename S>
 struct Pair {
 	F first;
 	S second;
@@ -50,17 +49,17 @@ struct Pair {
 	}
 };
 
-template <class F, class S>
+template <typename F, typename S>
 bool operator==(const Pair<F, S> &pair, const Pair<F, S> &other) {
 	return (pair.first == other.first) && (pair.second == other.second);
 }
 
-template <class F, class S>
+template <typename F, typename S>
 bool operator!=(const Pair<F, S> &pair, const Pair<F, S> &other) {
 	return (pair.first != other.first) || (pair.second != other.second);
 }
 
-template <class F, class S>
+template <typename F, typename S>
 struct PairSort {
 	bool operator()(const Pair<F, S> &A, const Pair<F, S> &B) const {
 		if (A.first != B.first) {
@@ -70,7 +69,7 @@ struct PairSort {
 	}
 };
 
-template <class F, class S>
+template <typename F, typename S>
 struct PairHash {
 	static uint32_t hash(const Pair<F, S> &P) {
 		uint64_t h1 = HashMapHasherDefault::hash(P.first);
@@ -79,7 +78,7 @@ struct PairHash {
 	}
 };
 
-template <class K, class V>
+template <typename K, typename V>
 struct KeyValue {
 	const K key;
 	V value;
@@ -95,17 +94,17 @@ struct KeyValue {
 	}
 };
 
-template <class K, class V>
+template <typename K, typename V>
 bool operator==(const KeyValue<K, V> &pair, const KeyValue<K, V> &other) {
 	return (pair.key == other.key) && (pair.value == other.value);
 }
 
-template <class K, class V>
+template <typename K, typename V>
 bool operator!=(const KeyValue<K, V> &pair, const KeyValue<K, V> &other) {
 	return (pair.key != other.key) || (pair.value != other.value);
 }
 
-template <class K, class V>
+template <typename K, typename V>
 struct KeyValueSort {
 	bool operator()(const KeyValue<K, V> &A, const KeyValue<K, V> &B) const {
 		return A.key < B.key;

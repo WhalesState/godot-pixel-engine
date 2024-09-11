@@ -2,10 +2,9 @@
 /*  editor_build_profile.h                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -51,7 +50,7 @@ public:
 		BUILD_OPTION_TEXT_SERVER_ADVANCED,
 		BUILD_OPTION_DYNAMIC_FONTS,
 		BUILD_OPTION_WOFF2_FONTS,
-		BUILD_OPTION_GRPAHITE_FONTS,
+		BUILD_OPTION_GRAPHITE_FONTS,
 		BUILD_OPTION_MSDFGEN,
 		BUILD_OPTION_MAX,
 	};
@@ -144,6 +143,7 @@ class EditorBuildProfileManager : public AcceptDialog {
 
 	void _profile_action(int p_action);
 	void _action_confirm();
+	void _hide_requested();
 
 	void _update_edited_profile();
 	void _fill_classes_from(TreeItem *p_parent, const String &p_class, const String &p_selected);

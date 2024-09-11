@@ -2,10 +2,9 @@
 /*  editor_property_name_processor.h                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -43,11 +42,16 @@ class EditorPropertyNameProcessor : public Node {
 	HashMap<String, String> capitalize_string_remaps;
 	LocalVector<String> stop_words; // Exceptions that shouldn't be capitalized.
 
+	HashMap<String, HashMap<String, StringName>> translation_contexts;
+
 	// Capitalizes property path segments.
 	String _capitalize_name(const String &p_name) const;
 
+	// Returns the translation context for the given name.
+	StringName _get_context(const String &p_name, const String &p_property, const StringName &p_class) const;
+
 public:
-	// Matches `interface/inspector/capitalize_properties` editor setting.
+	// Matches `interface/inspector/default_property_name_style` editor setting.
 	enum Style {
 		STYLE_RAW,
 		STYLE_CAPITALIZED,
@@ -63,7 +67,8 @@ public:
 	static bool is_localization_available();
 
 	// Turns property path segment into the given style.
-	String process_name(const String &p_name, Style p_style) const;
+	// `p_class` and `p_property` are only used for `STYLE_LOCALIZED`, associating the name with a translation context.
+	String process_name(const String &p_name, Style p_style, const String &p_property = "", const StringName &p_class = "") const;
 
 	// Translate plain text group names.
 	String translate_group_name(const String &p_name) const;

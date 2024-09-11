@@ -2,10 +2,9 @@
 /*  resource_saver.h                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -71,7 +70,7 @@ class ResourceSaver {
 	static ResourceSavedCallback save_callback;
 	static ResourceSaverGetResourceIDForPath save_get_id_for_path;
 
-	static Ref<ResourceFormatSaver> _find_custom_resource_format_saver(String path);
+	static Ref<ResourceFormatSaver> _find_custom_resource_format_saver(const String &path);
 
 public:
 	enum SaverFlags {
@@ -100,7 +99,7 @@ public:
 	static void set_save_callback(ResourceSavedCallback p_callback);
 	static void set_get_resource_id_for_path(ResourceSaverGetResourceIDForPath p_callback);
 
-	static bool add_custom_resource_format_saver(String script_path);
+	static bool add_custom_resource_format_saver(const String &script_path);
 	static void add_custom_savers();
 	static void remove_custom_savers();
 };

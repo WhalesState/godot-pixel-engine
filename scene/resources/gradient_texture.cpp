@@ -2,10 +2,9 @@
 /*  gradient_texture.cpp                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -31,7 +30,6 @@
 
 #include "gradient_texture.h"
 
-#include "core/core_string_names.h"
 #include "core/math/geometry_2d.h"
 
 GradientTexture1D::GradientTexture1D() {
@@ -52,12 +50,8 @@ void GradientTexture1D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_width", "width"), &GradientTexture1D::set_width);
 	// The `get_width()` method is already exposed by the parent class Texture2D.
 
-	ClassDB::bind_method(D_METHOD("set_use_hdr", "enabled"), &GradientTexture1D::set_use_hdr);
-	ClassDB::bind_method(D_METHOD("is_using_hdr"), &GradientTexture1D::is_using_hdr);
-
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "gradient", PROPERTY_HINT_RESOURCE_TYPE, "Gradient", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_EDITOR_INSTANTIATE_OBJECT), "set_gradient", "get_gradient");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "width", PROPERTY_HINT_RANGE, "1,16384,suffix:px"), "set_width", "get_width");
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "use_hdr"), "set_use_hdr", "is_using_hdr");
 }
 
 void GradientTexture1D::set_gradient(Ref<Gradient> p_gradient) {
@@ -94,50 +88,34 @@ void GradientTexture1D::_update() {
 		return;
 	}
 
-	if (use_hdr) {
-		// High dynamic range.
-		Ref<Image> image = memnew(Image(width, 1, false, Image::FORMAT_RGBAF));
+	// Low dynamic range. "Overbright" colors will be clamped.
+	Vector<uint8_t> data;
+	data.resize(width * 4);
+	{
+		uint8_t *wd8 = data.ptrw();
 		Gradient &g = **gradient;
-		// `create()` isn't available for non-uint8_t data, so fill in the data manually.
+
 		for (int i = 0; i < width; i++) {
 			float ofs = float(i) / (width - 1);
-			image->set_pixel(i, 0, g.get_color_at_offset(ofs));
-		}
+			Color color = g.get_color_at_offset(ofs);
 
-		if (texture.is_valid()) {
-			RID new_texture = RS::get_singleton()->texture_2d_create(image);
-			RS::get_singleton()->texture_replace(texture, new_texture);
-		} else {
-			texture = RS::get_singleton()->texture_2d_create(image);
-		}
-	} else {
-		// Low dynamic range. "Overbright" colors will be clamped.
-		Vector<uint8_t> data;
-		data.resize(width * 4);
-		{
-			uint8_t *wd8 = data.ptrw();
-			Gradient &g = **gradient;
-
-			for (int i = 0; i < width; i++) {
-				float ofs = float(i) / (width - 1);
-				Color color = g.get_color_at_offset(ofs);
-
-				wd8[i * 4 + 0] = uint8_t(CLAMP(color.r * 255.0, 0, 255));
-				wd8[i * 4 + 1] = uint8_t(CLAMP(color.g * 255.0, 0, 255));
-				wd8[i * 4 + 2] = uint8_t(CLAMP(color.b * 255.0, 0, 255));
-				wd8[i * 4 + 3] = uint8_t(CLAMP(color.a * 255.0, 0, 255));
-			}
-		}
-
-		Ref<Image> image = memnew(Image(width, 1, false, Image::FORMAT_RGBA8, data));
-
-		if (texture.is_valid()) {
-			RID new_texture = RS::get_singleton()->texture_2d_create(image);
-			RS::get_singleton()->texture_replace(texture, new_texture);
-		} else {
-			texture = RS::get_singleton()->texture_2d_create(image);
+			wd8[i * 4 + 0] = uint8_t(CLAMP(color.r * 255.0, 0, 255));
+			wd8[i * 4 + 1] = uint8_t(CLAMP(color.g * 255.0, 0, 255));
+			wd8[i * 4 + 2] = uint8_t(CLAMP(color.b * 255.0, 0, 255));
+			wd8[i * 4 + 3] = uint8_t(CLAMP(color.a * 255.0, 0, 255));
 		}
 	}
+
+	Ref<Image> image = memnew(Image(width, 1, false, Image::FORMAT_RGBA8, data));
+
+	if (texture.is_valid()) {
+		RID new_texture = RS::get_singleton()->texture_2d_create(image);
+		RS::get_singleton()->texture_replace(texture, new_texture);
+	} else {
+		texture = RS::get_singleton()->texture_2d_create(image);
+	}
+
+	RS::get_singleton()->texture_set_path(texture, get_path());
 }
 
 void GradientTexture1D::set_width(int p_width) {
@@ -149,20 +127,6 @@ void GradientTexture1D::set_width(int p_width) {
 
 int GradientTexture1D::get_width() const {
 	return width;
-}
-
-void GradientTexture1D::set_use_hdr(bool p_enabled) {
-	if (p_enabled == use_hdr) {
-		return;
-	}
-
-	use_hdr = p_enabled;
-	_queue_update();
-	emit_changed();
-}
-
-bool GradientTexture1D::is_using_hdr() const {
-	return use_hdr;
 }
 
 RID GradientTexture1D::get_rid() const {
@@ -236,39 +200,27 @@ void GradientTexture2D::_update() {
 	image.instantiate();
 
 	if (gradient->get_point_count() <= 1) { // No need to interpolate.
-		image->initialize_data(width, height, false, (use_hdr) ? Image::FORMAT_RGBAF : Image::FORMAT_RGBA8);
+		image->initialize_data(width, height, false, Image::FORMAT_RGBA8);
 		image->fill((gradient->get_point_count() == 1) ? gradient->get_color(0) : Color(0, 0, 0, 1));
 	} else {
-		if (use_hdr) {
-			image->initialize_data(width, height, false, Image::FORMAT_RGBAF);
+		Vector<uint8_t> data;
+		data.resize(width * height * 4);
+		{
+			uint8_t *wd8 = data.ptrw();
 			Gradient &g = **gradient;
-			// `create()` isn't available for non-uint8_t data, so fill in the data manually.
 			for (int y = 0; y < height; y++) {
 				for (int x = 0; x < width; x++) {
 					float ofs = _get_gradient_offset_at(x, y);
-					image->set_pixel(x, y, g.get_color_at_offset(ofs));
-				}
-			}
-		} else {
-			Vector<uint8_t> data;
-			data.resize(width * height * 4);
-			{
-				uint8_t *wd8 = data.ptrw();
-				Gradient &g = **gradient;
-				for (int y = 0; y < height; y++) {
-					for (int x = 0; x < width; x++) {
-						float ofs = _get_gradient_offset_at(x, y);
-						const Color &c = g.get_color_at_offset(ofs);
+					const Color &c = g.get_color_at_offset(ofs);
 
-						wd8[(x + (y * width)) * 4 + 0] = uint8_t(CLAMP(c.r * 255.0, 0, 255));
-						wd8[(x + (y * width)) * 4 + 1] = uint8_t(CLAMP(c.g * 255.0, 0, 255));
-						wd8[(x + (y * width)) * 4 + 2] = uint8_t(CLAMP(c.b * 255.0, 0, 255));
-						wd8[(x + (y * width)) * 4 + 3] = uint8_t(CLAMP(c.a * 255.0, 0, 255));
-					}
+					wd8[(x + (y * width)) * 4 + 0] = uint8_t(CLAMP(c.r * 255.0, 0, 255));
+					wd8[(x + (y * width)) * 4 + 1] = uint8_t(CLAMP(c.g * 255.0, 0, 255));
+					wd8[(x + (y * width)) * 4 + 2] = uint8_t(CLAMP(c.b * 255.0, 0, 255));
+					wd8[(x + (y * width)) * 4 + 3] = uint8_t(CLAMP(c.a * 255.0, 0, 255));
 				}
 			}
-			image->set_data(width, height, false, Image::FORMAT_RGBA8, data);
 		}
+		image->set_data(width, height, false, Image::FORMAT_RGBA8, data);
 	}
 
 	if (texture.is_valid()) {
@@ -277,6 +229,7 @@ void GradientTexture2D::_update() {
 	} else {
 		texture = RS::get_singleton()->texture_2d_create(image);
 	}
+	RS::get_singleton()->texture_set_path(texture, get_path());
 }
 
 float GradientTexture2D::_get_gradient_offset_at(int x, int y) const {
@@ -341,20 +294,6 @@ void GradientTexture2D::set_height(int p_height) {
 }
 int GradientTexture2D::get_height() const {
 	return height;
-}
-
-void GradientTexture2D::set_use_hdr(bool p_enabled) {
-	if (p_enabled == use_hdr) {
-		return;
-	}
-
-	use_hdr = p_enabled;
-	_queue_update();
-	emit_changed();
-}
-
-bool GradientTexture2D::is_using_hdr() const {
-	return use_hdr;
 }
 
 void GradientTexture2D::set_fill_from(Vector2 p_fill_from) {
@@ -425,9 +364,6 @@ void GradientTexture2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_width", "width"), &GradientTexture2D::set_width);
 	ClassDB::bind_method(D_METHOD("set_height", "height"), &GradientTexture2D::set_height);
 
-	ClassDB::bind_method(D_METHOD("set_use_hdr", "enabled"), &GradientTexture2D::set_use_hdr);
-	ClassDB::bind_method(D_METHOD("is_using_hdr"), &GradientTexture2D::is_using_hdr);
-
 	ClassDB::bind_method(D_METHOD("set_fill", "fill"), &GradientTexture2D::set_fill);
 	ClassDB::bind_method(D_METHOD("get_fill"), &GradientTexture2D::get_fill);
 	ClassDB::bind_method(D_METHOD("set_fill_from", "fill_from"), &GradientTexture2D::set_fill_from);
@@ -441,7 +377,6 @@ void GradientTexture2D::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "gradient", PROPERTY_HINT_RESOURCE_TYPE, "Gradient", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_EDITOR_INSTANTIATE_OBJECT), "set_gradient", "get_gradient");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "width", PROPERTY_HINT_RANGE, "1,2048,or_greater,suffix:px"), "set_width", "get_width");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "height", PROPERTY_HINT_RANGE, "1,2048,or_greater,suffix:px"), "set_height", "get_height");
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "use_hdr"), "set_use_hdr", "is_using_hdr");
 
 	ADD_GROUP("Fill", "fill_");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "fill", PROPERTY_HINT_ENUM, "Linear,Radial,Square"), "set_fill", "get_fill");

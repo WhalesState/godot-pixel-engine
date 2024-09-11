@@ -2,10 +2,9 @@
 /*  panel_container.cpp                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -36,17 +35,13 @@
 Size2 PanelContainer::get_minimum_size() const {
 	Size2 ms;
 	for (int i = 0; i < get_child_count(); i++) {
-		Control *c = Object::cast_to<Control>(get_child(i));
-		if (!c || !c->is_visible()) {
-			continue;
-		}
-		if (c->is_set_as_top_level()) {
+		Control *c = as_sortable_control(get_child(i), SortableVisbilityMode::VISIBLE);
+		if (!c) {
 			continue;
 		}
 
 		Size2 minsize = c->get_combined_minimum_size();
-		ms.width = MAX(ms.width, minsize.width);
-		ms.height = MAX(ms.height, minsize.height);
+		ms = ms.max(minsize);
 	}
 
 	if (theme_cache.panel_style.is_valid()) {
@@ -78,8 +73,8 @@ void PanelContainer::_notification(int p_what) {
 		case NOTIFICATION_DRAW: {
 			RID ci = get_canvas_item();
 			theme_cache.panel_style->draw(ci, Rect2(Point2(), get_size()));
-			Size2 expand_begin = theme_cache.panel_style->get_expand_margin_begin();
-			Size2 expand_end = theme_cache.panel_style->get_expand_margin_end();
+			Size2 expand_begin = Size2(theme_cache.panel_style->get_margin(SIDE_LEFT), theme_cache.panel_style->get_margin(SIDE_TOP));
+			Size2 expand_end = Size2(theme_cache.panel_style->get_margin(SIDE_RIGHT), theme_cache.panel_style->get_margin(SIDE_BOTTOM));
 			RenderingServer::get_singleton()->canvas_item_set_custom_rect(ci, !is_visibility_clip_disabled(), Rect2(-expand_begin, get_size() + expand_begin + expand_end));
 		} break;
 
@@ -92,11 +87,8 @@ void PanelContainer::_notification(int p_what) {
 			}
 
 			for (int i = 0; i < get_child_count(); i++) {
-				Control *c = Object::cast_to<Control>(get_child(i));
-				if (!c || !c->is_visible_in_tree()) {
-					continue;
-				}
-				if (c->is_set_as_top_level()) {
+				Control *c = as_sortable_control(get_child(i));
+				if (!c) {
 					continue;
 				}
 

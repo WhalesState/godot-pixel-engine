@@ -2,10 +2,9 @@
 /*  resource_preloader.cpp                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -41,12 +40,11 @@ void ResourcePreloader::_set_resources(const Array &p_data) {
 	ERR_FAIL_COND(names.size() != resdata.size());
 
 	for (int i = 0; i < resdata.size(); i++) {
-		String name = names[i];
 		Ref<Resource> resource = resdata[i];
 		ERR_CONTINUE(!resource.is_valid());
-		resources[name] = resource;
+		resources[names[i]] = resource;
 
-		//add_resource(name,resource);
+		//add_resource(names[i],resource);
 	}
 }
 

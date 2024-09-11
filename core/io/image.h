@@ -2,10 +2,9 @@
 /*  image.h                                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -99,8 +98,6 @@ public:
 		FORMAT_RGTC_R,
 		FORMAT_RGTC_RG,
 		FORMAT_BPTC_RGBA, //btpc bc7
-		FORMAT_BPTC_RGBF, //float bc6h
-		FORMAT_BPTC_RGBFU, //unsigned float bc6hu
 		FORMAT_ETC, //etc1
 		FORMAT_ETC2_R11, //etc2
 		FORMAT_ETC2_R11S, //signed, NOT srgb.
@@ -109,10 +106,10 @@ public:
 		FORMAT_ETC2_RGB8,
 		FORMAT_ETC2_RGBA8,
 		FORMAT_ETC2_RGB8A1,
+		FORMAT_ETC2_RA_AS_RG, //used to make basis universal happy
+		FORMAT_DXT5_RA_AS_RG, //used to make basis universal happy
 		FORMAT_ASTC_4x4,
-		FORMAT_ASTC_4x4_HDR,
 		FORMAT_ASTC_8x8,
-		FORMAT_ASTC_8x8_HDR,
 		FORMAT_MAX
 	};
 
@@ -144,6 +141,7 @@ public:
 	};
 
 	static ImageMemLoadFunc _png_mem_loader_func;
+	static ImageMemLoadFunc _png_mem_unpacker_func;
 	static ImageMemLoadFunc _jpg_mem_loader_func;
 	static ImageMemLoadFunc _webp_mem_loader_func;
 	static ImageMemLoadFunc _tga_mem_loader_func;
@@ -156,6 +154,8 @@ public:
 	static void (*_image_compress_etc2_func)(Image *, UsedChannels p_channels);
 	static void (*_image_compress_astc_func)(Image *, ASTCFormat p_format);
 
+	static Error (*_image_compress_bptc_rd_func)(Image *, UsedChannels p_channels);
+
 	static void (*_image_decompress_bc)(Image *);
 	static void (*_image_decompress_bptc)(Image *);
 	static void (*_image_decompress_etc1)(Image *);
@@ -167,6 +167,9 @@ public:
 	static Ref<Image> (*webp_unpacker)(const Vector<uint8_t> &p_buffer);
 	static Vector<uint8_t> (*png_packer)(const Ref<Image> &p_image);
 	static Ref<Image> (*png_unpacker)(const Vector<uint8_t> &p_buffer);
+	static Vector<uint8_t> (*basis_universal_packer)(const Ref<Image> &p_image, UsedChannels p_channels);
+	static Ref<Image> (*basis_universal_unpacker)(const Vector<uint8_t> &p_buffer);
+	static Ref<Image> (*basis_universal_unpacker_ptr)(const uint8_t *p_data, int p_size);
 
 	_FORCE_INLINE_ Color _get_color_at_ofs(const uint8_t *ptr, uint32_t ofs) const;
 	_FORCE_INLINE_ void _set_color_at_ofs(uint8_t *ptr, uint32_t ofs, const Color &p_color);
@@ -190,9 +193,9 @@ private:
 		data = p_image.data;
 	}
 
-	_FORCE_INLINE_ void _get_mipmap_offset_and_size(int p_mipmap, int &r_offset, int &r_width, int &r_height) const; //get where the mipmap begins in data
+	_FORCE_INLINE_ void _get_mipmap_offset_and_size(int p_mipmap, int64_t &r_offset, int &r_width, int &r_height) const; //get where the mipmap begins in data
 
-	static int _get_dst_image_size(int p_width, int p_height, Format p_format, int &r_mipmaps, int p_mipmaps = -1, int *r_mm_width = nullptr, int *r_mm_height = nullptr);
+	static int64_t _get_dst_image_size(int p_width, int p_height, Format p_format, int &r_mipmaps, int p_mipmaps = -1, int *r_mm_width = nullptr, int *r_mm_height = nullptr);
 	bool _can_modify(Format p_format) const;
 
 	_FORCE_INLINE_ void _get_clipped_src_and_dest_rects(const Ref<Image> &p_src, const Rect2i &p_src_rect, const Point2i &p_dest, Rect2i &r_clipped_src_rect, Rect2i &r_clipped_dest_rect) const;
@@ -233,10 +236,12 @@ public:
 	 */
 	Format get_format() const;
 
-	int get_mipmap_byte_size(int p_mipmap) const; //get where the mipmap begins in data
-	int get_mipmap_offset(int p_mipmap) const; //get where the mipmap begins in data
-	void get_mipmap_offset_and_size(int p_mipmap, int &r_ofs, int &r_size) const; //get where the mipmap begins in data
-	void get_mipmap_offset_size_and_dimensions(int p_mipmap, int &r_ofs, int &r_size, int &w, int &h) const; //get where the mipmap begins in data
+	/**
+	 * Get where the mipmap begins in data.
+	 */
+	int64_t get_mipmap_offset(int p_mipmap) const;
+	void get_mipmap_offset_and_size(int p_mipmap, int64_t &r_ofs, int64_t &r_size) const;
+	void get_mipmap_offset_size_and_dimensions(int p_mipmap, int64_t &r_ofs, int64_t &r_size, int &w, int &h) const;
 
 	/**
 	 * Resize the image, using the preferred interpolation method.
@@ -295,8 +300,8 @@ public:
 	Error save_jpg(const String &p_path, float p_quality = 0.75) const;
 	Vector<uint8_t> save_png_to_buffer() const;
 	Vector<uint8_t> save_jpg_to_buffer(float p_quality = 0.75) const;
-	Vector<uint8_t> save_exr_to_buffer(bool p_grayscale) const;
-	Error save_exr(const String &p_path, bool p_grayscale) const;
+	Vector<uint8_t> save_exr_to_buffer(bool p_grayscale = false) const;
+	Error save_exr(const String &p_path, bool p_grayscale = false) const;
 	Error save_webp(const String &p_path, const bool p_lossy = false, const float p_quality = 0.75f) const;
 	Vector<uint8_t> save_webp_to_buffer(const bool p_lossy = false, const float p_quality = 0.75f) const;
 
@@ -333,11 +338,11 @@ public:
 	static int get_format_block_size(Format p_format);
 	static void get_format_min_pixel_size(Format p_format, int &r_w, int &r_h);
 
-	static int get_image_data_size(int p_width, int p_height, Format p_format, bool p_mipmaps = false);
+	static int64_t get_image_data_size(int p_width, int p_height, Format p_format, bool p_mipmaps = false);
 	static int get_image_required_mipmaps(int p_width, int p_height, Format p_format);
 	static Size2i get_image_mipmap_size(int p_width, int p_height, Format p_format, int p_mipmap);
-	static int get_image_mipmap_offset(int p_width, int p_height, Format p_format, int p_mipmap);
-	static int get_image_mipmap_offset_and_dimensions(int p_width, int p_height, Format p_format, int p_mipmap, int &r_w, int &r_h);
+	static int64_t get_image_mipmap_offset(int p_width, int p_height, Format p_format, int p_mipmap);
+	static int64_t get_image_mipmap_offset_and_dimensions(int p_width, int p_height, Format p_format, int p_mipmap, int &r_w, int &r_h);
 
 	enum CompressMode {
 		COMPRESS_S3TC,
@@ -358,14 +363,18 @@ public:
 	Error compress_from_channels(CompressMode p_mode, UsedChannels p_channels, ASTCFormat p_astc_format = ASTC_FORMAT_4x4);
 	Error decompress();
 	bool is_compressed() const;
+	static bool is_format_compressed(Format p_format);
 
 	void fix_alpha_edges();
 	void premultiply_alpha();
 	void srgb_to_linear();
+	void linear_to_srgb();
 	void normal_map_to_xy();
 	Ref<Image> rgbe_to_srgb();
-	Ref<Image> get_image_from_mipmap(int p_mipamp) const;
+	Ref<Image> get_image_from_mipmap(int p_mipmap) const;
 	void bump_map_to_normal_map(float bump_scale = 1.0);
+
+	bool detect_signed(bool p_include_mips = true) const;
 
 	void blit_rect(const Ref<Image> &p_src, const Rect2i &p_src_rect, const Point2i &p_dest);
 	void blit_rect_mask(const Ref<Image> &p_src, const Ref<Image> &p_mask, const Rect2i &p_src_rect, const Point2i &p_dest);
@@ -390,6 +399,8 @@ public:
 	Error load_svg_from_buffer(const Vector<uint8_t> &p_array, float scale = 1.0);
 	Error load_svg_from_string(const String &p_svg_str, float scale = 1.0);
 
+	void convert_rg_to_ra_rgba8();
+	void convert_ra_rgba8_to_rg();
 	void convert_rgba8_to_bgra8();
 
 	Image(const uint8_t *p_mem_png_jpg, int p_len = -1);
@@ -399,6 +410,10 @@ public:
 
 	UsedChannels detect_used_channels(CompressSource p_source = COMPRESS_SOURCE_GENERIC) const;
 	void optimize_channels();
+
+	const uint8_t *ptr() const;
+	uint8_t *ptrw();
+	int64_t get_data_size() const;
 
 	bool point_inside_rect(int p_x, int p_y) const;
 	bool point_inside_rect_v(const Point2i &p_point) const;
@@ -450,7 +465,7 @@ public:
 	void set_as_black();
 
 	void copy_internals_from(const Ref<Image> &p_image) {
-		ERR_FAIL_COND_MSG(p_image.is_null(), "It's not a reference to a valid Image object.");
+		ERR_FAIL_COND_MSG(p_image.is_null(), "Cannot copy image internals: invalid Image object.");
 		format = p_image->format;
 		width = p_image->width;
 		height = p_image->height;

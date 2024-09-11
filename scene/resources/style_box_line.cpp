@@ -2,10 +2,9 @@
 /*  style_box_line.cpp                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -90,14 +89,6 @@ void StyleBoxLine::set_grow_begin(float p_grow_begin) {
 
 float StyleBoxLine::get_grow_begin() const {
 	return grow_begin;
-}
-
-Point2 StyleBoxLine::get_expand_margin_begin() const {
-	return vertical ? Point2(0, grow_begin) : Point2(grow_begin, 0);
-}
-
-Point2 StyleBoxLine::get_expand_margin_end() const {
-	return vertical ? Point2(0, grow_end) : Point2(grow_end, 0);
 }
 
 void StyleBoxLine::draw(RID p_canvas_item, const Rect2 &p_rect) const {

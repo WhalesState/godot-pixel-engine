@@ -2,10 +2,9 @@
 /*  test_local_vector.h                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -64,7 +63,7 @@ TEST_CASE("[LocalVector] Push Back.") {
 	CHECK(vector[4] == 4);
 }
 
-TEST_CASE("[LocalVector] Find.") {
+TEST_CASE("[LocalVector] Find, has.") {
 	LocalVector<int> vector;
 	vector.push_back(3);
 	vector.push_back(1);
@@ -86,6 +85,15 @@ TEST_CASE("[LocalVector] Find.") {
 
 	CHECK(vector.find(-1) == -1);
 	CHECK(vector.find(5) == -1);
+
+	CHECK(vector.has(0));
+	CHECK(vector.has(1));
+	CHECK(vector.has(2));
+	CHECK(vector.has(3));
+	CHECK(vector.has(4));
+
+	CHECK(!vector.has(-1));
+	CHECK(!vector.has(5));
 }
 
 TEST_CASE("[LocalVector] Remove.") {

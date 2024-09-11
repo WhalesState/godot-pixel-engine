@@ -2,10 +2,9 @@
 /*  marker_2d.cpp                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -49,7 +48,7 @@ void Marker2D::_draw_cross() {
 	// Use a darkened axis color for the negative axis.
 	// This makes it possible to see in which direction the Marker3D node is rotated
 	// (which can be important depending on how it's used).
-	// Axis colors are taken from `axis_x_color` and `axis_y_color` (defined in `editor/editor_themes.cpp`).
+	// Axis colors are taken from `axis_x_color` and `axis_y_color` (defined in `editor/themes/editor_theme_manager.cpp`).
 	const Color color_x = Color(0.96, 0.20, 0.32);
 	const Color color_y = Color(0.53, 0.84, 0.01);
 	PackedColorArray colors = {

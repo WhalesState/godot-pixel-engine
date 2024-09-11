@@ -2,10 +2,9 @@
 /*  config.h                                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -51,11 +50,12 @@ public:
 	bool use_nearest_mip_filter = false;
 	bool use_depth_prepass = true;
 
-	int64_t max_vertex_texture_image_units = 0;
-	int64_t max_texture_image_units = 0;
-	int64_t max_texture_size = 0;
-	int64_t max_viewport_size[2] = { 0, 0 };
-	int64_t max_uniform_buffer_size = 0;
+	GLint max_vertex_texture_image_units = 0;
+	GLint max_texture_image_units = 0;
+	GLint max_texture_size = 0;
+	GLint max_viewport_size[2] = { 0, 0 };
+	GLint64 max_uniform_buffer_size = 0;
+
 	int64_t max_renderable_elements = 0;
 	int64_t max_renderable_lights = 0;
 	int64_t max_lights_per_object = 0;
@@ -70,13 +70,19 @@ public:
 	bool bptc_supported = false;
 	bool etc2_supported = false;
 	bool astc_supported = false;
-	bool astc_hdr_supported = false;
 	bool astc_layered_supported = false;
 
 	bool force_vertex_shading = false;
 
 	bool support_anisotropic_filter = false;
 	float anisotropic_level = 0.0f;
+
+	// Adreno 3XX compatibility
+	bool disable_particles_workaround = false; // set to 'true' to disable 'GPUParticles'
+	bool flip_xy_workaround = false;
+
+	// PowerVR GE 8320 workaround
+	bool disable_transform_feedback_shader_cache = false;
 
 	static Config *get_singleton() { return singleton; };
 

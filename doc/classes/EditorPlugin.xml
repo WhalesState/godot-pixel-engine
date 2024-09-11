@@ -84,8 +84,7 @@
 			<return type="bool" />
 			<param index="0" name="event" type="InputEvent" />
 			<description>
-				Called when there is a root node in the current edited scene, [method _handles] is implemented and an [InputEvent] happens in the 2D viewport. Intercepts the [InputEvent], if [code]return true[/code] [EditorPlugin] consumes the [param event], otherwise forwards [param event] to other Editor classes.
-				[b]Example:[/b]
+				Called when there is a root node in the current edited scene, [method _handles] is implemented, and an [InputEvent] happens in the 2D viewport. If this method returns [code]true[/code], [param event] is intercepted by this [EditorPlugin], otherwise [param event] is forwarded to other Editor classes.
 				[codeblocks]
 				[gdscript]
 				# Prevents the InputEvent from reaching other Editor classes.
@@ -93,8 +92,7 @@
 				    return true
 				[/gdscript]
 				[/codeblocks]
-				Must [code]return false[/code] in order to forward the [InputEvent] to other Editor classes.
-				[b]Example:[/b]
+				This method must return [code]false[/code] in order to forward the [InputEvent] to other Editor classes.
 				[codeblocks]
 				[gdscript]
 				# Consumes InputEventMouseMotion and forwards other InputEvent types.
@@ -117,7 +115,7 @@
 			<description>
 				Override this method in your plugin to return a [Texture2D] in order to give it an icon.
 				For main screen plugins, this appears at the top of the screen, to the right of the "2D", "3D", "Script", and "AssetLib" buttons.
-				Ideally, the plugin icon should be white with a transparent background and 16x16 pixels in size.
+				Ideally, the plugin icon should be white with a transparent background and 16×16 pixels in size.
 				[codeblocks]
 				[gdscript]
 				func _get_plugin_icon():
@@ -195,7 +193,7 @@
 			<return type="bool" />
 			<param index="0" name="object" type="Object" />
 			<description>
-				Implement this function if your plugin edits a specific type of object (Resource or Node). If you return [code]true[/code], then you will get the functions [method _edit] and [method _make_visible] called when the editor requests them. If you have declared the methods [method _forward_canvas_gui_input] it will be called too.
+				Implement this function if your plugin edits a specific type of object (Resource or Node). If you return [code]true[/code], then you will get the functions [method _edit] and [method _make_visible] called when the editor requests them. If you have declared the methods [method _forward_canvas_gui_input] and [method _forward_3d_gui_input] these will be called too.
 				[b]Note:[/b] Each plugin should handle only one type of objects at a time. If a plugin handles more types of objects and they are edited at the same time, it will result in errors.
 			</description>
 		</method>
@@ -203,7 +201,7 @@
 			<return type="bool" />
 			<description>
 				Returns [code]true[/code] if this is a main screen editor plugin (it goes in the workspace selector together with [b]2D[/b], [b]3D[/b], [b]Script[/b] and [b]AssetLib[/b]).
-				When the plugin's workspace is selected, other main screen plugins will be hidden, but your plugin will not appear automatically. It needs to be added as a child of [method EditorInterface.get_base_control] and made visible inside [method _make_visible].
+				When the plugin's workspace is selected, other main screen plugins will be hidden, but your plugin will not appear automatically. It needs to be added as a child of [method EditorInterface.get_editor_main_screen] and made visible inside [method _make_visible].
 				Use [method _get_plugin_name] and [method _get_plugin_icon] to customize the plugin button's appearance.
 				[codeblock]
 				var plugin_control
@@ -274,12 +272,23 @@
 				Adds a script at [param path] to the Autoload list as [param name].
 			</description>
 		</method>
+		<method name="add_context_menu_plugin">
+			<return type="void" />
+			<param index="0" name="slot" type="int" enum="EditorPlugin.ContextMenuSlot" />
+			<param index="1" name="plugin" type="EditorContextMenuPlugin" />
+			<description>
+				Adds a plugin to the context menu. [param slot] is the position in the context menu where the plugin will be added.
+				Context menus are supported for three commonly used areas: the file system, scene tree, and editor script list panel.
+			</description>
+		</method>
 		<method name="add_control_to_bottom_panel">
 			<return type="Button" />
 			<param index="0" name="control" type="Control" />
 			<param index="1" name="title" type="String" />
+			<param index="2" name="shortcut" type="Shortcut" default="null" />
 			<description>
 				Adds a control to the bottom panel (together with Output, Debug, Animation, etc). Returns a reference to the button added. It's up to you to hide/show the button when needed. When your plugin is deactivated, make sure to remove your custom control with [method remove_control_from_bottom_panel] and free it with [method Node.queue_free].
+				Optionally, you can specify a shortcut parameter. When pressed, this shortcut will toggle the bottom panel's visibility. See the default editor bottom panel shortcuts in the Editor Settings for inspiration. Per convention, they all use [kbd]Alt[/kbd] modifier.
 			</description>
 		</method>
 		<method name="add_control_to_container">
@@ -296,10 +305,12 @@
 			<return type="void" />
 			<param index="0" name="slot" type="int" enum="EditorPlugin.DockSlot" />
 			<param index="1" name="control" type="Control" />
+			<param index="2" name="shortcut" type="Shortcut" default="null" />
 			<description>
 				Adds the control to a specific dock slot (see [enum DockSlot] for options).
 				If the dock is repositioned and as long as the plugin is active, the editor will save the dock position on further sessions.
 				When your plugin is deactivated, make sure to remove your custom control with [method remove_control_from_docks] and free it with [method Node.queue_free].
+				Optionally, you can specify a shortcut parameter. When pressed, this shortcut will toggle the dock's visibility once it's moved to the bottom panel (this shortcut does not affect the dock otherwise). See the default editor bottom panel shortcuts in the Editor Settings for inspiration. Per convention, they all use [kbd]Alt[/kbd] modifier.
 			</description>
 		</method>
 		<method name="add_custom_type">
@@ -309,8 +320,8 @@
 			<param index="2" name="script" type="Script" />
 			<param index="3" name="icon" type="Texture2D" />
 			<description>
-				Adds a custom type, which will appear in the list of nodes or resources. An icon can be optionally passed.
-				When a given node or resource is selected, the base type will be instantiated (e.g. "Control", "Resource"), then the script will be loaded and set to this object.
+				Adds a custom type, which will appear in the list of nodes or resources.
+				When a given node or resource is selected, the base type will be instantiated (e.g. "Node3D", "Control", "Resource"), then the script will be loaded and set to this object.
 				[b]Note:[/b] The base type is the base engine class which this type's class hierarchy inherits, not any custom type parent classes.
 				You can use the virtual method [method _handles] to check if your custom object is being edited by checking the script or using the [code]is[/code] keyword.
 				During run-time, this will be a simple object with a script so this function does not need to be called then.
@@ -322,6 +333,13 @@
 			<param index="0" name="script" type="EditorDebuggerPlugin" />
 			<description>
 				Adds a [Script] as debugger plugin to the Debugger. The script must extend [EditorDebuggerPlugin].
+			</description>
+		</method>
+		<method name="add_export_platform">
+			<return type="void" />
+			<param index="0" name="platform" type="EditorExportPlatform" />
+			<description>
+				Registers a new [EditorExportPlatform]. Export platforms provides functionality of exporting to the specific platform.
 			</description>
 		</method>
 		<method name="add_export_plugin">
@@ -339,6 +357,7 @@
 			<description>
 				Registers a new [EditorImportPlugin]. Import plugins are used to import custom and unsupported assets as a custom [Resource] type.
 				If [param first_priority] is [code]true[/code], the new import plugin is inserted first in the list and takes precedence over pre-existing plugins.
+				[b]Note:[/b] If you want to import custom 3D asset formats use [method add_scene_format_importer_plugin] instead.
 				See [method add_inspector_plugin] for an example of how to register a plugin.
 			</description>
 		</method>
@@ -401,11 +420,10 @@
 				The callback should have 4 arguments: [Object] [code]undo_redo[/code], [Object] [code]modified_object[/code], [String] [code]property[/code] and [Variant] [code]new_value[/code]. They are, respectively, the [UndoRedo] object used by the inspector, the currently modified object, the name of the modified property and the new value the property is about to take.
 			</description>
 		</method>
-		<method name="get_editor_interface" is_deprecated="true">
+		<method name="get_editor_interface" deprecated="[EditorInterface] is a global singleton and can be accessed directly by its name.">
 			<return type="EditorInterface" />
 			<description>
 				Returns the [EditorInterface] singleton instance.
-				[i]Deprecated.[/i] [EditorInterface] is a global singleton and can be accessed directly by its name.
 			</description>
 		</method>
 		<method name="get_plugin_version" qualifiers="const">
@@ -454,6 +472,14 @@
 				Removes an Autoload [param name] from the list.
 			</description>
 		</method>
+		<method name="remove_context_menu_plugin">
+			<return type="void" />
+			<param index="0" name="slot" type="int" enum="EditorPlugin.ContextMenuSlot" />
+			<param index="1" name="plugin" type="EditorContextMenuPlugin" />
+			<description>
+				Removes a context menu plugin from the specified slot.
+			</description>
+		</method>
 		<method name="remove_control_from_bottom_panel">
 			<return type="void" />
 			<param index="0" name="control" type="Control" />
@@ -488,6 +514,13 @@
 			<param index="0" name="script" type="EditorDebuggerPlugin" />
 			<description>
 				Removes the debugger plugin with given script from the Debugger.
+			</description>
+		</method>
+		<method name="remove_export_platform">
+			<return type="void" />
+			<param index="0" name="platform" type="EditorExportPlatform" />
+			<description>
+				Removes an export platform registered by [method add_export_platform].
 			</description>
 		</method>
 		<method name="remove_export_plugin">
@@ -539,16 +572,30 @@
 				Removes a callback previously added by [method add_undo_redo_inspector_hook_callback].
 			</description>
 		</method>
+		<method name="set_dock_tab_icon">
+			<return type="void" />
+			<param index="0" name="control" type="Control" />
+			<param index="1" name="icon" type="Texture2D" />
+			<description>
+				Sets the tab icon for the given control in a dock slot. Setting to [code]null[/code] removes the icon.
+			</description>
+		</method>
 		<method name="set_force_draw_over_forwarding_enabled">
 			<return type="void" />
 			<description>
-				Enables calling of [method _forward_canvas_force_draw_over_viewport] for the 2D editor when it's viewport is updated. You need to call this method only once and it will work permanently for this plugin.
+				Enables calling of [method _forward_canvas_force_draw_over_viewport] for the 2D editor and [method _forward_3d_force_draw_over_viewport] for the 3D editor when their viewports are updated. You need to call this method only once and it will work permanently for this plugin.
+			</description>
+		</method>
+		<method name="set_input_event_forwarding_always_enabled">
+			<return type="void" />
+			<description>
+				Use this method if you always want to receive inputs from 3D view screen inside [method _forward_3d_gui_input]. It might be especially usable if your plugin will want to use raycast in the scene.
 			</description>
 		</method>
 		<method name="update_overlays" qualifiers="const">
 			<return type="int" />
 			<description>
-				Updates the overlays of the 2D and 3D editor viewport. Causes methods [method _forward_canvas_draw_over_viewport] and [method _forward_canvas_force_draw_over_viewport] to be called.
+				Updates the overlays of the 2D and 3D editor viewport. Causes methods [method _forward_canvas_draw_over_viewport], [method _forward_canvas_force_draw_over_viewport], [method _forward_3d_draw_over_viewport] and [method _forward_3d_force_draw_over_viewport] to be called.
 			</description>
 		</method>
 	</methods>
@@ -559,16 +606,15 @@
 				Emitted when user changes the workspace ([b]2D[/b], [b]3D[/b], [b]Script[/b], [b]AssetLib[/b]). Also works with custom screens defined by plugins.
 			</description>
 		</signal>
-		<signal name="project_settings_changed" is_deprecated="true">
+		<signal name="project_settings_changed" deprecated="Use [signal ProjectSettings.settings_changed] instead.">
 			<description>
 				Emitted when any project setting has changed.
-				[i]Deprecated.[/i] Use [signal ProjectSettings.settings_changed] instead.
 			</description>
 		</signal>
 		<signal name="resource_saved">
 			<param index="0" name="resource" type="Resource" />
 			<description>
-				Emitted when the given [param resource] was saved on disc.
+				Emitted when the given [param resource] was saved on disc. See also [signal scene_saved].
 			</description>
 		</signal>
 		<signal name="scene_changed">
@@ -580,7 +626,13 @@
 		<signal name="scene_closed">
 			<param index="0" name="filepath" type="String" />
 			<description>
-				Emitted when user closes a scene. The argument is file path to a closed scene.
+				Emitted when user closes a scene. The argument is a file path to the closed scene.
+			</description>
+		</signal>
+		<signal name="scene_saved">
+			<param index="0" name="filepath" type="String" />
+			<description>
+				Emitted when a scene was saved on disc. The argument is a file path to the saved scene. See also [signal resource_saved].
 			</description>
 		</signal>
 	</signals>
@@ -643,7 +695,19 @@
 			Prevents the [InputEvent] from reaching other Editor classes.
 		</constant>
 		<constant name="AFTER_GUI_INPUT_CUSTOM" value="2" enum="AfterGUIInput">
-			Pass the [InputEvent] to other editor plugins. This can be used to prevent node selection changes and work with sub-gizmos instead.
+			Pass the [InputEvent] to other editor plugins except the main [Node3D] one. This can be used to prevent node selection changes and work with sub-gizmos instead.
+		</constant>
+		<constant name="CONTEXT_SLOT_SCENE_TREE" value="0" enum="ContextMenuSlot">
+			Context menu slot for the SceneTree.
+		</constant>
+		<constant name="CONTEXT_SLOT_FILESYSTEM" value="1" enum="ContextMenuSlot">
+			Context menu slot for the FileSystem.
+		</constant>
+		<constant name="CONTEXT_SLOT_SCRIPT_EDITOR" value="2" enum="ContextMenuSlot">
+			Context menu slot for the ScriptEditor file list.
+		</constant>
+		<constant name="CONTEXT_SUBMENU_SLOT_FILESYSTEM_CREATE" value="3" enum="ContextMenuSlot">
+			Context menu slot for the FileSystem create submenu.
 		</constant>
 	</constants>
 </class>

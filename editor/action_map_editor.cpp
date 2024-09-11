@@ -2,10 +2,9 @@
 /*  action_map_editor.cpp                                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -31,12 +30,13 @@
 
 #include "editor/action_map_editor.h"
 
-#include "editor/editor_scale.h"
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
 #include "editor/event_listener_line_edit.h"
 #include "editor/input_event_configuration_dialog.h"
+#include "editor/themes/editor_scale.h"
 #include "scene/gui/check_button.h"
+#include "scene/gui/separator.h"
 #include "scene/gui/tree.h"
 
 static bool _is_action_name_valid(const String &p_name) {
@@ -168,7 +168,7 @@ void ActionMapEditor::_tree_button_pressed(Object *p_item, int p_column, int p_i
 			current_action_name = item->get_meta("__name");
 			current_action_event_index = -1;
 
-			event_config_dialog->popup_and_configure();
+			event_config_dialog->popup_and_configure(Ref<InputEvent>(), current_action_name);
 		} break;
 		case ActionMapEditor::BUTTON_EDIT_EVENT: {
 			// Action and Action name is located on the parent of the event.
@@ -179,7 +179,7 @@ void ActionMapEditor::_tree_button_pressed(Object *p_item, int p_column, int p_i
 
 			Ref<InputEvent> ie = item->get_meta("__event");
 			if (ie.is_valid()) {
-				event_config_dialog->popup_and_configure(ie);
+				event_config_dialog->popup_and_configure(ie, current_action_name);
 			}
 		} break;
 		case ActionMapEditor::BUTTON_REMOVE_ACTION: {
@@ -357,6 +357,7 @@ void ActionMapEditor::_notification(int p_what) {
 		case NOTIFICATION_ENTER_TREE:
 		case NOTIFICATION_THEME_CHANGED: {
 			action_list_search->set_right_icon(get_editor_theme_icon(SNAME("Search")));
+			add_button->set_icon(get_editor_theme_icon(SNAME("Add")));
 			if (!actions_cache.is_empty()) {
 				update_action_list();
 			}
@@ -376,6 +377,10 @@ void ActionMapEditor::_bind_methods() {
 
 LineEdit *ActionMapEditor::get_search_box() const {
 	return action_list_search;
+}
+
+LineEdit *ActionMapEditor::get_path_box() const {
+	return add_edit;
 }
 
 InputEventConfigurationDialog *ActionMapEditor::get_configuration_dialog() {
@@ -423,6 +428,7 @@ void ActionMapEditor::update_action_list(const Vector<ActionInfo> &p_action_info
 		// Update Tree...
 
 		TreeItem *action_item = action_tree->create_item(root);
+		ERR_FAIL_NULL(action_item);
 		action_item->set_meta("__action", action_info.action);
 		action_item->set_meta("__name", action_info.name);
 
@@ -500,6 +506,9 @@ void ActionMapEditor::update_action_list(const Vector<ActionInfo> &p_action_info
 			event_item->set_button_color(2, 1, Color(1, 1, 1, 0.75));
 		}
 	}
+
+	// Update UI.
+	clear_all_search->set_disabled(action_list_search->get_text().is_empty() && action_list_search_by_event->get_event().is_null());
 }
 
 void ActionMapEditor::show_message(const String &p_message) {
@@ -510,7 +519,7 @@ void ActionMapEditor::show_message(const String &p_message) {
 void ActionMapEditor::use_external_search_box(LineEdit *p_searchbox) {
 	memdelete(action_list_search);
 	action_list_search = p_searchbox;
-	action_list_search->connect("text_changed", callable_mp(this, &ActionMapEditor::_search_term_updated));
+	action_list_search->connect(SceneStringName(text_changed), callable_mp(this, &ActionMapEditor::_search_term_updated));
 }
 
 void ActionMapEditor::_on_filter_focused() {
@@ -532,9 +541,9 @@ ActionMapEditor::ActionMapEditor() {
 
 	action_list_search = memnew(LineEdit);
 	action_list_search->set_h_size_flags(Control::SIZE_EXPAND_FILL);
-	action_list_search->set_placeholder(TTR("Filter by name..."));
+	action_list_search->set_placeholder(TTR("Filter by Name"));
 	action_list_search->set_clear_button_enabled(true);
-	action_list_search->connect("text_changed", callable_mp(this, &ActionMapEditor::_search_term_updated));
+	action_list_search->connect(SceneStringName(text_changed), callable_mp(this, &ActionMapEditor::_search_term_updated));
 	top_hbox->add_child(action_list_search);
 
 	action_list_search_by_event = memnew(EventListenerLineEdit);
@@ -545,8 +554,9 @@ ActionMapEditor::ActionMapEditor() {
 	action_list_search_by_event->connect(SceneStringName(focus_exited), callable_mp(this, &ActionMapEditor::_on_filter_unfocused));
 	top_hbox->add_child(action_list_search_by_event);
 
-	Button *clear_all_search = memnew(Button);
+	clear_all_search = memnew(Button);
 	clear_all_search->set_text(TTR("Clear All"));
+	clear_all_search->set_tooltip_text(TTR("Clear all search filters."));
 	clear_all_search->connect(SceneStringName(pressed), callable_mp(action_list_search_by_event, &EventListenerLineEdit::clear_event));
 	clear_all_search->connect(SceneStringName(pressed), callable_mp(action_list_search, &LineEdit::clear));
 	top_hbox->add_child(clear_all_search);
@@ -559,7 +569,7 @@ ActionMapEditor::ActionMapEditor() {
 	add_edit->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	add_edit->set_placeholder(TTR("Add New Action"));
 	add_edit->set_clear_button_enabled(true);
-	add_edit->connect("text_changed", callable_mp(this, &ActionMapEditor::_add_edit_text_changed));
+	add_edit->connect(SceneStringName(text_changed), callable_mp(this, &ActionMapEditor::_add_edit_text_changed));
 	add_edit->connect("text_submitted", callable_mp(this, &ActionMapEditor::_add_action));
 	add_hbox->add_child(add_edit);
 
@@ -570,9 +580,11 @@ ActionMapEditor::ActionMapEditor() {
 	// Disable the button and set its tooltip.
 	_add_edit_text_changed(add_edit->get_text());
 
+	add_hbox->add_child(memnew(VSeparator));
+
 	show_builtin_actions_checkbutton = memnew(CheckButton);
 	show_builtin_actions_checkbutton->set_text(TTR("Show Built-in Actions"));
-	show_builtin_actions_checkbutton->connect("toggled", callable_mp(this, &ActionMapEditor::set_show_builtin_actions));
+	show_builtin_actions_checkbutton->connect(SceneStringName(toggled), callable_mp(this, &ActionMapEditor::set_show_builtin_actions));
 	add_hbox->add_child(show_builtin_actions_checkbutton);
 
 	show_builtin_actions = EditorSettings::get_singleton()->get_project_metadata("project_settings", "show_builtin_actions", false);
@@ -593,7 +605,7 @@ ActionMapEditor::ActionMapEditor() {
 	action_tree->set_column_custom_minimum_width(1, 80 * EDSCALE);
 	action_tree->set_column_expand(2, false);
 	action_tree->set_column_custom_minimum_width(2, 50 * EDSCALE);
-	action_tree->connect("item_edited", callable_mp(this, &ActionMapEditor::_action_edited));
+	action_tree->connect("item_edited", callable_mp(this, &ActionMapEditor::_action_edited), CONNECT_DEFERRED);
 	action_tree->connect("item_activated", callable_mp(this, &ActionMapEditor::_tree_item_activated));
 	action_tree->connect("button_clicked", callable_mp(this, &ActionMapEditor::_tree_button_pressed));
 	main_vbox->add_child(action_tree);
@@ -602,7 +614,7 @@ ActionMapEditor::ActionMapEditor() {
 
 	// Adding event dialog
 	event_config_dialog = memnew(InputEventConfigurationDialog);
-	event_config_dialog->connect("confirmed", callable_mp(this, &ActionMapEditor::_event_config_confirmed));
+	event_config_dialog->connect(SceneStringName(confirmed), callable_mp(this, &ActionMapEditor::_event_config_confirmed));
 	add_child(event_config_dialog);
 
 	message = memnew(AcceptDialog);

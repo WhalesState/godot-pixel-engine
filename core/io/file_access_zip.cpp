@@ -2,10 +2,9 @@
 /*  file_access_zip.cpp                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -116,7 +115,7 @@ void ZipArchive::close_handle(unzFile p_file) const {
 	unzClose(p_file);
 }
 
-unzFile ZipArchive::get_file_handle(String p_file) const {
+unzFile ZipArchive::get_file_handle(const String &p_file) const {
 	ERR_FAIL_COND_V_MSG(!file_exists(p_file), nullptr, "File '" + p_file + " doesn't exist.");
 	File file = files[p_file];
 
@@ -207,7 +206,7 @@ bool ZipArchive::try_open_pack(const String &p_path, bool p_replace_files, uint6
 	return true;
 }
 
-bool ZipArchive::file_exists(String p_name) const {
+bool ZipArchive::file_exists(const String &p_name) const {
 	return files.has(p_name);
 }
 
@@ -278,7 +277,7 @@ void FileAccessZip::seek_end(int64_t p_position) {
 
 uint64_t FileAccessZip::get_position() const {
 	ERR_FAIL_NULL_V(zfile, 0);
-	return unztell(zfile);
+	return unztell64(zfile);
 }
 
 uint64_t FileAccessZip::get_length() const {
@@ -290,12 +289,6 @@ bool FileAccessZip::eof_reached() const {
 	ERR_FAIL_NULL_V(zfile, true);
 
 	return at_eof;
-}
-
-uint8_t FileAccessZip::get_8() const {
-	uint8_t ret = 0;
-	get_buffer(&ret, 1);
-	return ret;
 }
 
 uint64_t FileAccessZip::get_buffer(uint8_t *p_dst, uint64_t p_length) const {
@@ -329,7 +322,7 @@ void FileAccessZip::flush() {
 	ERR_FAIL();
 }
 
-void FileAccessZip::store_8(uint8_t p_dest) {
+void FileAccessZip::store_buffer(const uint8_t *p_src, uint64_t p_length) {
 	ERR_FAIL();
 }
 

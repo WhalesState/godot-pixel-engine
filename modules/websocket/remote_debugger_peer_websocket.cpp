@@ -2,10 +2,9 @@
 /*  remote_debugger_peer_websocket.cpp                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -75,7 +74,7 @@ void RemoteDebuggerPeerWebSocket::poll() {
 	}
 
 	while (ws_peer->get_ready_state() == WebSocketPeer::STATE_OPEN && out_queue.size() > 0) {
-		Array var = out_queue[0];
+		Array var = out_queue.front()->get();
 		Error err = ws_peer->put_var(var);
 		ERR_BREAK(err != OK); // Peer buffer full?
 		out_queue.pop_front();
@@ -92,8 +91,8 @@ bool RemoteDebuggerPeerWebSocket::has_message() {
 }
 
 Array RemoteDebuggerPeerWebSocket::get_message() {
-	ERR_FAIL_COND_V(in_queue.size() < 1, Array());
-	Array msg = in_queue[0];
+	ERR_FAIL_COND_V(in_queue.is_empty(), Array());
+	Array msg = in_queue.front()->get();
 	in_queue.pop_front();
 	return msg;
 }
@@ -113,7 +112,11 @@ void RemoteDebuggerPeerWebSocket::close() {
 }
 
 bool RemoteDebuggerPeerWebSocket::can_block() const {
+#ifdef WEB_ENABLED
+	return false;
+#else
 	return true;
+#endif
 }
 
 RemoteDebuggerPeerWebSocket::RemoteDebuggerPeerWebSocket(Ref<WebSocketPeer> p_peer) {

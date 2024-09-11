@@ -2,10 +2,9 @@
 /*  utilities.h                                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,6 +31,7 @@
 #ifndef UTILITIES_DUMMY_H
 #define UTILITIES_DUMMY_H
 
+#include "material_storage.h"
 #include "servers/rendering/storage/utilities.h"
 #include "texture_storage.h"
 
@@ -49,10 +49,6 @@ public:
 
 	/* INSTANCES */
 
-	virtual RS::InstanceType get_base_type(RID p_rid) const override {
-		return RS::INSTANCE_NONE;
-	}
-
 	virtual bool free(RID p_rid) override {
 		if (RendererDummy::TextureStorage::get_singleton()->owns_texture(p_rid)) {
 			RendererDummy::TextureStorage::get_singleton()->texture_free(p_rid);
@@ -60,10 +56,6 @@ public:
 		}
 		return false;
 	}
-
-	/* DEPENDENCIES */
-
-	virtual void base_update_dependency(RID p_base, DependencyTracker *p_instance) override {}
 
 	/* TIMING */
 
@@ -81,7 +73,7 @@ public:
 	virtual void set_debug_generate_wireframes(bool p_generate) override {}
 
 	virtual bool has_os_feature(const String &p_feature) const override {
-		return p_feature == "rgtc" || p_feature == "bptc" || p_feature == "s3tc" || p_feature == "etc" || p_feature == "etc2";
+		return p_feature == "rgtc" || p_feature == "bptc" || p_feature == "s3tc" || p_feature == "etc2";
 	}
 
 	virtual void update_memory_info() override {}

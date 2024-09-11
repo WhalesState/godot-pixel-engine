@@ -2,10 +2,9 @@
 /*  node_dock.h                                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -48,7 +47,6 @@ class NodeDock : public VBoxContainer {
 	HBoxContainer *mode_hb = nullptr;
 
 	Label *select_a_node = nullptr;
-	Node *last_valid_node = nullptr;
 
 private:
 	static NodeDock *singleton;
@@ -57,13 +55,10 @@ public:
 	static NodeDock *get_singleton() { return singleton; }
 
 protected:
-	static void _bind_methods();
 	void _notification(int p_what);
-	void _on_node_tree_exited();
 
 public:
 	void set_node(Node *p_node);
-	void restore_last_valid_node();
 
 	void show_groups();
 	void show_connections();

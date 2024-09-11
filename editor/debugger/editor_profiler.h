@@ -2,10 +2,9 @@
 /*  editor_profiler.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -34,6 +33,7 @@
 
 #include "scene/gui/box_container.h"
 #include "scene/gui/button.h"
+#include "scene/gui/check_button.h"
 #include "scene/gui/label.h"
 #include "scene/gui/option_button.h"
 #include "scene/gui/spin_box.h"
@@ -68,6 +68,7 @@ public:
 				int line = 0;
 				float self = 0;
 				float total = 0;
+				float internal = 0;
 				int calls = 0;
 			};
 
@@ -93,6 +94,11 @@ public:
 	};
 
 private:
+	struct ThemeCache {
+		Color seek_line_color;
+		Color seek_line_hover_color;
+	} theme_cache;
+
 	Button *activate = nullptr;
 	Button *clear_button = nullptr;
 	TextureRect *graph = nullptr;
@@ -105,6 +111,8 @@ private:
 
 	OptionButton *display_mode = nullptr;
 	OptionButton *display_time = nullptr;
+
+	CheckButton *display_internal_profiles = nullptr;
 
 	SpinBox *cursor_metric_edit = nullptr;
 
@@ -130,6 +138,8 @@ private:
 
 	void _activate_pressed();
 	void _clear_pressed();
+
+	void _internal_profiles_pressed();
 
 	String _get_time_as_text(const Metric &m, float p_time, int p_calls);
 

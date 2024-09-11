@@ -54,6 +54,7 @@ _complete_godot_options() {
 --text-driver
 --tablet-driver
 --headless
+--log-file
 --write-movie
 --fullscreen
 --maximized
@@ -70,8 +71,6 @@ _complete_godot_options() {
 --gpu-validation
 --gpu-abort
 --remote-debug
---debug-collisions
---debug-navigation
 --debug-stringnames
 --max-fps
 --frame-delay
@@ -88,6 +87,8 @@ _complete_godot_options() {
 --export-pack
 --doctool
 --no-docbase
+--dump-gdextension-interface
+--dump-extension-api
 --benchmark
 --benchmark-file
 --test

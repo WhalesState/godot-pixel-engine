@@ -2,10 +2,9 @@
 /*  sprite_frames_editor_plugin.cpp                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -34,14 +33,16 @@
 #include "core/config/project_settings.h"
 #include "core/io/resource_loader.h"
 #include "core/os/keyboard.h"
+#include "editor/editor_command_palette.h"
 #include "editor/editor_file_system.h"
 #include "editor/editor_node.h"
-#include "editor/editor_scale.h"
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
 #include "editor/editor_undo_redo_manager.h"
+#include "editor/gui/editor_bottom_panel.h"
 #include "editor/gui/editor_file_dialog.h"
 #include "editor/scene_tree_dock.h"
+#include "editor/themes/editor_scale.h"
 #include "scene/gui/center_container.h"
 #include "scene/gui/flow_container.h"
 #include "scene/gui/margin_container.h"
@@ -59,8 +60,8 @@ void SpriteFramesEditor::_open_sprite_sheet() {
 	file_split_sheet->clear_filters();
 	List<String> extensions;
 	ResourceLoader::get_recognized_extensions_for_type("Texture2D", &extensions);
-	for (int i = 0; i < extensions.size(); i++) {
-		file_split_sheet->add_filter("*." + extensions[i]);
+	for (const String &extension : extensions) {
+		file_split_sheet->add_filter("*." + extension);
 	}
 
 	file_split_sheet->popup_file_dialog();
@@ -283,7 +284,7 @@ void SpriteFramesEditor::_sheet_add_frames() {
 	const Size2i separation = _get_separation();
 
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-	undo_redo->create_action(TTR("Add Frame"), UndoRedo::MERGE_DISABLE, EditorNode::get_singleton()->get_edited_scene());
+	undo_redo->create_action(TTR("Add Frame"), UndoRedo::MERGE_DISABLE, frames.ptr());
 	int fc = frames->get_frame_count(edited_anim);
 
 	_sheet_sort_frames();
@@ -503,6 +504,82 @@ void SpriteFramesEditor::_update_show_settings() {
 	}
 }
 
+void SpriteFramesEditor::_auto_slice_sprite_sheet() {
+	if (updating_split_settings) {
+		return;
+	}
+	updating_split_settings = true;
+
+	const Size2i size = split_sheet_preview->get_texture()->get_size();
+
+	const Size2i split_sheet = _estimate_sprite_sheet_size(split_sheet_preview->get_texture());
+	split_sheet_h->set_value(split_sheet.x);
+	split_sheet_v->set_value(split_sheet.y);
+	split_sheet_size_x->set_value(size.x / split_sheet.x);
+	split_sheet_size_y->set_value(size.y / split_sheet.y);
+	split_sheet_sep_x->set_value(0);
+	split_sheet_sep_y->set_value(0);
+	split_sheet_offset_x->set_value(0);
+	split_sheet_offset_y->set_value(0);
+
+	updating_split_settings = false;
+
+	frames_selected.clear();
+	selected_count = 0;
+	last_frame_selected = -1;
+	split_sheet_preview->queue_redraw();
+}
+
+bool SpriteFramesEditor::_matches_background_color(const Color &p_background_color, const Color &p_pixel_color) {
+	if ((p_background_color.a == 0 && p_pixel_color.a == 0) || p_background_color.is_equal_approx(p_pixel_color)) {
+		return true;
+	}
+
+	Color d = p_background_color - p_pixel_color;
+	// 0.04f is the threshold for how much a colour can deviate from background colour and still be considered a match. Arrived at through experimentation, can be tweaked.
+	return (d.r * d.r) + (d.g * d.g) + (d.b * d.b) + (d.a * d.a) < 0.04f;
+}
+
+Size2i SpriteFramesEditor::_estimate_sprite_sheet_size(const Ref<Texture2D> p_texture) {
+	Ref<Image> image = p_texture->get_image();
+	Size2i size = p_texture->get_size();
+
+	Color assumed_background_color = image->get_pixel(0, 0);
+	Size2i sheet_size;
+
+	bool previous_line_background = true;
+	for (int x = 0; x < size.x; x++) {
+		int y = 0;
+		while (y < size.y && _matches_background_color(assumed_background_color, image->get_pixel(x, y))) {
+			y++;
+		}
+		bool current_line_background = (y == size.y);
+		if (previous_line_background && !current_line_background) {
+			sheet_size.x++;
+		}
+		previous_line_background = current_line_background;
+	}
+
+	previous_line_background = true;
+	for (int y = 0; y < size.y; y++) {
+		int x = 0;
+		while (x < size.x && _matches_background_color(assumed_background_color, image->get_pixel(x, y))) {
+			x++;
+		}
+		bool current_line_background = (x == size.x);
+		if (previous_line_background && !current_line_background) {
+			sheet_size.y++;
+		}
+		previous_line_background = current_line_background;
+	}
+
+	if (sheet_size == Size2i(0, 0) || sheet_size == Size2i(1, 1)) {
+		sheet_size = Size2i(4, 4);
+	}
+
+	return sheet_size;
+}
+
 void SpriteFramesEditor::_prepare_sprite_sheet(const String &p_file) {
 	Ref<Texture2D> texture = ResourceLoader::load(p_file);
 	if (texture.is_null()) {
@@ -525,18 +602,22 @@ void SpriteFramesEditor::_prepare_sprite_sheet(const String &p_file) {
 		split_sheet_offset_x->set_max(size.x);
 		split_sheet_offset_y->set_max(size.y);
 
-		// Different texture, reset to 4x4.
-		dominant_param = PARAM_FRAME_COUNT;
-		updating_split_settings = true;
-		split_sheet_h->set_value(4);
-		split_sheet_v->set_value(4);
-		split_sheet_size_x->set_value(size.x / 4);
-		split_sheet_size_y->set_value(size.y / 4);
-		split_sheet_sep_x->set_value(0);
-		split_sheet_sep_y->set_value(0);
-		split_sheet_offset_x->set_value(0);
-		split_sheet_offset_y->set_value(0);
-		updating_split_settings = false;
+		if (size != previous_texture_size) {
+			// Different texture, reset to 4x4.
+			dominant_param = PARAM_FRAME_COUNT;
+			updating_split_settings = true;
+			const Size2i split_sheet = Size2i(4, 4);
+			split_sheet_h->set_value(split_sheet.x);
+			split_sheet_v->set_value(split_sheet.y);
+			split_sheet_size_x->set_value(size.x / split_sheet.x);
+			split_sheet_size_y->set_value(size.y / split_sheet.y);
+			split_sheet_sep_x->set_value(0);
+			split_sheet_sep_y->set_value(0);
+			split_sheet_offset_x->set_value(0);
+			split_sheet_offset_y->set_value(0);
+			updating_split_settings = false;
+		}
+		previous_texture_size = size;
 
 		// Reset zoom.
 		_sheet_zoom_reset();
@@ -578,12 +659,13 @@ void SpriteFramesEditor::_notification(int p_what) {
 			zoom_reset->set_icon(get_editor_theme_icon(SNAME("ZoomReset")));
 			zoom_in->set_icon(get_editor_theme_icon(SNAME("ZoomMore")));
 			add_anim->set_icon(get_editor_theme_icon(SNAME("New")));
+			duplicate_anim->set_icon(get_editor_theme_icon(SNAME("Duplicate")));
 			delete_anim->set_icon(get_editor_theme_icon(SNAME("Remove")));
 			anim_search_box->set_right_icon(get_editor_theme_icon(SNAME("Search")));
 			split_sheet_zoom_out->set_icon(get_editor_theme_icon(SNAME("ZoomLess")));
 			split_sheet_zoom_reset->set_icon(get_editor_theme_icon(SNAME("ZoomReset")));
 			split_sheet_zoom_in->set_icon(get_editor_theme_icon(SNAME("ZoomMore")));
-			split_sheet_scroll->add_theme_style_override("panel", get_theme_stylebox(SNAME("panel"), SNAME("Tree")));
+			split_sheet_scroll->add_theme_style_override(SceneStringName(panel), get_theme_stylebox(SceneStringName(panel), SNAME("Tree")));
 
 			_update_show_settings();
 		} break;
@@ -625,7 +707,7 @@ void SpriteFramesEditor::_file_load_request(const Vector<String> &p_path, int p_
 	}
 
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-	undo_redo->create_action(TTR("Add Frame"), UndoRedo::MERGE_DISABLE, EditorNode::get_singleton()->get_edited_scene());
+	undo_redo->create_action(TTR("Add Frame"), UndoRedo::MERGE_DISABLE, frames.ptr());
 	int fc = frames->get_frame_count(edited_anim);
 
 	int count = 0;
@@ -664,8 +746,8 @@ void SpriteFramesEditor::_load_pressed() {
 	file->clear_filters();
 	List<String> extensions;
 	ResourceLoader::get_recognized_extensions_for_type("Texture2D", &extensions);
-	for (int i = 0; i < extensions.size(); i++) {
-		file->add_filter("*." + extensions[i]);
+	for (const String &extension : extensions) {
+		file->add_filter("*." + extension);
 	}
 
 	file->set_file_mode(EditorFileDialog::FILE_MODE_OPEN_FILES);
@@ -675,30 +757,57 @@ void SpriteFramesEditor::_load_pressed() {
 void SpriteFramesEditor::_paste_pressed() {
 	ERR_FAIL_COND(!frames->has_animation(edited_anim));
 
+	Ref<ClipboardSpriteFrames> clipboard_frames = EditorSettings::get_singleton()->get_resource_clipboard();
+	if (clipboard_frames.is_valid()) {
+		_paste_frame_array(clipboard_frames);
+		return;
+	}
+
+	Ref<Texture2D> texture = EditorSettings::get_singleton()->get_resource_clipboard();
+	if (texture.is_valid()) {
+		_paste_texture(texture);
+		return;
+	}
+}
+
+void SpriteFramesEditor::_paste_frame_array(const Ref<ClipboardSpriteFrames> &p_clipboard_frames) {
+	if (p_clipboard_frames->frames.is_empty()) {
+		return;
+	}
+
 	Ref<Texture2D> texture;
 	float duration = 1.0;
 
-	Ref<EditorSpriteFramesFrame> frame = EditorSettings::get_singleton()->get_resource_clipboard();
-	if (frame.is_valid()) {
-		texture = frame->texture;
-		duration = frame->duration;
-	} else {
-		texture = EditorSettings::get_singleton()->get_resource_clipboard();
+	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
+	undo_redo->create_action(TTR("Paste Frame(s)"), UndoRedo::MERGE_DISABLE, frames.ptr());
+
+	int undo_index = frames->get_frame_count(edited_anim);
+
+	for (int index = 0; index < p_clipboard_frames->frames.size(); index++) {
+		const ClipboardSpriteFrames::Frame &frame = p_clipboard_frames->frames[index];
+		texture = frame.texture;
+		duration = frame.duration;
+
+		undo_redo->add_do_method(frames.ptr(), "add_frame", edited_anim, texture, duration);
+		undo_redo->add_undo_method(frames.ptr(), "remove_frame", edited_anim, undo_index);
 	}
 
-	if (texture.is_null()) {
-		dialog->set_text(TTR("Resource clipboard is empty or not a texture!"));
-		dialog->set_title(TTR("Error!"));
-		//dialog->get_cancel()->set_text("Close");
-		dialog->set_ok_button_text(TTR("Close"));
-		dialog->popup_centered();
-		return; ///beh should show an error i guess
-	}
+	undo_redo->add_do_method(this, "_update_library");
+	undo_redo->add_undo_method(this, "_update_library");
+	undo_redo->commit_action();
+}
+
+void SpriteFramesEditor::_paste_texture(const Ref<Texture2D> &p_texture) {
+	float duration = 1.0;
 
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-	undo_redo->create_action(TTR("Paste Frame"), UndoRedo::MERGE_DISABLE, EditorNode::get_singleton()->get_edited_scene());
-	undo_redo->add_do_method(frames.ptr(), "add_frame", edited_anim, texture, duration);
-	undo_redo->add_undo_method(frames.ptr(), "remove_frame", edited_anim, frames->get_frame_count(edited_anim));
+	undo_redo->create_action(TTR("Paste Texture"), UndoRedo::MERGE_DISABLE, frames.ptr());
+
+	int undo_index = frames->get_frame_count(edited_anim);
+
+	undo_redo->add_do_method(frames.ptr(), "add_frame", edited_anim, p_texture, duration);
+	undo_redo->add_undo_method(frames.ptr(), "remove_frame", edited_anim, undo_index);
+
 	undo_redo->add_do_method(this, "_update_library");
 	undo_redo->add_undo_method(this, "_update_library");
 	undo_redo->commit_action();
@@ -707,31 +816,39 @@ void SpriteFramesEditor::_paste_pressed() {
 void SpriteFramesEditor::_copy_pressed() {
 	ERR_FAIL_COND(!frames->has_animation(edited_anim));
 
-	if (frame_list->get_current() < 0) {
+	Vector<int> selected_items = frame_list->get_selected_items();
+
+	if (selected_items.is_empty()) {
 		return;
 	}
 
-	Ref<Texture2D> texture = frames->get_frame_texture(edited_anim, frame_list->get_current());
-	if (texture.is_null()) {
-		return;
+	Ref<ClipboardSpriteFrames> clipboard_frames = memnew(ClipboardSpriteFrames);
+
+	for (const int &frame_index : selected_items) {
+		Ref<Texture2D> texture = frames->get_frame_texture(edited_anim, frame_index);
+		if (texture.is_null()) {
+			continue;
+		}
+
+		ClipboardSpriteFrames::Frame frame;
+		frame.texture = texture;
+		frame.duration = frames->get_frame_duration(edited_anim, frame_index);
+
+		clipboard_frames->frames.push_back(frame);
 	}
-
-	Ref<EditorSpriteFramesFrame> frame = memnew(EditorSpriteFramesFrame);
-	frame->texture = texture;
-	frame->duration = frames->get_frame_duration(edited_anim, frame_list->get_current());
-
-	EditorSettings::get_singleton()->set_resource_clipboard(frame);
+	EditorSettings::get_singleton()->set_resource_clipboard(clipboard_frames);
 }
 
 void SpriteFramesEditor::_empty_pressed() {
 	ERR_FAIL_COND(!frames->has_animation(edited_anim));
 
 	int from = -1;
+	Vector<int> selected_items = frame_list->get_selected_items();
 
-	if (frame_list->get_current() >= 0) {
-		from = frame_list->get_current();
-		sel = from;
-
+	if (!selected_items.is_empty()) {
+		from = selected_items[0];
+		selection.clear();
+		selection.push_back(from + 1);
 	} else {
 		from = frames->get_frame_count(edited_anim);
 	}
@@ -739,7 +856,7 @@ void SpriteFramesEditor::_empty_pressed() {
 	Ref<Texture2D> texture;
 
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-	undo_redo->create_action(TTR("Add Empty"), UndoRedo::MERGE_DISABLE, EditorNode::get_singleton()->get_edited_scene());
+	undo_redo->create_action(TTR("Add Empty"), UndoRedo::MERGE_DISABLE, frames.ptr());
 	undo_redo->add_do_method(frames.ptr(), "add_frame", edited_anim, texture, 1.0, from);
 	undo_redo->add_undo_method(frames.ptr(), "remove_frame", edited_anim, from);
 	undo_redo->add_do_method(this, "_update_library");
@@ -751,11 +868,12 @@ void SpriteFramesEditor::_empty2_pressed() {
 	ERR_FAIL_COND(!frames->has_animation(edited_anim));
 
 	int from = -1;
+	Vector<int> selected_items = frame_list->get_selected_items();
 
-	if (frame_list->get_current() >= 0) {
-		from = frame_list->get_current();
-		sel = from;
-
+	if (!selected_items.is_empty()) {
+		from = selected_items[selected_items.size() - 1];
+		selection.clear();
+		selection.push_back(from);
 	} else {
 		from = frames->get_frame_count(edited_anim);
 	}
@@ -763,7 +881,7 @@ void SpriteFramesEditor::_empty2_pressed() {
 	Ref<Texture2D> texture;
 
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-	undo_redo->create_action(TTR("Add Empty"), UndoRedo::MERGE_DISABLE, EditorNode::get_singleton()->get_edited_scene());
+	undo_redo->create_action(TTR("Add Empty"), UndoRedo::MERGE_DISABLE, frames.ptr());
 	undo_redo->add_do_method(frames.ptr(), "add_frame", edited_anim, texture, 1.0, from + 1);
 	undo_redo->add_undo_method(frames.ptr(), "remove_frame", edited_anim, from + 1);
 	undo_redo->add_do_method(this, "_update_library");
@@ -774,24 +892,44 @@ void SpriteFramesEditor::_empty2_pressed() {
 void SpriteFramesEditor::_up_pressed() {
 	ERR_FAIL_COND(!frames->has_animation(edited_anim));
 
-	if (frame_list->get_current() < 0) {
+	Vector<int> selected_items = frame_list->get_selected_items();
+
+	int nb_selected_items = selected_items.size();
+	if (nb_selected_items <= 0) {
 		return;
 	}
 
-	int to_move = frame_list->get_current();
-	if (to_move < 1) {
+	int first_selected_frame_index = selected_items[0];
+	if (first_selected_frame_index < 1) {
 		return;
 	}
-
-	sel = to_move;
-	sel -= 1;
 
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-	undo_redo->create_action(TTR("Move Frame"), UndoRedo::MERGE_DISABLE, EditorNode::get_singleton()->get_edited_scene());
-	undo_redo->add_do_method(frames.ptr(), "set_frame", edited_anim, to_move, frames->get_frame_texture(edited_anim, to_move - 1), frames->get_frame_duration(edited_anim, to_move - 1));
-	undo_redo->add_do_method(frames.ptr(), "set_frame", edited_anim, to_move - 1, frames->get_frame_texture(edited_anim, to_move), frames->get_frame_duration(edited_anim, to_move));
-	undo_redo->add_undo_method(frames.ptr(), "set_frame", edited_anim, to_move, frames->get_frame_texture(edited_anim, to_move), frames->get_frame_duration(edited_anim, to_move));
-	undo_redo->add_undo_method(frames.ptr(), "set_frame", edited_anim, to_move - 1, frames->get_frame_texture(edited_anim, to_move - 1), frames->get_frame_duration(edited_anim, to_move - 1));
+	undo_redo->create_action(TTR("Move Frame"), UndoRedo::MERGE_DISABLE, frames.ptr());
+
+	int last_overwritten_frame = -1;
+
+	for (int selected_index = 0; selected_index < nb_selected_items; selected_index++) {
+		int to_move = selected_items[selected_index];
+		int new_index = to_move - 1;
+		selected_items.set(selected_index, new_index);
+
+		undo_redo->add_do_method(frames.ptr(), "set_frame", edited_anim, new_index, frames->get_frame_texture(edited_anim, to_move), frames->get_frame_duration(edited_anim, to_move));
+		undo_redo->add_undo_method(frames.ptr(), "set_frame", edited_anim, new_index, frames->get_frame_texture(edited_anim, new_index), frames->get_frame_duration(edited_anim, new_index));
+
+		bool is_next_item_in_selection = selected_index + 1 < nb_selected_items && selected_items[selected_index + 1] == to_move + 1;
+		if (last_overwritten_frame == -1) {
+			last_overwritten_frame = new_index;
+		}
+
+		if (!is_next_item_in_selection) {
+			undo_redo->add_do_method(frames.ptr(), "set_frame", edited_anim, to_move, frames->get_frame_texture(edited_anim, last_overwritten_frame), frames->get_frame_duration(edited_anim, last_overwritten_frame));
+			undo_redo->add_undo_method(frames.ptr(), "set_frame", edited_anim, to_move, frames->get_frame_texture(edited_anim, to_move), frames->get_frame_duration(edited_anim, to_move));
+			last_overwritten_frame = -1;
+		}
+	}
+	selection = selected_items;
+
 	undo_redo->add_do_method(this, "_update_library");
 	undo_redo->add_undo_method(this, "_update_library");
 	undo_redo->commit_action();
@@ -800,24 +938,44 @@ void SpriteFramesEditor::_up_pressed() {
 void SpriteFramesEditor::_down_pressed() {
 	ERR_FAIL_COND(!frames->has_animation(edited_anim));
 
-	if (frame_list->get_current() < 0) {
+	Vector<int> selected_items = frame_list->get_selected_items();
+
+	int nb_selected_items = selected_items.size();
+	if (nb_selected_items <= 0) {
 		return;
 	}
 
-	int to_move = frame_list->get_current();
-	if (to_move < 0 || to_move >= frames->get_frame_count(edited_anim) - 1) {
+	int last_selected_frame_index = selected_items[nb_selected_items - 1];
+	if (last_selected_frame_index >= frames->get_frame_count(edited_anim) - 1) {
 		return;
 	}
-
-	sel = to_move;
-	sel += 1;
 
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-	undo_redo->create_action(TTR("Move Frame"), UndoRedo::MERGE_DISABLE, EditorNode::get_singleton()->get_edited_scene());
-	undo_redo->add_do_method(frames.ptr(), "set_frame", edited_anim, to_move, frames->get_frame_texture(edited_anim, to_move + 1), frames->get_frame_duration(edited_anim, to_move + 1));
-	undo_redo->add_do_method(frames.ptr(), "set_frame", edited_anim, to_move + 1, frames->get_frame_texture(edited_anim, to_move), frames->get_frame_duration(edited_anim, to_move));
-	undo_redo->add_undo_method(frames.ptr(), "set_frame", edited_anim, to_move, frames->get_frame_texture(edited_anim, to_move), frames->get_frame_duration(edited_anim, to_move));
-	undo_redo->add_undo_method(frames.ptr(), "set_frame", edited_anim, to_move + 1, frames->get_frame_texture(edited_anim, to_move + 1), frames->get_frame_duration(edited_anim, to_move + 1));
+	undo_redo->create_action(TTR("Move Frame"), UndoRedo::MERGE_DISABLE, frames.ptr());
+
+	int first_moved_frame = -1;
+
+	for (int selected_index = 0; selected_index < nb_selected_items; selected_index++) {
+		int to_move = selected_items[selected_index];
+		int new_index = to_move + 1;
+		selected_items.set(selected_index, new_index);
+
+		undo_redo->add_do_method(frames.ptr(), "set_frame", edited_anim, new_index, frames->get_frame_texture(edited_anim, to_move), frames->get_frame_duration(edited_anim, to_move));
+		undo_redo->add_undo_method(frames.ptr(), "set_frame", edited_anim, new_index, frames->get_frame_texture(edited_anim, new_index), frames->get_frame_duration(edited_anim, new_index));
+
+		bool is_next_item_in_selection = selected_index + 1 < nb_selected_items && selected_items[selected_index + 1] == new_index;
+		if (first_moved_frame == -1) {
+			first_moved_frame = to_move;
+		}
+
+		if (!is_next_item_in_selection) {
+			undo_redo->add_do_method(frames.ptr(), "set_frame", edited_anim, first_moved_frame, frames->get_frame_texture(edited_anim, new_index), frames->get_frame_duration(edited_anim, new_index));
+			undo_redo->add_undo_method(frames.ptr(), "set_frame", edited_anim, first_moved_frame, frames->get_frame_texture(edited_anim, first_moved_frame), frames->get_frame_duration(edited_anim, first_moved_frame));
+			first_moved_frame = -1;
+		}
+	}
+	selection = selected_items;
+
 	undo_redo->add_do_method(this, "_update_library");
 	undo_redo->add_undo_method(this, "_update_library");
 	undo_redo->commit_action();
@@ -826,19 +984,21 @@ void SpriteFramesEditor::_down_pressed() {
 void SpriteFramesEditor::_delete_pressed() {
 	ERR_FAIL_COND(!frames->has_animation(edited_anim));
 
-	if (frame_list->get_current() < 0) {
-		return;
-	}
+	Vector<int> selected_items = frame_list->get_selected_items();
 
-	int to_delete = frame_list->get_current();
-	if (to_delete < 0 || to_delete >= frames->get_frame_count(edited_anim)) {
+	int nb_selected_items = selected_items.size();
+	if (nb_selected_items <= 0) {
 		return;
 	}
 
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-	undo_redo->create_action(TTR("Delete Resource"), UndoRedo::MERGE_DISABLE, EditorNode::get_singleton()->get_edited_scene());
-	undo_redo->add_do_method(frames.ptr(), "remove_frame", edited_anim, to_delete);
-	undo_redo->add_undo_method(frames.ptr(), "add_frame", edited_anim, frames->get_frame_texture(edited_anim, to_delete), frames->get_frame_duration(edited_anim, to_delete), to_delete);
+	undo_redo->create_action(TTR("Delete Resource"), UndoRedo::MERGE_DISABLE, frames.ptr());
+	for (int selected_index = 0; selected_index < nb_selected_items; selected_index++) {
+		int to_delete = selected_items[selected_index];
+		undo_redo->add_do_method(frames.ptr(), "remove_frame", edited_anim, to_delete - selected_index);
+		undo_redo->add_undo_method(frames.ptr(), "add_frame", edited_anim, frames->get_frame_texture(edited_anim, to_delete), frames->get_frame_duration(edited_anim, to_delete), to_delete);
+	}
+
 	undo_redo->add_do_method(this, "_update_library");
 	undo_redo->add_undo_method(this, "_update_library");
 	undo_redo->commit_action();
@@ -871,7 +1031,7 @@ void SpriteFramesEditor::_sync_animation() {
 }
 
 void SpriteFramesEditor::_select_animation(const String &p_name, bool p_update_node) {
-	if (!frames->has_animation(p_name)) {
+	if (frames.is_null() || !frames->has_animation(p_name)) {
 		return;
 	}
 	edited_anim = p_name;
@@ -945,7 +1105,7 @@ void SpriteFramesEditor::_animation_name_edited() {
 	edited->set_text(0, name);
 
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-	undo_redo->create_action(TTR("Rename Animation"), UndoRedo::MERGE_DISABLE, EditorNode::get_singleton()->get_edited_scene());
+	undo_redo->create_action(TTR("Rename Animation"), UndoRedo::MERGE_DISABLE, frames.ptr());
 	undo_redo->add_do_method(frames.ptr(), "rename_animation", edited_anim, name);
 	undo_redo->add_undo_method(frames.ptr(), "rename_animation", name, edited_anim);
 	_rename_node_animation(undo_redo, false, edited_anim, name, name);
@@ -967,10 +1127,12 @@ void SpriteFramesEditor::_rename_node_animation(EditorUndoRedoManager *undo_redo
 		for (Node *E : nodes) {
 			String current_name = E->call("get_animation");
 			if (current_name == p_filter) {
+				undo_redo->force_fixed_history(); // Fixes corner-case when editing SpriteFrames stored as separate file.
 				undo_redo->add_undo_method(E, "set_animation", p_new_animation);
 			}
 			String autoplay_name = E->call("get_autoplay");
 			if (autoplay_name == p_filter) {
+				undo_redo->force_fixed_history();
 				undo_redo->add_undo_method(E, "set_autoplay", p_new_autoplay);
 			}
 		}
@@ -978,10 +1140,12 @@ void SpriteFramesEditor::_rename_node_animation(EditorUndoRedoManager *undo_redo
 		for (Node *E : nodes) {
 			String current_name = E->call("get_animation");
 			if (current_name == p_filter) {
+				undo_redo->force_fixed_history();
 				undo_redo->add_do_method(E, "set_animation", p_new_animation);
 			}
 			String autoplay_name = E->call("get_autoplay");
 			if (autoplay_name == p_filter) {
+				undo_redo->force_fixed_history();
 				undo_redo->add_do_method(E, "set_autoplay", p_new_autoplay);
 			}
 		}
@@ -997,10 +1161,45 @@ void SpriteFramesEditor::_animation_add() {
 	}
 
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-	undo_redo->create_action(TTR("Add Animation"), UndoRedo::MERGE_DISABLE, EditorNode::get_singleton()->get_edited_scene());
+	undo_redo->create_action(TTR("Add Animation"), UndoRedo::MERGE_DISABLE, frames.ptr());
 	undo_redo->add_do_method(frames.ptr(), "add_animation", name);
 	undo_redo->add_undo_method(frames.ptr(), "remove_animation", name);
 	undo_redo->add_do_method(this, "_select_animation", name);
+	undo_redo->add_undo_method(this, "_select_animation", edited_anim);
+	undo_redo->add_do_method(this, "_update_library");
+	undo_redo->add_undo_method(this, "_update_library");
+	undo_redo->commit_action();
+
+	animations->grab_focus();
+}
+
+void SpriteFramesEditor::_animation_duplicate() {
+	if (updating) {
+		return;
+	}
+
+	if (!frames->has_animation(edited_anim)) {
+		return;
+	}
+
+	int counter = 1;
+	String new_name = edited_anim;
+	PackedStringArray name_component = new_name.rsplit("_", true, 1);
+	String base_name = name_component[0];
+	if (name_component.size() > 1 && name_component[1].is_valid_int() && name_component[1].to_int() >= 0) {
+		counter = name_component[1].to_int();
+	}
+	new_name = base_name + "_" + itos(counter);
+	while (frames->has_animation(new_name)) {
+		counter++;
+		new_name = base_name + "_" + itos(counter);
+	}
+
+	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
+	undo_redo->create_action(TTR("Duplicate Animation"), UndoRedo::MERGE_DISABLE, EditorNode::get_singleton()->get_edited_scene());
+	undo_redo->add_do_method(frames.ptr(), "duplicate_animation", edited_anim, new_name);
+	undo_redo->add_undo_method(frames.ptr(), "remove_animation", new_name);
+	undo_redo->add_do_method(this, "_select_animation", new_name);
 	undo_redo->add_undo_method(this, "_select_animation", edited_anim);
 	undo_redo->add_do_method(this, "_update_library");
 	undo_redo->add_undo_method(this, "_update_library");
@@ -1028,17 +1227,17 @@ void SpriteFramesEditor::_animation_remove_confirmed() {
 	frames->get_animation_list(&anim_names);
 	anim_names.sort_custom<StringName::AlphCompare>();
 	if (anim_names.size() >= 2) {
-		if (edited_anim == anim_names[0]) {
-			new_edited = anim_names[1];
+		if (edited_anim == anim_names.get(0)) {
+			new_edited = anim_names.get(1);
 		} else {
-			new_edited = anim_names[0];
+			new_edited = anim_names.get(0);
 		}
 	} else {
 		new_edited = StringName();
 	}
 
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-	undo_redo->create_action(TTR("Remove Animation"), UndoRedo::MERGE_DISABLE, EditorNode::get_singleton()->get_edited_scene());
+	undo_redo->create_action(TTR("Remove Animation"), UndoRedo::MERGE_DISABLE, frames.ptr());
 	_rename_node_animation(undo_redo, false, edited_anim, new_edited, "");
 	undo_redo->add_do_method(frames.ptr(), "remove_animation", edited_anim);
 	undo_redo->add_undo_method(frames.ptr(), "add_animation", edited_anim);
@@ -1068,7 +1267,7 @@ void SpriteFramesEditor::_animation_loop_changed() {
 	}
 
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-	undo_redo->create_action(TTR("Change Animation Loop"), UndoRedo::MERGE_DISABLE, EditorNode::get_singleton()->get_edited_scene());
+	undo_redo->create_action(TTR("Change Animation Loop"), UndoRedo::MERGE_DISABLE, frames.ptr());
 	undo_redo->add_do_method(frames.ptr(), "set_animation_loop", edited_anim, anim_loop->is_pressed());
 	undo_redo->add_undo_method(frames.ptr(), "set_animation_loop", edited_anim, frames->get_animation_loop(edited_anim));
 	undo_redo->add_do_method(this, "_update_library", true);
@@ -1082,7 +1281,7 @@ void SpriteFramesEditor::_animation_speed_changed(double p_value) {
 	}
 
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-	undo_redo->create_action(TTR("Change Animation FPS"), UndoRedo::MERGE_ENDS, EditorNode::get_singleton()->get_edited_scene());
+	undo_redo->create_action(TTR("Change Animation FPS"), UndoRedo::MERGE_ENDS, frames.ptr());
 	undo_redo->add_do_method(frames.ptr(), "set_animation_speed", edited_anim, p_value);
 	undo_redo->add_undo_method(frames.ptr(), "set_animation_speed", edited_anim, frames->get_animation_speed(edited_anim));
 	undo_redo->add_do_method(this, "_update_library", true);
@@ -1106,15 +1305,18 @@ void SpriteFramesEditor::_frame_list_gui_input(const Ref<InputEvent> &p_event) {
 	}
 }
 
-void SpriteFramesEditor::_frame_list_item_selected(int p_index) {
+void SpriteFramesEditor::_frame_list_item_selected(int p_index, bool p_selected) {
 	if (updating) {
 		return;
 	}
 
-	sel = p_index;
+	selection = frame_list->get_selected_items();
+	if (selection.is_empty() || !p_selected) {
+		return;
+	}
 
 	updating = true;
-	frame_duration->set_value(frames->get_frame_duration(edited_anim, p_index));
+	frame_duration->set_value(frames->get_frame_duration(edited_anim, selection[0]));
 	updating = false;
 }
 
@@ -1123,18 +1325,21 @@ void SpriteFramesEditor::_frame_duration_changed(double p_value) {
 		return;
 	}
 
-	int index = sel;
-	if (index < 0) {
+	if (selection.is_empty()) {
 		return;
 	}
 
-	Ref<Texture2D> texture = frames->get_frame_texture(edited_anim, index);
-	float old_duration = frames->get_frame_duration(edited_anim, index);
-
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-	undo_redo->create_action(TTR("Set Frame Duration"), UndoRedo::MERGE_ENDS, EditorNode::get_singleton()->get_edited_scene());
-	undo_redo->add_do_method(frames.ptr(), "set_frame", edited_anim, index, texture, p_value);
-	undo_redo->add_undo_method(frames.ptr(), "set_frame", edited_anim, index, texture, old_duration);
+	undo_redo->create_action(TTR("Set Frame Duration"), UndoRedo::MERGE_ENDS, frames.ptr());
+
+	for (const int &index : selection) {
+		Ref<Texture2D> texture = frames->get_frame_texture(edited_anim, index);
+		float old_duration = frames->get_frame_duration(edited_anim, index);
+
+		undo_redo->add_do_method(frames.ptr(), "set_frame", edited_anim, index, texture, p_value);
+		undo_redo->add_undo_method(frames.ptr(), "set_frame", edited_anim, index, texture, old_duration);
+	}
+
 	undo_redo->add_do_method(this, "_update_library");
 	undo_redo->add_undo_method(this, "_update_library");
 	undo_redo->commit_action();
@@ -1217,7 +1422,7 @@ void SpriteFramesEditor::_update_library_impl() {
 		TreeItem *selected = nullptr;
 		for (const StringName &E : anim_names) {
 			String name = E;
-			if (searching && name.to_lower().find(searched_string) < 0) {
+			if (searching && !name.to_lower().contains(searched_string)) {
 				continue;
 			}
 			TreeItem *it = animations->create_item(anim_root);
@@ -1255,12 +1460,31 @@ void SpriteFramesEditor::_update_library_impl() {
 		return;
 	}
 
-	if (sel >= frames->get_frame_count(edited_anim)) {
-		sel = frames->get_frame_count(edited_anim) - 1;
-	} else if (sel < 0 && frames->get_frame_count(edited_anim)) {
-		sel = 0;
+	int anim_frame_count = frames->get_frame_count(edited_anim);
+	if (anim_frame_count == 0) {
+		selection.clear();
 	}
 
+	for (int index = 0; index < selection.size(); index++) {
+		int sel = selection[index];
+		if (sel == -1) {
+			selection.remove_at(index);
+			index--;
+		}
+		if (sel >= anim_frame_count) {
+			selection.set(index, anim_frame_count - 1);
+			// Since selection is ordered, if we get a frame that is outside of the range
+			// we can clip all the other one.
+			selection.resize(index + 1);
+			break;
+		}
+	}
+
+	if (selection.is_empty() && frames->get_frame_count(edited_anim)) {
+		selection.push_back(0);
+	}
+
+	bool is_first_selection = true;
 	for (int i = 0; i < frames->get_frame_count(edited_anim); i++) {
 		String name = itos(i);
 		Ref<Texture2D> texture = frames->get_frame_texture(edited_anim, i);
@@ -1294,9 +1518,12 @@ void SpriteFramesEditor::_update_library_impl() {
 
 			frame_list->set_item_tooltip(-1, tooltip);
 		}
-		if (sel == i) {
-			frame_list->select(frame_list->get_item_count() - 1);
-			frame_duration->set_value_no_signal(frames->get_frame_duration(edited_anim, i));
+		if (selection.has(i)) {
+			frame_list->select(frame_list->get_item_count() - 1, is_first_selection);
+			if (is_first_selection) {
+				frame_duration->set_value_no_signal(frames->get_frame_duration(edited_anim, i));
+			}
+			is_first_selection = false;
 		}
 	}
 
@@ -1343,6 +1570,7 @@ void SpriteFramesEditor::edit(Ref<SpriteFrames> p_frames) {
 	_zoom_reset();
 
 	add_anim->set_disabled(read_only);
+	duplicate_anim->set_disabled(read_only);
 	delete_anim->set_disabled(read_only);
 	anim_speed->set_editable(!read_only);
 	anim_loop->set_disabled(read_only);
@@ -1357,6 +1585,10 @@ void SpriteFramesEditor::edit(Ref<SpriteFrames> p_frames) {
 	delete_frame->set_disabled(read_only);
 
 	_fetch_sprite_node(); // Fetch node after set frames.
+}
+
+Ref<SpriteFrames> SpriteFramesEditor::get_sprite_frames() const {
+	return frames;
 }
 
 Variant SpriteFramesEditor::get_drag_data_fw(const Point2 &p_point, Control *p_from) {
@@ -1419,7 +1651,7 @@ bool SpriteFramesEditor::can_drop_data_fw(const Point2 &p_point, const Variant &
 		}
 
 		for (int i = 0; i < files.size(); i++) {
-			String f = files[i];
+			const String &f = files[i];
 			String ftype = EditorFileSystem::get_singleton()->get_file_type(f);
 
 			if (!ClassDB::is_parent_class(ftype, "Texture2D")) {
@@ -1465,7 +1697,7 @@ void SpriteFramesEditor::drop_data_fw(const Point2 &p_point, const Variant &p_da
 					duration = frames->get_frame_duration(edited_anim, from_frame);
 				}
 
-				undo_redo->create_action(TTR("Move Frame"), UndoRedo::MERGE_DISABLE, EditorNode::get_singleton()->get_edited_scene());
+				undo_redo->create_action(TTR("Move Frame"), UndoRedo::MERGE_DISABLE, frames.ptr());
 				undo_redo->add_do_method(frames.ptr(), "remove_frame", edited_anim, from_frame == -1 ? frames->get_frame_count(edited_anim) : from_frame);
 				undo_redo->add_do_method(frames.ptr(), "add_frame", edited_anim, texture, duration, at_pos == -1 ? -1 : at_pos);
 				undo_redo->add_undo_method(frames.ptr(), "remove_frame", edited_anim, at_pos == -1 ? frames->get_frame_count(edited_anim) - 1 : at_pos);
@@ -1474,7 +1706,7 @@ void SpriteFramesEditor::drop_data_fw(const Point2 &p_point, const Variant &p_da
 				undo_redo->add_undo_method(this, "_update_library");
 				undo_redo->commit_action();
 			} else {
-				undo_redo->create_action(TTR("Add Frame"), UndoRedo::MERGE_DISABLE, EditorNode::get_singleton()->get_edited_scene());
+				undo_redo->create_action(TTR("Add Frame"), UndoRedo::MERGE_DISABLE, frames.ptr());
 				undo_redo->add_do_method(frames.ptr(), "add_frame", edited_anim, texture, 1.0, at_pos == -1 ? -1 : at_pos);
 				undo_redo->add_undo_method(frames.ptr(), "remove_frame", edited_anim, at_pos == -1 ? frames->get_frame_count(edited_anim) : at_pos);
 				undo_redo->add_do_method(this, "_update_library");
@@ -1527,7 +1759,7 @@ void SpriteFramesEditor::_fetch_sprite_node() {
 	Node *selected = nullptr;
 	EditorSelection *editor_selection = EditorNode::get_singleton()->get_editor_selection();
 	if (editor_selection->get_selected_node_list().size() == 1) {
-		selected = editor_selection->get_selected_node_list()[0];
+		selected = editor_selection->get_selected_node_list().front()->get();
 	}
 
 	bool show_node_edit = false;
@@ -1611,7 +1843,7 @@ void SpriteFramesEditor::_autoplay_pressed() {
 
 	if (animated_sprite) {
 		EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
-		undo_redo->create_action(TTR("Toggle Autoplay"), UndoRedo::MERGE_DISABLE, EditorNode::get_singleton()->get_edited_scene());
+		undo_redo->create_action(TTR("Toggle Autoplay"), UndoRedo::MERGE_DISABLE, animated_sprite);
 		String current = animated_sprite->call("get_animation");
 		String current_auto = animated_sprite->call("get_autoplay");
 		if (current == current_auto) {
@@ -1662,6 +1894,11 @@ SpriteFramesEditor::SpriteFramesEditor() {
 	hbc_animlist->add_child(add_anim);
 	add_anim->connect(SceneStringName(pressed), callable_mp(this, &SpriteFramesEditor::_animation_add));
 
+	duplicate_anim = memnew(Button);
+	duplicate_anim->set_flat(true);
+	hbc_animlist->add_child(duplicate_anim);
+	duplicate_anim->connect(SceneStringName(pressed), callable_mp(this, &SpriteFramesEditor::_animation_duplicate));
+
 	delete_anim = memnew(Button);
 	delete_anim->set_theme_type_variation("FlatButton");
 	hbc_animlist->add_child(delete_anim);
@@ -1694,7 +1931,7 @@ SpriteFramesEditor::SpriteFramesEditor() {
 	anim_speed->set_step(0.01);
 	anim_speed->set_custom_arrow_step(1);
 	anim_speed->set_tooltip_text(TTR("Animation Speed"));
-	anim_speed->connect("value_changed", callable_mp(this, &SpriteFramesEditor::_animation_speed_changed));
+	anim_speed->connect(SceneStringName(value_changed), callable_mp(this, &SpriteFramesEditor::_animation_speed_changed));
 	hbc_animlist->add_child(anim_speed);
 
 	anim_search_box = memnew(LineEdit);
@@ -1702,7 +1939,7 @@ SpriteFramesEditor::SpriteFramesEditor() {
 	anim_search_box->set_h_size_flags(SIZE_EXPAND_FILL);
 	anim_search_box->set_placeholder(TTR("Filter Animations"));
 	anim_search_box->set_clear_button_enabled(true);
-	anim_search_box->connect("text_changed", callable_mp(this, &SpriteFramesEditor::_animation_search_text_changed));
+	anim_search_box->connect(SceneStringName(text_changed), callable_mp(this, &SpriteFramesEditor::_animation_search_text_changed));
 
 	animations = memnew(Tree);
 	sub_vb->add_child(animations);
@@ -1715,6 +1952,8 @@ SpriteFramesEditor::SpriteFramesEditor() {
 
 	add_anim->set_shortcut_context(animations);
 	add_anim->set_shortcut(ED_SHORTCUT("sprite_frames/new_animation", TTR("Add Animation"), KeyModifierMask::CMD_OR_CTRL | Key::N));
+	duplicate_anim->set_shortcut_context(animations);
+	duplicate_anim->set_shortcut(ED_SHORTCUT("sprite_frames/duplicate_animation", TTR("Duplicate Animation"), KeyModifierMask::CMD_OR_CTRL | Key::D));
 	delete_anim->set_shortcut_context(animations);
 	delete_anim->set_shortcut(ED_SHORTCUT("sprite_frames/delete_animation", TTR("Delete Animation"), Key::KEY_DELETE));
 
@@ -1838,11 +2077,16 @@ SpriteFramesEditor::SpriteFramesEditor() {
 	frame_duration->set_custom_arrow_step(0.1);
 	frame_duration->set_allow_lesser(false);
 	frame_duration->set_allow_greater(true);
-	frame_duration->connect("value_changed", callable_mp(this, &SpriteFramesEditor::_frame_duration_changed));
+	frame_duration->connect(SceneStringName(value_changed), callable_mp(this, &SpriteFramesEditor::_frame_duration_changed));
 	hbc_frame_duration->add_child(frame_duration);
 
+	// Wide empty separation control. (like BoxContainer::add_spacer())
+	Control *c = memnew(Control);
+	c->set_mouse_filter(MOUSE_FILTER_PASS);
+	c->set_h_size_flags(SIZE_EXPAND_FILL);
+	hfc->add_child(c);
+
 	HBoxContainer *hbc_zoom = memnew(HBoxContainer);
-	hbc_zoom->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
 	hfc->add_child(hbc_zoom);
 
 	zoom_out = memnew(Button);
@@ -1868,9 +2112,11 @@ SpriteFramesEditor::SpriteFramesEditor() {
 	add_child(file);
 
 	frame_list = memnew(ItemList);
+	frame_list->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 	frame_list->set_v_size_flags(SIZE_EXPAND_FILL);
 	frame_list->set_icon_mode(ItemList::ICON_MODE_TOP);
 	frame_list->set_texture_filter(TEXTURE_FILTER_NEAREST_WITH_MIPMAPS);
+	frame_list->set_select_mode(ItemList::SELECT_MULTI);
 
 	frame_list->set_max_columns(0);
 	frame_list->set_icon_mode(ItemList::ICON_MODE_TOP);
@@ -1878,7 +2124,8 @@ SpriteFramesEditor::SpriteFramesEditor() {
 	SET_DRAG_FORWARDING_GCD(frame_list, SpriteFramesEditor);
 	frame_list->connect(SceneStringName(gui_input), callable_mp(this, &SpriteFramesEditor::_frame_list_gui_input));
 	// HACK: The item_selected signal is emitted before the Frame Duration spinbox loses focus and applies the change.
-	frame_list->connect("item_selected", callable_mp(this, &SpriteFramesEditor::_frame_list_item_selected), CONNECT_DEFERRED);
+	frame_list->connect("multi_selected", callable_mp(this, &SpriteFramesEditor::_frame_list_item_selected), CONNECT_DEFERRED);
+
 	sub_vb->add_child(frame_list);
 
 	dialog = memnew(AcceptDialog);
@@ -1901,9 +2148,9 @@ SpriteFramesEditor::SpriteFramesEditor() {
 	delete_frame->set_shortcut_context(frame_list);
 	delete_frame->set_shortcut(ED_SHORTCUT("sprite_frames/delete", TTR("Delete Frame"), Key::KEY_DELETE));
 	copy->set_shortcut_context(frame_list);
-	copy->set_shortcut(ED_SHORTCUT("sprite_frames/copy", TTR("Copy Frame"), KeyModifierMask::CMD_OR_CTRL | Key::C));
+	copy->set_shortcut(ED_SHORTCUT("sprite_frames/copy", TTR("Copy Frame(s)"), KeyModifierMask::CMD_OR_CTRL | Key::C));
 	paste->set_shortcut_context(frame_list);
-	paste->set_shortcut(ED_SHORTCUT("sprite_frames/paste", TTR("Paste Frame"), KeyModifierMask::CMD_OR_CTRL | Key::V));
+	paste->set_shortcut(ED_SHORTCUT("sprite_frames/paste", TTR("Paste Frame(s)"), KeyModifierMask::CMD_OR_CTRL | Key::V));
 	empty_before->set_shortcut_context(frame_list);
 	empty_before->set_shortcut(ED_SHORTCUT("sprite_frames/empty_before", TTR("Insert Empty (Before Selected)"), KeyModifierMask::ALT | Key::LEFT));
 	empty_after->set_shortcut_context(frame_list);
@@ -1921,7 +2168,6 @@ SpriteFramesEditor::SpriteFramesEditor() {
 			{ int32_t(KeyModifierMask::CMD_OR_CTRL | Key::EQUAL), int32_t(KeyModifierMask::CMD_OR_CTRL | Key::KP_ADD) }));
 
 	loading_scene = false;
-	sel = -1;
 
 	updating = false;
 
@@ -1929,12 +2175,12 @@ SpriteFramesEditor::SpriteFramesEditor() {
 
 	delete_dialog = memnew(ConfirmationDialog);
 	add_child(delete_dialog);
-	delete_dialog->connect("confirmed", callable_mp(this, &SpriteFramesEditor::_animation_remove_confirmed));
+	delete_dialog->connect(SceneStringName(confirmed), callable_mp(this, &SpriteFramesEditor::_animation_remove_confirmed));
 
 	split_sheet_dialog = memnew(ConfirmationDialog);
 	add_child(split_sheet_dialog);
 	split_sheet_dialog->set_title(TTR("Select Frames"));
-	split_sheet_dialog->connect("confirmed", callable_mp(this, &SpriteFramesEditor::_sheet_add_frames));
+	split_sheet_dialog->connect(SceneStringName(confirmed), callable_mp(this, &SpriteFramesEditor::_sheet_add_frames));
 
 	HBoxContainer *split_sheet_hb = memnew(HBoxContainer);
 	split_sheet_dialog->add_child(split_sheet_hb);
@@ -1962,7 +2208,7 @@ SpriteFramesEditor::SpriteFramesEditor() {
 	split_sheet_order->add_item(TTR("Top to Bottom, Right to Left"), FRAME_ORDER_TOP_BOTTOM_RIGHT_LEFT);
 	split_sheet_order->add_item(TTR("Bottom to Top, Left to Right"), FRAME_ORDER_BOTTOM_TOP_LEFT_RIGHT);
 	split_sheet_order->add_item(TTR("Bottom to Top, Right to Left"), FRAME_ORDER_BOTTOM_TOP_RIGHT_LEFT);
-	split_sheet_order->connect("item_selected", callable_mp(this, &SpriteFramesEditor::_sheet_order_selected));
+	split_sheet_order->connect(SceneStringName(item_selected), callable_mp(this, &SpriteFramesEditor::_sheet_order_selected));
 	split_sheet_menu_hb->add_child(split_sheet_order);
 
 	Button *select_all = memnew(Button);
@@ -1975,8 +2221,9 @@ SpriteFramesEditor::SpriteFramesEditor() {
 	clear_all->connect(SceneStringName(pressed), callable_mp(this, &SpriteFramesEditor::_sheet_clear_all_frames));
 	split_sheet_menu_hb->add_child(clear_all);
 
+	split_sheet_menu_hb->add_spacer();
+
 	toggle_settings_button = memnew(Button);
-	toggle_settings_button->set_h_size_flags(SIZE_EXPAND | SIZE_SHRINK_END);
 	toggle_settings_button->set_h_size_flags(SIZE_SHRINK_END);
 	toggle_settings_button->set_theme_type_variation("FlatButton");
 	toggle_settings_button->connect(SceneStringName(pressed), callable_mp(this, &SpriteFramesEditor::_toggle_show_settings));
@@ -2051,8 +2298,9 @@ SpriteFramesEditor::SpriteFramesEditor() {
 	split_sheet_h->set_min(1);
 	split_sheet_h->set_max(128);
 	split_sheet_h->set_step(1);
+	split_sheet_h->set_select_all_on_focus(true);
 	split_sheet_h_hb->add_child(split_sheet_h);
-	split_sheet_h->connect("value_changed", callable_mp(this, &SpriteFramesEditor::_sheet_spin_changed).bind(PARAM_FRAME_COUNT));
+	split_sheet_h->connect(SceneStringName(value_changed), callable_mp(this, &SpriteFramesEditor::_sheet_spin_changed).bind(PARAM_FRAME_COUNT));
 	split_sheet_settings_vb->add_child(split_sheet_h_hb);
 
 	HBoxContainer *split_sheet_v_hb = memnew(HBoxContainer);
@@ -2067,8 +2315,9 @@ SpriteFramesEditor::SpriteFramesEditor() {
 	split_sheet_v->set_min(1);
 	split_sheet_v->set_max(128);
 	split_sheet_v->set_step(1);
+	split_sheet_v->set_select_all_on_focus(true);
 	split_sheet_v_hb->add_child(split_sheet_v);
-	split_sheet_v->connect("value_changed", callable_mp(this, &SpriteFramesEditor::_sheet_spin_changed).bind(PARAM_FRAME_COUNT));
+	split_sheet_v->connect(SceneStringName(value_changed), callable_mp(this, &SpriteFramesEditor::_sheet_spin_changed).bind(PARAM_FRAME_COUNT));
 	split_sheet_settings_vb->add_child(split_sheet_v_hb);
 
 	HBoxContainer *split_sheet_size_hb = memnew(HBoxContainer);
@@ -2086,14 +2335,16 @@ SpriteFramesEditor::SpriteFramesEditor() {
 	split_sheet_size_x->set_min(1);
 	split_sheet_size_x->set_step(1);
 	split_sheet_size_x->set_suffix("px");
-	split_sheet_size_x->connect("value_changed", callable_mp(this, &SpriteFramesEditor::_sheet_spin_changed).bind(PARAM_SIZE));
+	split_sheet_size_x->set_select_all_on_focus(true);
+	split_sheet_size_x->connect(SceneStringName(value_changed), callable_mp(this, &SpriteFramesEditor::_sheet_spin_changed).bind(PARAM_SIZE));
 	split_sheet_size_vb->add_child(split_sheet_size_x);
 	split_sheet_size_y = memnew(SpinBox);
 	split_sheet_size_y->set_h_size_flags(SIZE_EXPAND_FILL);
 	split_sheet_size_y->set_min(1);
 	split_sheet_size_y->set_step(1);
 	split_sheet_size_y->set_suffix("px");
-	split_sheet_size_y->connect("value_changed", callable_mp(this, &SpriteFramesEditor::_sheet_spin_changed).bind(PARAM_SIZE));
+	split_sheet_size_y->set_select_all_on_focus(true);
+	split_sheet_size_y->connect(SceneStringName(value_changed), callable_mp(this, &SpriteFramesEditor::_sheet_spin_changed).bind(PARAM_SIZE));
 	split_sheet_size_vb->add_child(split_sheet_size_y);
 	split_sheet_size_hb->add_child(split_sheet_size_vb);
 	split_sheet_settings_vb->add_child(split_sheet_size_hb);
@@ -2112,13 +2363,15 @@ SpriteFramesEditor::SpriteFramesEditor() {
 	split_sheet_sep_x->set_min(0);
 	split_sheet_sep_x->set_step(1);
 	split_sheet_sep_x->set_suffix("px");
-	split_sheet_sep_x->connect("value_changed", callable_mp(this, &SpriteFramesEditor::_sheet_spin_changed).bind(PARAM_USE_CURRENT));
+	split_sheet_sep_x->set_select_all_on_focus(true);
+	split_sheet_sep_x->connect(SceneStringName(value_changed), callable_mp(this, &SpriteFramesEditor::_sheet_spin_changed).bind(PARAM_USE_CURRENT));
 	split_sheet_sep_vb->add_child(split_sheet_sep_x);
 	split_sheet_sep_y = memnew(SpinBox);
 	split_sheet_sep_y->set_min(0);
 	split_sheet_sep_y->set_step(1);
 	split_sheet_sep_y->set_suffix("px");
-	split_sheet_sep_y->connect("value_changed", callable_mp(this, &SpriteFramesEditor::_sheet_spin_changed).bind(PARAM_USE_CURRENT));
+	split_sheet_sep_y->set_select_all_on_focus(true);
+	split_sheet_sep_y->connect(SceneStringName(value_changed), callable_mp(this, &SpriteFramesEditor::_sheet_spin_changed).bind(PARAM_USE_CURRENT));
 	split_sheet_sep_vb->add_child(split_sheet_sep_y);
 	split_sheet_sep_hb->add_child(split_sheet_sep_vb);
 	split_sheet_settings_vb->add_child(split_sheet_sep_hb);
@@ -2137,16 +2390,23 @@ SpriteFramesEditor::SpriteFramesEditor() {
 	split_sheet_offset_x->set_min(0);
 	split_sheet_offset_x->set_step(1);
 	split_sheet_offset_x->set_suffix("px");
-	split_sheet_offset_x->connect("value_changed", callable_mp(this, &SpriteFramesEditor::_sheet_spin_changed).bind(PARAM_USE_CURRENT));
+	split_sheet_offset_x->set_select_all_on_focus(true);
+	split_sheet_offset_x->connect(SceneStringName(value_changed), callable_mp(this, &SpriteFramesEditor::_sheet_spin_changed).bind(PARAM_USE_CURRENT));
 	split_sheet_offset_vb->add_child(split_sheet_offset_x);
 	split_sheet_offset_y = memnew(SpinBox);
 	split_sheet_offset_y->set_min(0);
 	split_sheet_offset_y->set_step(1);
 	split_sheet_offset_y->set_suffix("px");
-	split_sheet_offset_y->connect("value_changed", callable_mp(this, &SpriteFramesEditor::_sheet_spin_changed).bind(PARAM_USE_CURRENT));
+	split_sheet_offset_y->set_select_all_on_focus(true);
+	split_sheet_offset_y->connect(SceneStringName(value_changed), callable_mp(this, &SpriteFramesEditor::_sheet_spin_changed).bind(PARAM_USE_CURRENT));
 	split_sheet_offset_vb->add_child(split_sheet_offset_y);
 	split_sheet_offset_hb->add_child(split_sheet_offset_vb);
 	split_sheet_settings_vb->add_child(split_sheet_offset_hb);
+
+	Button *auto_slice = memnew(Button);
+	auto_slice->set_text(TTR("Auto Slice"));
+	auto_slice->connect(SceneStringName(pressed), callable_mp(this, &SpriteFramesEditor::_auto_slice_sprite_sheet));
+	split_sheet_settings_vb->add_child(auto_slice);
 
 	split_sheet_hb->add_child(split_sheet_settings_vb);
 
@@ -2164,7 +2424,7 @@ SpriteFramesEditor::SpriteFramesEditor() {
 	min_thumbnail_zoom = 0.1f * MAX(1.0f, EDSCALE);
 	// Default the zoom to match the editor scale, but don't dezoom on editor scales below 100% to prevent pixel art from looking bad.
 	sheet_zoom = MAX(1.0f, EDSCALE);
-	max_sheet_zoom = 16.0f * MAX(1.0f, EDSCALE);
+	max_sheet_zoom = 128.0f * MAX(1.0f, EDSCALE);
 	min_sheet_zoom = 0.01f * MAX(1.0f, EDSCALE);
 	_zoom_reset();
 
@@ -2186,28 +2446,33 @@ void SpriteFramesEditorPlugin::edit(Object *p_object) {
 }
 
 bool SpriteFramesEditorPlugin::handles(Object *p_object) const {
-	AnimatedSprite2D *animated_sprite = Object::cast_to<AnimatedSprite2D>(p_object);
-	if (animated_sprite && *animated_sprite->get_sprite_frames()) {
+	AnimatedSprite2D *animated_sprite_2d = Object::cast_to<AnimatedSprite2D>(p_object);
+	if (animated_sprite_2d && *animated_sprite_2d->get_sprite_frames()) {
 		return true;
-	} else {
-		return p_object->is_class("SpriteFrames");
 	}
+	SpriteFrames *frames = Object::cast_to<SpriteFrames>(p_object);
+	if (frames && (frames_editor->get_sprite_frames().is_null() || frames_editor->get_sprite_frames() == frames)) {
+		return true;
+	}
+	return false;
 }
 
 void SpriteFramesEditorPlugin::make_visible(bool p_visible) {
 	if (p_visible) {
 		button->show();
-		EditorNode::get_singleton()->make_bottom_panel_item_visible(frames_editor);
+		EditorNode::get_bottom_panel()->make_item_visible(frames_editor);
 	} else {
 		button->hide();
-		frames_editor->edit(Ref<SpriteFrames>());
+		if (frames_editor->is_visible_in_tree()) {
+			EditorNode::get_bottom_panel()->hide_bottom_panel();
+		}
 	}
 }
 
 SpriteFramesEditorPlugin::SpriteFramesEditorPlugin() {
 	frames_editor = memnew(SpriteFramesEditor);
 	frames_editor->set_custom_minimum_size(Size2(0, 300) * EDSCALE);
-	button = EditorNode::get_singleton()->add_bottom_panel_item(TTR("SpriteFrames"), frames_editor);
+	button = EditorNode::get_bottom_panel()->add_item(TTR("SpriteFrames"), frames_editor, ED_SHORTCUT_AND_COMMAND("bottom_panels/toggle_sprite_frames_bottom_panel", TTR("Toggle SpriteFrames Bottom Panel")));
 	button->hide();
 }
 

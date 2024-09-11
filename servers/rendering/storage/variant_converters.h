@@ -2,10 +2,9 @@
 /*  variant_converters.h                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -138,34 +137,6 @@ struct VariantConverterStd140<Transform2D> {
 };
 
 template <>
-struct VariantConverterStd140<Transform3D> {
-	static constexpr int Elements = 16;
-
-	template <typename P>
-	static void convert(const Transform3D &p_v, P *p_write, bool p_compact) {
-		p_write[0] = p_v.basis.rows[0][0];
-		p_write[1] = p_v.basis.rows[1][0];
-		p_write[2] = p_v.basis.rows[2][0];
-		p_write[3] = 0;
-
-		p_write[4] = p_v.basis.rows[0][1];
-		p_write[5] = p_v.basis.rows[1][1];
-		p_write[6] = p_v.basis.rows[2][1];
-		p_write[7] = 0;
-
-		p_write[8] = p_v.basis.rows[0][2];
-		p_write[9] = p_v.basis.rows[1][2];
-		p_write[10] = p_v.basis.rows[2][2];
-		p_write[11] = 0;
-
-		p_write[12] = p_v.origin.x;
-		p_write[13] = p_v.origin.y;
-		p_write[14] = p_v.origin.z;
-		p_write[15] = 1;
-	}
-};
-
-template <>
 struct VariantConverterStd140<Projection> {
 	static constexpr int Elements = 16;
 
@@ -240,11 +211,11 @@ inline bool is_convertible_array(Variant::Type type) {
 			type == Variant::PACKED_COLOR_ARRAY;
 }
 
-template <class, class = void>
-struct is_vector_type : std::false_type {};
+template <typename, typename = void>
+inline constexpr bool is_vector_type_v = false;
 
-template <class T>
-struct is_vector_type<T, std::void_t<decltype(T::AXIS_COUNT)>> : std::true_type {};
+template <typename T>
+inline constexpr bool is_vector_type_v<T, std::void_t<decltype(T::AXIS_COUNT)>> = true;
 
 template <typename T, typename P>
 void convert_item_std140(const T &p_item, P *p_write, bool p_compact = false) {
@@ -272,7 +243,7 @@ Vector<P> convert_array_std140(const Variant &p_variant, [[maybe_unused]] bool p
 			const Variant &item = array.get(i);
 			P *offset = write + (i * elements);
 
-			if constexpr (is_vector_type<T>::value) {
+			if constexpr (is_vector_type_v<T>) {
 				const T &vec = convert_to_vector<T>(item, p_linear_color);
 				convert_item_std140<T, P>(vec, offset, true);
 			} else {

@@ -2,10 +2,9 @@
 /*  remote_transform_2d.cpp                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -35,7 +34,7 @@ void RemoteTransform2D::_update_cache() {
 	cache = ObjectID();
 	if (has_node(remote_node)) {
 		Node *node = get_node(remote_node);
-		if (!node || this == node || node->is_ancestor_of(this) || this->is_ancestor_of(node)) {
+		if (!node || this == node || node->is_ancestor_of(this) || is_ancestor_of(node)) {
 			return;
 		}
 
@@ -113,6 +112,16 @@ void RemoteTransform2D::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE: {
 			_update_cache();
+		} break;
+
+		case NOTIFICATION_RESET_PHYSICS_INTERPOLATION: {
+			if (cache.is_valid()) {
+				_update_remote();
+				Node2D *n = Object::cast_to<Node2D>(ObjectDB::get_instance(cache));
+				if (n) {
+					n->reset_physics_interpolation();
+				}
+			}
 		} break;
 
 		case NOTIFICATION_LOCAL_TRANSFORM_CHANGED:
@@ -202,7 +211,7 @@ void RemoteTransform2D::force_update_cache() {
 }
 
 PackedStringArray RemoteTransform2D::get_configuration_warnings() const {
-	PackedStringArray warnings = Node::get_configuration_warnings();
+	PackedStringArray warnings = Node2D::get_configuration_warnings();
 
 	if (!has_node(remote_node) || !Object::cast_to<Node2D>(get_node(remote_node))) {
 		warnings.push_back(RTR("Path property must point to a valid Node2D node to work."));

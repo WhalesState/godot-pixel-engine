@@ -2,10 +2,9 @@
 /*  self_list.h                                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -35,7 +34,7 @@
 #include "core/error/error_macros.h"
 #include "core/typedefs.h"
 
-template <class T>
+template <typename T>
 class SelfList {
 public:
 	class List {
@@ -110,7 +109,7 @@ public:
 			sort_custom<Comparator<T>>();
 		}
 
-		template <class C>
+		template <typename C>
 		void sort_custom() {
 			if (_first == _last) {
 				return;
@@ -160,6 +159,9 @@ public:
 		_FORCE_INLINE_ SelfList<T> *first() { return _first; }
 		_FORCE_INLINE_ const SelfList<T> *first() const { return _first; }
 
+		// Forbid copying, which has broken behavior.
+		void operator=(const List &) = delete;
+
 		_FORCE_INLINE_ List() {}
 		_FORCE_INLINE_ ~List() {
 			// A self list must be empty on destruction.
@@ -185,6 +187,9 @@ public:
 	_FORCE_INLINE_ const SelfList<T> *next() const { return _next; }
 	_FORCE_INLINE_ const SelfList<T> *prev() const { return _prev; }
 	_FORCE_INLINE_ T *self() const { return _self; }
+
+	// Forbid copying, which has broken behavior.
+	void operator=(const SelfList<T> &) = delete;
 
 	_FORCE_INLINE_ SelfList(T *p_self) {
 		_self = p_self;

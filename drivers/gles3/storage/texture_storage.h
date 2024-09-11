@@ -2,10 +2,9 @@
 /*  texture_storage.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -117,6 +116,7 @@ enum DefaultGLTexture {
 	DEFAULT_GL_TEXTURE_TRANSPARENT,
 	DEFAULT_GL_TEXTURE_NORMAL,
 	DEFAULT_GL_TEXTURE_ANISO,
+	DEFAULT_GL_TEXTURE_2D_UINT,
 	DEFAULT_GL_TEXTURE_MAX
 };
 
@@ -155,11 +155,10 @@ struct Texture {
 	Image::Format real_format = Image::FORMAT_R8;
 
 	enum Type {
-		TYPE_2D,
-		TYPE_3D
+		TYPE_2D
 	};
 
-	Type type;
+	Type type = TYPE_2D;
 
 	GLenum target = GL_TEXTURE_2D;
 	GLenum gl_format_cache = 0;
@@ -180,9 +179,6 @@ struct Texture {
 	Ref<Image> image_cache_2d;
 
 	bool redraw_if_visible = false;
-
-	RS::TextureDetectCallback detect_3d_callback = nullptr;
-	void *detect_3d_callback_ud = nullptr;
 
 	RS::TextureDetectCallback detect_normal_callback = nullptr;
 	void *detect_normal_callback_ud = nullptr;
@@ -212,8 +208,6 @@ struct Texture {
 		render_target = o.render_target;
 		is_render_target = o.is_render_target;
 		redraw_if_visible = o.redraw_if_visible;
-		detect_3d_callback = o.detect_3d_callback;
-		detect_3d_callback_ud = o.detect_3d_callback_ud;
 		detect_normal_callback = o.detect_normal_callback;
 		detect_normal_callback_ud = o.detect_normal_callback_ud;
 		detect_roughness_callback = o.detect_roughness_callback;
@@ -333,6 +327,7 @@ struct RenderTarget {
 	GLuint color_internal_format = GL_RGBA8;
 	GLuint color_format = GL_RGBA;
 	GLuint color_type = GL_UNSIGNED_BYTE;
+	uint32_t color_format_size = 4;
 	Image::Format image_format = Image::FORMAT_RGBA8;
 
 	GLuint sdf_texture_write = 0;
@@ -349,6 +344,7 @@ struct RenderTarget {
 
 	bool used_in_frame = false;
 	RS::ViewportMSAA msaa = RS::VIEWPORT_MSAA_DISABLED;
+	bool reattach_textures = false;
 
 	struct RTOverridden {
 		bool is_overridden = false;
@@ -434,7 +430,8 @@ private:
 	void _render_target_clear_sdf(RenderTarget *rt);
 	Rect2i _render_target_get_sdf_rect(const RenderTarget *rt) const;
 
-	void _texture_set_data(RID p_texture, const Ref<Image> &p_image, int p_layer, bool initialize);
+	void _texture_set_data(RID p_texture, const Ref<Image> &p_image, int p_layer, bool p_initialize);
+	void _texture_set_swizzle(Texture *p_texture, Image::Format p_real_format);
 
 	struct RenderTargetSDF {
 		CanvasSdfShaderGLES3 shader;
@@ -468,7 +465,7 @@ public:
 
 	/* Texture API */
 
-	Texture *get_texture(RID p_rid) {
+	Texture *get_texture(RID p_rid) const {
 		Texture *texture = texture_owner.get_or_null(p_rid);
 		if (texture && texture->is_proxy) {
 			return texture_owner.get_or_null(texture->proxy_to);
@@ -476,6 +473,10 @@ public:
 		return texture;
 	};
 	bool owns_texture(RID p_rid) { return texture_owner.owns(p_rid); };
+
+	void texture_2d_initialize_from_texture(RID p_texture, Texture &p_tex) {
+		texture_owner.initialize_rid(p_texture, p_tex);
+	}
 
 	virtual bool can_create_resources_async() const override;
 
@@ -501,7 +502,6 @@ public:
 	virtual void texture_set_path(RID p_texture, const String &p_path) override;
 	virtual String texture_get_path(RID p_texture) const override;
 
-	virtual void texture_set_detect_3d_callback(RID p_texture, RS::TextureDetectCallback p_callback, void *p_userdata) override;
 	void texture_set_detect_srgb_callback(RID p_texture, RS::TextureDetectCallback p_callback, void *p_userdata);
 	virtual void texture_set_detect_normal_callback(RID p_texture, RS::TextureDetectCallback p_callback, void *p_userdata) override;
 	virtual void texture_set_detect_roughness_callback(RID p_texture, RS::TextureDetectRoughnessCallback p_callback, void *p_userdata) override;
@@ -517,6 +517,7 @@ public:
 	void texture_set_data(RID p_texture, const Ref<Image> &p_image, int p_layer = 0);
 	virtual Image::Format texture_get_format(RID p_texture) const override;
 	uint32_t texture_get_texid(RID p_texture) const;
+	Vector3i texture_get_size(RID p_texture) const;
 	uint32_t texture_get_width(RID p_texture) const;
 	uint32_t texture_get_height(RID p_texture) const;
 	uint32_t texture_get_depth(RID p_texture) const;
@@ -548,7 +549,7 @@ public:
 	RenderTarget *get_render_target(RID p_rid) { return render_target_owner.get_or_null(p_rid); };
 	bool owns_render_target(RID p_rid) { return render_target_owner.owns(p_rid); };
 
-	void copy_scene_to_backbuffer(RenderTarget *rt, const bool uses_screen_texture, const bool uses_depth_texture);
+	void check_backbuffer(RenderTarget *rt, const bool uses_screen_texture, const bool uses_depth_texture);
 
 	virtual RID render_target_create() override;
 	virtual void render_target_free(RID p_rid) override;
@@ -572,11 +573,22 @@ public:
 		render_target_clear_used(p_render_target);
 	}
 
+	GLuint render_target_get_color_internal_format(RID p_render_target) const;
+	GLuint render_target_get_color_format(RID p_render_target) const;
+	GLuint render_target_get_color_type(RID p_render_target) const;
+	uint32_t render_target_get_color_format_size(RID p_render_target) const;
+
 	void render_target_request_clear(RID p_render_target, const Color &p_clear_color) override;
 	bool render_target_is_clear_requested(RID p_render_target) override;
 	Color render_target_get_clear_request_color(RID p_render_target) override;
 	void render_target_disable_clear_request(RID p_render_target) override;
 	void render_target_do_clear_request(RID p_render_target) override;
+
+	GLuint render_target_get_fbo(RID p_render_target) const;
+	GLuint render_target_get_color(RID p_render_target) const;
+	GLuint render_target_get_depth(RID p_render_target) const;
+	void render_target_set_reattach_textures(RID p_render_target, bool p_reattach_textures) const;
+	bool render_target_is_reattach_textures(RID p_render_target) const;
 
 	virtual void render_target_set_sdf_size_and_scale(RID p_render_target, RS::ViewportSDFOversize p_size, RS::ViewportSDFScale p_scale) override;
 	virtual Rect2i render_target_get_sdf_rect(RID p_render_target) const override;

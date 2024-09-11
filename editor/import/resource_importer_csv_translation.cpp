@@ -2,10 +2,9 @@
 /*  resource_importer_csv_translation.cpp                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -34,7 +33,7 @@
 #include "core/io/file_access.h"
 #include "core/io/resource_saver.h"
 #include "core/string/optimized_translation.h"
-#include "core/string/translation.h"
+#include "core/string/translation_server.h"
 
 String ResourceImporterCSVTranslation::get_importer_name() const {
 	return "csv_translation";
@@ -102,9 +101,12 @@ Error ResourceImporterCSVTranslation::import(const String &p_source_file, const 
 	for (int i = 1; i < line.size(); i++) {
 		String locale = TranslationServer::get_singleton()->standardize_locale(line[i]);
 
-		if (locale.is_empty()) {
+		if (line[i].left(1) == "_") {
 			skipped_locales.insert(i);
-			ERR_CONTINUE_MSG(true, vformat("Error importing CSV translation: Invalid locale format '%s', should be 'language_Script_COUNTRY_VARIANT@extra'.", line[i]));
+			continue;
+		} else if (locale.is_empty()) {
+			skipped_locales.insert(i);
+			ERR_CONTINUE_MSG(true, vformat("Error importing CSV translation: Invalid locale format '%s', should be 'language_Script_COUNTRY_VARIANT@extra'. This column will be ignored.", line[i]));
 		}
 
 		locales.push_back(locale);
@@ -118,13 +120,14 @@ Error ResourceImporterCSVTranslation::import(const String &p_source_file, const 
 		line = f->get_csv_line(delimiter);
 		String key = line[0];
 		if (!key.is_empty()) {
-			ERR_CONTINUE_MSG(line.size() != locales.size() + 1, vformat("Error importing CSV translation: expected %d locale(s), but the '%s' key has %d locale(s).", locales.size(), key, line.size() - 1));
+			ERR_CONTINUE_MSG(line.size() != locales.size() + (int)skipped_locales.size() + 1, vformat("Error importing CSV translation: expected %d locale(s), but the '%s' key has %d locale(s).", locales.size(), key, line.size() - 1));
 
+			int write_index = 0; // Keep track of translations written in case some locales are skipped.
 			for (int i = 1; i < line.size(); i++) {
 				if (skipped_locales.has(i)) {
 					continue;
 				}
-				translations.write[i - 1]->add_message(key, line[i].c_unescape());
+				translations.write[write_index++]->add_message(key, line[i].c_unescape());
 			}
 		}
 	} while (!f->eof_reached());

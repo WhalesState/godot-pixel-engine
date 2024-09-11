@@ -2,10 +2,9 @@
 /*  shader_globals_override.cpp                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -31,6 +30,7 @@
 
 #include "shader_globals_override.h"
 
+#include "scene/main/node.h"
 #include "servers/rendering_server.h"
 
 StringName *ShaderGlobalsOverride::_remap(const StringName &p_name) const {
@@ -175,9 +175,6 @@ void ShaderGlobalsOverride::_get_property_list(List<PropertyInfo> *p_list) const
 			case RS::GLOBAL_VAR_TYPE_TRANSFORM_2D: {
 				pinfo.type = Variant::TRANSFORM2D;
 			} break;
-			case RS::GLOBAL_VAR_TYPE_TRANSFORM: {
-				pinfo.type = Variant::TRANSFORM3D;
-			} break;
 			case RS::GLOBAL_VAR_TYPE_SAMPLER2D: {
 				pinfo.type = Variant::OBJECT;
 				pinfo.hint = PROPERTY_HINT_RESOURCE_TYPE;
@@ -231,6 +228,29 @@ void ShaderGlobalsOverride::_activate() {
 }
 
 void ShaderGlobalsOverride::_notification(int p_what) {
+	switch (p_what) {
+		case Node::NOTIFICATION_ENTER_TREE: {
+			add_to_group(SceneStringName(shader_overrides_group));
+			_activate();
+		} break;
+
+		case Node::NOTIFICATION_EXIT_TREE: {
+			if (active) {
+				//remove overrides
+				for (const KeyValue<StringName, Override> &E : overrides) {
+					const Override *o = &E.value;
+					if (o->in_use) {
+						RS::get_singleton()->global_shader_parameter_set_override(E.key, Variant());
+					}
+				}
+			}
+
+			remove_from_group(SceneStringName(shader_overrides_group_active));
+			remove_from_group(SceneStringName(shader_overrides_group));
+			get_tree()->call_group_flags(SceneTree::GROUP_CALL_DEFERRED, SceneStringName(shader_overrides_group), "_activate"); //another may want to activate when this is removed
+			active = false;
+		} break;
+	}
 }
 
 PackedStringArray ShaderGlobalsOverride::get_configuration_warnings() const {

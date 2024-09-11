@@ -2,10 +2,9 @@
 /*  rasterizer_gles3.h                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -48,6 +47,7 @@ private:
 	float delta = 0;
 
 	double time_total = 0.0;
+	bool flip_xy_workaround = false;
 
 	static bool gles_over_gl;
 
@@ -73,9 +73,9 @@ public:
 	void initialize();
 	void begin_frame(double frame_step);
 
-	void prepare_for_blitting_render_targets();
 	void blit_render_targets_to_screen(DisplayServer::WindowID p_screen, const BlitToScreen *p_render_targets, int p_amount);
 
+	void gl_end_frame(bool p_swap_buffers);
 	void end_frame(bool p_swap_buffers);
 
 	void finalize();
@@ -89,6 +89,7 @@ public:
 
 	static void make_current(bool p_gles_over_gl) {
 		gles_over_gl = p_gles_over_gl;
+		// OS::get_singleton()->set_gles_over_gl(gles_over_gl);
 		_create_func = _create_current;
 		low_end = true;
 	}

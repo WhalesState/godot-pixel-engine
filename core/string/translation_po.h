@@ -2,10 +2,9 @@
 /*  translation_po.h                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -51,7 +50,17 @@ class TranslationPO : public Translation {
 	String plural_rule;
 
 	// Cache temporary variables related to _get_plural_index() to make it faster
-	Vector<String> equi_tests;
+	class EQNode : public RefCounted {
+	public:
+		String regex;
+		Ref<EQNode> left;
+		Ref<EQNode> right;
+	};
+	Ref<EQNode> equi_tests;
+
+	int _find_unquoted(const String &p_src, char32_t p_chr) const;
+	int _eq_test(const Ref<EQNode> &p_node, const Variant &p_result) const;
+
 	Vector<String> input_name;
 	mutable Ref<Expression> expr;
 	mutable Array input_val;
@@ -60,7 +69,7 @@ class TranslationPO : public Translation {
 	mutable int last_plural_n = -1; // Set it to an impossible value at the beginning.
 	mutable int last_plural_mapped_index = 0;
 
-	void _cache_plural_tests(const String &p_plural_rule);
+	void _cache_plural_tests(const String &p_plural_rule, Ref<EQNode> &p_node);
 	int _get_plural_index(int p_n) const;
 
 	Vector<String> _get_message_list() const override;

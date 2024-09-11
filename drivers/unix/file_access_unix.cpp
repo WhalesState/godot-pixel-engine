@@ -2,10 +2,9 @@
 /*  file_access_unix.cpp                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -219,22 +218,13 @@ bool FileAccessUnix::eof_reached() const {
 	return last_error == ERR_FILE_EOF;
 }
 
-uint8_t FileAccessUnix::get_8() const {
-	ERR_FAIL_NULL_V_MSG(f, 0, "File must be opened before use.");
-	uint8_t b;
-	if (fread(&b, 1, 1, f) == 0) {
-		check_errors();
-		b = '\0';
-	}
-	return b;
-}
-
 uint64_t FileAccessUnix::get_buffer(uint8_t *p_dst, uint64_t p_length) const {
-	ERR_FAIL_COND_V(!p_dst && p_length > 0, -1);
 	ERR_FAIL_NULL_V_MSG(f, -1, "File must be opened before use.");
+	ERR_FAIL_COND_V(!p_dst && p_length > 0, -1);
 
 	uint64_t read = fread(p_dst, 1, p_length, f);
 	check_errors();
+
 	return read;
 }
 
@@ -242,14 +232,26 @@ Error FileAccessUnix::get_error() const {
 	return last_error;
 }
 
+Error FileAccessUnix::resize(int64_t p_length) {
+	ERR_FAIL_NULL_V_MSG(f, FAILED, "File must be opened before use.");
+	int res = ::ftruncate(fileno(f), p_length);
+	switch (res) {
+		case 0:
+			return OK;
+		case EBADF:
+			return ERR_FILE_CANT_OPEN;
+		case EFBIG:
+			return ERR_OUT_OF_MEMORY;
+		case EINVAL:
+			return ERR_INVALID_PARAMETER;
+		default:
+			return FAILED;
+	}
+}
+
 void FileAccessUnix::flush() {
 	ERR_FAIL_NULL_MSG(f, "File must be opened before use.");
 	fflush(f);
-}
-
-void FileAccessUnix::store_8(uint8_t p_dest) {
-	ERR_FAIL_NULL_MSG(f, "File must be opened before use.");
-	ERR_FAIL_COND(fwrite(&p_dest, 1, 1, f) != 1);
 }
 
 void FileAccessUnix::store_buffer(const uint8_t *p_src, uint64_t p_length) {
@@ -292,7 +294,7 @@ uint64_t FileAccessUnix::_get_modified_time(const String &p_file) {
 	if (!err) {
 		return status.st_mtime;
 	} else {
-		print_verbose("Failed to get modified time for: " + p_file + "");
+		WARN_PRINT("Failed to get modified time for: " + p_file);
 		return 0;
 	}
 }
@@ -321,7 +323,7 @@ Error FileAccessUnix::_set_unix_permissions(const String &p_file, BitField<FileA
 }
 
 bool FileAccessUnix::_get_hidden_attribute(const String &p_file) {
-#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__)
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__APPLE__)
 	String file = fix_path(p_file);
 
 	struct stat st = {};
@@ -335,7 +337,7 @@ bool FileAccessUnix::_get_hidden_attribute(const String &p_file) {
 }
 
 Error FileAccessUnix::_set_hidden_attribute(const String &p_file, bool p_hidden) {
-#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__)
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__APPLE__)
 	String file = fix_path(p_file);
 
 	struct stat st = {};

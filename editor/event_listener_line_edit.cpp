@@ -2,10 +2,9 @@
 /*  event_listener_line_edit.cpp                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -66,7 +65,7 @@ String EventListenerLineEdit::get_event_text(const Ref<InputEvent> &p_event, boo
 		String mods_text = key->InputEventWithModifiers::as_text();
 		mods_text = mods_text.is_empty() ? mods_text : mods_text + "+";
 		if (key->is_command_or_control_autoremap()) {
-			if (OS::get_singleton()->has_feature("macos") || OS::get_singleton()->has_feature("web_macos") || OS::get_singleton()->has_feature("web_ios")) {
+			if (OS::get_singleton()->has_feature("macos") || OS::get_singleton()->has_feature("web_macos")) {
 				mods_text = mods_text.replace("Command", "Command/Ctrl");
 			} else {
 				mods_text = mods_text.replace("Ctrl", "Command/Ctrl");
@@ -80,7 +79,11 @@ String EventListenerLineEdit::get_event_text(const Ref<InputEvent> &p_event, boo
 			if (!text.is_empty()) {
 				text += " " + TTR("or") + " ";
 			}
-			text += mods_text + keycode_get_string(key->get_physical_keycode()) + " (" + TTR("Physical") + ")";
+			text += mods_text + keycode_get_string(key->get_physical_keycode()) + " (" + TTR("Physical");
+			if (key->get_location() != KeyLocation::UNSPECIFIED) {
+				text += " " + key->as_text_location();
+			}
+			text += ")";
 		}
 		if (key->get_key_label() != Key::NONE) {
 			if (!text.is_empty()) {
@@ -166,7 +169,7 @@ void EventListenerLineEdit::gui_input(const Ref<InputEvent> &p_event) {
 
 	event = p_event;
 	set_text(get_event_text(event, false));
-	emit_signal(SNAME("event_changed"), event);
+	emit_signal("event_changed", event);
 }
 
 void EventListenerLineEdit::_on_text_changed(const String &p_text) {
@@ -176,12 +179,12 @@ void EventListenerLineEdit::_on_text_changed(const String &p_text) {
 }
 
 void EventListenerLineEdit::_on_focus() {
-	set_placeholder(TTR("Listening for input..."));
+	set_placeholder(TTR("Listening for Input"));
 }
 
 void EventListenerLineEdit::_on_unfocus() {
 	ignore_next_event = true;
-	set_placeholder(TTR("Filter by event..."));
+	set_placeholder(TTR("Filter by Event"));
 }
 
 Ref<InputEvent> EventListenerLineEdit::get_event() const {
@@ -192,7 +195,7 @@ void EventListenerLineEdit::clear_event() {
 	if (event.is_valid()) {
 		event = Ref<InputEvent>();
 		set_text("");
-		emit_signal(SNAME("event_changed"), event);
+		emit_signal("event_changed", event);
 	}
 }
 
@@ -213,7 +216,7 @@ void EventListenerLineEdit::grab_focus() {
 void EventListenerLineEdit::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE: {
-			connect("text_changed", callable_mp(this, &EventListenerLineEdit::_on_text_changed));
+			connect(SceneStringName(text_changed), callable_mp(this, &EventListenerLineEdit::_on_text_changed));
 			connect(SceneStringName(focus_entered), callable_mp(this, &EventListenerLineEdit::_on_focus));
 			connect(SceneStringName(focus_exited), callable_mp(this, &EventListenerLineEdit::_on_unfocus));
 			set_right_icon(get_editor_theme_icon(SNAME("Keyboard")));
@@ -228,5 +231,5 @@ void EventListenerLineEdit::_bind_methods() {
 
 EventListenerLineEdit::EventListenerLineEdit() {
 	set_caret_blink_enabled(false);
-	set_placeholder(TTR("Filter by event..."));
+	set_placeholder(TTR("Filter by Event"));
 }

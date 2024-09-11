@@ -2,10 +2,9 @@
 /*  packet_peer_udp.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -92,8 +91,8 @@ public:
 	int get_available_packet_count() const override;
 	int get_max_packet_size() const override;
 	void set_broadcast_enabled(bool p_enabled);
-	Error join_multicast_group(IPAddress p_multi_address, String p_if_name);
-	Error leave_multicast_group(IPAddress p_multi_address, String p_if_name);
+	Error join_multicast_group(IPAddress p_multi_address, const String &p_if_name);
+	Error leave_multicast_group(IPAddress p_multi_address, const String &p_if_name);
 
 	PacketPeerUDP();
 	~PacketPeerUDP();

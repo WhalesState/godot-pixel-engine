@@ -2,10 +2,9 @@
 /*  engine.h                                                              */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -71,7 +70,7 @@ private:
 	double _physics_interpolation_fraction = 0.0f;
 	bool abort_on_gpu_errors = false;
 	bool use_validation_layers = false;
-	bool generate_spirv_debug_info = false;
+	bool extra_gpu_memory_tracking = false;
 	int32_t gpu_idx = -1;
 
 	uint64_t _process_frames = 0;
@@ -82,10 +81,17 @@ private:
 
 	bool editor_hint = false;
 	bool project_manager_hint = false;
+	bool extension_reloading = false;
+
+	bool _print_header = true;
 
 	static Engine *singleton;
 
 	String shader_cache_path;
+
+	static constexpr int SERVER_SYNC_FRAME_COUNT_WARNING = 5;
+	int server_syncs = 0;
+	bool frame_server_synced = false;
 
 public:
 	static Engine *get_singleton();
@@ -118,6 +124,8 @@ public:
 
 	void set_print_error_messages(bool p_enabled);
 	bool is_printing_error_messages() const;
+	void print_header(const String &p_string) const;
+	void print_header_rich(const String &p_string) const;
 
 	void set_frame_delay(uint32_t p_msec);
 	uint32_t get_frame_delay() const;
@@ -136,12 +144,18 @@ public:
 
 	_FORCE_INLINE_ void set_project_manager_hint(bool p_enabled) { project_manager_hint = p_enabled; }
 	_FORCE_INLINE_ bool is_project_manager_hint() const { return project_manager_hint; }
+
+	_FORCE_INLINE_ void set_extension_reloading_enabled(bool p_enabled) { extension_reloading = p_enabled; }
+	_FORCE_INLINE_ bool is_extension_reloading_enabled() const { return extension_reloading; }
 #else
 	_FORCE_INLINE_ void set_editor_hint(bool p_enabled) {}
 	_FORCE_INLINE_ bool is_editor_hint() const { return false; }
 
 	_FORCE_INLINE_ void set_project_manager_hint(bool p_enabled) {}
 	_FORCE_INLINE_ bool is_project_manager_hint() const { return false; }
+
+	_FORCE_INLINE_ void set_extension_reloading_enabled(bool p_enabled) {}
+	_FORCE_INLINE_ bool is_extension_reloading_enabled() const { return false; }
 #endif
 
 	Dictionary get_version_info() const;
@@ -158,11 +172,14 @@ public:
 
 	bool is_abort_on_gpu_errors_enabled() const;
 	bool is_validation_layers_enabled() const;
-	bool is_generate_spirv_debug_info_enabled() const;
+	bool is_extra_gpu_memory_tracking_enabled() const;
 	int32_t get_gpu_index() const;
 
+	void increment_frames_drawn();
+	bool notify_frame_server_synced();
+
 	Engine();
-	virtual ~Engine() {}
+	virtual ~Engine();
 };
 
 #endif // ENGINE_H

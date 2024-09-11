@@ -2,10 +2,9 @@
 /*  math_funcs.h                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -106,6 +105,9 @@ public:
 	static _ALWAYS_INLINE_ double fmod(double p_x, double p_y) { return ::fmod(p_x, p_y); }
 	static _ALWAYS_INLINE_ float fmod(float p_x, float p_y) { return ::fmodf(p_x, p_y); }
 
+	static _ALWAYS_INLINE_ double modf(double p_x, double *r_y) { return ::modf(p_x, r_y); }
+	static _ALWAYS_INLINE_ float modf(float p_x, float *r_y) { return ::modff(p_x, r_y); }
+
 	static _ALWAYS_INLINE_ double floor(double p_x) { return ::floor(p_x); }
 	static _ALWAYS_INLINE_ float floor(float p_x) { return ::floorf(p_x); }
 
@@ -197,6 +199,22 @@ public:
 #else
 		return isinf(p_val);
 #endif
+	}
+
+	// These methods assume (p_num + p_den) doesn't overflow.
+	static _ALWAYS_INLINE_ int32_t division_round_up(int32_t p_num, int32_t p_den) {
+		int32_t offset = (p_num < 0 && p_den < 0) ? 1 : -1;
+		return (p_num + p_den + offset) / p_den;
+	}
+	static _ALWAYS_INLINE_ uint32_t division_round_up(uint32_t p_num, uint32_t p_den) {
+		return (p_num + p_den - 1) / p_den;
+	}
+	static _ALWAYS_INLINE_ int64_t division_round_up(int64_t p_num, int64_t p_den) {
+		int32_t offset = (p_num < 0 && p_den < 0) ? 1 : -1;
+		return (p_num + p_den + offset) / p_den;
+	}
+	static _ALWAYS_INLINE_ uint64_t division_round_up(uint64_t p_num, uint64_t p_den) {
+		return (p_num + p_den - 1) / p_den;
 	}
 
 	static _ALWAYS_INLINE_ bool is_finite(double p_val) { return isfinite(p_val); }
@@ -432,14 +450,22 @@ public:
 
 	static _ALWAYS_INLINE_ double smoothstep(double p_from, double p_to, double p_s) {
 		if (is_equal_approx(p_from, p_to)) {
-			return p_from;
+			if (likely(p_from <= p_to)) {
+				return p_s <= p_from ? 0.0 : 1.0;
+			} else {
+				return p_s <= p_to ? 1.0 : 0.0;
+			}
 		}
 		double s = CLAMP((p_s - p_from) / (p_to - p_from), 0.0, 1.0);
 		return s * s * (3.0 - 2.0 * s);
 	}
 	static _ALWAYS_INLINE_ float smoothstep(float p_from, float p_to, float p_s) {
 		if (is_equal_approx(p_from, p_to)) {
-			return p_from;
+			if (likely(p_from <= p_to)) {
+				return p_s <= p_from ? 0.0f : 1.0f;
+			} else {
+				return p_s <= p_to ? 1.0f : 0.0f;
+			}
 		}
 		float s = CLAMP((p_s - p_from) / (p_to - p_from), 0.0f, 1.0f);
 		return s * s * (3.0f - 2.0f * s);

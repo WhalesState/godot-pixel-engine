@@ -2,10 +2,9 @@
 /*  import_dock.h                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -77,6 +76,7 @@ class ImportDock : public VBoxContainer {
 	void _property_edited(const StringName &p_prop);
 	void _property_toggled(const StringName &p_prop, bool p_checked);
 	void _set_dirty(bool p_dirty);
+	void _reimport_pressed();
 	void _reimport_attempt();
 	void _reimport_and_cleanup();
 	void _reimport();

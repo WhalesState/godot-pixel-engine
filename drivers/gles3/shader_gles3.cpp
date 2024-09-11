@@ -2,10 +2,9 @@
 /*  shader_gles3.cpp                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -38,6 +37,7 @@
 #include "core/io/file_access.h"
 
 #include "drivers/gles3/rasterizer_gles3.h"
+#include "drivers/gles3/storage/config.h"
 
 static String _mkid(const String &p_id) {
 	String id = "m_" + p_id.replace("__", "_dus_");
@@ -50,7 +50,7 @@ void ShaderGLES3::_add_stage(const char *p_code, StageType p_stage_type) {
 	String text;
 
 	for (int i = 0; i < lines.size(); i++) {
-		String l = lines[i];
+		const String &l = lines[i];
 		bool push_chunk = false;
 
 		StageTemplate::Chunk chunk;
@@ -504,11 +504,16 @@ String ShaderGLES3::_version_get_sha1(Version *p_version) const {
 	return hash_build.as_string().sha1_text();
 }
 
+#ifndef WEB_ENABLED // not supported in webgl
 static const char *shader_file_header = "GLSC";
 static const uint32_t cache_file_version = 3;
+#endif
 
 bool ShaderGLES3::_load_from_cache(Version *p_version) {
-	if (RasterizerGLES3::is_gles_over_gl() && (glProgramBinary == NULL)) { // ARB_get_program_binary extension not available.
+#ifdef WEB_ENABLED // not supported in webgl
+	return false;
+#else
+	if (RasterizerGLES3::is_gles_over_gl() && (glProgramBinary == nullptr)) { // ARB_get_program_binary extension not available.
 		return false;
 	}
 	String sha1 = _version_get_sha1(p_version);
@@ -529,7 +534,7 @@ bool ShaderGLES3::_load_from_cache(Version *p_version) {
 	}
 
 	int cache_variant_count = static_cast<int>(f->get_32());
-	ERR_FAIL_COND_V_MSG(cache_variant_count != this->variant_count, false, "shader cache variant count mismatch, expected " + itos(this->variant_count) + " got " + itos(cache_variant_count)); //should not happen but check
+	ERR_FAIL_COND_V_MSG(cache_variant_count != variant_count, false, "shader cache variant count mismatch, expected " + itos(variant_count) + " got " + itos(cache_variant_count)); //should not happen but check
 
 	LocalVector<OAHashMap<uint64_t, Version::Specialization>> variants;
 	for (int i = 0; i < cache_variant_count; i++) {
@@ -552,6 +557,19 @@ bool ShaderGLES3::_load_from_cache(Version *p_version) {
 			Version::Specialization specialization;
 
 			specialization.id = glCreateProgram();
+			if (feedback_count) {
+				Vector<const char *> feedback;
+				for (int feedback_index = 0; feedback_index < feedback_count; feedback_index++) {
+					if (feedbacks[feedback_index].specialization == 0 || (feedbacks[feedback_index].specialization & specialization_key)) {
+						// Specialization for this feedback is enabled.
+						feedback.push_back(feedbacks[feedback_index].name);
+					}
+				}
+
+				if (!feedback.is_empty()) {
+					glTransformFeedbackVaryings(specialization.id, feedback.size(), feedback.ptr(), GL_INTERLEAVED_ATTRIBS);
+				}
+			}
 			glProgramBinary(specialization.id, variant_format, variant_bytes.ptr(), variant_bytes.size());
 
 			GLint link_status = 0;
@@ -572,10 +590,15 @@ bool ShaderGLES3::_load_from_cache(Version *p_version) {
 	p_version->variants = variants;
 
 	return true;
+#endif // WEB_ENABLED
 }
 
 void ShaderGLES3::_save_to_cache(Version *p_version) {
-	if (RasterizerGLES3::is_gles_over_gl() && (glGetProgramBinary == NULL)) { // ARB_get_program_binary extension not available.
+#ifdef WEB_ENABLED // not supported in webgl
+	return;
+#else
+	ERR_FAIL_COND(!shader_cache_dir_valid);
+	if (RasterizerGLES3::is_gles_over_gl() && (glGetProgramBinary == nullptr)) { // ARB_get_program_binary extension not available.
 		return;
 	}
 	String sha1 = _version_get_sha1(p_version);
@@ -620,6 +643,7 @@ void ShaderGLES3::_save_to_cache(Version *p_version) {
 			f->store_buffer(compiled_program.ptr(), compiled_program.size());
 		}
 	}
+#endif // WEB_ENABLED
 }
 
 void ShaderGLES3::_clear_version(Version *p_version) {
@@ -643,7 +667,8 @@ void ShaderGLES3::_clear_version(Version *p_version) {
 
 void ShaderGLES3::_initialize_version(Version *p_version) {
 	ERR_FAIL_COND(p_version->variants.size() > 0);
-	if (shader_cache_dir_valid && _load_from_cache(p_version)) {
+	bool use_cache = shader_cache_dir_valid && !(feedback_count > 0 && GLES3::Config::get_singleton()->disable_transform_feedback_shader_cache);
+	if (use_cache && _load_from_cache(p_version)) {
 		return;
 	}
 	p_version->variants.reserve(variant_count);
@@ -654,7 +679,7 @@ void ShaderGLES3::_initialize_version(Version *p_version) {
 		_compile_specialization(spec, i, p_version, specialization_default_mask);
 		p_version->variants[i].insert(specialization_default_mask, spec);
 	}
-	if (shader_cache_dir_valid) {
+	if (use_cache) {
 		_save_to_cache(p_version);
 	}
 }
@@ -747,7 +772,9 @@ void ShaderGLES3::initialize(const String &p_general_defines, int p_base_texture
 		print_verbose("Shader '" + name + "' SHA256: " + base_sha256);
 	}
 
-	glGetInteger64v(GL_MAX_TEXTURE_IMAGE_UNITS, &max_image_units);
+	GLES3::Config *config = GLES3::Config::get_singleton();
+	ERR_FAIL_NULL(config);
+	max_image_units = config->max_texture_image_units;
 }
 
 void ShaderGLES3::set_shader_cache_dir(const String &p_dir) {

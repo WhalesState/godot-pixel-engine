@@ -2,10 +2,9 @@
 /*  window_wrapper.h                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -79,7 +78,7 @@ public:
 	void restore_window_from_saved_position(const Rect2 p_window_rect, int p_screen, const Rect2 p_screen_rect);
 	void enable_window_on_screen(int p_screen = -1, bool p_auto_scale = false);
 
-	void set_window_title(const String p_title);
+	void set_window_title(const String &p_title);
 	void set_margins_enabled(bool p_enabled);
 
 	WindowWrapper();

@@ -2,10 +2,9 @@
 /*  noise_texture_2d.h                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -54,7 +53,6 @@ private:
 
 	Size2i size = Size2i(512, 512);
 	bool invert = false;
-	bool in_3d_space = false;
 	bool generate_mipmaps = true;
 	bool seamless = false;
 	real_t seamless_blend_skirt = 0.1;
@@ -88,9 +86,6 @@ public:
 
 	void set_invert(bool p_invert);
 	bool get_invert() const;
-
-	void set_in_3d_space(bool p_enable);
-	bool is_in_3d_space() const;
 
 	void set_generate_mipmaps(bool p_enable);
 	bool is_generating_mipmaps() const;

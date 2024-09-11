@@ -2,10 +2,9 @@
 /*  shader_types.cpp                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -152,7 +151,7 @@ ShaderTypes::ShaderTypes() {
 
 	shader_types_list.push_back("canvas_item");
 
-	for (int i = 0; i < shader_types_list.size(); i++) {
-		shader_types.insert(shader_types_list[i]);
+	for (const String &type : shader_types_list) {
+		shader_types.insert(type);
 	}
 }

@@ -2,10 +2,9 @@
 /*  gl_manager_windows_native.h                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -69,9 +68,6 @@ private:
 
 	PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = nullptr;
 
-	// funcs
-	void _internal_set_current_window(GLWindow *p_win);
-
 	GLWindow &get_window(unsigned int id) { return _windows[id]; }
 	const GLWindow &get_window(unsigned int id) const { return _windows[id]; }
 
@@ -82,7 +78,7 @@ private:
 	int glx_minor, glx_major;
 
 private:
-	void _nvapi_disable_threaded_optimization();
+	void _nvapi_setup_profile();
 	int _find_or_create_display(GLWindow &win);
 	Error _create_context(GLWindow &win, GLDisplay &gl_display);
 
@@ -92,7 +88,6 @@ public:
 	void window_resize(DisplayServer::WindowID p_window_id, int p_width, int p_height) {}
 
 	void release_current();
-	void make_current();
 	void swap_buffers();
 
 	void window_make_current(DisplayServer::WindowID p_window_id);

@@ -2,10 +2,9 @@
 /*  texture_rect.cpp                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -258,10 +257,8 @@ void TextureRect::_bind_methods() {
 }
 
 void TextureRect::_texture_changed() {
-	if (texture.is_valid()) {
-		queue_redraw();
-		update_minimum_size();
-	}
+	queue_redraw();
+	update_minimum_size();
 }
 
 void TextureRect::set_texture(const Ref<Texture2D> &p_tex) {
@@ -329,6 +326,7 @@ void TextureRect::set_stretch_mode(StretchMode p_mode) {
 	if (stretch_mode == p_mode) {
 		return;
 	}
+
 	stretch_mode = p_mode;
 
 	if (texture.is_null()) {

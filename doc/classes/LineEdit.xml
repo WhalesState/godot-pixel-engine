@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<class name="LineEdit" inherits="Control" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+<class name="LineEdit" inherits="Control" keywords="text, input" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
 	<brief_description>
 		An input field for single-line text.
 	</brief_description>
 	<description>
-		[LineEdit] provides an input field for editing a single line of text. It features many built-in shortcuts that are always available ([kbd]Ctrl[/kbd] here maps to [kbd]Cmd[/kbd] on macOS):
+		[LineEdit] provides an input field for editing a single line of text.
+		[b]New behavior:[/b]
+		- When the [LineEdit] control is focused using keyboard arrow keys, it will only gain focus and not enter edit mode.
+		- To enter edit mode, click on the control with the mouse or press the "ui_text_submit" action (default: Enter or Kp Enter keys).
+		- To exit edit mode, press the "ui_text_submit" or "ui_"
+		- Check [method is_editing] and [signal editing_toggled] for more information.
+		[b]Important:[/b] [method Control.grab_focus] still enters edit mode for compatibility.
+		[LineEdit] features many built-in shortcuts that are always available ([kbd]Ctrl[/kbd] here maps to [kbd]Cmd[/kbd] on macOS):
 		- [kbd]Ctrl + C[/kbd]: Copy
 		- [kbd]Ctrl + X[/kbd]: Cut
 		- [kbd]Ctrl + V[/kbd] or [kbd]Ctrl + Y[/kbd]: Paste/"yank"
@@ -54,14 +61,6 @@
 			<return type="void" />
 			<description>
 				Clears the current selection.
-			</description>
-		</method>
-		<method name="edit">
-			<return type="void" />
-			<param index="0" name="select_all" type="bool" default="false" />
-			<description>
-				Focus the [LineEdit] in edit mode.
-				If [param select_all] is [code]true[/code], it will select all [member text].
 			</description>
 		</method>
 		<method name="get_menu" qualifiers="const">
@@ -126,10 +125,10 @@
 				Inserts [param text] at the caret. If the resulting value is longer than [member max_length], nothing happens.
 			</description>
 		</method>
-		<method name="is_being_edited" qualifiers="const">
+		<method name="is_editing" qualifiers="const">
 			<return type="bool" />
 			<description>
-				Returns [code]true[/code] if the [LineEdit] is in edit mode.
+				Returns whether the [LineEdit] is being edited.
 			</description>
 		</method>
 		<method name="is_menu_visible" qualifiers="const">
@@ -165,12 +164,6 @@
 			<return type="void" />
 			<description>
 				Selects the whole [String].
-			</description>
-		</method>
-		<method name="unedit">
-			<return type="void" />
-			<description>
-				Exit edit mode and preserve focus.
 			</description>
 		</method>
 	</methods>
@@ -209,7 +202,7 @@
 		<member name="draw_control_chars" type="bool" setter="set_draw_control_chars" getter="get_draw_control_chars" default="false">
 			If [code]true[/code], control characters are displayed.
 		</member>
-		<member name="editable" type="bool" setter="set_editable" getter="is_editable" default="true">
+		<member name="editable" type="bool" setter="set_editable" getter="is_editable" default="true" keywords="readonly, disabled, enabled">
 			If [code]false[/code], existing text cannot be modified and new text cannot be added.
 		</member>
 		<member name="expand_to_text_length" type="bool" setter="set_expand_to_text_length_enabled" getter="is_expand_to_text_length_enabled" default="false">
@@ -224,8 +217,8 @@
 		</member>
 		<member name="max_length" type="int" setter="set_max_length" getter="get_max_length" default="0">
 			Maximum number of characters that can be entered inside the [LineEdit]. If [code]0[/code], there is no limit.
-			When a limit is defined, characters that would exceed [member max_length] are truncated. This happens both for existing [member text] contents when setting the max length, or for new text inserted in the [LineEdit], including pasting. If any input text is truncated, the [signal text_change_rejected] signal is emitted with the truncated substring as parameter.
-			[b]Example:[/b]
+			When a limit is defined, characters that would exceed [member max_length] are truncated. This happens both for existing [member text] contents when setting the max length, or for new text inserted in the [LineEdit], including pasting.
+			If any input text is truncated, the [signal text_change_rejected] signal is emitted with the truncated substring as parameter:
 			[codeblocks]
 			[gdscript]
 			text = "Hello world"
@@ -288,6 +281,7 @@
 		<signal name="editing_toggled">
 			<param index="0" name="toggled_on" type="bool" />
 			<description>
+				Emitted when the [LineEdit] switches in or out of edit mode.
 			</description>
 		</signal>
 		<signal name="text_change_rejected">
@@ -443,7 +437,7 @@
 		<theme_item name="font_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 1)">
 			Default font color.
 		</theme_item>
-		<theme_item name="font_outline_color" data_type="color" type="Color" default="Color(1, 1, 1, 1)">
+		<theme_item name="font_outline_color" data_type="color" type="Color" default="Color(0, 0, 0, 1)">
 			The tint of text outline of the [LineEdit].
 		</theme_item>
 		<theme_item name="font_placeholder_color" data_type="color" type="Color" default="Color(0.875, 0.875, 0.875, 0.6)">
@@ -461,7 +455,7 @@
 		<theme_item name="caret_width" data_type="constant" type="int" default="1">
 			The caret's width in pixels. Greater values can be used to improve accessibility by ensuring the caret is easily visible, or to ensure consistency with a large font size.
 		</theme_item>
-		<theme_item name="minimum_character_width" data_type="constant" type="int" default="3">
+		<theme_item name="minimum_character_width" data_type="constant" type="int" default="4">
 			Minimum horizontal space for the text (not counting the clear button and content margins). This value is measured in count of 'M' characters (i.e. this number of 'M' characters can be displayed without scrolling).
 		</theme_item>
 		<theme_item name="outline_size" data_type="constant" type="int" default="0">
@@ -483,7 +477,7 @@
 		<theme_item name="normal" data_type="style" type="StyleBox">
 			Default background for the [LineEdit].
 		</theme_item>
-		<theme_item name="read_only" data_type="style" type="StyleBox">
+		<theme_item name="read_only" data_type="style" type="StyleBox" keywords="enabled, disabled, editable">
 			Background used when [LineEdit] is in read-only mode ([member editable] is set to [code]false[/code]).
 		</theme_item>
 	</theme_items>

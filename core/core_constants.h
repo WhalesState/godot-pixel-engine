@@ -2,10 +2,9 @@
 /*  core_constants.h                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -46,7 +45,7 @@ public:
 	static bool is_global_constant(const StringName &p_name);
 	static int get_global_constant_index(const StringName &p_name);
 	static bool is_global_enum(const StringName &p_enum);
-	static void get_enum_values(StringName p_enum, HashMap<StringName, int64_t> *p_values);
+	static void get_enum_values(const StringName &p_enum, HashMap<StringName, int64_t> *p_values);
 };
 
 #endif // CORE_CONSTANTS_H

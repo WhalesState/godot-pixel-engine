@@ -2,10 +2,9 @@
 /*  core_string_names.cpp                                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -44,6 +43,7 @@ CoreStringNames::CoreStringNames() :
 		get_rid(StaticCString::create("get_rid")),
 		_to_string(StaticCString::create("_to_string")),
 		_custom_features(StaticCString::create("_custom_features")),
+
 		x(StaticCString::create("x")),
 		y(StaticCString::create("y")),
 		z(StaticCString::create("z")),
@@ -66,6 +66,7 @@ CoreStringNames::CoreStringNames() :
 		g8(StaticCString::create("g8")),
 		b8(StaticCString::create("b8")),
 		a8(StaticCString::create("a8")),
+
 		call(StaticCString::create("call")),
 		call_deferred(StaticCString::create("call_deferred")),
 		bind(StaticCString::create("bind")),

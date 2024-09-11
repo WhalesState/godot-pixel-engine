@@ -2,10 +2,9 @@
 /*  rendering_server.h                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -39,6 +38,22 @@
 #include "core/variant/typed_array.h"
 #include "core/variant/variant.h"
 #include "servers/display_server.h"
+
+// Helper macros for code outside of the rendering server, but that is
+// called by the rendering server.
+#ifdef DEBUG_ENABLED
+#define ERR_NOT_ON_RENDER_THREAD                                          \
+	RenderingServer *rendering_server = RenderingServer::get_singleton(); \
+	ERR_FAIL_NULL(rendering_server);                                      \
+	ERR_FAIL_COND(!rendering_server->is_on_render_thread());
+#define ERR_NOT_ON_RENDER_THREAD_V(m_ret)                                 \
+	RenderingServer *rendering_server = RenderingServer::get_singleton(); \
+	ERR_FAIL_NULL_V(rendering_server, m_ret);                             \
+	ERR_FAIL_COND_V(!rendering_server->is_on_render_thread(), m_ret);
+#else
+#define ERR_NOT_ON_RENDER_THREAD
+#define ERR_NOT_ON_RENDER_THREAD_V(m_ret)
+#endif
 
 template <typename T>
 class TypedArray;
@@ -92,6 +107,8 @@ public:
 
 	virtual Ref<Image> texture_2d_get(RID p_texture) const = 0;
 
+	virtual void texture_bind(RID p_texture, uint32_t p_texture_no = 0) = 0;
+
 	virtual void texture_replace(RID p_texture, RID p_by_texture) = 0;
 	virtual void texture_set_size_override(RID p_texture, int p_width, int p_height) = 0;
 
@@ -102,7 +119,6 @@ public:
 
 	typedef void (*TextureDetectCallback)(void *);
 
-	virtual void texture_set_detect_3d_callback(RID p_texture, TextureDetectCallback p_callback, void *p_userdata) = 0;
 	virtual void texture_set_detect_normal_callback(RID p_texture, TextureDetectCallback p_callback, void *p_userdata) = 0;
 
 	enum TextureDetectRoughnessChannel {
@@ -122,7 +138,7 @@ public:
 		uint32_t height;
 		uint32_t depth;
 		Image::Format format;
-		int bytes;
+		int64_t bytes;
 		String path;
 	};
 
@@ -182,28 +198,8 @@ public:
 		ARRAY_COLOR = 3, // RGBA8
 		ARRAY_TEX_UV = 4, // RG32F or RG16
 		ARRAY_TEX_UV2 = 5, // RG32F or RG16
-		ARRAY_CUSTOM0 = 6, // Depends on ArrayCustomFormat.
-		ARRAY_CUSTOM1 = 7,
-		ARRAY_CUSTOM2 = 8,
-		ARRAY_CUSTOM3 = 9,
 		ARRAY_INDEX = 12, // 16 or 32 bits depending on length > 0xFFFF.
 		ARRAY_MAX = 13
-	};
-
-	enum {
-		ARRAY_CUSTOM_COUNT = ARRAY_INDEX - ARRAY_CUSTOM0
-	};
-
-	enum ArrayCustomFormat {
-		ARRAY_CUSTOM_RGBA8_UNORM,
-		ARRAY_CUSTOM_RGBA8_SNORM,
-		ARRAY_CUSTOM_RG_HALF,
-		ARRAY_CUSTOM_RGBA_HALF,
-		ARRAY_CUSTOM_R_FLOAT,
-		ARRAY_CUSTOM_RG_FLOAT,
-		ARRAY_CUSTOM_RGB_FLOAT,
-		ARRAY_CUSTOM_RGBA_FLOAT,
-		ARRAY_CUSTOM_MAX
 	};
 
 	enum ArrayFormat : uint64_t {
@@ -214,21 +210,7 @@ public:
 		ARRAY_FORMAT_COLOR = 1 << ARRAY_COLOR,
 		ARRAY_FORMAT_TEX_UV = 1 << ARRAY_TEX_UV,
 		ARRAY_FORMAT_TEX_UV2 = 1 << ARRAY_TEX_UV2,
-		ARRAY_FORMAT_CUSTOM0 = 1 << ARRAY_CUSTOM0,
-		ARRAY_FORMAT_CUSTOM1 = 1 << ARRAY_CUSTOM1,
-		ARRAY_FORMAT_CUSTOM2 = 1 << ARRAY_CUSTOM2,
-		ARRAY_FORMAT_CUSTOM3 = 1 << ARRAY_CUSTOM3,
 		ARRAY_FORMAT_INDEX = 1 << ARRAY_INDEX,
-
-		ARRAY_FORMAT_BLEND_SHAPE_MASK = ARRAY_FORMAT_VERTEX | ARRAY_FORMAT_NORMAL | ARRAY_FORMAT_TANGENT,
-
-		ARRAY_FORMAT_CUSTOM_BASE = (ARRAY_INDEX + 1),
-		ARRAY_FORMAT_CUSTOM_BITS = 3,
-		ARRAY_FORMAT_CUSTOM_MASK = 0x7,
-		ARRAY_FORMAT_CUSTOM0_SHIFT = (ARRAY_FORMAT_CUSTOM_BASE + 0),
-		ARRAY_FORMAT_CUSTOM1_SHIFT = (ARRAY_FORMAT_CUSTOM_BASE + ARRAY_FORMAT_CUSTOM_BITS),
-		ARRAY_FORMAT_CUSTOM2_SHIFT = (ARRAY_FORMAT_CUSTOM_BASE + ARRAY_FORMAT_CUSTOM_BITS * 2),
-		ARRAY_FORMAT_CUSTOM3_SHIFT = (ARRAY_FORMAT_CUSTOM_BASE + ARRAY_FORMAT_CUSTOM_BITS * 3),
 
 		ARRAY_COMPRESS_FLAGS_BASE = (ARRAY_INDEX + 1 + 12),
 
@@ -285,11 +267,6 @@ public:
 		RID material;
 	};
 
-	enum BlendShapeMode {
-		BLEND_SHAPE_MODE_NORMALIZED,
-		BLEND_SHAPE_MODE_RELATIVE,
-	};
-
 	/* VIEWPORT API */
 
 	enum CanvasItemTextureFilter {
@@ -330,6 +307,7 @@ public:
 	};
 
 	virtual void viewport_set_update_mode(RID p_viewport, ViewportUpdateMode p_mode) = 0;
+	virtual ViewportUpdateMode viewport_get_update_mode(RID p_viewport) const = 0;
 
 	enum ViewportClearMode {
 		VIEWPORT_CLEAR_ALWAYS,
@@ -396,7 +374,12 @@ public:
 	enum ViewportRenderInfoType {
 		VIEWPORT_RENDER_INFO_TYPE_VISIBLE,
 		VIEWPORT_RENDER_INFO_TYPE_SHADOW,
+		VIEWPORT_RENDER_INFO_TYPE_CANVAS,
 		VIEWPORT_RENDER_INFO_TYPE_MAX
+	};
+
+	struct RenderInfo {
+		int info[VIEWPORT_RENDER_INFO_TYPE_MAX][VIEWPORT_RENDER_INFO_MAX] = {};
 	};
 
 	virtual int viewport_get_render_info(RID p_viewport, ViewportRenderInfoType p_type, ViewportRenderInfo p_info) = 0;
@@ -407,25 +390,11 @@ public:
 
 	virtual RID viewport_find_from_screen_attachment(DisplayServer::WindowID p_id = DisplayServer::MAIN_WINDOW_ID) const = 0;
 
-	/* INSTANCING API */
-
-	enum InstanceType {
-		INSTANCE_NONE,
-		INSTANCE_MAX,
-	};
-
-	// virtual RID instance_create() = 0;
-
-	enum VisibilityRangeFadeMode {
-		VISIBILITY_RANGE_FADE_DISABLED,
-		VISIBILITY_RANGE_FADE_SELF,
-		VISIBILITY_RANGE_FADE_DEPENDENCIES,
-	};
-
 	/* CANVAS (2D) */
 
 	virtual RID canvas_create() = 0;
 	virtual void canvas_set_item_mirroring(RID p_canvas, RID p_item, const Point2 &p_mirroring) = 0;
+	virtual void canvas_set_item_repeat(RID p_item, const Point2 &p_repeat_size, int p_repeat_times) = 0;
 	virtual void canvas_set_modulate(RID p_canvas, const Color &p_color) = 0;
 	virtual void canvas_set_parent(RID p_canvas, RID p_parent, float p_scale) = 0;
 
@@ -477,9 +446,9 @@ public:
 
 	virtual void canvas_item_add_line(RID p_item, const Point2 &p_from, const Point2 &p_to, const Color &p_color, float p_width = -1.0, bool p_antialiased = false) = 0;
 	virtual void canvas_item_add_polyline(RID p_item, const Vector<Point2> &p_points, const Vector<Color> &p_colors, float p_width = -1.0, bool p_antialiased = false) = 0;
-	virtual void canvas_item_add_multiline(RID p_item, const Vector<Point2> &p_points, const Vector<Color> &p_colors, float p_width = -1.0) = 0;
-	virtual void canvas_item_add_rect(RID p_item, const Rect2 &p_rect, const Color &p_color) = 0;
-	virtual void canvas_item_add_circle(RID p_item, const Point2 &p_pos, float p_radius, const Color &p_color) = 0;
+	virtual void canvas_item_add_multiline(RID p_item, const Vector<Point2> &p_points, const Vector<Color> &p_colors, float p_width = -1.0, bool p_antialiased = false) = 0;
+	virtual void canvas_item_add_rect(RID p_item, const Rect2 &p_rect, const Color &p_color, bool p_antialiased = false) = 0;
+	virtual void canvas_item_add_circle(RID p_item, const Point2 &p_pos, float p_radius, const Color &p_color, bool p_antialiased = false) = 0;
 	virtual void canvas_item_add_texture_rect(RID p_item, const Rect2 &p_rect, RID p_texture, bool p_tile = false, const Color &p_modulate = Color(1, 1, 1), bool p_transpose = false) = 0;
 	virtual void canvas_item_add_texture_rect_region(RID p_item, const Rect2 &p_rect, RID p_texture, const Rect2 &p_src_rect, const Color &p_modulate = Color(1, 1, 1), bool p_transpose = false, bool p_clip_uv = false) = 0;
 	virtual void canvas_item_add_msdf_texture_rect_region(RID p_item, const Rect2 &p_rect, RID p_texture, const Rect2 &p_src_rect, const Color &p_modulate = Color(1, 1, 1), int p_outline_size = 0, float p_px_range = 1.0, float p_scale = 1.0) = 0;
@@ -514,6 +483,13 @@ public:
 	};
 
 	virtual void canvas_item_set_canvas_group_mode(RID p_item, CanvasGroupMode p_mode, float p_clear_margin = 5.0, bool p_fit_empty = false, float p_fit_margin = 0.0, bool p_blur_mipmaps = false) = 0;
+
+	virtual void canvas_item_set_debug_redraw(bool p_enabled) = 0;
+	virtual bool canvas_item_get_debug_redraw() const = 0;
+
+	virtual void canvas_item_set_interpolated(RID p_item, bool p_interpolated) = 0;
+	virtual void canvas_item_reset_physics_interpolation(RID p_item) = 0;
+	virtual void canvas_item_transform_physics_interpolation(RID p_item, const Transform2D &p_transform) = 0;
 
 	/* CANVAS LIGHT */
 	virtual RID canvas_light_create() = 0;
@@ -562,6 +538,10 @@ public:
 	virtual void canvas_light_set_shadow_color(RID p_light, const Color &p_color) = 0;
 	virtual void canvas_light_set_shadow_smooth(RID p_light, float p_smooth) = 0;
 
+	virtual void canvas_light_set_interpolated(RID p_light, bool p_interpolated) = 0;
+	virtual void canvas_light_reset_physics_interpolation(RID p_light) = 0;
+	virtual void canvas_light_transform_physics_interpolation(RID p_light, const Transform2D &p_transform) = 0;
+
 	/* CANVAS LIGHT OCCLUDER */
 
 	virtual RID canvas_light_occluder_create() = 0;
@@ -571,6 +551,10 @@ public:
 	virtual void canvas_light_occluder_set_as_sdf_collision(RID p_occluder, bool p_enable) = 0;
 	virtual void canvas_light_occluder_set_transform(RID p_occluder, const Transform2D &p_xform) = 0;
 	virtual void canvas_light_occluder_set_light_mask(RID p_occluder, int p_mask) = 0;
+
+	virtual void canvas_light_occluder_set_interpolated(RID p_occluder, bool p_interpolated) = 0;
+	virtual void canvas_light_occluder_reset_physics_interpolation(RID p_occluder) = 0;
+	virtual void canvas_light_occluder_transform_physics_interpolation(RID p_occluder, const Transform2D &p_transform) = 0;
 
 	/* CANVAS LIGHT OCCLUDER POLYGON */
 
@@ -616,7 +600,6 @@ public:
 		GLOBAL_VAR_TYPE_MAT3,
 		GLOBAL_VAR_TYPE_MAT4,
 		GLOBAL_VAR_TYPE_TRANSFORM_2D,
-		GLOBAL_VAR_TYPE_TRANSFORM,
 		GLOBAL_VAR_TYPE_SAMPLER2D,
 		GLOBAL_VAR_TYPE_MAX
 	};
@@ -640,6 +623,10 @@ public:
 
 	virtual void free(RID p_rid) = 0; // Free RIDs associated with the rendering server.
 
+	/* INTERPOLATION */
+
+	virtual void set_physics_interpolation_enabled(bool p_enabled) = 0;
+
 	/* EVENT QUEUING */
 
 	virtual void request_frame_drawn_callback(const Callable &p_callable) = 0;
@@ -649,6 +636,7 @@ public:
 	virtual bool has_changed() const = 0;
 	virtual void init();
 	virtual void finish() = 0;
+	virtual void tick() = 0;
 
 	/* STATUS INFORMATION */
 
@@ -688,13 +676,6 @@ public:
 	virtual Color get_default_clear_color() = 0;
 	virtual void set_default_clear_color(const Color &p_color) = 0;
 
-	enum Features {
-		FEATURE_SHADERS,
-		FEATURE_MULTITHREADED,
-	};
-
-	virtual bool has_feature(Features p_feature) const = 0;
-
 	virtual bool has_os_feature(const String &p_feature) const = 0;
 
 	virtual void set_debug_generate_wireframes(bool p_generate) = 0;
@@ -710,7 +691,12 @@ public:
 	bool is_render_loop_enabled() const;
 	void set_render_loop_enabled(bool p_enabled);
 
+	virtual bool is_on_render_thread() = 0;
 	virtual void call_on_render_thread(const Callable &p_callable) = 0;
+
+#ifdef TOOLS_ENABLED
+	virtual void get_argument_options(const StringName &p_function, int p_idx, List<String> *r_options) const override;
+#endif
 
 	RenderingServer();
 	virtual ~RenderingServer();
@@ -724,9 +710,7 @@ private:
 VARIANT_ENUM_CAST(RenderingServer::ShaderMode);
 VARIANT_ENUM_CAST(RenderingServer::ArrayType);
 VARIANT_BITFIELD_CAST(RenderingServer::ArrayFormat);
-VARIANT_ENUM_CAST(RenderingServer::ArrayCustomFormat);
 VARIANT_ENUM_CAST(RenderingServer::PrimitiveType);
-VARIANT_ENUM_CAST(RenderingServer::BlendShapeMode);
 VARIANT_ENUM_CAST(RenderingServer::ViewportUpdateMode);
 VARIANT_ENUM_CAST(RenderingServer::ViewportClearMode);
 VARIANT_ENUM_CAST(RenderingServer::ViewportMSAA);
@@ -734,8 +718,6 @@ VARIANT_ENUM_CAST(RenderingServer::ViewportRenderInfo);
 VARIANT_ENUM_CAST(RenderingServer::ViewportRenderInfoType);
 VARIANT_ENUM_CAST(RenderingServer::ViewportSDFOversize);
 VARIANT_ENUM_CAST(RenderingServer::ViewportSDFScale);
-VARIANT_ENUM_CAST(RenderingServer::InstanceType);
-VARIANT_ENUM_CAST(RenderingServer::VisibilityRangeFadeMode);
 VARIANT_ENUM_CAST(RenderingServer::NinePatchAxisMode);
 VARIANT_ENUM_CAST(RenderingServer::CanvasItemTextureFilter);
 VARIANT_ENUM_CAST(RenderingServer::CanvasItemTextureRepeat);
@@ -746,7 +728,6 @@ VARIANT_ENUM_CAST(RenderingServer::CanvasLightShadowFilter);
 VARIANT_ENUM_CAST(RenderingServer::CanvasOccluderPolygonCullMode);
 VARIANT_ENUM_CAST(RenderingServer::GlobalShaderParameterType);
 VARIANT_ENUM_CAST(RenderingServer::RenderingInfo);
-VARIANT_ENUM_CAST(RenderingServer::Features);
 VARIANT_ENUM_CAST(RenderingServer::CanvasTextureChannel);
 
 // Alias to make it easier to use.

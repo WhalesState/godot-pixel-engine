@@ -2,10 +2,9 @@
 /*  animation.cpp                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -36,42 +35,14 @@
 bool Animation::_set(const StringName &p_name, const Variant &p_value) {
 	String prop_name = p_name;
 
-	if (p_name == SNAME("_compression")) {
-		ERR_FAIL_COND_V(tracks.size() > 0, false); //can only set compression if no tracks exist
-		Dictionary comp = p_value;
-		ERR_FAIL_COND_V(!comp.has("fps"), false);
-		ERR_FAIL_COND_V(!comp.has("bounds"), false);
-		ERR_FAIL_COND_V(!comp.has("pages"), false);
-		ERR_FAIL_COND_V(!comp.has("format_version"), false);
-		uint32_t format_version = comp["format_version"];
-		ERR_FAIL_COND_V(format_version > Compression::FORMAT_VERSION, false); // version does not match this supported version
-		compression.fps = comp["fps"];
-		Array bounds = comp["bounds"];
-		compression.bounds.resize(bounds.size());
-		for (int i = 0; i < bounds.size(); i++) {
-			compression.bounds[i] = bounds[i];
-		}
-		Array pages = comp["pages"];
-		compression.pages.resize(pages.size());
-		for (int i = 0; i < pages.size(); i++) {
-			Dictionary page = pages[i];
-			ERR_FAIL_COND_V(!page.has("data"), false);
-			ERR_FAIL_COND_V(!page.has("time_offset"), false);
-			compression.pages[i].data = page["data"];
-			compression.pages[i].time_offset = page["time_offset"];
-		}
-		compression.enabled = true;
-		return true;
-	} else if (prop_name.begins_with("tracks/")) {
+	if (prop_name.begins_with("tracks/")) {
 		int track = prop_name.get_slicec('/', 1).to_int();
 		String what = prop_name.get_slicec('/', 2);
 
 		if (tracks.size() == track && what == "type") {
 			String type = p_value;
 
-			if (type == "blend_shape") {
-				add_track(TYPE_BLEND_SHAPE);
-			} else if (type == "value") {
+			if (type == "value") {
 				add_track(TYPE_VALUE);
 			} else if (type == "method") {
 				add_track(TYPE_METHOD);
@@ -90,22 +61,6 @@ bool Animation::_set(const StringName &p_name, const Variant &p_value) {
 
 		if (what == "path") {
 			track_set_path(track, p_value);
-		} else if (what == "compressed_track") {
-			int index = p_value;
-			ERR_FAIL_COND_V(!compression.enabled, false);
-			ERR_FAIL_UNSIGNED_INDEX_V((uint32_t)index, compression.bounds.size(), false);
-			Track *t = tracks[track];
-			t->interpolation = INTERPOLATION_LINEAR; //only linear supported
-			switch (t->type) {
-				case TYPE_BLEND_SHAPE: {
-					BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
-					bst->compressed_track = index;
-				} break;
-				default: {
-					return false;
-				}
-			}
-			return true;
 		} else if (what == "interp") {
 			track_set_interpolation_type(track, InterpolationType(p_value.operator int()));
 		} else if (what == "loop_wrap") {
@@ -115,27 +70,7 @@ bool Animation::_set(const StringName &p_name, const Variant &p_value) {
 		} else if (what == "enabled") {
 			track_set_enabled(track, p_value);
 		} else if (what == "keys" || what == "key_values") {
-			if (track_get_type(track) == TYPE_BLEND_SHAPE) {
-				BlendShapeTrack *st = static_cast<BlendShapeTrack *>(tracks[track]);
-				Vector<real_t> values = p_value;
-				int vcount = values.size();
-				ERR_FAIL_COND_V(vcount % BLEND_SHAPE_TRACK_SIZE, false);
-
-				const real_t *r = values.ptr();
-
-				int64_t count = vcount / BLEND_SHAPE_TRACK_SIZE;
-				st->blend_shapes.resize(count);
-
-				TKey<float> *sw = st->blend_shapes.ptrw();
-				for (int i = 0; i < count; i++) {
-					TKey<float> &sk = sw[i];
-					const real_t *ofs = &r[i * BLEND_SHAPE_TRACK_SIZE];
-					sk.time = ofs[0];
-					sk.transition = ofs[1];
-					sk.value = ofs[2];
-				}
-
-			} else if (track_get_type(track) == TYPE_VALUE) {
+			if (track_get_type(track) == TYPE_VALUE) {
 				ValueTrack *vt = static_cast<ValueTrack *>(tracks[track]);
 				Dictionary d = p_value;
 				ERR_FAIL_COND_V(!d.has("times"), false);
@@ -154,6 +89,7 @@ bool Animation::_set(const StringName &p_name, const Variant &p_value) {
 					}
 					vt->update_mode = UpdateMode(um);
 				}
+				capture_included = capture_included || (vt->update_mode == UPDATE_CAPTURE);
 
 				Vector<real_t> times = d["times"];
 				Array values = d["values"];
@@ -303,31 +239,7 @@ bool Animation::_set(const StringName &p_name, const Variant &p_value) {
 
 bool Animation::_get(const StringName &p_name, Variant &r_ret) const {
 	String prop_name = p_name;
-
-	if (p_name == SNAME("_compression")) {
-		ERR_FAIL_COND_V(!compression.enabled, false);
-		Dictionary comp;
-		comp["fps"] = compression.fps;
-		Array bounds;
-		bounds.resize(compression.bounds.size());
-		for (uint32_t i = 0; i < compression.bounds.size(); i++) {
-			bounds[i] = compression.bounds[i];
-		}
-		comp["bounds"] = bounds;
-		Array pages;
-		pages.resize(compression.pages.size());
-		for (uint32_t i = 0; i < compression.pages.size(); i++) {
-			Dictionary page;
-			page["data"] = compression.pages[i].data;
-			page["time_offset"] = compression.pages[i].time_offset;
-			pages[i] = page;
-		}
-		comp["pages"] = pages;
-		comp["format_version"] = Compression::FORMAT_VERSION;
-
-		r_ret = comp;
-		return true;
-	} else if (prop_name == "length") {
+	if (prop_name == "length") {
 		r_ret = length;
 	} else if (prop_name == "loop_mode") {
 		r_ret = loop_mode;
@@ -339,9 +251,6 @@ bool Animation::_get(const StringName &p_name, Variant &r_ret) const {
 		ERR_FAIL_INDEX_V(track, tracks.size(), false);
 		if (what == "type") {
 			switch (track_get_type(track)) {
-				case TYPE_BLEND_SHAPE:
-					r_ret = "blend_shape";
-					break;
 				case TYPE_VALUE:
 					r_ret = "value";
 					break;
@@ -360,21 +269,6 @@ bool Animation::_get(const StringName &p_name, Variant &r_ret) const {
 
 		} else if (what == "path") {
 			r_ret = track_get_path(track);
-		} else if (what == "compressed_track") {
-			ERR_FAIL_COND_V(!compression.enabled, false);
-			Track *t = tracks[track];
-			switch (t->type) {
-				case TYPE_BLEND_SHAPE: {
-					BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
-					r_ret = bst->compressed_track;
-				} break;
-				default: {
-					r_ret = Variant();
-					ERR_FAIL_V(false);
-				}
-			}
-
-			return true;
 		} else if (what == "interp") {
 			r_ret = track_get_interpolation_type(track);
 		} else if (what == "loop_wrap") {
@@ -384,26 +278,7 @@ bool Animation::_get(const StringName &p_name, Variant &r_ret) const {
 		} else if (what == "enabled") {
 			r_ret = track_is_enabled(track);
 		} else if (what == "keys") {
-			if (track_get_type(track) == TYPE_BLEND_SHAPE) {
-				Vector<real_t> keys;
-				int kk = track_get_key_count(track);
-				keys.resize(kk * BLEND_SHAPE_TRACK_SIZE);
-
-				real_t *w = keys.ptrw();
-
-				int idx = 0;
-				for (int i = 0; i < track_get_key_count(track); i++) {
-					float bs;
-					blend_shape_track_get_key(track, i, &bs);
-
-					w[idx++] = track_get_key_time(track, i);
-					w[idx++] = track_get_key_transition(track, i);
-					w[idx++] = bs;
-				}
-
-				r_ret = keys;
-				return true;
-			} else if (track_get_type(track) == TYPE_VALUE) {
+			if (track_get_type(track) == TYPE_VALUE) {
 				const ValueTrack *vt = static_cast<const ValueTrack *>(tracks[track]);
 
 				Dictionary d;
@@ -566,21 +441,14 @@ bool Animation::_get(const StringName &p_name, Variant &r_ret) const {
 }
 
 void Animation::_get_property_list(List<PropertyInfo> *p_list) const {
-	if (compression.enabled) {
-		p_list->push_back(PropertyInfo(Variant::DICTIONARY, "_compression", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
-	}
 	for (int i = 0; i < tracks.size(); i++) {
 		p_list->push_back(PropertyInfo(Variant::STRING, "tracks/" + itos(i) + "/type", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
 		p_list->push_back(PropertyInfo(Variant::BOOL, "tracks/" + itos(i) + "/imported", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
 		p_list->push_back(PropertyInfo(Variant::BOOL, "tracks/" + itos(i) + "/enabled", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
 		p_list->push_back(PropertyInfo(Variant::NODE_PATH, "tracks/" + itos(i) + "/path", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
-		if (track_is_compressed(i)) {
-			p_list->push_back(PropertyInfo(Variant::INT, "tracks/" + itos(i) + "/compressed_track", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
-		} else {
-			p_list->push_back(PropertyInfo(Variant::INT, "tracks/" + itos(i) + "/interp", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
-			p_list->push_back(PropertyInfo(Variant::BOOL, "tracks/" + itos(i) + "/loop_wrap", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
-			p_list->push_back(PropertyInfo(Variant::ARRAY, "tracks/" + itos(i) + "/keys", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
-		}
+		p_list->push_back(PropertyInfo(Variant::INT, "tracks/" + itos(i) + "/interp", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
+		p_list->push_back(PropertyInfo(Variant::BOOL, "tracks/" + itos(i) + "/loop_wrap", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
+		p_list->push_back(PropertyInfo(Variant::ARRAY, "tracks/" + itos(i) + "/keys", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR | PROPERTY_USAGE_INTERNAL));
 	}
 }
 
@@ -594,10 +462,6 @@ int Animation::add_track(TrackType p_type, int p_at_pos) {
 	}
 
 	switch (p_type) {
-		case TYPE_BLEND_SHAPE: {
-			BlendShapeTrack *bst = memnew(BlendShapeTrack);
-			tracks.insert(p_at_pos, bst);
-		} break;
 		case TYPE_VALUE: {
 			tracks.insert(p_at_pos, memnew(ValueTrack));
 
@@ -627,12 +491,6 @@ void Animation::remove_track(int p_track) {
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_BLEND_SHAPE: {
-			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
-			ERR_FAIL_COND_MSG(bst->compressed_track >= 0, "Compressed tracks can't be manually removed. Call clear() to get rid of compression first.");
-			_clear(bst->blend_shapes);
-
-		} break;
 		case TYPE_VALUE: {
 			ValueTrack *vt = static_cast<ValueTrack *>(t);
 			_clear(vt->values);
@@ -658,6 +516,24 @@ void Animation::remove_track(int p_track) {
 	memdelete(t);
 	tracks.remove_at(p_track);
 	emit_changed();
+	_check_capture_included();
+}
+
+bool Animation::is_capture_included() const {
+	return capture_included;
+}
+
+void Animation::_check_capture_included() {
+	capture_included = false;
+	for (int i = 0; i < tracks.size(); i++) {
+		if (tracks[i]->type == TYPE_VALUE) {
+			ValueTrack *vt = static_cast<ValueTrack *>(tracks[i]);
+			if (vt->update_mode == UPDATE_CAPTURE) {
+				capture_included = true;
+				break;
+			}
+		}
+	}
 }
 
 int Animation::get_track_count() const {
@@ -672,6 +548,7 @@ Animation::TrackType Animation::track_get_type(int p_track) const {
 void Animation::track_set_path(int p_track, const NodePath &p_path) {
 	ERR_FAIL_INDEX(p_track, tracks.size());
 	tracks[p_track]->path = p_path;
+	_track_update_hash(p_track);
 	emit_changed();
 }
 
@@ -688,6 +565,24 @@ int Animation::find_track(const NodePath &p_path, const TrackType p_type) const 
 	};
 	return -1;
 };
+
+Animation::TrackType Animation::get_cache_type(TrackType p_type) {
+	if (p_type == Animation::TYPE_BEZIER) {
+		return Animation::TYPE_VALUE;
+	}
+	return p_type;
+}
+
+void Animation::_track_update_hash(int p_track) {
+	NodePath track_path = tracks[p_track]->path;
+	TrackType track_cache_type = get_cache_type(tracks[p_track]->type);
+	tracks[p_track]->thash = StringName(String(track_path.get_concatenated_names()) + String(track_path.get_concatenated_subnames()) + itos(track_cache_type)).hash();
+}
+
+Animation::TypeHash Animation::track_get_type_hash(int p_track) const {
+	ERR_FAIL_INDEX_V(p_track, tracks.size(), 0);
+	return tracks[p_track]->thash;
+}
 
 void Animation::track_set_interpolation_type(int p_track, InterpolationType p_interp) {
 	ERR_FAIL_INDEX(p_track, tracks.size());
@@ -711,7 +606,7 @@ bool Animation::track_get_interpolation_loop_wrap(int p_track) const {
 	return tracks[p_track]->loop_wrap;
 }
 
-template <class T, class V>
+template <typename T, typename V>
 int Animation::_insert(double p_time, T &p_keys, const V &p_value) {
 	int idx = p_keys.size();
 
@@ -735,89 +630,9 @@ int Animation::_insert(double p_time, T &p_keys, const V &p_value) {
 	return -1;
 }
 
-template <class T>
+template <typename T>
 void Animation::_clear(T &p_keys) {
 	p_keys.clear();
-}
-
-////
-
-int Animation::blend_shape_track_insert_key(int p_track, double p_time, float p_blend_shape) {
-	ERR_FAIL_INDEX_V(p_track, tracks.size(), -1);
-	Track *t = tracks[p_track];
-	ERR_FAIL_COND_V(t->type != TYPE_BLEND_SHAPE, -1);
-
-	BlendShapeTrack *st = static_cast<BlendShapeTrack *>(t);
-
-	ERR_FAIL_COND_V(st->compressed_track >= 0, -1);
-
-	TKey<float> tkey;
-	tkey.time = p_time;
-	tkey.value = p_blend_shape;
-
-	int ret = _insert(p_time, st->blend_shapes, tkey);
-	emit_changed();
-	return ret;
-}
-
-Error Animation::blend_shape_track_get_key(int p_track, int p_key, float *r_blend_shape) const {
-	ERR_FAIL_INDEX_V(p_track, tracks.size(), ERR_INVALID_PARAMETER);
-	Track *t = tracks[p_track];
-
-	BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
-	ERR_FAIL_COND_V(t->type != TYPE_BLEND_SHAPE, ERR_INVALID_PARAMETER);
-
-	if (bst->compressed_track >= 0) {
-		Vector3i key;
-		double time;
-		bool fetch_success = _fetch_compressed_by_index<1>(bst->compressed_track, p_key, key, time);
-		if (!fetch_success) {
-			return ERR_INVALID_PARAMETER;
-		}
-
-		*r_blend_shape = _uncompress_blend_shape(key);
-		return OK;
-	}
-
-	ERR_FAIL_INDEX_V(p_key, bst->blend_shapes.size(), ERR_INVALID_PARAMETER);
-
-	*r_blend_shape = bst->blend_shapes[p_key].value;
-
-	return OK;
-}
-
-Error Animation::try_blend_shape_track_interpolate(int p_track, double p_time, float *r_interpolation) const {
-	ERR_FAIL_INDEX_V(p_track, tracks.size(), ERR_INVALID_PARAMETER);
-	Track *t = tracks[p_track];
-	ERR_FAIL_COND_V(t->type != TYPE_BLEND_SHAPE, ERR_INVALID_PARAMETER);
-
-	BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
-
-	if (bst->compressed_track >= 0) {
-		if (_blend_shape_interpolate_compressed(bst->compressed_track, p_time, *r_interpolation)) {
-			return OK;
-		} else {
-			return ERR_UNAVAILABLE;
-		}
-	}
-
-	bool ok = false;
-
-	float tk = _interpolate(bst->blend_shapes, p_time, bst->interpolation, bst->loop_wrap, &ok);
-
-	if (!ok) {
-		return ERR_UNAVAILABLE;
-	}
-	*r_interpolation = tk;
-	return OK;
-}
-
-float Animation::blend_shape_track_interpolate(int p_track, double p_time) const {
-	float ret = 0;
-	ERR_FAIL_INDEX_V(p_track, tracks.size(), ret);
-	bool err = try_blend_shape_track_interpolate(p_track, p_time, &ret);
-	ERR_FAIL_COND_V_MSG(err, ret, "Blend Shape Track: '" + tracks[p_track]->path + "' is unavailable.");
-	return ret;
 }
 
 ////
@@ -833,15 +648,6 @@ void Animation::track_remove_key(int p_track, int p_idx) {
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_BLEND_SHAPE: {
-			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
-
-			ERR_FAIL_COND(bst->compressed_track >= 0);
-
-			ERR_FAIL_INDEX(p_idx, bst->blend_shapes.size());
-			bst->blend_shapes.remove_at(p_idx);
-
-		} break;
 		case TYPE_VALUE: {
 			ValueTrack *vt = static_cast<ValueTrack *>(t);
 			ERR_FAIL_INDEX(p_idx, vt->values.size());
@@ -871,41 +677,14 @@ void Animation::track_remove_key(int p_track, int p_idx) {
 	emit_changed();
 }
 
-int Animation::track_find_key(int p_track, double p_time, FindMode p_find_mode) const {
+int Animation::track_find_key(int p_track, double p_time, FindMode p_find_mode, bool p_limit, bool p_backward) const {
 	ERR_FAIL_INDEX_V(p_track, tracks.size(), -1);
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_BLEND_SHAPE: {
-			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
-
-			if (bst->compressed_track >= 0) {
-				double time;
-				double time_next;
-				Vector3i key;
-				Vector3i key_next;
-				uint32_t key_index;
-				bool fetch_compressed_success = _fetch_compressed<1>(bst->compressed_track, p_time, key, time, key_next, time_next, &key_index);
-				ERR_FAIL_COND_V(!fetch_compressed_success, -1);
-				if ((p_find_mode == FIND_MODE_APPROX && !Math::is_equal_approx(time, p_time)) || (p_find_mode == FIND_MODE_EXACT && time != p_time)) {
-					return -1;
-				}
-				return key_index;
-			}
-
-			int k = _find(bst->blend_shapes, p_time);
-			if (k < 0 || k >= bst->blend_shapes.size()) {
-				return -1;
-			}
-			if ((p_find_mode == FIND_MODE_APPROX && !Math::is_equal_approx(bst->blend_shapes[k].time, p_time)) || (p_find_mode == FIND_MODE_EXACT && bst->blend_shapes[k].time != p_time)) {
-				return -1;
-			}
-			return k;
-
-		} break;
 		case TYPE_VALUE: {
 			ValueTrack *vt = static_cast<ValueTrack *>(t);
-			int k = _find(vt->values, p_time);
+			int k = _find(vt->values, p_time, p_backward, p_limit);
 			if (k < 0 || k >= vt->values.size()) {
 				return -1;
 			}
@@ -917,7 +696,7 @@ int Animation::track_find_key(int p_track, double p_time, FindMode p_find_mode) 
 		} break;
 		case TYPE_METHOD: {
 			MethodTrack *mt = static_cast<MethodTrack *>(t);
-			int k = _find(mt->methods, p_time);
+			int k = _find(mt->methods, p_time, p_backward, p_limit);
 			if (k < 0 || k >= mt->methods.size()) {
 				return -1;
 			}
@@ -929,7 +708,7 @@ int Animation::track_find_key(int p_track, double p_time, FindMode p_find_mode) 
 		} break;
 		case TYPE_BEZIER: {
 			BezierTrack *bt = static_cast<BezierTrack *>(t);
-			int k = _find(bt->values, p_time);
+			int k = _find(bt->values, p_time, p_backward, p_limit);
 			if (k < 0 || k >= bt->values.size()) {
 				return -1;
 			}
@@ -941,7 +720,7 @@ int Animation::track_find_key(int p_track, double p_time, FindMode p_find_mode) 
 		} break;
 		case TYPE_ANIMATION: {
 			AnimationTrack *at = static_cast<AnimationTrack *>(t);
-			int k = _find(at->values, p_time);
+			int k = _find(at->values, p_time, p_backward, p_limit);
 			if (k < 0 || k >= at->values.size()) {
 				return -1;
 			}
@@ -963,12 +742,6 @@ int Animation::track_insert_key(int p_track, double p_time, const Variant &p_key
 	int ret = -1;
 
 	switch (t->type) {
-		case TYPE_BLEND_SHAPE: {
-			ERR_FAIL_COND_V((p_key.get_type() != Variant::FLOAT) && (p_key.get_type() != Variant::INT), -1);
-			ret = blend_shape_track_insert_key(p_track, p_time, p_key);
-			track_set_key_transition(p_track, ret, p_transition);
-
-		} break;
 		case TYPE_VALUE: {
 			ValueTrack *vt = static_cast<ValueTrack *>(t);
 
@@ -985,7 +758,7 @@ int Animation::track_insert_key(int p_track, double p_time, const Variant &p_key
 			ERR_FAIL_COND_V(p_key.get_type() != Variant::DICTIONARY, -1);
 
 			Dictionary d = p_key;
-			ERR_FAIL_COND_V(!d.has("method") || (d["method"].get_type() != Variant::STRING_NAME && d["method"].get_type() != Variant::STRING), -1);
+			ERR_FAIL_COND_V(!d.has("method") || !d["method"].is_string(), -1);
 			ERR_FAIL_COND_V(!d.has("args") || !d["args"].is_array(), -1);
 
 			MethodKey k;
@@ -1044,13 +817,6 @@ int Animation::track_get_key_count(int p_track) const {
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_BLEND_SHAPE: {
-			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
-			if (bst->compressed_track >= 0) {
-				return _get_compressed_key_count(bst->compressed_track);
-			}
-			return bst->blend_shapes.size();
-		} break;
 		case TYPE_VALUE: {
 			ValueTrack *vt = static_cast<ValueTrack *>(t);
 			return vt->values.size();
@@ -1078,11 +844,6 @@ Variant Animation::track_get_key_value(int p_track, int p_key_idx) const {
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_BLEND_SHAPE: {
-			float value;
-			blend_shape_track_get_key(p_track, p_key_idx, &value);
-			return value;
-		} break;
 		case TYPE_VALUE: {
 			ValueTrack *vt = static_cast<ValueTrack *>(t);
 			ERR_FAIL_INDEX_V(p_key_idx, vt->values.size(), Variant());
@@ -1129,18 +890,6 @@ double Animation::track_get_key_time(int p_track, int p_key_idx) const {
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_BLEND_SHAPE: {
-			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
-			if (bst->compressed_track >= 0) {
-				Vector3i value;
-				double time;
-				bool fetch_compressed_success = _fetch_compressed_by_index<1>(bst->compressed_track, p_key_idx, value, time);
-				ERR_FAIL_COND_V(!fetch_compressed_success, false);
-				return time;
-			}
-			ERR_FAIL_INDEX_V(p_key_idx, bst->blend_shapes.size(), -1);
-			return bst->blend_shapes[p_key_idx].time;
-		} break;
 		case TYPE_VALUE: {
 			ValueTrack *vt = static_cast<ValueTrack *>(t);
 			ERR_FAIL_INDEX_V(p_key_idx, vt->values.size(), -1);
@@ -1175,16 +924,6 @@ void Animation::track_set_key_time(int p_track, int p_key_idx, double p_time) {
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_BLEND_SHAPE: {
-			BlendShapeTrack *tt = static_cast<BlendShapeTrack *>(t);
-			ERR_FAIL_COND(tt->compressed_track >= 0);
-			ERR_FAIL_INDEX(p_key_idx, tt->blend_shapes.size());
-			TKey<float> key = tt->blend_shapes[p_key_idx];
-			key.time = p_time;
-			tt->blend_shapes.remove_at(p_key_idx);
-			_insert(p_time, tt->blend_shapes, key);
-			return;
-		}
 		case TYPE_VALUE: {
 			ValueTrack *vt = static_cast<ValueTrack *>(t);
 			ERR_FAIL_INDEX(p_key_idx, vt->values.size());
@@ -1231,14 +970,6 @@ real_t Animation::track_get_key_transition(int p_track, int p_key_idx) const {
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_BLEND_SHAPE: {
-			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
-			if (bst->compressed_track >= 0) {
-				return 1.0;
-			}
-			ERR_FAIL_INDEX_V(p_key_idx, bst->blend_shapes.size(), -1);
-			return bst->blend_shapes[p_key_idx].transition;
-		} break;
 		case TYPE_VALUE: {
 			ValueTrack *vt = static_cast<ValueTrack *>(t);
 			ERR_FAIL_INDEX_V(p_key_idx, vt->values.size(), -1);
@@ -1262,35 +993,11 @@ real_t Animation::track_get_key_transition(int p_track, int p_key_idx) const {
 	ERR_FAIL_V(0);
 }
 
-bool Animation::track_is_compressed(int p_track) const {
-	ERR_FAIL_INDEX_V(p_track, tracks.size(), false);
-	Track *t = tracks[p_track];
-
-	switch (t->type) {
-		case TYPE_BLEND_SHAPE: {
-			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
-			return bst->compressed_track >= 0;
-		} break;
-		default: {
-			return false; // Animation does not really use transitions.
-		} break;
-	}
-}
-
 void Animation::track_set_key_value(int p_track, int p_key_idx, const Variant &p_value) {
 	ERR_FAIL_INDEX(p_track, tracks.size());
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_BLEND_SHAPE: {
-			ERR_FAIL_COND((p_value.get_type() != Variant::FLOAT) && (p_value.get_type() != Variant::INT));
-			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
-			ERR_FAIL_COND(bst->compressed_track >= 0);
-			ERR_FAIL_INDEX(p_key_idx, bst->blend_shapes.size());
-
-			bst->blend_shapes.write[p_key_idx].value = p_value;
-
-		} break;
 		case TYPE_VALUE: {
 			ValueTrack *vt = static_cast<ValueTrack *>(t);
 			ERR_FAIL_INDEX(p_key_idx, vt->values.size());
@@ -1343,12 +1050,6 @@ void Animation::track_set_key_transition(int p_track, int p_key_idx, real_t p_tr
 	Track *t = tracks[p_track];
 
 	switch (t->type) {
-		case TYPE_BLEND_SHAPE: {
-			BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
-			ERR_FAIL_COND(bst->compressed_track >= 0);
-			ERR_FAIL_INDEX(p_key_idx, bst->blend_shapes.size());
-			bst->blend_shapes.write[p_key_idx].transition = p_transition;
-		} break;
 		case TYPE_VALUE: {
 			ValueTrack *vt = static_cast<ValueTrack *>(t);
 			ERR_FAIL_INDEX(p_key_idx, vt->values.size());
@@ -1370,8 +1071,8 @@ void Animation::track_set_key_transition(int p_track, int p_key_idx, real_t p_tr
 	emit_changed();
 }
 
-template <class K>
-int Animation::_find(const Vector<K> &p_keys, double p_time, bool p_backward) const {
+template <typename K>
+int Animation::_find(const Vector<K> &p_keys, double p_time, bool p_backward, bool p_limit) const {
 	int len = p_keys.size();
 	if (len == 0) {
 		return -2;
@@ -1383,7 +1084,7 @@ int Animation::_find(const Vector<K> &p_keys, double p_time, bool p_backward) co
 
 #ifdef DEBUG_ENABLED
 	if (low > high) {
-		ERR_PRINT("low > high, this may be a bug");
+		ERR_PRINT("low > high, this may be a bug.");
 	}
 #endif
 
@@ -1408,6 +1109,14 @@ int Animation::_find(const Vector<K> &p_keys, double p_time, bool p_backward) co
 	} else {
 		if (keys[middle].time < p_time) {
 			middle++;
+		}
+	}
+
+	if (p_limit) {
+		double diff = length - keys[middle].time;
+		if ((signbit(keys[middle].time) && !Math::is_zero_approx(keys[middle].time)) || (signbit(diff) && !Math::is_zero_approx(diff))) {
+			ERR_PRINT_ONCE_ED("Found the key outside the animation range. Consider using the clean-up option in AnimationTrackEditor to fix it.");
+			return -1;
 		}
 	}
 
@@ -1448,71 +1157,7 @@ Vector3 Animation::_cubic_interpolate_in_time(const Vector3 &p_pre_a, const Vect
 }
 
 Variant Animation::_cubic_interpolate_in_time(const Variant &p_pre_a, const Variant &p_a, const Variant &p_b, const Variant &p_post_b, real_t p_c, real_t p_pre_a_t, real_t p_b_t, real_t p_post_b_t) const {
-	Variant::Type type_a = p_a.get_type();
-	Variant::Type type_b = p_b.get_type();
-	Variant::Type type_pa = p_pre_a.get_type();
-	Variant::Type type_pb = p_post_b.get_type();
-
-	//make int and real play along
-
-	uint32_t vformat = 1 << type_a;
-	vformat |= 1 << type_b;
-	vformat |= 1 << type_pa;
-	vformat |= 1 << type_pb;
-
-	if (vformat == ((1 << Variant::INT) | (1 << Variant::FLOAT)) || vformat == (1 << Variant::FLOAT)) {
-		//mix of real and int
-		real_t a = p_a;
-		real_t b = p_b;
-		real_t pa = p_pre_a;
-		real_t pb = p_post_b;
-
-		return Math::cubic_interpolate_in_time(a, b, pa, pb, p_c, p_b_t, p_pre_a_t, p_post_b_t);
-	} else if ((vformat & (vformat - 1))) {
-		return p_a; //can't interpolate, mix of types
-	}
-
-	switch (type_a) {
-		case Variant::VECTOR2: {
-			Vector2 a = p_a;
-			Vector2 b = p_b;
-			Vector2 pa = p_pre_a;
-			Vector2 pb = p_post_b;
-
-			return a.cubic_interpolate_in_time(b, pa, pb, p_c, p_b_t, p_pre_a_t, p_post_b_t);
-		}
-		case Variant::RECT2: {
-			Rect2 a = p_a;
-			Rect2 b = p_b;
-			Rect2 pa = p_pre_a;
-			Rect2 pb = p_post_b;
-
-			return Rect2(
-					a.position.cubic_interpolate_in_time(b.position, pa.position, pb.position, p_c, p_b_t, p_pre_a_t, p_post_b_t),
-					a.size.cubic_interpolate_in_time(b.size, pa.size, pb.size, p_c, p_b_t, p_pre_a_t, p_post_b_t));
-		}
-		case Variant::VECTOR3: {
-			Vector3 a = p_a;
-			Vector3 b = p_b;
-			Vector3 pa = p_pre_a;
-			Vector3 pb = p_post_b;
-
-			return a.cubic_interpolate_in_time(b, pa, pb, p_c, p_b_t, p_pre_a_t, p_post_b_t);
-		}
-		case Variant::AABB: {
-			AABB a = p_a;
-			AABB b = p_b;
-			AABB pa = p_pre_a;
-			AABB pb = p_post_b;
-
-			return AABB(
-					a.position.cubic_interpolate_in_time(b.position, pa.position, pb.position, p_c, p_b_t, p_pre_a_t, p_post_b_t),
-					a.size.cubic_interpolate_in_time(b.size, pa.size, pb.size, p_c, p_b_t, p_pre_a_t, p_post_b_t));
-		}
-		default: {
-			return _interpolate(p_a, p_b, p_c);
-		}
-	}
+	return cubic_interpolate_in_time_variant(p_pre_a, p_a, p_b, p_post_b, p_c, p_pre_a_t, p_b_t, p_post_b_t);
 }
 
 real_t Animation::_cubic_interpolate_in_time(const real_t &p_pre_a, const real_t &p_a, const real_t &p_b, const real_t &p_post_b, real_t p_c, real_t p_pre_a_t, real_t p_b_t, real_t p_post_b_t) const {
@@ -1535,10 +1180,10 @@ Variant Animation::_cubic_interpolate_angle_in_time(const Variant &p_pre_a, cons
 		real_t pb = p_post_b;
 		return Math::fposmod((float)Math::cubic_interpolate_angle_in_time(a, b, pa, pb, p_c, p_b_t, p_pre_a_t, p_post_b_t), (float)Math_TAU);
 	}
-	return _interpolate(p_a, p_b, p_c);
+	return _cubic_interpolate_in_time(p_pre_a, p_a, p_b, p_post_b, p_c, p_pre_a_t, p_b_t, p_post_b_t);
 }
 
-template <class T>
+template <typename T>
 T Animation::_interpolate(const Vector<TKey<T>> &p_keys, double p_time, InterpolationType p_interp, bool p_loop_wrap, bool *p_ok, bool p_backward) const {
 	int len = _find(p_keys, length) + 1; // try to find last key (there may be more past the end)
 
@@ -1561,7 +1206,7 @@ T Animation::_interpolate(const Vector<TKey<T>> &p_keys, double p_time, Interpol
 
 	ERR_FAIL_COND_V(idx == -2, T());
 	int maxi = len - 1;
-	bool is_start_edge = idx == -1;
+	bool is_start_edge = p_backward ? idx >= len : idx == -1;
 	bool is_end_edge = p_backward ? idx == 0 : idx >= maxi;
 
 	real_t c = 0.0;
@@ -1743,7 +1388,7 @@ T Animation::_interpolate(const Vector<TKey<T>> &p_keys, double p_time, Interpol
 	// do a barrel roll
 }
 
-Variant Animation::value_track_interpolate(int p_track, double p_time) const {
+Variant Animation::value_track_interpolate(int p_track, double p_time, bool p_backward) const {
 	ERR_FAIL_INDEX_V(p_track, tracks.size(), 0);
 	Track *t = tracks[p_track];
 	ERR_FAIL_COND_V(t->type != TYPE_VALUE, Variant());
@@ -1751,7 +1396,7 @@ Variant Animation::value_track_interpolate(int p_track, double p_time) const {
 
 	bool ok = false;
 
-	Variant res = _interpolate(vt->values, p_time, (vt->update_mode == UPDATE_CONTINUOUS || vt->update_mode == UPDATE_CAPTURE) ? vt->interpolation : INTERPOLATION_NEAREST, vt->loop_wrap, &ok);
+	Variant res = _interpolate(vt->values, p_time, vt->update_mode == UPDATE_DISCRETE ? INTERPOLATION_NEAREST : vt->interpolation, vt->loop_wrap, &ok, p_backward);
 
 	if (ok) {
 		return res;
@@ -1768,6 +1413,8 @@ void Animation::value_track_set_update_mode(int p_track, UpdateMode p_mode) {
 
 	ValueTrack *vt = static_cast<ValueTrack *>(t);
 	vt->update_mode = p_mode;
+
+	_check_capture_included();
 	emit_changed();
 }
 
@@ -1780,7 +1427,7 @@ Animation::UpdateMode Animation::value_track_get_update_mode(int p_track) const 
 	return vt->update_mode;
 }
 
-template <class T>
+template <typename T>
 void Animation::_track_get_key_indices_in_range(const Vector<T> &p_array, double from_time, double to_time, List<int> *p_indices, bool p_is_backward) const {
 	int len = p_array.size();
 	if (len == 0) {
@@ -1882,21 +1529,6 @@ void Animation::track_get_key_indices_in_range(int p_track, double p_time, doubl
 				double anim_start = -CMP_EPSILON;
 
 				switch (t->type) {
-					case TYPE_BLEND_SHAPE: {
-						const BlendShapeTrack *bst = static_cast<const BlendShapeTrack *>(t);
-						if (bst->compressed_track >= 0) {
-							_get_compressed_key_indices_in_range<1>(bst->compressed_track, from_time, length, p_indices);
-							_get_compressed_key_indices_in_range<1>(bst->compressed_track, 0, to_time, p_indices);
-						} else {
-							if (!is_backward) {
-								_track_get_key_indices_in_range(bst->blend_shapes, from_time, anim_end, p_indices, is_backward);
-								_track_get_key_indices_in_range(bst->blend_shapes, anim_start, to_time, p_indices, is_backward);
-							} else {
-								_track_get_key_indices_in_range(bst->blend_shapes, anim_start, to_time, p_indices, is_backward);
-								_track_get_key_indices_in_range(bst->blend_shapes, from_time, anim_end, p_indices, is_backward);
-							}
-						}
-					} break;
 					case TYPE_VALUE: {
 						const ValueTrack *vt = static_cast<const ValueTrack *>(t);
 						if (!is_backward) {
@@ -1967,16 +1599,6 @@ void Animation::track_get_key_indices_in_range(int p_track, double p_time, doubl
 			if (p_looped_flag == Animation::LOOPED_FLAG_START) {
 				// Handle loop by splitting.
 				switch (t->type) {
-					case TYPE_BLEND_SHAPE: {
-						const BlendShapeTrack *bst = static_cast<const BlendShapeTrack *>(t);
-						if (bst->compressed_track >= 0) {
-							_get_compressed_key_indices_in_range<1>(bst->compressed_track, 0, from_time, p_indices);
-							_get_compressed_key_indices_in_range<1>(bst->compressed_track, 0, to_time, p_indices);
-						} else {
-							_track_get_key_indices_in_range(bst->blend_shapes, 0, from_time, p_indices, true);
-							_track_get_key_indices_in_range(bst->blend_shapes, 0, to_time, p_indices, false);
-						}
-					} break;
 					case TYPE_VALUE: {
 						const ValueTrack *vt = static_cast<const ValueTrack *>(t);
 						_track_get_key_indices_in_range(vt->values, 0, from_time, p_indices, true);
@@ -2003,16 +1625,6 @@ void Animation::track_get_key_indices_in_range(int p_track, double p_time, doubl
 			if (p_looped_flag == Animation::LOOPED_FLAG_END) {
 				// Handle loop by splitting.
 				switch (t->type) {
-					case TYPE_BLEND_SHAPE: {
-						const BlendShapeTrack *bst = static_cast<const BlendShapeTrack *>(t);
-						if (bst->compressed_track >= 0) {
-							_get_compressed_key_indices_in_range<1>(bst->compressed_track, from_time, length, p_indices);
-							_get_compressed_key_indices_in_range<1>(bst->compressed_track, to_time, length, p_indices);
-						} else {
-							_track_get_key_indices_in_range(bst->blend_shapes, from_time, length, p_indices, false);
-							_track_get_key_indices_in_range(bst->blend_shapes, to_time, length, p_indices, true);
-						}
-					} break;
 					case TYPE_VALUE: {
 						const ValueTrack *vt = static_cast<const ValueTrack *>(t);
 						_track_get_key_indices_in_range(vt->values, from_time, length, p_indices, false);
@@ -2046,14 +1658,6 @@ void Animation::track_get_key_indices_in_range(int p_track, double p_time, doubl
 		} break;
 	}
 	switch (t->type) {
-		case TYPE_BLEND_SHAPE: {
-			const BlendShapeTrack *bst = static_cast<const BlendShapeTrack *>(t);
-			if (bst->compressed_track >= 0) {
-				_get_compressed_key_indices_in_range<1>(bst->compressed_track, from_time, to_time - from_time, p_indices);
-			} else {
-				_track_get_key_indices_in_range(bst->blend_shapes, from_time, to_time, p_indices, is_backward);
-			}
-		} break;
 		case TYPE_VALUE: {
 			const ValueTrack *vt = static_cast<const ValueTrack *>(t);
 			_track_get_key_indices_in_range(vt->values, from_time, to_time, p_indices, is_backward);
@@ -2097,6 +1701,20 @@ StringName Animation::method_track_get_name(int p_track, int p_key_idx) const {
 	ERR_FAIL_INDEX_V(p_key_idx, pm->methods.size(), StringName());
 
 	return pm->methods[p_key_idx].method;
+}
+
+Array Animation::make_default_bezier_key(float p_value) {
+	const double max_width = length / 2.0;
+	Array new_point;
+	new_point.resize(5);
+
+	new_point[0] = p_value;
+	new_point[1] = MAX(-0.25, -max_width);
+	new_point[2] = 0;
+	new_point[3] = MIN(0.25, max_width);
+	new_point[4] = 0;
+
+	return new_point;
 }
 
 int Animation::bezier_track_insert_key(int p_track, double p_time, real_t p_value, const Vector2 &p_in_handle, const Vector2 &p_out_handle) {
@@ -2413,7 +2031,7 @@ real_t Animation::bezier_track_interpolate(int p_track, double p_time) const {
 	return low_pos.lerp(high_pos, c).y;
 }
 
-/////////////////
+//
 
 int Animation::animation_track_insert_key(int p_track, double p_time, const StringName &p_animation) {
 	ERR_FAIL_INDEX_V(p_track, tracks.size(), -1);
@@ -2592,10 +2210,6 @@ void Animation::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("track_set_enabled", "track_idx", "enabled"), &Animation::track_set_enabled);
 	ClassDB::bind_method(D_METHOD("track_is_enabled", "track_idx"), &Animation::track_is_enabled);
 
-	ClassDB::bind_method(D_METHOD("blend_shape_track_insert_key", "track_idx", "time", "amount"), &Animation::blend_shape_track_insert_key);
-
-	ClassDB::bind_method(D_METHOD("blend_shape_track_interpolate", "track_idx", "time_sec"), &Animation::blend_shape_track_interpolate);
-
 	ClassDB::bind_method(D_METHOD("track_insert_key", "track_idx", "time", "key", "transition"), &Animation::track_insert_key, DEFVAL(1));
 	ClassDB::bind_method(D_METHOD("track_remove_key", "track_idx", "key_idx"), &Animation::track_remove_key);
 	ClassDB::bind_method(D_METHOD("track_remove_key_at_time", "track_idx", "time"), &Animation::track_remove_key_at_time);
@@ -2607,7 +2221,7 @@ void Animation::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("track_get_key_count", "track_idx"), &Animation::track_get_key_count);
 	ClassDB::bind_method(D_METHOD("track_get_key_value", "track_idx", "key_idx"), &Animation::track_get_key_value);
 	ClassDB::bind_method(D_METHOD("track_get_key_time", "track_idx", "key_idx"), &Animation::track_get_key_time);
-	ClassDB::bind_method(D_METHOD("track_find_key", "track_idx", "time", "find_mode"), &Animation::track_find_key, DEFVAL(FIND_MODE_NEAREST));
+	ClassDB::bind_method(D_METHOD("track_find_key", "track_idx", "time", "find_mode", "limit", "backward"), &Animation::track_find_key, DEFVAL(FIND_MODE_NEAREST), DEFVAL(false), DEFVAL(false));
 
 	ClassDB::bind_method(D_METHOD("track_set_interpolation_type", "track_idx", "interpolation"), &Animation::track_set_interpolation_type);
 	ClassDB::bind_method(D_METHOD("track_get_interpolation_type", "track_idx"), &Animation::track_get_interpolation_type);
@@ -2615,12 +2229,10 @@ void Animation::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("track_set_interpolation_loop_wrap", "track_idx", "interpolation"), &Animation::track_set_interpolation_loop_wrap);
 	ClassDB::bind_method(D_METHOD("track_get_interpolation_loop_wrap", "track_idx"), &Animation::track_get_interpolation_loop_wrap);
 
-	ClassDB::bind_method(D_METHOD("track_is_compressed", "track_idx"), &Animation::track_is_compressed);
-
 	ClassDB::bind_method(D_METHOD("value_track_set_update_mode", "track_idx", "mode"), &Animation::value_track_set_update_mode);
 	ClassDB::bind_method(D_METHOD("value_track_get_update_mode", "track_idx"), &Animation::value_track_get_update_mode);
 
-	ClassDB::bind_method(D_METHOD("value_track_interpolate", "track_idx", "time_sec"), &Animation::value_track_interpolate);
+	ClassDB::bind_method(D_METHOD("value_track_interpolate", "track_idx", "time_sec", "backward"), &Animation::value_track_interpolate, DEFVAL(false));
 
 	ClassDB::bind_method(D_METHOD("method_track_get_name", "track_idx", "key_idx"), &Animation::method_track_get_name);
 	ClassDB::bind_method(D_METHOD("method_track_get_params", "track_idx", "key_idx"), &Animation::method_track_get_params);
@@ -2653,14 +2265,14 @@ void Animation::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("clear"), &Animation::clear);
 	ClassDB::bind_method(D_METHOD("copy_track", "track_idx", "to_animation"), &Animation::copy_track);
 
-	ClassDB::bind_method(D_METHOD("compress", "page_size", "fps", "split_tolerance"), &Animation::compress, DEFVAL(8192), DEFVAL(120), DEFVAL(4.0));
+	ClassDB::bind_method(D_METHOD("is_capture_included"), &Animation::is_capture_included);
 
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "length", PROPERTY_HINT_RANGE, "0.001,99999,0.001,suffix:s"), "set_length", "get_length");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "loop_mode", PROPERTY_HINT_ENUM, "None,Linear,Ping-Pong"), "set_loop_mode", "get_loop_mode");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "step", PROPERTY_HINT_RANGE, "0,4096,0.001,suffix:s"), "set_step", "get_step");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "capture_included", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR), "", "is_capture_included");
 
 	BIND_ENUM_CONSTANT(TYPE_VALUE);
-	BIND_ENUM_CONSTANT(TYPE_BLEND_SHAPE);
 	BIND_ENUM_CONSTANT(TYPE_METHOD);
 	BIND_ENUM_CONSTANT(TYPE_BEZIER);
 	BIND_ENUM_CONSTANT(TYPE_ANIMATION);
@@ -2695,10 +2307,6 @@ void Animation::clear() {
 	tracks.clear();
 	loop_mode = LOOP_NONE;
 	length = 1;
-	compression.enabled = false;
-	compression.bounds.clear();
-	compression.pages.clear();
-	compression.fps = 120;
 	emit_changed();
 }
 
@@ -2790,32 +2398,6 @@ bool Animation::_vector3_track_optimize_key(const TKey<Vector3> t0, const TKey<V
 		}
 	}
 	return false;
-}
-
-void Animation::_blend_shape_track_optimize(int p_idx, real_t p_allowed_velocity_err, real_t p_allowed_precision_error) {
-	ERR_FAIL_INDEX(p_idx, tracks.size());
-	ERR_FAIL_COND(tracks[p_idx]->type != TYPE_BLEND_SHAPE);
-	BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(tracks[p_idx]);
-
-	int i = 0;
-	while (i < bst->blend_shapes.size() - 2) {
-		TKey<float> t0 = bst->blend_shapes[i];
-		TKey<float> t1 = bst->blend_shapes[i + 1];
-		TKey<float> t2 = bst->blend_shapes[i + 2];
-
-		bool erase = _float_track_optimize_key(t0, t1, t2, p_allowed_velocity_err, p_allowed_precision_error);
-		if (erase) {
-			bst->blend_shapes.remove_at(i + 1);
-		} else {
-			i++;
-		}
-	}
-
-	if (bst->blend_shapes.size() == 2) {
-		if (abs(bst->blend_shapes[0].value - bst->blend_shapes[1].value) < p_allowed_precision_error) {
-			bst->blend_shapes.remove_at(1);
-		}
-	}
 }
 
 void Animation::_value_track_optimize(int p_idx, real_t p_allowed_velocity_err, real_t p_allowed_angular_err, real_t p_allowed_precision_error) {
@@ -2923,1001 +2505,14 @@ void Animation::_value_track_optimize(int p_idx, real_t p_allowed_velocity_err, 
 void Animation::optimize(real_t p_allowed_velocity_err, real_t p_allowed_angular_err, int p_precision) {
 	real_t precision = Math::pow(0.1, p_precision);
 	for (int i = 0; i < tracks.size(); i++) {
-		if (track_is_compressed(i)) {
-			continue; //not possible to optimize compressed track
-		}
-		if (tracks[i]->type == TYPE_BLEND_SHAPE) {
-			_blend_shape_track_optimize(i, p_allowed_velocity_err, precision);
-		} else if (tracks[i]->type == TYPE_VALUE) {
+		if (tracks[i]->type == TYPE_VALUE) {
 			_value_track_optimize(i, p_allowed_velocity_err, p_allowed_angular_err, precision);
 		}
 	}
 }
 
-#define print_animc(m_str)
+// #define print_animc(m_str)
 //#define print_animc(m_str) print_line(m_str);
-
-struct AnimationCompressionDataState {
-	enum {
-		MIN_OPTIMIZE_PACKETS = 5,
-		MAX_PACKETS = 16
-	};
-
-	uint32_t components = 3;
-	LocalVector<uint8_t> data; // Committed packets.
-	struct PacketData {
-		int32_t data[3] = { 0, 0, 0 };
-		uint32_t frame = 0;
-	};
-
-	float split_tolerance = 1.5;
-
-	LocalVector<PacketData> temp_packets;
-
-	//used for rollback if the new frame does not fit
-	int32_t validated_packet_count = -1;
-
-	static int32_t _compute_delta16_signed(int32_t p_from, int32_t p_to) {
-		int32_t delta = p_to - p_from;
-		if (delta > 32767) {
-			return delta - 65536; // use wrap around
-		} else if (delta < -32768) {
-			return 65536 + delta; // use wrap around
-		}
-		return delta;
-	}
-
-	static uint32_t _compute_shift_bits_signed(int32_t p_delta) {
-		if (p_delta == 0) {
-			return 0;
-		} else if (p_delta < 0) {
-			p_delta = ABS(p_delta) - 1;
-			if (p_delta == 0) {
-				return 1;
-			}
-		}
-		return nearest_shift(p_delta);
-	}
-
-	void _compute_max_shifts(uint32_t p_from, uint32_t p_to, uint32_t *max_shifts, uint32_t &max_frame_delta_shift) const {
-		for (uint32_t j = 0; j < components; j++) {
-			max_shifts[j] = 0;
-		}
-		max_frame_delta_shift = 0;
-
-		for (uint32_t i = p_from + 1; i <= p_to; i++) {
-			int32_t frame_delta = temp_packets[i].frame - temp_packets[i - 1].frame;
-			max_frame_delta_shift = MAX(max_frame_delta_shift, nearest_shift(frame_delta));
-			for (uint32_t j = 0; j < components; j++) {
-				int32_t diff = _compute_delta16_signed(temp_packets[i - 1].data[j], temp_packets[i].data[j]);
-				uint32_t shift = _compute_shift_bits_signed(diff);
-				max_shifts[j] = MAX(shift, max_shifts[j]);
-			}
-		}
-	}
-
-	bool insert_key(uint32_t p_frame, const Vector3i &p_key) {
-		if (temp_packets.size() == MAX_PACKETS) {
-			commit_temp_packets();
-		}
-		PacketData packet;
-		packet.frame = p_frame;
-		for (int i = 0; i < 3; i++) {
-			ERR_FAIL_COND_V(p_key[i] > 65535, false); // Safety checks.
-			packet.data[i] = p_key[i];
-		}
-
-		temp_packets.push_back(packet);
-
-		if (temp_packets.size() >= MIN_OPTIMIZE_PACKETS) {
-			uint32_t max_shifts[3] = { 0, 0, 0 }; // Base sizes, 16 bit
-			uint32_t max_frame_delta_shift = 0;
-			// Compute the average shift before the packet was added
-			_compute_max_shifts(0, temp_packets.size() - 2, max_shifts, max_frame_delta_shift);
-
-			float prev_packet_size_avg = 0;
-			prev_packet_size_avg = float(1 << max_frame_delta_shift);
-			for (uint32_t i = 0; i < components; i++) {
-				prev_packet_size_avg += float(1 << max_shifts[i]);
-			}
-			prev_packet_size_avg /= float(1 + components);
-
-			_compute_max_shifts(temp_packets.size() - 2, temp_packets.size() - 1, max_shifts, max_frame_delta_shift);
-
-			float new_packet_size_avg = 0;
-			new_packet_size_avg = float(1 << max_frame_delta_shift);
-			for (uint32_t i = 0; i < components; i++) {
-				new_packet_size_avg += float(1 << max_shifts[i]);
-			}
-			new_packet_size_avg /= float(1 + components);
-
-			print_animc("packet count: " + rtos(temp_packets.size() - 1) + " size avg " + rtos(prev_packet_size_avg) + " new avg " + rtos(new_packet_size_avg));
-			float ratio = (prev_packet_size_avg < new_packet_size_avg) ? (new_packet_size_avg / prev_packet_size_avg) : (prev_packet_size_avg / new_packet_size_avg);
-
-			if (ratio > split_tolerance) {
-				print_animc("split!");
-				temp_packets.resize(temp_packets.size() - 1);
-				commit_temp_packets();
-				temp_packets.push_back(packet);
-			}
-		}
-
-		return temp_packets.size() == 1; // First key
-	}
-
-	uint32_t get_temp_packet_size() const {
-		if (temp_packets.size() == 0) {
-			return 0;
-		} else if (temp_packets.size() == 1) {
-			return components == 1 ? 4 : 8; // 1 component packet is 16 bits and 16 bits unused. 3 component packets is 48 bits and 16 bits unused
-		}
-		uint32_t max_shifts[3] = { 0, 0, 0 }; //base sizes, 16 bit
-		uint32_t max_frame_delta_shift = 0;
-
-		_compute_max_shifts(0, temp_packets.size() - 1, max_shifts, max_frame_delta_shift);
-
-		uint32_t size_bits = 16; //base value (all 4 bits of shift sizes for x,y,z,time)
-		size_bits += max_frame_delta_shift * (temp_packets.size() - 1); //times
-		for (uint32_t j = 0; j < components; j++) {
-			size_bits += 16; //base value
-			uint32_t shift = max_shifts[j];
-			if (shift > 0) {
-				shift += 1; //if not zero, add sign bit
-			}
-			size_bits += shift * (temp_packets.size() - 1);
-		}
-		if (size_bits % 8 != 0) { //wrap to 8 bits
-			size_bits += 8 - (size_bits % 8);
-		}
-		uint32_t size_bytes = size_bits / 8; //wrap to words
-		if (size_bytes % 4 != 0) {
-			size_bytes += 4 - (size_bytes % 4);
-		}
-		return size_bytes;
-	}
-
-	static void _push_bits(LocalVector<uint8_t> &data, uint32_t &r_buffer, uint32_t &r_bits_used, uint32_t p_value, uint32_t p_bits) {
-		r_buffer |= p_value << r_bits_used;
-		r_bits_used += p_bits;
-		while (r_bits_used >= 8) {
-			uint8_t byte = r_buffer & 0xFF;
-			data.push_back(byte);
-			r_buffer >>= 8;
-			r_bits_used -= 8;
-		}
-	}
-
-	void commit_temp_packets() {
-		if (temp_packets.size() == 0) {
-			return; // Nothing to do.
-		}
-//#define DEBUG_PACKET_PUSH
-#ifdef DEBUG_PACKET_PUSH
-#ifndef _MSC_VER
-#warning Debugging packet push, disable this code in production to gain a bit more import performance.
-#endif
-		uint32_t debug_packet_push = get_temp_packet_size();
-		uint32_t debug_data_size = data.size();
-#endif
-		// Store header
-
-		uint8_t header[8];
-		uint32_t header_bytes = 0;
-		for (uint32_t i = 0; i < components; i++) {
-			encode_uint16(temp_packets[0].data[i], &header[header_bytes]);
-			header_bytes += 2;
-		}
-
-		uint32_t max_shifts[3] = { 0, 0, 0 }; //base sizes, 16 bit
-		uint32_t max_frame_delta_shift = 0;
-
-		if (temp_packets.size() > 1) {
-			_compute_max_shifts(0, temp_packets.size() - 1, max_shifts, max_frame_delta_shift);
-			uint16_t shift_header = (max_frame_delta_shift - 1) << 12;
-			for (uint32_t i = 0; i < components; i++) {
-				shift_header |= max_shifts[i] << (4 * i);
-			}
-
-			encode_uint16(shift_header, &header[header_bytes]);
-			header_bytes += 2;
-		}
-
-		while (header_bytes < 8 && header_bytes % 4 != 0) { // First cond needed to silence wrong GCC warning.
-			header[header_bytes++] = 0;
-		}
-
-		for (uint32_t i = 0; i < header_bytes; i++) {
-			data.push_back(header[i]);
-		}
-
-		if (temp_packets.size() == 1) {
-			temp_packets.clear();
-			validated_packet_count = 0;
-			return; //only header stored, nothing else to do
-		}
-
-		uint32_t bit_buffer = 0;
-		uint32_t bits_used = 0;
-
-		for (uint32_t i = 1; i < temp_packets.size(); i++) {
-			uint32_t frame_delta = temp_packets[i].frame - temp_packets[i - 1].frame;
-			_push_bits(data, bit_buffer, bits_used, frame_delta, max_frame_delta_shift);
-
-			for (uint32_t j = 0; j < components; j++) {
-				if (max_shifts[j] == 0) {
-					continue; // Zero delta, do not store
-				}
-				int32_t delta = _compute_delta16_signed(temp_packets[i - 1].data[j], temp_packets[i].data[j]);
-
-				ERR_FAIL_COND(delta < -32768 || delta > 32767); // Safety check.
-
-				uint16_t deltau;
-				if (delta < 0) {
-					deltau = (ABS(delta) - 1) | (1 << max_shifts[j]);
-				} else {
-					deltau = delta;
-				}
-				_push_bits(data, bit_buffer, bits_used, deltau, max_shifts[j] + 1); // Include sign bit
-			}
-		}
-		if (bits_used != 0) {
-			ERR_FAIL_COND(bit_buffer > 0xFF); // Safety check.
-			data.push_back(bit_buffer);
-		}
-
-		while (data.size() % 4 != 0) {
-			data.push_back(0); //pad to align with 4
-		}
-
-		temp_packets.clear();
-		validated_packet_count = 0;
-
-#ifdef DEBUG_PACKET_PUSH
-		ERR_FAIL_COND((data.size() - debug_data_size) != debug_packet_push);
-#endif
-	}
-};
-
-struct AnimationCompressionTimeState {
-	struct Packet {
-		uint32_t frame;
-		uint32_t offset;
-		uint32_t count;
-	};
-
-	LocalVector<Packet> packets;
-	//used for rollback
-	int32_t key_index = 0;
-	int32_t validated_packet_count = 0;
-	int32_t validated_key_index = -1;
-	bool needs_start_frame = false;
-};
-
-Vector3i Animation::_compress_key(uint32_t p_track, const AABB &p_bounds, int32_t p_key, float p_time) {
-	Vector3i values;
-	TrackType tt = track_get_type(p_track);
-	switch (tt) {
-		case TYPE_BLEND_SHAPE: {
-			float blend;
-			if (p_key >= 0) {
-				blend_shape_track_get_key(p_track, p_key, &blend);
-			} else {
-				try_blend_shape_track_interpolate(p_track, p_time, &blend);
-			}
-
-			blend = (blend / float(Compression::BLEND_SHAPE_RANGE)) * 0.5 + 0.5;
-			values[0] = CLAMP(int32_t(blend * 65535.0), 0, 65535);
-		} break;
-		default: {
-			ERR_FAIL_V(Vector3i()); // Safety check.
-		} break;
-	}
-
-	return values;
-}
-
-struct AnimationCompressionBufferBitsRead {
-	uint32_t buffer = 0;
-	uint32_t used = 0;
-	const uint8_t *src_data = nullptr;
-
-	_FORCE_INLINE_ uint32_t read(uint32_t p_bits) {
-		uint32_t output = 0;
-		uint32_t written = 0;
-		while (p_bits > 0) {
-			if (used == 0) {
-				used = 8;
-				buffer = *src_data;
-				src_data++;
-			}
-			uint32_t to_write = MIN(used, p_bits);
-			output |= (buffer & ((1 << to_write) - 1)) << written;
-			buffer >>= to_write;
-			used -= to_write;
-			p_bits -= to_write;
-			written += to_write;
-		}
-		return output;
-	}
-};
-
-void Animation::compress(uint32_t p_page_size, uint32_t p_fps, float p_split_tolerance) {
-	ERR_FAIL_COND_MSG(compression.enabled, "This animation is already compressed");
-
-	p_split_tolerance = CLAMP(p_split_tolerance, 1.1, 8.0);
-	compression.pages.clear();
-
-	uint32_t base_page_size = 0; // Before compressing pages, compute how large the "end page" datablock is.
-	LocalVector<uint32_t> tracks_to_compress;
-	LocalVector<AABB> track_bounds;
-	const uint32_t time_packet_size = 4;
-
-	const uint32_t track_header_size = 4 + 4 + 4; // pointer to time (4 bytes), amount of time keys (4 bytes) pointer to track data (4 bytes)
-
-	for (int i = 0; i < get_track_count(); i++) {
-		TrackType type = track_get_type(i);
-		if (type != TYPE_BLEND_SHAPE) {
-			continue;
-		}
-		if (track_get_key_count(i) == 0) {
-			continue; //do not compress, no keys
-		}
-		base_page_size += track_header_size; //pointer to beginning of each track timeline and amount of time keys
-		base_page_size += time_packet_size; //for end of track time marker
-		base_page_size += (type == TYPE_BLEND_SHAPE) ? 4 : 8; // at least the end of track packet (at much 8 bytes). This could be less, but have to be pessimistic.
-		tracks_to_compress.push_back(i);
-
-		AABB bounds;
-
-		track_bounds.push_back(bounds);
-	}
-
-	if (tracks_to_compress.size() == 0) {
-		return; //nothing to compress
-	}
-
-	print_animc("Anim Compression:");
-	print_animc("-----------------");
-	print_animc("Tracks to compress: " + itos(tracks_to_compress.size()));
-
-	uint32_t current_frame = 0;
-	uint32_t base_page_frame = 0;
-	double frame_len = 1.0 / double(p_fps);
-	const uint32_t max_frames_per_page = 65536;
-
-	print_animc("Frame Len: " + rtos(frame_len));
-
-	LocalVector<AnimationCompressionDataState> data_tracks;
-	LocalVector<AnimationCompressionTimeState> time_tracks;
-
-	data_tracks.resize(tracks_to_compress.size());
-	time_tracks.resize(tracks_to_compress.size());
-
-	uint32_t needed_min_page_size = base_page_size;
-	for (uint32_t i = 0; i < data_tracks.size(); i++) {
-		data_tracks[i].split_tolerance = p_split_tolerance;
-		if (track_get_type(tracks_to_compress[i]) == TYPE_BLEND_SHAPE) {
-			data_tracks[i].components = 1;
-		} else {
-			data_tracks[i].components = 3;
-		}
-		needed_min_page_size += data_tracks[i].data.size() + data_tracks[i].get_temp_packet_size();
-	}
-	for (uint32_t i = 0; i < time_tracks.size(); i++) {
-		needed_min_page_size += time_tracks[i].packets.size() * 4; // time packet is 32 bits
-	}
-	ERR_FAIL_COND_MSG(p_page_size < needed_min_page_size, "Cannot compress with the given page size");
-
-	while (true) {
-		// Begin by finding the keyframe in all tracks with the time closest to the current time
-		const uint32_t FRAME_MAX = 0xFFFFFFFF;
-		const int32_t NO_TRACK_FOUND = -1;
-		uint32_t best_frame = FRAME_MAX;
-		uint32_t best_invalid_frame = FRAME_MAX;
-		int32_t best_frame_track = NO_TRACK_FOUND; // Default is -1, which means all keyframes for this page are exhausted.
-		bool start_frame = false;
-
-		for (uint32_t i = 0; i < tracks_to_compress.size(); i++) {
-			uint32_t uncomp_track = tracks_to_compress[i];
-
-			if (time_tracks[i].key_index == track_get_key_count(uncomp_track)) {
-				if (time_tracks[i].needs_start_frame) {
-					start_frame = true;
-					best_frame = base_page_frame;
-					best_frame_track = i;
-					time_tracks[i].needs_start_frame = false;
-					break;
-				} else {
-					continue; // This track is exhausted (all keys were added already), don't consider.
-				}
-			}
-
-			uint32_t key_frame = double(track_get_key_time(uncomp_track, time_tracks[i].key_index)) / frame_len;
-
-			if (time_tracks[i].needs_start_frame && key_frame > base_page_frame) {
-				start_frame = true;
-				best_frame = base_page_frame;
-				best_frame_track = i;
-				time_tracks[i].needs_start_frame = false;
-				break;
-			}
-
-			ERR_FAIL_COND(key_frame < base_page_frame); // Safety check, should never happen.
-
-			if (key_frame - base_page_frame >= max_frames_per_page) {
-				// Invalid because beyond the max frames allowed per page
-				best_invalid_frame = MIN(best_invalid_frame, key_frame);
-			} else if (key_frame < best_frame) {
-				best_frame = key_frame;
-				best_frame_track = i;
-			}
-		}
-
-		print_animc("*KEY*: Current Frame: " + itos(current_frame) + " Best Frame: " + rtos(best_frame) + " Best Track: " + itos(best_frame_track) + " Start: " + String(start_frame ? "true" : "false"));
-
-		if (!start_frame && best_frame > current_frame) {
-			// Any case where the current frame advanced, either because nothing was found or because something was found greater than the current one.
-			print_animc("\tAdvance Condition.");
-			bool rollback = false;
-
-			// The frame has advanced, time to validate the previous frame
-			uint32_t current_page_size = base_page_size;
-			for (const AnimationCompressionDataState &state : data_tracks) {
-				uint32_t track_size = state.data.size(); // track size
-				track_size += state.get_temp_packet_size(); // Add the temporary data
-				if (track_size > Compression::MAX_DATA_TRACK_SIZE) {
-					rollback = true; //track to large, time track can't point to keys any longer, because key offset is 12 bits
-					break;
-				}
-				current_page_size += track_size;
-			}
-			for (const AnimationCompressionTimeState &state : time_tracks) {
-				current_page_size += state.packets.size() * 4; // time packet is 32 bits
-			}
-
-			if (!rollback && current_page_size > p_page_size) {
-				rollback = true;
-			}
-
-			print_animc("\tCurrent Page Size: " + itos(current_page_size) + "/" + itos(p_page_size) + " Rollback? " + String(rollback ? "YES!" : "no"));
-
-			if (rollback) {
-				// Not valid any longer, so rollback and commit page
-
-				for (AnimationCompressionDataState &state : data_tracks) {
-					state.temp_packets.resize(state.validated_packet_count);
-				}
-				for (AnimationCompressionTimeState &state : time_tracks) {
-					state.key_index = state.validated_key_index; //rollback key
-					state.packets.resize(state.validated_packet_count);
-				}
-
-			} else {
-				// All valid, so save rollback information
-				for (AnimationCompressionDataState &state : data_tracks) {
-					state.validated_packet_count = state.temp_packets.size();
-				}
-				for (AnimationCompressionTimeState &state : time_tracks) {
-					state.validated_key_index = state.key_index;
-					state.validated_packet_count = state.packets.size();
-				}
-
-				// Accept this frame as the frame being processed (as long as it exists)
-				if (best_frame != FRAME_MAX) {
-					current_frame = best_frame;
-					print_animc("\tValidated, New Current Frame: " + itos(current_frame));
-				}
-			}
-
-			if (rollback || best_frame == FRAME_MAX) {
-				// Commit the page if had to rollback or if no track was found
-				print_animc("\tCommiting page...");
-
-				// The end frame for the page depends entirely on whether its valid or
-				// no more keys were found.
-				// If not valid, then the end frame is the current frame (as this means the current frame is being rolled back
-				// If valid, then the end frame is the next invalid one (in case more frames exist), or the current frame in case no more frames exist.
-				uint32_t page_end_frame = (rollback || best_frame == FRAME_MAX) ? current_frame : best_invalid_frame;
-
-				print_animc("\tEnd Frame: " + itos(page_end_frame) + ", " + rtos(page_end_frame * frame_len) + "s");
-
-				// Add finalizer frames and commit pending tracks
-				uint32_t finalizer_local_frame = page_end_frame - base_page_frame;
-
-				uint32_t total_page_size = 0;
-
-				for (uint32_t i = 0; i < data_tracks.size(); i++) {
-					if (data_tracks[i].temp_packets.size() == 0 || (data_tracks[i].temp_packets[data_tracks[i].temp_packets.size() - 1].frame) < finalizer_local_frame) {
-						// Add finalizer frame if it makes sense
-						Vector3i values = _compress_key(tracks_to_compress[i], track_bounds[i], -1, page_end_frame * frame_len);
-
-						bool first_key = data_tracks[i].insert_key(finalizer_local_frame, values);
-						if (first_key) {
-							AnimationCompressionTimeState::Packet p;
-							p.count = 1;
-							p.frame = finalizer_local_frame;
-							p.offset = data_tracks[i].data.size();
-							time_tracks[i].packets.push_back(p);
-						} else {
-							ERR_FAIL_COND(time_tracks[i].packets.size() == 0);
-							time_tracks[i].packets[time_tracks[i].packets.size() - 1].count++;
-						}
-					}
-
-					data_tracks[i].commit_temp_packets();
-					total_page_size += data_tracks[i].data.size();
-					total_page_size += time_tracks[i].packets.size() * 4;
-					total_page_size += track_header_size;
-
-					print_animc("\tTrack " + itos(i) + " time packets: " + itos(time_tracks[i].packets.size()) + " Packet data: " + itos(data_tracks[i].data.size()));
-				}
-
-				print_animc("\tTotal page Size: " + itos(total_page_size) + "/" + itos(p_page_size));
-
-				// Create Page
-				Vector<uint8_t> page_data;
-				page_data.resize(total_page_size);
-				{
-					uint8_t *page_ptr = page_data.ptrw();
-					uint32_t base_offset = data_tracks.size() * track_header_size;
-
-					for (uint32_t i = 0; i < data_tracks.size(); i++) {
-						encode_uint32(base_offset, page_ptr + (track_header_size * i + 0));
-						uint16_t *key_time_ptr = (uint16_t *)(page_ptr + base_offset);
-						for (uint32_t j = 0; j < time_tracks[i].packets.size(); j++) {
-							key_time_ptr[j * 2 + 0] = uint16_t(time_tracks[i].packets[j].frame);
-							uint16_t ptr = time_tracks[i].packets[j].offset / 4;
-							ptr |= (time_tracks[i].packets[j].count - 1) << 12;
-							key_time_ptr[j * 2 + 1] = ptr;
-							base_offset += 4;
-						}
-						encode_uint32(time_tracks[i].packets.size(), page_ptr + (track_header_size * i + 4));
-						encode_uint32(base_offset, page_ptr + (track_header_size * i + 8));
-						memcpy(page_ptr + base_offset, data_tracks[i].data.ptr(), data_tracks[i].data.size());
-						base_offset += data_tracks[i].data.size();
-
-						//reset track
-						data_tracks[i].data.clear();
-						data_tracks[i].temp_packets.clear();
-						data_tracks[i].validated_packet_count = -1;
-
-						time_tracks[i].needs_start_frame = true; //Not required the first time, but from now on it is.
-						time_tracks[i].packets.clear();
-						time_tracks[i].validated_key_index = -1;
-						time_tracks[i].validated_packet_count = 0;
-					}
-				}
-
-				Compression::Page page;
-				page.data = page_data;
-				page.time_offset = base_page_frame * frame_len;
-				compression.pages.push_back(page);
-
-				if (!rollback && best_invalid_frame == FRAME_MAX) {
-					break; // No more pages to add.
-				}
-
-				current_frame = page_end_frame;
-				base_page_frame = page_end_frame;
-
-				continue; // Start over
-			}
-		}
-
-		// A key was found for the current frame and all is ok
-
-		uint32_t comp_track = best_frame_track;
-		Vector3i values;
-
-		if (start_frame) {
-			// Interpolate
-			values = _compress_key(tracks_to_compress[comp_track], track_bounds[comp_track], -1, base_page_frame * frame_len);
-		} else {
-			uint32_t key = time_tracks[comp_track].key_index;
-			values = _compress_key(tracks_to_compress[comp_track], track_bounds[comp_track], key);
-			time_tracks[comp_track].key_index++; //goto next key (but could be rolled back if beyond page size).
-		}
-
-		bool first_key = data_tracks[comp_track].insert_key(best_frame - base_page_frame, values);
-		if (first_key) {
-			AnimationCompressionTimeState::Packet p;
-			p.count = 1;
-			p.frame = best_frame - base_page_frame;
-			p.offset = data_tracks[comp_track].data.size();
-			time_tracks[comp_track].packets.push_back(p);
-		} else {
-			ERR_CONTINUE(time_tracks[comp_track].packets.size() == 0);
-			time_tracks[comp_track].packets[time_tracks[comp_track].packets.size() - 1].count++;
-		}
-	}
-
-	compression.bounds = track_bounds;
-	compression.fps = p_fps;
-	compression.enabled = true;
-
-	for (uint32_t i = 0; i < tracks_to_compress.size(); i++) {
-		Track *t = tracks[tracks_to_compress[i]];
-		t->interpolation = INTERPOLATION_LINEAR; //only linear supported
-		switch (t->type) {
-			case TYPE_BLEND_SHAPE: {
-				BlendShapeTrack *bst = static_cast<BlendShapeTrack *>(t);
-				bst->blend_shapes.clear();
-				bst->compressed_track = i;
-			} break;
-			default: {
-			}
-		}
-	}
-#if 1
-	uint32_t orig_size = 0;
-	for (int i = 0; i < get_track_count(); i++) {
-		switch (track_get_type(i)) {
-			case TYPE_BLEND_SHAPE: {
-				orig_size += sizeof(TKey<float>) * track_get_key_count(i);
-			} break;
-			default: {
-			}
-		}
-	}
-
-	uint32_t new_size = 0;
-	for (const Compression::Page &page : compression.pages) {
-		new_size += page.data.size();
-	}
-
-	print_line("Original size: " + itos(orig_size) + " - Compressed size: " + itos(new_size) + " " + String::num(float(new_size) / float(orig_size) * 100, 2) + "% pages: " + itos(compression.pages.size()));
-#endif
-}
-
-bool Animation::_blend_shape_interpolate_compressed(uint32_t p_compressed_track, double p_time, float &r_ret) const {
-	Vector3i current;
-	Vector3i next;
-	double time_current;
-	double time_next;
-
-	if (!_fetch_compressed<1>(p_compressed_track, p_time, current, time_current, next, time_next)) {
-		return false; //some sort of problem
-	}
-
-	if (time_current >= p_time || time_current == time_next) {
-		r_ret = _uncompress_blend_shape(current);
-	} else if (p_time >= time_next) {
-		r_ret = _uncompress_blend_shape(next);
-	} else {
-		float c = (p_time - time_current) / (time_next - time_current);
-		float from = _uncompress_blend_shape(current);
-		float to = _uncompress_blend_shape(next);
-		r_ret = Math::lerp(from, to, c);
-	}
-
-	return true;
-}
-
-template <uint32_t COMPONENTS>
-bool Animation::_fetch_compressed(uint32_t p_compressed_track, double p_time, Vector3i &r_current_value, double &r_current_time, Vector3i &r_next_value, double &r_next_time, uint32_t *key_index) const {
-	ERR_FAIL_COND_V(!compression.enabled, false);
-	ERR_FAIL_UNSIGNED_INDEX_V(p_compressed_track, compression.bounds.size(), false);
-	p_time = CLAMP(p_time, 0, length);
-	if (key_index) {
-		*key_index = 0;
-	}
-
-	double frame_to_sec = 1.0 / double(compression.fps);
-
-	int32_t page_index = -1;
-	for (uint32_t i = 0; i < compression.pages.size(); i++) {
-		if (compression.pages[i].time_offset > p_time) {
-			break;
-		}
-		page_index = i;
-	}
-
-	ERR_FAIL_COND_V(page_index == -1, false); //should not happen
-
-	double page_base_time = compression.pages[page_index].time_offset;
-	const uint8_t *page_data = compression.pages[page_index].data.ptr();
-	// Little endian assumed. No major big endian hardware exists any longer, but in case it does it will need to be supported.
-	const uint32_t *indices = (const uint32_t *)page_data;
-	const uint16_t *time_keys = (const uint16_t *)&page_data[indices[p_compressed_track * 3 + 0]];
-	uint32_t time_key_count = indices[p_compressed_track * 3 + 1];
-
-	int32_t packet_idx = 0;
-	double packet_time = double(time_keys[0]) * frame_to_sec + page_base_time;
-	uint32_t base_frame = time_keys[0];
-
-	for (uint32_t i = 1; i < time_key_count; i++) {
-		uint32_t f = time_keys[i * 2 + 0];
-		double frame_time = double(f) * frame_to_sec + page_base_time;
-
-		if (frame_time > p_time) {
-			break;
-		}
-
-		if (key_index) {
-			(*key_index) += (time_keys[(i - 1) * 2 + 1] >> 12) + 1;
-		}
-
-		packet_idx = i;
-		packet_time = frame_time;
-		base_frame = f;
-	}
-
-	const uint8_t *data_keys_base = (const uint8_t *)&page_data[indices[p_compressed_track * 3 + 2]];
-
-	uint16_t time_key_data = time_keys[packet_idx * 2 + 1];
-	uint32_t data_offset = (time_key_data & 0xFFF) * 4; // lower 12 bits
-	uint32_t data_count = (time_key_data >> 12) + 1;
-
-	const uint16_t *data_key = (const uint16_t *)(data_keys_base + data_offset);
-
-	uint16_t decode[COMPONENTS];
-	uint16_t decode_next[COMPONENTS];
-
-	for (uint32_t i = 0; i < COMPONENTS; i++) {
-		decode[i] = data_key[i];
-		decode_next[i] = data_key[i];
-	}
-
-	double next_time = packet_time;
-
-	if (p_time > packet_time) { // If its equal or less, then don't bother
-		if (data_count > 1) {
-			//decode forward
-			uint32_t bit_width[COMPONENTS];
-			for (uint32_t i = 0; i < COMPONENTS; i++) {
-				bit_width[i] = (data_key[COMPONENTS] >> (i * 4)) & 0xF;
-			}
-
-			uint32_t frame_bit_width = (data_key[COMPONENTS] >> 12) + 1;
-
-			AnimationCompressionBufferBitsRead buffer;
-
-			buffer.src_data = (const uint8_t *)&data_key[COMPONENTS + 1];
-
-			for (uint32_t i = 1; i < data_count; i++) {
-				uint32_t frame_delta = buffer.read(frame_bit_width);
-				base_frame += frame_delta;
-
-				for (uint32_t j = 0; j < COMPONENTS; j++) {
-					if (bit_width[j] == 0) {
-						continue; // do none
-					}
-					uint32_t valueu = buffer.read(bit_width[j] + 1);
-					bool sign = valueu & (1 << bit_width[j]);
-					int16_t value = valueu & ((1 << bit_width[j]) - 1);
-					if (sign) {
-						value = -value - 1;
-					}
-
-					decode_next[j] += value;
-				}
-
-				next_time = double(base_frame) * frame_to_sec + page_base_time;
-				if (p_time < next_time) {
-					break;
-				}
-
-				packet_time = next_time;
-
-				for (uint32_t j = 0; j < COMPONENTS; j++) {
-					decode[j] = decode_next[j];
-				}
-
-				if (key_index) {
-					(*key_index)++;
-				}
-			}
-		}
-
-		if (p_time > next_time) { // > instead of >= because if its equal, then it will be properly interpolated anyway
-			// So, the last frame found still has a time that is less than the required frame,
-			// will have to interpolate with the first frame of the next timekey.
-
-			if ((uint32_t)packet_idx < time_key_count - 1) { // Safety check but should not matter much, otherwise current next packet is last packet.
-
-				uint16_t time_key_data_next = time_keys[(packet_idx + 1) * 2 + 1];
-				uint32_t data_offset_next = (time_key_data_next & 0xFFF) * 4; // Lower 12 bits
-
-				const uint16_t *data_key_next = (const uint16_t *)(data_keys_base + data_offset_next);
-				base_frame = time_keys[(packet_idx + 1) * 2 + 0];
-				next_time = double(base_frame) * frame_to_sec + page_base_time;
-				for (uint32_t i = 0; i < COMPONENTS; i++) {
-					decode_next[i] = data_key_next[i];
-				}
-			}
-		}
-	}
-
-	r_current_time = packet_time;
-	r_next_time = next_time;
-
-	for (uint32_t i = 0; i < COMPONENTS; i++) {
-		r_current_value[i] = decode[i];
-		r_next_value[i] = decode_next[i];
-	}
-
-	return true;
-}
-
-template <uint32_t COMPONENTS>
-void Animation::_get_compressed_key_indices_in_range(uint32_t p_compressed_track, double p_time, double p_delta, List<int> *r_indices) const {
-	ERR_FAIL_COND(!compression.enabled);
-	ERR_FAIL_UNSIGNED_INDEX(p_compressed_track, compression.bounds.size());
-
-	double frame_to_sec = 1.0 / double(compression.fps);
-	uint32_t key_index = 0;
-
-	for (uint32_t p = 0; p < compression.pages.size(); p++) {
-		if (compression.pages[p].time_offset >= p_time + p_delta) {
-			// Page beyond range
-			return;
-		}
-
-		// Page within range
-
-		uint32_t page_index = p;
-
-		double page_base_time = compression.pages[page_index].time_offset;
-		const uint8_t *page_data = compression.pages[page_index].data.ptr();
-		// Little endian assumed. No major big endian hardware exists any longer, but in case it does it will need to be supported.
-		const uint32_t *indices = (const uint32_t *)page_data;
-		const uint16_t *time_keys = (const uint16_t *)&page_data[indices[p_compressed_track * 3 + 0]];
-		uint32_t time_key_count = indices[p_compressed_track * 3 + 1];
-
-		for (uint32_t i = 0; i < time_key_count; i++) {
-			uint32_t f = time_keys[i * 2 + 0];
-			double frame_time = f * frame_to_sec + page_base_time;
-			if (frame_time >= p_time + p_delta) {
-				return;
-			} else if (frame_time >= p_time) {
-				r_indices->push_back(key_index);
-			}
-
-			key_index++;
-
-			const uint8_t *data_keys_base = (const uint8_t *)&page_data[indices[p_compressed_track * 3 + 2]];
-
-			uint16_t time_key_data = time_keys[i * 2 + 1];
-			uint32_t data_offset = (time_key_data & 0xFFF) * 4; // lower 12 bits
-			uint32_t data_count = (time_key_data >> 12) + 1;
-
-			const uint16_t *data_key = (const uint16_t *)(data_keys_base + data_offset);
-
-			if (data_count > 1) {
-				//decode forward
-				uint32_t bit_width[COMPONENTS];
-				for (uint32_t j = 0; j < COMPONENTS; j++) {
-					bit_width[j] = (data_key[COMPONENTS] >> (j * 4)) & 0xF;
-				}
-
-				uint32_t frame_bit_width = (data_key[COMPONENTS] >> 12) + 1;
-
-				AnimationCompressionBufferBitsRead buffer;
-
-				buffer.src_data = (const uint8_t *)&data_key[COMPONENTS + 1];
-
-				for (uint32_t j = 1; j < data_count; j++) {
-					uint32_t frame_delta = buffer.read(frame_bit_width);
-					f += frame_delta;
-
-					frame_time = f * frame_to_sec + page_base_time;
-					if (frame_time >= p_time + p_delta) {
-						return;
-					} else if (frame_time >= p_time) {
-						r_indices->push_back(key_index);
-					}
-
-					for (uint32_t k = 0; k < COMPONENTS; k++) {
-						if (bit_width[k] == 0) {
-							continue; // do none
-						}
-						buffer.read(bit_width[k] + 1); // skip
-					}
-
-					key_index++;
-				}
-			}
-		}
-	}
-}
-
-int Animation::_get_compressed_key_count(uint32_t p_compressed_track) const {
-	ERR_FAIL_COND_V(!compression.enabled, -1);
-	ERR_FAIL_UNSIGNED_INDEX_V(p_compressed_track, compression.bounds.size(), -1);
-
-	int key_count = 0;
-
-	for (const Compression::Page &page : compression.pages) {
-		const uint8_t *page_data = page.data.ptr();
-		// Little endian assumed. No major big endian hardware exists any longer, but in case it does it will need to be supported.
-		const uint32_t *indices = (const uint32_t *)page_data;
-		const uint16_t *time_keys = (const uint16_t *)&page_data[indices[p_compressed_track * 3 + 0]];
-		uint32_t time_key_count = indices[p_compressed_track * 3 + 1];
-
-		for (uint32_t j = 0; j < time_key_count; j++) {
-			key_count += (time_keys[j * 2 + 1] >> 12) + 1;
-		}
-	}
-
-	return key_count;
-}
-
-float Animation::_uncompress_blend_shape(const Vector3i &p_value) const {
-	float bsn = float(p_value.x) / 65535.0;
-	return (bsn * 2.0 - 1.0) * float(Compression::BLEND_SHAPE_RANGE);
-}
-
-template <uint32_t COMPONENTS>
-bool Animation::_fetch_compressed_by_index(uint32_t p_compressed_track, int p_index, Vector3i &r_value, double &r_time) const {
-	ERR_FAIL_COND_V(!compression.enabled, false);
-	ERR_FAIL_UNSIGNED_INDEX_V(p_compressed_track, compression.bounds.size(), false);
-
-	for (const Compression::Page &page : compression.pages) {
-		const uint8_t *page_data = page.data.ptr();
-		// Little endian assumed. No major big endian hardware exists any longer, but in case it does it will need to be supported.
-		const uint32_t *indices = (const uint32_t *)page_data;
-		const uint16_t *time_keys = (const uint16_t *)&page_data[indices[p_compressed_track * 3 + 0]];
-		uint32_t time_key_count = indices[p_compressed_track * 3 + 1];
-		const uint8_t *data_keys_base = (const uint8_t *)&page_data[indices[p_compressed_track * 3 + 2]];
-
-		for (uint32_t j = 0; j < time_key_count; j++) {
-			uint32_t subkeys = (time_keys[j * 2 + 1] >> 12) + 1;
-			if ((uint32_t)p_index < subkeys) {
-				uint16_t data_offset = (time_keys[j * 2 + 1] & 0xFFF) * 4;
-
-				const uint16_t *data_key = (const uint16_t *)(data_keys_base + data_offset);
-
-				uint16_t frame = time_keys[j * 2 + 0];
-				uint16_t decode[COMPONENTS];
-
-				for (uint32_t k = 0; k < COMPONENTS; k++) {
-					decode[k] = data_key[k];
-				}
-
-				if (p_index > 0) {
-					uint32_t bit_width[COMPONENTS];
-					for (uint32_t k = 0; k < COMPONENTS; k++) {
-						bit_width[k] = (data_key[COMPONENTS] >> (k * 4)) & 0xF;
-					}
-					uint32_t frame_bit_width = (data_key[COMPONENTS] >> 12) + 1;
-
-					AnimationCompressionBufferBitsRead buffer;
-					buffer.src_data = (const uint8_t *)&data_key[COMPONENTS + 1];
-
-					for (int k = 0; k < p_index; k++) {
-						uint32_t frame_delta = buffer.read(frame_bit_width);
-						frame += frame_delta;
-						for (uint32_t l = 0; l < COMPONENTS; l++) {
-							if (bit_width[l] == 0) {
-								continue; // do none
-							}
-							uint32_t valueu = buffer.read(bit_width[l] + 1);
-							bool sign = valueu & (1 << bit_width[l]);
-							int16_t value = valueu & ((1 << bit_width[l]) - 1);
-							if (sign) {
-								value = -value - 1;
-							}
-
-							decode[l] += value;
-						}
-					}
-				}
-
-				r_time = page.time_offset + double(frame) / double(compression.fps);
-				for (uint32_t l = 0; l < COMPONENTS; l++) {
-					r_value[l] = decode[l];
-				}
-
-				return true;
-
-			} else {
-				p_index -= subkeys;
-			}
-		}
-	}
-
-	return false;
-}
 
 // Helper math functions for Variant.
 bool Animation::is_variant_interpolatable(const Variant p_value) {
@@ -4074,9 +2669,6 @@ Variant Animation::add_variant(const Variant &a, const Variant &b) {
 		case Variant::TRANSFORM2D: {
 			return (a.operator Transform2D()) * (b.operator Transform2D());
 		} break;
-		case Variant::TRANSFORM3D: {
-			return (a.operator Transform3D()) * (b.operator Transform3D());
-		} break;
 		case Variant::INT:
 		case Variant::RECT2I:
 		case Variant::VECTOR2I:
@@ -4184,9 +2776,6 @@ Variant Animation::subtract_variant(const Variant &a, const Variant &b) {
 		} break;
 		case Variant::TRANSFORM2D: {
 			return (b.operator Transform2D()).affine_inverse() * (a.operator Transform2D());
-		} break;
-		case Variant::TRANSFORM3D: {
-			return (b.operator Transform3D()).affine_inverse() * (a.operator Transform3D());
 		} break;
 		case Variant::INT:
 		case Variant::RECT2I:
@@ -4308,9 +2897,6 @@ Variant Animation::blend_variant(const Variant &a, const Variant &b, float c) {
 		case Variant::TRANSFORM2D: {
 			return (a.operator Transform2D()) * Transform2D().interpolate_with((b.operator Transform2D()), c);
 		} break;
-		case Variant::TRANSFORM3D: {
-			return (a.operator Transform3D()) * Transform3D().interpolate_with((b.operator Transform3D()), c);
-		} break;
 		case Variant::BOOL:
 		case Variant::INT:
 		case Variant::RECT2I:
@@ -4407,8 +2993,7 @@ Variant Animation::interpolate_variant(const Variant &a, const Variant &b, float
 			return Variant();
 		} break;
 		case Variant::FLOAT: {
-			const double va = a.operator double();
-			return va + ((b.operator double()) - va) * c;
+			return Math::lerp(a.operator double(), b.operator double(), (double)c);
 		} break;
 		case Variant::VECTOR2: {
 			return (a.operator Vector2()).lerp(b.operator Vector2(), c);
@@ -4427,7 +3012,7 @@ Variant Animation::interpolate_variant(const Variant &a, const Variant &b, float
 		case Variant::PLANE: {
 			const Plane pa = a.operator Plane();
 			const Plane pb = b.operator Plane();
-			return Plane(pa.normal.lerp(pb.normal, c), pa.d + (pb.d - pa.d) * c);
+			return Plane(pa.normal.lerp(pb.normal, c), Math::lerp((double)pa.d, (double)pb.d, (double)c));
 		} break;
 		case Variant::COLOR: {
 			return (a.operator Color()).lerp(b.operator Color(), c);
@@ -4442,9 +3027,6 @@ Variant Animation::interpolate_variant(const Variant &a, const Variant &b, float
 		} break;
 		case Variant::TRANSFORM2D: {
 			return (a.operator Transform2D()).interpolate_with(b.operator Transform2D(), c);
-		} break;
-		case Variant::TRANSFORM3D: {
-			return (a.operator Transform3D()).interpolate_with(b.operator Transform3D(), c);
 		} break;
 		case Variant::BOOL:
 		case Variant::INT:
@@ -4524,6 +3106,168 @@ Variant Animation::interpolate_variant(const Variant &a, const Variant &b, float
 						}
 						for (; i < max_size; i++) {
 							result[i] = interpolate_variant(lesser_last, arr_b[i], c);
+						}
+					}
+				}
+				return result;
+			}
+		} break;
+	}
+	return c < 0.5 ? a : b;
+}
+
+Variant Animation::cubic_interpolate_in_time_variant(const Variant &pre_a, const Variant &a, const Variant &b, const Variant &post_b, float c, real_t p_pre_a_t, real_t p_b_t, real_t p_post_b_t, bool p_snap_array_element) {
+	if (pre_a.get_type() != a.get_type() || pre_a.get_type() != b.get_type() || pre_a.get_type() != post_b.get_type()) {
+		if (pre_a.is_num() && a.is_num() && b.is_num() && post_b.is_num()) {
+			return cubic_interpolate_in_time_variant(cast_to_blendwise(pre_a), cast_to_blendwise(a), cast_to_blendwise(b), cast_to_blendwise(post_b), c, p_pre_a_t, p_b_t, p_post_b_t, p_snap_array_element);
+		} else if (!a.is_array()) {
+			return a;
+		}
+	}
+
+	switch (a.get_type()) {
+		case Variant::NIL: {
+			return Variant();
+		} break;
+		case Variant::FLOAT: {
+			return Math::cubic_interpolate_in_time(a.operator double(), b.operator double(), pre_a.operator double(), post_b.operator double(), (double)c, (double)p_b_t, (double)p_pre_a_t, (double)p_post_b_t);
+		} break;
+		case Variant::VECTOR2: {
+			return (a.operator Vector2()).cubic_interpolate_in_time(b.operator Vector2(), pre_a.operator Vector2(), post_b.operator Vector2(), c, p_b_t, p_pre_a_t, p_post_b_t);
+		} break;
+		case Variant::RECT2: {
+			const Rect2 rpa = pre_a.operator Rect2();
+			const Rect2 ra = a.operator Rect2();
+			const Rect2 rb = b.operator Rect2();
+			const Rect2 rpb = post_b.operator Rect2();
+			return Rect2(
+					ra.position.cubic_interpolate_in_time(rb.position, rpa.position, rpb.position, c, p_b_t, p_pre_a_t, p_post_b_t),
+					ra.size.cubic_interpolate_in_time(rb.size, rpa.size, rpb.size, c, p_b_t, p_pre_a_t, p_post_b_t));
+		} break;
+		case Variant::VECTOR3: {
+			return (a.operator Vector3()).cubic_interpolate_in_time(b.operator Vector3(), pre_a.operator Vector3(), post_b.operator Vector3(), c, p_b_t, p_pre_a_t, p_post_b_t);
+		} break;
+		case Variant::VECTOR4: {
+			return (a.operator Vector4()).cubic_interpolate_in_time(b.operator Vector4(), pre_a.operator Vector4(), post_b.operator Vector4(), c, p_b_t, p_pre_a_t, p_post_b_t);
+		} break;
+		case Variant::PLANE: {
+			const Plane ppa = pre_a.operator Plane();
+			const Plane pa = a.operator Plane();
+			const Plane pb = b.operator Plane();
+			const Plane ppb = post_b.operator Plane();
+			return Plane(
+					pa.normal.cubic_interpolate_in_time(pb.normal, ppa.normal, ppb.normal, c, p_b_t, p_pre_a_t, p_post_b_t),
+					Math::cubic_interpolate_in_time((double)pa.d, (double)pb.d, (double)ppa.d, (double)ppb.d, (double)c, (double)p_b_t, (double)p_pre_a_t, (double)p_post_b_t));
+		} break;
+		case Variant::COLOR: {
+			const Color cpa = pre_a.operator Color();
+			const Color ca = a.operator Color();
+			const Color cb = b.operator Color();
+			const Color cpb = post_b.operator Color();
+			return Color(
+					Math::cubic_interpolate_in_time((double)ca.r, (double)cb.r, (double)cpa.r, (double)cpb.r, (double)c, (double)p_b_t, (double)p_pre_a_t, (double)p_post_b_t),
+					Math::cubic_interpolate_in_time((double)ca.g, (double)cb.g, (double)cpa.g, (double)cpb.g, (double)c, (double)p_b_t, (double)p_pre_a_t, (double)p_post_b_t),
+					Math::cubic_interpolate_in_time((double)ca.b, (double)cb.b, (double)cpa.b, (double)cpb.b, (double)c, (double)p_b_t, (double)p_pre_a_t, (double)p_post_b_t),
+					Math::cubic_interpolate_in_time((double)ca.a, (double)cb.a, (double)cpa.a, (double)cpb.a, (double)c, (double)p_b_t, (double)p_pre_a_t, (double)p_post_b_t));
+		} break;
+		case Variant::AABB: {
+			const ::AABB apa = pre_a.operator ::AABB();
+			const ::AABB aa = a.operator ::AABB();
+			const ::AABB ab = b.operator ::AABB();
+			const ::AABB apb = post_b.operator ::AABB();
+			return AABB(
+					aa.position.cubic_interpolate_in_time(ab.position, apa.position, apb.position, c, p_b_t, p_pre_a_t, p_post_b_t),
+					aa.size.cubic_interpolate_in_time(ab.size, apa.size, apb.size, c, p_b_t, p_pre_a_t, p_post_b_t));
+		} break;
+		case Variant::BASIS: {
+			const Basis bpa = pre_a.operator Basis();
+			const Basis ba = a.operator Basis();
+			const Basis bb = b.operator Basis();
+			const Basis bpb = post_b.operator Basis();
+			return Basis(
+					ba.rows[0].cubic_interpolate_in_time(bb.rows[0], bpa.rows[0], bpb.rows[0], c, p_b_t, p_pre_a_t, p_post_b_t),
+					ba.rows[1].cubic_interpolate_in_time(bb.rows[1], bpa.rows[1], bpb.rows[1], c, p_b_t, p_pre_a_t, p_post_b_t),
+					ba.rows[2].cubic_interpolate_in_time(bb.rows[2], bpa.rows[2], bpb.rows[2], c, p_b_t, p_pre_a_t, p_post_b_t));
+		} break;
+		case Variant::BOOL:
+		case Variant::INT:
+		case Variant::RECT2I:
+		case Variant::VECTOR2I:
+		case Variant::VECTOR3I:
+		case Variant::VECTOR4I:
+		case Variant::PACKED_INT32_ARRAY:
+		case Variant::PACKED_INT64_ARRAY: {
+			// Fallback the interpolatable value which needs casting.
+			return cast_from_blendwise(cubic_interpolate_in_time_variant(cast_to_blendwise(pre_a), cast_to_blendwise(a), cast_to_blendwise(b), cast_to_blendwise(post_b), c, p_pre_a_t, p_b_t, p_post_b_t, p_snap_array_element), a.get_type());
+		} break;
+		case Variant::STRING:
+		case Variant::STRING_NAME: {
+			// TODO:
+			// String interpolation works on both the character array size and the character code, to apply cubic interpolation neatly,
+			// we need to figure out how to interpolate well in cases where there are fewer than 4 keys. So, for now, fallback to linear interpolation.
+			return interpolate_variant(a, b, c);
+		} break;
+		case Variant::PACKED_BYTE_ARRAY: {
+			// Skip.
+		} break;
+		default: {
+			if (a.is_array()) {
+				const Array arr_pa = pre_a.operator Array();
+				const Array arr_a = a.operator Array();
+				const Array arr_b = b.operator Array();
+				const Array arr_pb = post_b.operator Array();
+
+				int min_size = arr_a.size();
+				int max_size = arr_b.size();
+				bool is_a_larger = inform_variant_array(min_size, max_size);
+
+				Array result;
+				result.set_typed(MAX(arr_a.get_typed_builtin(), arr_b.get_typed_builtin()), StringName(), Variant());
+				result.resize(min_size);
+
+				if (min_size == 0 && max_size == 0) {
+					return result;
+				}
+
+				Variant vz;
+				if (is_a_larger) {
+					vz = arr_a[0];
+				} else {
+					vz = arr_b[0];
+				}
+				vz.zero();
+				Variant pre_last = arr_pa.size() ? arr_pa[arr_pa.size() - 1] : vz;
+				Variant post_last = arr_pb.size() ? arr_pb[arr_pb.size() - 1] : vz;
+
+				int i = 0;
+				for (; i < min_size; i++) {
+					result[i] = cubic_interpolate_in_time_variant(i >= arr_pa.size() ? pre_last : arr_pa[i], arr_a[i], arr_b[i], i >= arr_pb.size() ? post_last : arr_pb[i], c, p_pre_a_t, p_b_t, p_post_b_t);
+				}
+				if (min_size != max_size) {
+					// Process with last element of the lesser array.
+					// This is pretty funny and bizarre, but artists like to use it for polygon animation.
+					Variant lesser_last = vz;
+					if (is_a_larger && !Math::is_equal_approx(c, 1.0f)) {
+						result.resize(max_size);
+						if (p_snap_array_element) {
+							c = 0;
+						}
+						if (i > 0) {
+							lesser_last = arr_b[i - 1];
+						}
+						for (; i < max_size; i++) {
+							result[i] = cubic_interpolate_in_time_variant(i >= arr_pa.size() ? pre_last : arr_pa[i], arr_a[i], lesser_last, i >= arr_pb.size() ? post_last : arr_pb[i], c, p_pre_a_t, p_b_t, p_post_b_t);
+						}
+					} else if (!is_a_larger && !Math::is_zero_approx(c)) {
+						result.resize(max_size);
+						if (p_snap_array_element) {
+							c = 1;
+						}
+						if (i > 0) {
+							lesser_last = arr_a[i - 1];
+						}
+						for (; i < max_size; i++) {
+							result[i] = cubic_interpolate_in_time_variant(i >= arr_pa.size() ? pre_last : arr_pa[i], lesser_last, arr_b[i], i >= arr_pb.size() ? post_last : arr_pb[i], c, p_pre_a_t, p_b_t, p_post_b_t);
 						}
 					}
 				}

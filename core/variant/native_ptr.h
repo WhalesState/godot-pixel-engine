@@ -2,10 +2,9 @@
 /*  native_ptr.h                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -35,7 +34,7 @@
 #include "core/variant/method_ptrcall.h"
 #include "core/variant/type_info.h"
 
-template <class T>
+template <typename T>
 struct GDExtensionConstPtr {
 	const T *data = nullptr;
 	GDExtensionConstPtr(const T *p_assign) { data = p_assign; }
@@ -44,7 +43,7 @@ struct GDExtensionConstPtr {
 	operator Variant() const { return uint64_t(data); }
 };
 
-template <class T>
+template <typename T>
 struct GDExtensionPtr {
 	T *data = nullptr;
 	GDExtensionPtr(T *p_assign) { data = p_assign; }
@@ -95,7 +94,7 @@ struct GDExtensionPtr {
 		static _FORCE_INLINE_ void set(Variant *v, const GDExtensionPtr<m_type> &p_value) { *VariantInternal::get_int(v) = uint64_t(p_value.data); }                                               \
 	};
 
-template <class T>
+template <typename T>
 struct GetTypeInfo<GDExtensionConstPtr<T>> {
 	static const Variant::Type VARIANT_TYPE = Variant::NIL;
 	static const GodotTypeInfo::Metadata METADATA = GodotTypeInfo::METADATA_NONE;
@@ -104,7 +103,7 @@ struct GetTypeInfo<GDExtensionConstPtr<T>> {
 	}
 };
 
-template <class T>
+template <typename T>
 struct GetTypeInfo<GDExtensionPtr<T>> {
 	static const Variant::Type VARIANT_TYPE = Variant::NIL;
 	static const GodotTypeInfo::Metadata METADATA = GodotTypeInfo::METADATA_NONE;
@@ -113,7 +112,7 @@ struct GetTypeInfo<GDExtensionPtr<T>> {
 	}
 };
 
-template <class T>
+template <typename T>
 struct PtrToArg<GDExtensionConstPtr<T>> {
 	_FORCE_INLINE_ static GDExtensionConstPtr<T> convert(const void *p_ptr) {
 		return GDExtensionConstPtr<T>(reinterpret_cast<const T *>(p_ptr));
@@ -123,7 +122,7 @@ struct PtrToArg<GDExtensionConstPtr<T>> {
 		*((const T **)p_ptr) = p_val.data;
 	}
 };
-template <class T>
+template <typename T>
 struct PtrToArg<GDExtensionPtr<T>> {
 	_FORCE_INLINE_ static GDExtensionPtr<T> convert(const void *p_ptr) {
 		return GDExtensionPtr<T>(reinterpret_cast<const T *>(p_ptr));

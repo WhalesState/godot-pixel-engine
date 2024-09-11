@@ -2,10 +2,9 @@
 /*  key_mapping_macos.h                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -46,6 +45,7 @@ public:
 	static Key translate_key(unsigned int p_key);
 	static unsigned int unmap_key(Key p_key);
 	static Key remap_key(unsigned int p_key, unsigned int p_state, bool p_unicode);
+	static KeyLocation translate_location(unsigned int p_key);
 
 	// Mapping for menu shortcuts.
 	static String keycode_get_native_string(Key p_keycode);

@@ -2,10 +2,9 @@
 /*  godot_menu_item.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -37,6 +36,9 @@
 #import <AppKit/AppKit.h>
 #import <Foundation/Foundation.h>
 
+#define MENU_TAG_START 0x00004447
+#define MENU_TAG_END 0xFFFF4447
+
 enum GlobalMenuCheckType {
 	CHECKABLE_TYPE_NONE,
 	CHECKABLE_TYPE_CHECK_BOX,
@@ -50,6 +52,7 @@ enum GlobalMenuCheckType {
 	Callable hover_callback;
 	Variant meta;
 	GlobalMenuCheckType checkable_type;
+	bool checked;
 	int max_states;
 	int state;
 	Ref<Image> img;

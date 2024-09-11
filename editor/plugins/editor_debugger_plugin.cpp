@@ -2,10 +2,9 @@
 /*  editor_debugger_plugin.cpp                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -33,7 +32,7 @@
 
 #include "editor/debugger/script_editor_debugger.h"
 
-void EditorDebuggerSession::_breaked(bool p_really_did, bool p_can_debug, String p_message, bool p_has_stackdump) {
+void EditorDebuggerSession::_breaked(bool p_really_did, bool p_can_debug, const String &p_message, bool p_has_stackdump) {
 	if (p_really_did) {
 		emit_signal(SNAME("breaked"), p_can_debug);
 	} else {
@@ -57,6 +56,7 @@ void EditorDebuggerSession::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_active"), &EditorDebuggerSession::is_active);
 	ClassDB::bind_method(D_METHOD("add_session_tab", "control"), &EditorDebuggerSession::add_session_tab);
 	ClassDB::bind_method(D_METHOD("remove_session_tab", "control"), &EditorDebuggerSession::remove_session_tab);
+	ClassDB::bind_method(D_METHOD("set_breakpoint", "path", "line", "enabled"), &EditorDebuggerSession::set_breakpoint);
 
 	ADD_SIGNAL(MethodInfo("started"));
 	ADD_SIGNAL(MethodInfo("stopped"));
@@ -101,6 +101,11 @@ bool EditorDebuggerSession::is_active() {
 	return debugger->is_session_active();
 }
 
+void EditorDebuggerSession::set_breakpoint(const String &p_path, int p_line, bool p_enabled) {
+	ERR_FAIL_NULL_MSG(debugger, "Plugin is not attached to debugger.");
+	debugger->set_breakpoint(p_path, p_line, p_enabled);
+}
+
 void EditorDebuggerSession::detach_debugger() {
 	if (!debugger) {
 		return;
@@ -141,8 +146,8 @@ EditorDebuggerPlugin::~EditorDebuggerPlugin() {
 }
 
 void EditorDebuggerPlugin::clear() {
-	for (int i = 0; i < sessions.size(); i++) {
-		sessions[i]->detach_debugger();
+	for (Ref<EditorDebuggerSession> &session : sessions) {
+		session->detach_debugger();
 	}
 	sessions.clear();
 }
@@ -158,13 +163,13 @@ void EditorDebuggerPlugin::setup_session(int p_idx) {
 
 Ref<EditorDebuggerSession> EditorDebuggerPlugin::get_session(int p_idx) {
 	ERR_FAIL_INDEX_V(p_idx, sessions.size(), nullptr);
-	return sessions[p_idx];
+	return sessions.get(p_idx);
 }
 
 Array EditorDebuggerPlugin::get_sessions() {
 	Array ret;
-	for (int i = 0; i < sessions.size(); i++) {
-		ret.push_back(sessions[i]);
+	for (const Ref<EditorDebuggerSession> &session : sessions) {
+		ret.push_back(session);
 	}
 	return ret;
 }
@@ -185,10 +190,31 @@ bool EditorDebuggerPlugin::capture(const String &p_message, const Array &p_data,
 	return false;
 }
 
+void EditorDebuggerPlugin::goto_script_line(const Ref<Script> &p_script, int p_line) {
+	GDVIRTUAL_CALL(_goto_script_line, p_script, p_line);
+}
+
+void EditorDebuggerPlugin::breakpoints_cleared_in_tree() {
+	GDVIRTUAL_CALL(_breakpoints_cleared_in_tree);
+}
+
+void EditorDebuggerPlugin::breakpoint_set_in_tree(const Ref<Script> &p_script, int p_line, bool p_enabled) {
+	GDVIRTUAL_CALL(_breakpoint_set_in_tree, p_script, p_line, p_enabled);
+}
+
 void EditorDebuggerPlugin::_bind_methods() {
 	GDVIRTUAL_BIND(_setup_session, "session_id");
 	GDVIRTUAL_BIND(_has_capture, "capture");
 	GDVIRTUAL_BIND(_capture, "message", "data", "session_id");
+	GDVIRTUAL_BIND(_goto_script_line, "script", "line");
+	GDVIRTUAL_BIND(_breakpoints_cleared_in_tree);
+	GDVIRTUAL_BIND(_breakpoint_set_in_tree, "script", "line", "enabled");
 	ClassDB::bind_method(D_METHOD("get_session", "id"), &EditorDebuggerPlugin::get_session);
 	ClassDB::bind_method(D_METHOD("get_sessions"), &EditorDebuggerPlugin::get_sessions);
+}
+
+EditorDebuggerPlugin::EditorDebuggerPlugin() {
+	EditorDebuggerNode::get_singleton()->connect("goto_script_line", callable_mp(this, &EditorDebuggerPlugin::goto_script_line));
+	EditorDebuggerNode::get_singleton()->connect("breakpoints_cleared_in_tree", callable_mp(this, &EditorDebuggerPlugin::breakpoints_cleared_in_tree));
+	EditorDebuggerNode::get_singleton()->connect("breakpoint_set_in_tree", callable_mp(this, &EditorDebuggerPlugin::breakpoint_set_in_tree));
 }

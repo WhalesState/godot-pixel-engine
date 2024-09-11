@@ -2,10 +2,9 @@
 /*  editor_quick_open.h                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -64,7 +63,7 @@ class EditorQuickOpen : public ConfirmationDialog {
 
 	void _update_search();
 	void _build_search_cache(EditorFileSystemDirectory *p_efsd);
-	float _score_path(const String &p_search, const String &p_path);
+	float _score_search_result(const PackedStringArray &p_search_tokens, const String &p_path);
 
 	void _confirmed();
 	virtual void cancel_pressed() override;

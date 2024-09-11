@@ -1,19 +1,19 @@
-func print_enum(e: BoxContainer.AlignmentMode) -> BoxContainer.AlignmentMode:
+func print_enum(e: TileSet.TileShape) -> TileSet.TileShape:
 	print(e)
 	return e
 
 func test():
-	var v: BoxContainer.AlignmentMode
-	v = BoxContainer.ALIGNMENT_BEGIN
+	var v: TileSet.TileShape
+	v = TileSet.TILE_SHAPE_SQUARE
 	v = print_enum(v)
-	v = print_enum(BoxContainer.ALIGNMENT_BEGIN)
-	v = BoxContainer.AlignmentMode.ALIGNMENT_BEGIN
+	v = print_enum(TileSet.TILE_SHAPE_SQUARE)
+	v = TileSet.TileShape.TILE_SHAPE_SQUARE
 	v = print_enum(v)
-	v = print_enum(BoxContainer.AlignmentMode.ALIGNMENT_BEGIN)
+	v = print_enum(TileSet.TileShape.TILE_SHAPE_SQUARE)
 
-	v = BoxContainer.ALIGNMENT_CENTER
+	v = TileSet.TILE_SHAPE_ISOMETRIC
 	v = print_enum(v)
-	v = print_enum(BoxContainer.ALIGNMENT_CENTER)
-	v = BoxContainer.AlignmentMode.ALIGNMENT_CENTER
+	v = print_enum(TileSet.TILE_SHAPE_ISOMETRIC)
+	v = TileSet.TileShape.TILE_SHAPE_ISOMETRIC
 	v = print_enum(v)
-	v = print_enum(BoxContainer.AlignmentMode.ALIGNMENT_CENTER)
+	v = print_enum(TileSet.TileShape.TILE_SHAPE_ISOMETRIC)

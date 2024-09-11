@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <class name="ResourceImporterTexture" inherits="ResourceImporter" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
 	<brief_description>
+		Imports an image for use in 2D or 3D rendering.
 	</brief_description>
 	<description>
+		This importer imports [CompressedTexture2D] resources. If you need to process the image in scripts in a more convenient way, use [ResourceImporterImage] instead. See also [ResourceImporterLayeredTexture].
 	</description>
 	<tutorials>
+		<link title="Importing images">$DOCS_URL/tutorials/assets_pipeline/importing_images.html</link>
 	</tutorials>
 	<members>
 		<member name="compress/channel_pack" type="int" setter="" getter="" default="0">
@@ -15,7 +18,7 @@
 		<member name="compress/high_quality" type="bool" setter="" getter="" default="false">
 			If [code]true[/code], uses BPTC compression on desktop platforms and ASTC compression on mobile platforms. When using BPTC, BC7 is used for SDR textures and BC6H is used for HDR textures.
 			If [code]false[/code], uses the faster but lower-quality S3TC compression on desktop platforms and ETC2 on mobile/web platforms. When using S3TC, DXT1 (BC1) is used for opaque textures and DXT5 (BC3) is used for transparent or normal map (RGTC) textures.
-			BPTC and ASTC support VRAM compression for HDR textures, but S3TC and ETC2 do not compress/hdr_compression).
+			BPTC and ASTC support VRAM compression for HDR textures, but S3TC and ETC2 do not (see [member compress/hdr_compression]).
 		</member>
 		<member name="compress/lossy_quality" type="float" setter="" getter="" default="0.7">
 			The quality to use when using the [b]Lossy[/b] compression mode. Higher values result in better quality, at the cost of larger file sizes. Lossy quality does not affect memory usage of the imported texture, only its file size on disk.
@@ -26,6 +29,7 @@
 			[b]Lossy:[/b] Reduced quality, high memory usage, low size on disk, fast import.
 			[b]VRAM Compressed:[/b] Reduced quality, low memory usage, low size on disk, slowest import. Only use for textures in 3D scenes, not for 2D elements.
 			[b]VRAM Uncompressed:[/b] Original quality, high memory usage, highest size on disk, fastest import.
+			[b]Basis Universal:[/b] Reduced quality, low memory usage, lowest size on disk, slow import. Only use for textures in 3D scenes, not for 2D elements.
 			See [url=$DOCS_URL/tutorials/assets_pipeline/importing_images.html#compress-mode]Compress mode[/url] in the manual for more details.
 		</member>
 		<member name="compress/normal_map" type="int" setter="" getter="" default="0">
@@ -34,7 +38,7 @@
 		</member>
 		<member name="detect_3d/compress_to" type="int" setter="" getter="" default="1">
 			This changes the [member compress/mode] option that is used when a texture is detected as being used in 3D.
-			Changing this import option only has an effect if a texture is detected as being used in 3D. Changing this to [b]Disabled[/b] then reimporting will not change the existing compress mode on a texture (if it's detected to be used in 3D), but choosing [b]VRAM Compressed[/b] will.
+			Changing this import option only has an effect if a texture is detected as being used in 3D. Changing this to [b]Disabled[/b] then reimporting will not change the existing compress mode on a texture (if it's detected to be used in 3D), but choosing [b]VRAM Compressed[/b] or [b]Basis Universal[/b] will.
 		</member>
 		<member name="editor/convert_colors_with_editor_theme" type="bool" setter="" getter="" default="false">
 			If [code]true[/code], converts the imported image's colors to match [member EditorSettings.interface/theme/icon_and_font_color]. This assumes the image uses the exact same colors as [url=$DOCS_URL/contributing/development/editor/creating_icons.html]Godot's own color palette for editor icons[/url], with the source file designed for a dark editor theme. This should be enabled for editor plugin icons and custom class icons, but should be left disabled otherwise.
@@ -55,17 +59,8 @@
 			Unimplemented. This currently has no effect when changed.
 		</member>
 		<member name="process/fix_alpha_border" type="bool" setter="" getter="" default="true">
-			If [code]true[/code], puts pixels of the same surrounding color in transition from transparent to opaque areas. For textures displayed with bilinear filtering, this helps mitigate the outline effect when exporting images from an image editor.
+			If [code]true[/code], puts pixels of the same surrounding color in transition from transparent to opaque areas. For textures displayed with bilinear filtering, this helps to reduce the outline effect when exporting images from an image editor.
 			It's recommended to leave this enabled (as it is by default), unless this causes issues for a particular image.
-		</member>
-		<member name="process/hdr_as_srgb" type="bool" setter="" getter="" default="false">
-			Some HDR images you can find online may be broken and contain sRGB color data (instead of linear color data). It is advised not to use those files. If you absolutely have to, enabling [member process/hdr_as_srgb] will make them look correct.
-			[b]Warning:[/b] Enabling [member process/hdr_as_srgb] on well-formatted HDR images will cause the resulting image to look too dark, so leave this on [code]false[/code] if unsure.
-		</member>
-		<member name="process/hdr_clamp_exposure" type="bool" setter="" getter="" default="false">
-			If [code]true[/code], clamps exposure in the imported high dynamic range images using a smart clamping formula (without introducing [i]visible[/i] clipping).
-			Some HDR panorama images you can find online may contain extremely bright pixels, due to being taken from real life sources without any clipping.
-			While these HDR panorama images are accurate to real life, this can cause the radiance map generated by Godot to contain sparkles when used as a background sky. This can be seen in material reflections (even on rough materials in extreme cases). Enabling [member process/hdr_clamp_exposure] can resolve this.
 		</member>
 		<member name="process/normal_map_invert_y" type="bool" setter="" getter="" default="false">
 			If [code]true[/code], convert the normal map from Y- (DirectX-style) to Y+ (OpenGL-style) by inverting its green color channel. This is the normal map convention expected by Godot.
@@ -73,8 +68,8 @@
 		</member>
 		<member name="process/premult_alpha" type="bool" setter="" getter="" default="false">
 			An alternative to fixing darkened borders with [member process/fix_alpha_border] is to use premultiplied alpha. By enabling this option, the texture will be converted to this format. A premultiplied alpha texture requires specific materials to be displayed correctly:
-			- In 2D, a [CanvasItemMaterial] will need to be created and configured to use the [constant CanvasItemMaterial.BLEND_MODE_PREMULT_ALPHA] blend mode on [CanvasItem]s that use this texture.
-			- In 3D, there is no support for premultiplied alpha blend mode yet, so this option is only suited for 2D.
+			- In 2D, a [CanvasItemMaterial] will need to be created and configured to use the [constant CanvasItemMaterial.BLEND_MODE_PREMULT_ALPHA] blend mode on [CanvasItem]s that use this texture. In custom [code]@canvas_item[/code] shaders, [code]render_mode blend_premul_alpha;[/code] should be used.
+			- In 3D, a [BaseMaterial3D] will need to be created and configured to use the [constant BaseMaterial3D.BLEND_MODE_PREMULT_ALPHA] blend mode on materials that use this texture. In custom [code]spatial[/code] shaders, [code]render_mode blend_premul_alpha;[/code] should be used.
 		</member>
 		<member name="process/size_limit" type="int" setter="" getter="" default="0">
 			If set to a value greater than [code]0[/code], the size of the texture is limited on import to a value smaller than or equal to the value specified here. For non-square textures, the size limit affects the longer dimension, with the shorter dimension scaled to preserve aspect ratio. Resizing is performed using cubic interpolation.

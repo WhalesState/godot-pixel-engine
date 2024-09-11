@@ -2,10 +2,9 @@
 /*  variant_construct.cpp                                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -42,7 +41,7 @@ struct VariantConstructData {
 
 static LocalVector<VariantConstructData> construct_data[Variant::VARIANT_MAX];
 
-template <class T>
+template <typename T>
 static void add_constructor(const Vector<String> &arg_names) {
 	ERR_FAIL_COND_MSG(arg_names.size() != T::get_argument_count(), "Argument names size mismatch for " + Variant::get_type_name(T::get_base_type()) + ".");
 
@@ -147,15 +146,9 @@ void Variant::_register_variant_constructors() {
 	add_constructor<VariantConstructor<Basis, Vector3, double>>(sarray("axis", "angle"));
 	add_constructor<VariantConstructor<Basis, Vector3, Vector3, Vector3>>(sarray("x_axis", "y_axis", "z_axis"));
 
-	add_constructor<VariantConstructNoArgs<Transform3D>>(sarray());
-	add_constructor<VariantConstructor<Transform3D, Transform3D>>(sarray("from"));
-	add_constructor<VariantConstructor<Transform3D, Basis, Vector3>>(sarray("basis", "origin"));
-	add_constructor<VariantConstructor<Transform3D, Vector3, Vector3, Vector3, Vector3>>(sarray("x_axis", "y_axis", "z_axis", "origin"));
-	add_constructor<VariantConstructor<Transform3D, Projection>>(sarray("from"));
-
 	add_constructor<VariantConstructNoArgs<Projection>>(sarray());
 	add_constructor<VariantConstructor<Projection, Projection>>(sarray("from"));
-	add_constructor<VariantConstructor<Projection, Transform3D>>(sarray("from"));
+	add_constructor<VariantConstructor<Projection, Transform2D>>(sarray("from"));
 	add_constructor<VariantConstructor<Projection, Vector4, Vector4, Vector4, Vector4>>(sarray("x_axis", "y_axis", "z_axis", "w_axis"));
 
 	add_constructor<VariantConstructNoArgs<Color>>(sarray());
@@ -191,6 +184,7 @@ void Variant::_register_variant_constructors() {
 
 	add_constructor<VariantConstructNoArgs<Dictionary>>(sarray());
 	add_constructor<VariantConstructor<Dictionary, Dictionary>>(sarray("from"));
+	add_constructor<VariantConstructorTypedDictionary>(sarray("base", "key_type", "key_class_name", "key_script", "value_type", "value_class_name", "value_script"));
 
 	add_constructor<VariantConstructNoArgs<Array>>(sarray());
 	add_constructor<VariantConstructor<Array, Array>>(sarray("from"));

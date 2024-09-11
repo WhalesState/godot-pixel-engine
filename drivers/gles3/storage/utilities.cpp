@@ -2,10 +2,9 @@
 /*  utilities.cpp                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -83,6 +82,21 @@ Utilities::~Utilities() {
 		}
 	}
 
+	if (render_buffer_mem_cache) {
+		uint32_t leaked_data_size = 0;
+		for (const KeyValue<GLuint, ResourceAllocation> &E : render_buffer_allocs_cache) {
+#ifdef DEV_ENABLED
+			ERR_PRINT(E.value.name + ": leaked " + itos(E.value.size) + " bytes.");
+#else
+			ERR_PRINT("Render buffer with GL ID of " + itos(E.key) + ": leaked " + itos(E.value.size) + " bytes.");
+#endif
+			leaked_data_size += E.value.size;
+		}
+		if (leaked_data_size < render_buffer_mem_cache) {
+			ERR_PRINT("Render buffer cache is not empty. There may be an additional render buffer leak of " + itos(render_buffer_mem_cache - leaked_data_size) + " bytes.");
+		}
+	}
+
 	if (buffer_mem_cache) {
 		uint32_t leaked_data_size = 0;
 
@@ -130,10 +144,6 @@ Vector<uint8_t> Utilities::buffer_get_data(GLenum p_target, GLuint p_buffer, uin
 
 /* INSTANCES */
 
-RS::InstanceType Utilities::get_base_type(RID p_rid) const {
-	return RS::INSTANCE_NONE;
-}
-
 bool Utilities::free(RID p_rid) {
 	if (GLES3::TextureStorage::get_singleton()->owns_render_target(p_rid)) {
 		GLES3::TextureStorage::get_singleton()->render_target_free(p_rid);
@@ -153,11 +163,6 @@ bool Utilities::free(RID p_rid) {
 	} else {
 		return false;
 	}
-}
-
-/* DEPENDENCIES */
-
-void Utilities::base_update_dependency(RID p_base, DependencyTracker *p_instance) {
 }
 
 /* TIMING */
@@ -262,7 +267,7 @@ bool Utilities::has_os_feature(const String &p_feature) const {
 		return config->astc_supported;
 	}
 
-	if (p_feature == "etc" || p_feature == "etc2") {
+	if (p_feature == "etc2") {
 		return config->etc2_supported;
 	}
 
@@ -274,11 +279,11 @@ void Utilities::update_memory_info() {
 
 uint64_t Utilities::get_rendering_info(RS::RenderingInfo p_info) {
 	if (p_info == RS::RENDERING_INFO_TEXTURE_MEM_USED) {
-		return texture_mem_cache;
+		return texture_mem_cache + render_buffer_mem_cache; // Add render buffer memory to our texture mem.
 	} else if (p_info == RS::RENDERING_INFO_BUFFER_MEM_USED) {
 		return buffer_mem_cache;
 	} else if (p_info == RS::RENDERING_INFO_VIDEO_MEM_USED) {
-		return texture_mem_cache + buffer_mem_cache;
+		return texture_mem_cache + buffer_mem_cache + render_buffer_mem_cache;
 	}
 	return 0;
 }
@@ -301,10 +306,7 @@ String Utilities::get_video_adapter_api_version() const {
 
 Size2i Utilities::get_maximum_viewport_size() const {
 	Config *config = Config::get_singleton();
-	if (!config) {
-		return Size2i();
-	}
-
+	ERR_FAIL_NULL_V(config, Size2i());
 	return Size2i(config->max_viewport_size[0], config->max_viewport_size[1]);
 }
 

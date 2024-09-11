@@ -2,10 +2,9 @@
 /*  image_loader_png.h                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -38,6 +37,7 @@ class ImageLoaderPNG : public ImageFormatLoader {
 private:
 	static Vector<uint8_t> lossless_pack_png(const Ref<Image> &p_image);
 	static Ref<Image> lossless_unpack_png(const Vector<uint8_t> &p_data);
+	static Ref<Image> unpack_mem_png(const uint8_t *p_png, int p_size);
 	static Ref<Image> load_mem_png(const uint8_t *p_png, int p_size);
 
 public:

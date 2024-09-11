@@ -51,14 +51,12 @@ complete -c godot -s p -l project-manager -d "Start the project manager, even if
 complete -c godot -l debug-server -d "Start the editor debug server (<protocol>://<host/IP>[:<port>] address)" -x
 complete -c godot -l quit -d "Quit after the first iteration"
 complete -c godot -s l -l language -d "Use a specific locale (<locale> being a two-letter code)" -x
-complete -c godot -l path -d "Path to a project (<directory> must contain a 'project.pixel_designer' file)" -r
-complete -c godot -s u -l upwards -d "Scan folders upwards for project.pixel_designer file"
+complete -c godot -l path -d "Path to a project (<directory> must contain a 'project.godot' file)" -r
+complete -c godot -s u -l upwards -d "Scan folders upwards for project.godot file"
 complete -c godot -l main-pack -d "Path to a pack (.pck) file to load" -r
 complete -c godot -l render-thread -d "Set the render thread mode" -x -a "unsafe safe separate"
 complete -c godot -l remote-fs -d "Use a remote filesystem (<host/IP>[:<port>] address)" -x
 complete -c godot -l remote-fs-password -d "Password for remote filesystem" -x
-complete -c godot -l audio-driver -d "Set the audio driver" -x
-complete -c godot -l audio-output-latency -d "Override audio output latency in milliseconds (default is 15 ms)" -x
 complete -c godot -l display-driver -d "Set the display driver" -x
 complete -c godot -l rendering-method -d "Set the renderer" -x -a "(godot_rendering_method_args)"
 complete -c godot -l rendering-driver -d "Set the rendering driver" -x -a "(godot_rendering_driver_args)"
@@ -66,7 +64,7 @@ complete -c godot -l gpu-index -d "Use a specific GPU (run with --verbose to get
 complete -c godot -l text-driver -d "Set the text driver" -x
 complete -c godot -l tablet-driver -d "Set the pen tablet input driver" -x
 complete -c godot -l headless -d "Enable headless mode (--display-driver headless --audio-driver Dummy). Useful for servers and with --script"
-complete -c godot -l write-movie -d "Writes a video to the specified path (usually with .avi or .png extension). --fixed-fps is forced when enabled" -x
+complete -c godot -l log-file -d "Write output/error log to the specified path instead of the default location defined by the project" -x
 
 # Display options:
 complete -c godot -s f -l fullscreen -d "Request fullscreen mode"
@@ -85,8 +83,6 @@ complete -c godot -l gpu-profile -d "Show a GPU profile of the tasks that took t
 complete -c godot -l gpu-validation -d "Enable graphics API validation layers for debugging"
 complete -c godot -l gpu-abort -d "Abort on graphics API usage errors (usually validation layer errors)"
 complete -c godot -l remote-debug -d "Enable remote debugging"
-complete -c godot -l debug-collisions -d "Show collision shapes when running the scene"
-complete -c godot -l debug-navigation -d "Show navigation polygons when running the scene"
 complete -c godot -l debug-stringnames -d "Print all StringName allocations to stdout when the engine quits"
 complete -c godot -l max-fps -d "Set a maximum number of frames per second rendered (can be used to limit power usage), a value of 0 results in unlimited framerate" -x
 complete -c godot -l frame-delay -d "Simulate high CPU load (delay each frame by the given number of milliseconds)" -x
@@ -104,6 +100,8 @@ complete -c godot -l export-debug -d "Export the project in debug mode using the
 complete -c godot -l export-pack -d "Export the project data only as a PCK or ZIP file using the given preset and output path" -x
 complete -c godot -l doctool -d "Dump the engine API reference to the given path in XML format, merging if existing files are found" -r
 complete -c godot -l no-docbase -d "Disallow dumping the base types (used with --doctool)"
+complete -c godot -l dump-gdextension-interface -d "Generate GDExtension header file 'gdextension_interface.h' in the current folder. This file is the base file required to implement a GDExtension"
+complete -c godot -l dump-extension-api -d "Generate JSON dump of the Godot API for GDExtension bindings named 'extension_api.json' in the current folder"
 complete -c godot -l benchmark -d "Benchmark the run time and print it to console"
 complete -c godot -l benchmark-file -d "Benchmark the run time and save it to a given file in JSON format" -x
 complete -c godot -l test -d "Run all unit tests; run with '--test --help' for more information" -x

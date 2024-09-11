@@ -2,10 +2,9 @@
 /*  light_occluder_2d.cpp                                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -153,6 +152,16 @@ OccluderPolygon2D::~OccluderPolygon2D() {
 	RS::get_singleton()->free(occ_polygon);
 }
 
+void LightOccluder2D::_poly_changed() {
+#ifdef DEBUG_ENABLED
+	queue_redraw();
+#endif
+}
+
+void LightOccluder2D::_physics_interpolated_changed() {
+	RenderingServer::get_singleton()->canvas_light_occluder_set_interpolated(occluder, is_physics_interpolated());
+}
+
 void LightOccluder2D::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_CANVAS: {
@@ -168,6 +177,7 @@ void LightOccluder2D::_notification(int p_what) {
 		case NOTIFICATION_VISIBILITY_CHANGED: {
 			RS::get_singleton()->canvas_light_occluder_set_enabled(occluder, is_visible_in_tree());
 		} break;
+
 		case NOTIFICATION_DRAW: {
 			if (!occluder_polygon.is_valid() || occluder_polygon->get_polygon().size() < 3 || !occluder_polygon->is_closed()) {
 				return;
@@ -182,8 +192,20 @@ void LightOccluder2D::_notification(int p_what) {
 			color.push_back(Color(0, 0, 0, 0.6));
 			draw_polygon(Variant(occluder_polygon->get_polygon()), color);
 		} break;
+
 		case NOTIFICATION_EXIT_CANVAS: {
 			RS::get_singleton()->canvas_light_occluder_attach_to_canvas(occluder, RID());
+		} break;
+
+		case NOTIFICATION_RESET_PHYSICS_INTERPOLATION: {
+			if (is_visible_in_tree() && is_physics_interpolated()) {
+				// Explicitly make sure the transform is up to date in RenderingServer before
+				// resetting. This is necessary because NOTIFICATION_TRANSFORM_CHANGED
+				// is normally deferred, and a client change to transform will not always be sent
+				// before the reset, so we need to guarantee this.
+				RS::get_singleton()->canvas_light_occluder_set_transform(occluder, get_global_transform());
+				RS::get_singleton()->canvas_light_occluder_reset_physics_interpolation(occluder);
+			}
 		} break;
 	}
 }
@@ -196,14 +218,10 @@ Rect2 LightOccluder2D::_edit_get_rect() const {
 bool LightOccluder2D::_edit_is_selected_on_click(const Point2 &p_point, double p_tolerance) const {
 	return occluder_polygon.is_valid() ? occluder_polygon->_edit_is_selected_on_click(p_point, p_tolerance) : false;
 }
-
-void LightOccluder2D::_poly_changed() {
-	queue_redraw();
-}
 #endif
 
 void LightOccluder2D::set_occluder_polygon(const Ref<OccluderPolygon2D> &p_polygon) {
-#ifdef TOOLS_ENABLED
+#ifdef DEBUG_ENABLED
 	if (occluder_polygon.is_valid()) {
 		occluder_polygon->disconnect_changed(callable_mp(this, &LightOccluder2D::_poly_changed));
 	}
@@ -216,7 +234,7 @@ void LightOccluder2D::set_occluder_polygon(const Ref<OccluderPolygon2D> &p_polyg
 		RS::get_singleton()->canvas_light_occluder_set_polygon(occluder, RID());
 	}
 
-#ifdef TOOLS_ENABLED
+#ifdef DEBUG_ENABLED
 	if (occluder_polygon.is_valid()) {
 		occluder_polygon->connect_changed(callable_mp(this, &LightOccluder2D::_poly_changed));
 	}
@@ -238,7 +256,7 @@ int LightOccluder2D::get_occluder_light_mask() const {
 }
 
 PackedStringArray LightOccluder2D::get_configuration_warnings() const {
-	PackedStringArray warnings = Node::get_configuration_warnings();
+	PackedStringArray warnings = Node2D::get_configuration_warnings();
 
 	if (!occluder_polygon.is_valid()) {
 		warnings.push_back(RTR("An occluder polygon must be set (or drawn) for this occluder to take effect."));

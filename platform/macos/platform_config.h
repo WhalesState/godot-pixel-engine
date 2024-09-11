@@ -2,10 +2,9 @@
 /*  platform_config.h                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,3 +31,10 @@
 #include <alloca.h>
 
 #define PTHREAD_RENAME_SELF
+
+#define _weakify(var) __weak typeof(var) GDWeak_##var = var;
+#define _strongify(var)                                      \
+	_Pragma("clang diagnostic push")                         \
+			_Pragma("clang diagnostic ignored \"-Wshadow\"") \
+					__strong typeof(var) var = GDWeak_##var; \
+	_Pragma("clang diagnostic pop")

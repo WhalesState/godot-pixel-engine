@@ -2,10 +2,9 @@
 /*  portable_compressed_texture.h                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -40,9 +39,18 @@ class PortableCompressedTexture2D : public Texture2D {
 	GDCLASS(PortableCompressedTexture2D, Texture2D);
 
 public:
+	enum DataFormat {
+		DATA_FORMAT_UNDEFINED,
+		DATA_FORMAT_IMAGE,
+		DATA_FORMAT_PNG,
+		DATA_FORMAT_WEBP,
+		DATA_FORMAT_BASIS_UNIVERSAL,
+	};
+
 	enum CompressionMode {
 		COMPRESSION_MODE_LOSSLESS,
 		COMPRESSION_MODE_LOSSY,
+		COMPRESSION_MODE_BASIS_UNIVERSAL,
 		COMPRESSION_MODE_S3TC,
 		COMPRESSION_MODE_ETC2,
 		COMPRESSION_MODE_BPTC,

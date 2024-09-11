@@ -2,10 +2,9 @@
 /*  godot_menu_delegate.mm                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -34,23 +33,31 @@
 #include "display_server_macos.h"
 #include "godot_menu_item.h"
 #include "key_mapping_macos.h"
+#include "native_menu_macos.h"
 
 @implementation GodotMenuDelegate
 
 - (void)doNothing:(id)sender {
 }
 
+- (void)menuWillOpen:(NSMenu *)menu {
+	if (NativeMenu::get_singleton()) {
+		NativeMenuMacOS *nmenu = (NativeMenuMacOS *)NativeMenu::get_singleton();
+		nmenu->_menu_open(menu);
+	}
+}
+
 - (void)menuNeedsUpdate:(NSMenu *)menu {
-	if (DisplayServer::get_singleton()) {
-		DisplayServerMacOS *ds = (DisplayServerMacOS *)DisplayServer::get_singleton();
-		ds->menu_open(menu);
+	if (NativeMenu::get_singleton()) {
+		NativeMenuMacOS *nmenu = (NativeMenuMacOS *)NativeMenu::get_singleton();
+		nmenu->_menu_need_update(menu);
 	}
 }
 
 - (void)menuDidClose:(NSMenu *)menu {
-	if (DisplayServer::get_singleton()) {
-		DisplayServerMacOS *ds = (DisplayServerMacOS *)DisplayServer::get_singleton();
-		ds->menu_close(menu);
+	if (NativeMenu::get_singleton()) {
+		NativeMenuMacOS *nmenu = (NativeMenuMacOS *)NativeMenu::get_singleton();
+		nmenu->_menu_close(menu);
 	}
 }
 

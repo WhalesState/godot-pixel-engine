@@ -2,10 +2,9 @@
 /*  popup_menu.h                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -35,10 +34,13 @@
 #include "core/input/shortcut.h"
 #include "scene/gui/popup.h"
 #include "scene/gui/scroll_container.h"
+#include "scene/property_list_helper.h"
 #include "scene/resources/text_line.h"
 
 class PopupMenu : public Popup {
 	GDCLASS(PopupMenu, Popup);
+
+	static HashMap<NativeMenu::SystemMenus, PopupMenu *> system_menus;
 
 	struct Item {
 		Ref<Texture2D> icon;
@@ -57,7 +59,7 @@ class PopupMenu : public Popup {
 			CHECKABLE_TYPE_NONE,
 			CHECKABLE_TYPE_CHECK_BOX,
 			CHECKABLE_TYPE_RADIO_BUTTON,
-		} checkable_type;
+		} checkable_type = CHECKABLE_TYPE_NONE;
 		int max_states = 0;
 		int state = 0;
 		bool separator = false;
@@ -65,7 +67,8 @@ class PopupMenu : public Popup {
 		bool dirty = true;
 		int id = 0;
 		Variant metadata;
-		String submenu;
+		String submenu_name; // Compatibility.
+		PopupMenu *submenu = nullptr;
 		String tooltip;
 		Key accel = Key::NONE;
 		int _ofs_cache = 0;
@@ -87,9 +90,21 @@ class PopupMenu : public Popup {
 			accel_text_buf.instantiate();
 			checkable_type = CHECKABLE_TYPE_NONE;
 		}
+
+		Item(bool p_dummy) {}
 	};
 
-	String global_menu_name;
+	static inline PropertyListHelper base_property_helper;
+	PropertyListHelper property_helper;
+
+	// To make Item available.
+	friend class OptionButton;
+	friend class MenuButton;
+
+	RID global_menu;
+	RID system_menu;
+	NativeMenu::SystemMenus system_menu_id = NativeMenu::INVALID_MENU_ID;
+	bool prefer_native = false;
 
 	bool close_allowed = false;
 	bool activated_by_keyboard = false;
@@ -114,7 +129,6 @@ class PopupMenu : public Popup {
 
 	void _shape_item(int p_idx);
 
-	virtual void gui_input(const Ref<InputEvent> &p_event);
 	void _activate_submenu(int p_over, bool p_by_keyboard = false);
 	void _submenu_timeout();
 
@@ -141,7 +155,6 @@ class PopupMenu : public Popup {
 	const float DEFAULT_GAMEPAD_EVENT_DELAY_MS = 0.5;
 	const float GAMEPAD_EVENT_REPEAT_RATE_MS = 1.0 / 20;
 	float gamepad_event_delay_ms = DEFAULT_GAMEPAD_EVENT_DELAY_MS;
-	bool is_gamepad_event = false;
 
 	struct ThemeCache {
 		Ref<StyleBox> panel_style;
@@ -192,15 +205,22 @@ class PopupMenu : public Popup {
 	void _minimum_lifetime_timeout();
 	void _close_pressed();
 	void _menu_changed();
+	void _input_from_window_internal(const Ref<InputEvent> &p_event);
+	bool _set_item_accelerator(int p_index, const Ref<InputEventKey> &p_ie);
+	void _set_item_checkable_type(int p_index, int p_checkable_type);
+	int _get_item_checkable_type(int p_index) const;
 
 protected:
 	virtual void add_child_notify(Node *p_child) override;
 	virtual void remove_child_notify(Node *p_child) override;
+	virtual void _input_from_window(const Ref<InputEvent> &p_event) override;
 
 	void _notification(int p_what);
 	bool _set(const StringName &p_name, const Variant &p_value);
-	bool _get(const StringName &p_name, Variant &r_ret) const;
-	void _get_property_list(List<PropertyInfo> *p_list) const;
+	bool _get(const StringName &p_name, Variant &r_ret) const { return property_helper.property_get_value(p_name, r_ret); }
+	void _get_property_list(List<PropertyInfo> *p_list) const { property_helper.get_property_list(p_list); }
+	bool _property_can_revert(const StringName &p_name) const { return property_helper.property_can_revert(p_name); }
+	bool _property_get_revert(const StringName &p_name, Variant &r_property) const { return property_helper.property_get_revert(p_name, r_property); }
 	static void _bind_methods();
 
 public:
@@ -210,8 +230,12 @@ public:
 
 	virtual void _parent_focused() override;
 
-	String bind_global_menu();
+	RID bind_global_menu();
 	void unbind_global_menu();
+	bool is_system_menu() const;
+
+	void set_system_menu(NativeMenu::SystemMenus p_system_menu_id);
+	NativeMenu::SystemMenus get_system_menu() const;
 
 	void add_item(const String &p_label, int p_id = -1, Key p_accel = Key::NONE);
 	void add_icon_item(const Ref<Texture2D> &p_icon, const String &p_label, int p_id = -1, Key p_accel = Key::NONE);
@@ -230,6 +254,7 @@ public:
 	void add_icon_radio_check_shortcut(const Ref<Texture2D> &p_icon, const Ref<Shortcut> &p_shortcut, int p_id = -1, bool p_global = false);
 
 	void add_submenu_item(const String &p_label, const String &p_submenu, int p_id = -1);
+	void add_submenu_node_item(const String &p_label, PopupMenu *p_submenu, int p_id = -1);
 
 	void set_item_text(int p_idx, const String &p_text);
 
@@ -244,12 +269,14 @@ public:
 	void set_item_metadata(int p_idx, const Variant &p_meta);
 	void set_item_disabled(int p_idx, bool p_disabled);
 	void set_item_submenu(int p_idx, const String &p_submenu);
+	void set_item_submenu_node(int p_idx, PopupMenu *p_submenu);
 	void set_item_as_separator(int p_idx, bool p_separator);
 	void set_item_as_checkable(int p_idx, bool p_checkable);
 	void set_item_as_radio_checkable(int p_idx, bool p_radio_checkable);
 	void set_item_tooltip(int p_idx, const String &p_tooltip);
 	void set_item_shortcut(int p_idx, const Ref<Shortcut> &p_shortcut, bool p_global = false);
 	void set_item_indent(int p_idx, int p_indent);
+	void set_item_max_states(int p_idx, int p_max_states);
 	void set_item_multistate(int p_idx, int p_state);
 	void toggle_item_multistate(int p_idx);
 	void set_item_shortcut_disabled(int p_idx, bool p_disabled);
@@ -271,6 +298,7 @@ public:
 	Variant get_item_metadata(int p_idx) const;
 	bool is_item_disabled(int p_idx) const;
 	String get_item_submenu(int p_idx) const;
+	PopupMenu *get_item_submenu_node(int p_idx) const;
 	bool is_item_separator(int p_idx) const;
 	bool is_item_checkable(int p_idx) const;
 	bool is_item_radio_checkable(int p_idx) const;
@@ -287,6 +315,11 @@ public:
 
 	void set_item_count(int p_count);
 	int get_item_count() const;
+
+	void set_prefer_native_menu(bool p_enabled);
+	bool is_prefer_native_menu() const;
+
+	bool is_native_menu() const;
 
 	void scroll_to_item(int p_idx);
 
@@ -323,8 +356,7 @@ public:
 	bool get_allow_search() const;
 
 	virtual void popup(const Rect2i &p_bounds = Rect2i()) override;
-
-	void take_mouse_focus();
+	virtual void set_visible(bool p_visible) override;
 
 	PopupMenu();
 	~PopupMenu();

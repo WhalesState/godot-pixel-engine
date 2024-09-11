@@ -2,10 +2,9 @@
 /*  visible_on_screen_notifier_2d.cpp                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -137,6 +136,10 @@ void VisibleOnScreenEnabler2D::set_enable_node_path(NodePath p_path) {
 		return;
 	}
 	enable_node_path = p_path;
+	if (enable_node_path.is_empty()) {
+		node_id = ObjectID();
+		return;
+	}
 	if (is_inside_tree() && !Engine::get_singleton()->is_editor_hint()) {
 		node_id = ObjectID();
 		Node *node = get_node(enable_node_path);
@@ -176,8 +179,11 @@ void VisibleOnScreenEnabler2D::_notification(int p_what) {
 			if (Engine::get_singleton()->is_editor_hint()) {
 				return;
 			}
-
 			node_id = ObjectID();
+			if (enable_node_path.is_empty()) {
+				return;
+			}
+
 			Node *node = get_node(enable_node_path);
 			if (node) {
 				node_id = node->get_instance_id();

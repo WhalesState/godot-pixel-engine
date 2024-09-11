@@ -2,10 +2,9 @@
 /*  path_2d.cpp                                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -35,10 +34,32 @@
 #include "scene/main/timer.h"
 
 #ifdef TOOLS_ENABLED
-#include "editor/editor_scale.h"
+#include "editor/themes/editor_scale.h"
 #endif
 
 #ifdef TOOLS_ENABLED
+Rect2 Path2D::_edit_get_rect() const {
+	if (!curve.is_valid() || curve->get_point_count() == 0) {
+		return Rect2(0, 0, 0, 0);
+	}
+
+	Rect2 aabb = Rect2(curve->get_point_position(0), Vector2(0, 0));
+
+	for (int i = 0; i < curve->get_point_count(); i++) {
+		for (int j = 0; j <= 8; j++) {
+			real_t frac = j / 8.0;
+			Vector2 p = curve->sample(i, frac);
+			aabb.expand_to(p);
+		}
+	}
+
+	return aabb;
+}
+
+bool Path2D::_edit_use_rect() const {
+	return curve.is_valid() && curve->get_point_count() != 0;
+}
+
 bool Path2D::_edit_is_selected_on_click(const Point2 &p_point, double p_tolerance) const {
 	if (curve.is_null()) {
 		return false;
@@ -67,6 +88,7 @@ bool Path2D::_edit_is_selected_on_click(const Point2 &p_point, double p_toleranc
 
 void Path2D::_notification(int p_what) {
 	switch (p_what) {
+		// Draw the curve if path debugging is enabled.
 		case NOTIFICATION_DRAW: {
 			if (!curve.is_valid() || curve->get_point_count() < 2) {
 				return;
@@ -121,8 +143,8 @@ void Path2D::_notification(int p_what) {
 
 					for (int i = 0; i < sample_count; i++) {
 						const Vector2 p = r[i].get_origin();
-						const Vector2 side = r[i].columns[0];
-						const Vector2 forward = r[i].columns[1];
+						const Vector2 side = r[i].columns[1];
+						const Vector2 forward = r[i].columns[0];
 
 						// Fish Bone.
 						w[0] = p + (side - forward) * 5;
@@ -226,8 +248,8 @@ void PathFollow2D::_update_transform() {
 
 	if (rotates) {
 		Transform2D xform = c->sample_baked_with_rotation(progress, cubic);
-		xform.translate_local(v_offset, h_offset);
-		set_rotation(xform[1].angle());
+		xform.translate_local(h_offset, v_offset);
+		set_rotation(xform[0].angle());
 		set_position(xform[2]);
 	} else {
 		Vector2 pos = c->sample_baked(progress, cubic);
@@ -282,7 +304,7 @@ void PathFollow2D::_validate_property(PropertyInfo &p_property) const {
 }
 
 PackedStringArray PathFollow2D::get_configuration_warnings() const {
-	PackedStringArray warnings = Node::get_configuration_warnings();
+	PackedStringArray warnings = Node2D::get_configuration_warnings();
 
 	if (is_visible_in_tree() && is_inside_tree()) {
 		if (!Object::cast_to<Path2D>(get_parent())) {
@@ -372,9 +394,10 @@ real_t PathFollow2D::get_progress() const {
 }
 
 void PathFollow2D::set_progress_ratio(real_t p_ratio) {
-	if (path && path->get_curve().is_valid() && path->get_curve()->get_baked_length()) {
-		set_progress(p_ratio * path->get_curve()->get_baked_length());
-	}
+	ERR_FAIL_NULL_MSG(path, "Can only set progress ratio on a PathFollow2D that is the child of a Path2D which is itself part of the scene tree.");
+	ERR_FAIL_COND_MSG(path->get_curve().is_null(), "Can't set progress ratio on a PathFollow2D that does not have a Curve.");
+	ERR_FAIL_COND_MSG(!path->get_curve()->get_baked_length(), "Can't set progress ratio on a PathFollow2D that has a 0 length curve.");
+	set_progress(p_ratio * path->get_curve()->get_baked_length());
 }
 
 real_t PathFollow2D::get_progress_ratio() const {

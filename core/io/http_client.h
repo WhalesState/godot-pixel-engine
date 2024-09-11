@@ -2,10 +2,9 @@
 /*  http_client.h                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -159,12 +158,12 @@ protected:
 	Error _request_raw(Method p_method, const String &p_url, const Vector<String> &p_headers, const Vector<uint8_t> &p_body);
 	Error _request(Method p_method, const String &p_url, const Vector<String> &p_headers, const String &p_body = String());
 
-	static HTTPClient *(*_create)();
+	static HTTPClient *(*_create)(bool p_notify_postinitialize);
 
 	static void _bind_methods();
 
 public:
-	static HTTPClient *create();
+	static HTTPClient *create(bool p_notify_postinitialize = true);
 
 	String query_string_from_dict(const Dictionary &p_dict);
 	Error verify_headers(const Vector<String> &p_headers);

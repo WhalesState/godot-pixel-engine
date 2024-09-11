@@ -2,10 +2,9 @@
 /*  command_queue_mt.cpp                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -34,51 +33,9 @@
 #include "core/config/project_settings.h"
 #include "core/os/os.h"
 
-void CommandQueueMT::lock() {
-	mutex.lock();
-}
-
-void CommandQueueMT::unlock() {
-	mutex.unlock();
-}
-
-void CommandQueueMT::wait_for_flush() {
-	// wait one millisecond for a flush to happen
-	OS::get_singleton()->delay_usec(1000);
-}
-
-CommandQueueMT::SyncSemaphore *CommandQueueMT::_alloc_sync_sem() {
-	int idx = -1;
-
-	while (true) {
-		lock();
-		for (int i = 0; i < SYNC_SEMAPHORES; i++) {
-			if (!sync_sems[i].in_use) {
-				sync_sems[i].in_use = true;
-				idx = i;
-				break;
-			}
-		}
-		unlock();
-
-		if (idx == -1) {
-			wait_for_flush();
-		} else {
-			break;
-		}
-	}
-
-	return &sync_sems[idx];
-}
-
-CommandQueueMT::CommandQueueMT(bool p_sync) {
-	if (p_sync) {
-		sync = memnew(Semaphore);
-	}
+CommandQueueMT::CommandQueueMT() {
+	command_mem.reserve(DEFAULT_COMMAND_MEM_SIZE_KB * 1024);
 }
 
 CommandQueueMT::~CommandQueueMT() {
-	if (sync) {
-		memdelete(sync);
-	}
 }

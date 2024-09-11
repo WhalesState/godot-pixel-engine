@@ -2,10 +2,9 @@
 /*  test_image.h                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -37,6 +36,8 @@
 
 #include "tests/test_utils.h"
 #include "thirdparty/doctest/doctest.h"
+
+#include "modules/modules_enabled.gen.h"
 
 namespace TestImage {
 
@@ -79,8 +80,8 @@ TEST_CASE("[Image] Instantiation") {
 
 TEST_CASE("[Image] Saving and loading") {
 	Ref<Image> image = memnew(Image(4, 4, false, Image::FORMAT_RGBA8));
-	const String save_path_png = OS::get_singleton()->get_cache_path().path_join("image.png");
-	const String save_path_exr = OS::get_singleton()->get_cache_path().path_join("image.exr");
+	const String save_path_png = TestUtils::get_temp_path("image.png");
+	const String save_path_exr = TestUtils::get_temp_path("image.exr");
 
 	// Save PNG
 	Error err;
@@ -108,6 +109,7 @@ TEST_CASE("[Image] Saving and loading") {
 			image->get_data() == image_load->get_data(),
 			"The loaded image should have the same data as the one that got saved.");
 
+#ifdef MODULE_BMP_ENABLED
 	// Load BMP
 	Ref<Image> image_bmp = memnew(Image());
 	Ref<FileAccess> f_bmp = FileAccess::open(TestUtils::get_data_path("images/icon.bmp"), FileAccess::READ, &err);
@@ -118,7 +120,9 @@ TEST_CASE("[Image] Saving and loading") {
 	CHECK_MESSAGE(
 			image_bmp->load_bmp_from_buffer(data_bmp) == OK,
 			"The BMP image should load successfully.");
+#endif // MODULE_BMP_ENABLED
 
+#ifdef MODULE_JPG_ENABLED
 	// Load JPG
 	Ref<Image> image_jpg = memnew(Image());
 	Ref<FileAccess> f_jpg = FileAccess::open(TestUtils::get_data_path("images/icon.jpg"), FileAccess::READ, &err);
@@ -129,7 +133,9 @@ TEST_CASE("[Image] Saving and loading") {
 	CHECK_MESSAGE(
 			image_jpg->load_jpg_from_buffer(data_jpg) == OK,
 			"The JPG image should load successfully.");
+#endif // MODULE_JPG_ENABLED
 
+#ifdef MODULE_WEBP_ENABLED
 	// Load WebP
 	Ref<Image> image_webp = memnew(Image());
 	Ref<FileAccess> f_webp = FileAccess::open(TestUtils::get_data_path("images/icon.webp"), FileAccess::READ, &err);
@@ -140,6 +146,7 @@ TEST_CASE("[Image] Saving and loading") {
 	CHECK_MESSAGE(
 			image_webp->load_webp_from_buffer(data_webp) == OK,
 			"The WebP image should load successfully.");
+#endif // MODULE_WEBP_ENABLED
 
 	// Load PNG
 	Ref<Image> image_png = memnew(Image());
@@ -152,6 +159,7 @@ TEST_CASE("[Image] Saving and loading") {
 			image_png->load_png_from_buffer(data_png) == OK,
 			"The PNG image should load successfully.");
 
+#ifdef MODULE_TGA_ENABLED
 	// Load TGA
 	Ref<Image> image_tga = memnew(Image());
 	Ref<FileAccess> f_tga = FileAccess::open(TestUtils::get_data_path("images/icon.tga"), FileAccess::READ, &err);
@@ -162,6 +170,7 @@ TEST_CASE("[Image] Saving and loading") {
 	CHECK_MESSAGE(
 			image_tga->load_tga_from_buffer(data_tga) == OK,
 			"The TGA image should load successfully.");
+#endif // MODULE_TGA_ENABLED
 }
 
 TEST_CASE("[Image] Basic getters") {
@@ -219,13 +228,13 @@ TEST_CASE("[Image] Modifying pixels of an image") {
 			!image->is_invisible(),
 			"Image should not be invisible after drawing on it.");
 	CHECK_MESSAGE(
-			image->get_pixel_v(Vector2(0, 0)).is_equal_approx(Color(1, 1, 1, 1)),
+			image->get_pixelv(Vector2(0, 0)).is_equal_approx(Color(1, 1, 1, 1)),
 			"Image's get_pixel() should return the same color value as the one being set with set_pixel() in the same position.");
 	CHECK_MESSAGE(
 			image->get_used_rect() == Rect2i(0, 0, 1, 1),
 			"Image's get_used_rect should return the expected value, larger than Rect2i(0, 0, 0, 0) if it's visible.");
 
-	image->set_pixel_v(Vector2(0, 0), Color(0.5, 0.5, 0.5, 0.5));
+	image->set_pixelv(Vector2(0, 0), Color(0.5, 0.5, 0.5, 0.5));
 	Ref<Image> image2 = memnew(Image(3, 3, false, Image::FORMAT_RGBA8));
 
 	// Fill image with color
@@ -346,8 +355,8 @@ TEST_CASE("[Image] Custom mipmaps") {
 		uint8_t *data_ptr = data.ptrw();
 
 		for (int mip = 0; mip < mipmaps; mip++) {
-			int mip_offset = 0;
-			int mip_size = 0;
+			int64_t mip_offset = 0;
+			int64_t mip_size = 0;
 			image->get_mipmap_offset_and_size(mip, mip_offset, mip_size);
 
 			for (int i = 0; i < mip_size; i++) {
@@ -369,8 +378,8 @@ TEST_CASE("[Image] Custom mipmaps") {
 		const uint8_t *data_ptr = data.ptr();
 
 		for (int mip = 0; mip < mipmaps; mip++) {
-			int mip_offset = 0;
-			int mip_size = 0;
+			int64_t mip_offset = 0;
+			int64_t mip_size = 0;
 			image_bytes->get_mipmap_offset_and_size(mip, mip_offset, mip_size);
 
 			for (int i = 0; i < mip_size; i++) {
@@ -393,8 +402,8 @@ TEST_CASE("[Image] Custom mipmaps") {
 		const uint8_t *data_ptr = data.ptr();
 
 		for (int mip = 0; mip < mipmaps; mip++) {
-			int mip_offset = 0;
-			int mip_size = 0;
+			int64_t mip_offset = 0;
+			int64_t mip_size = 0;
 			image_rgbaf->get_mipmap_offset_and_size(mip, mip_offset, mip_size);
 
 			for (int i = 0; i < mip_size; i += 4) {
@@ -405,6 +414,32 @@ TEST_CASE("[Image] Custom mipmaps") {
 			}
 		}
 	}
+}
+
+TEST_CASE("[Image] Convert image") {
+	for (int format = Image::FORMAT_RF; format < Image::FORMAT_RGBE9995; format++) {
+		for (int new_format = Image::FORMAT_RF; new_format < Image::FORMAT_RGBE9995; new_format++) {
+			Ref<Image> image = memnew(Image(4, 4, false, (Image::Format)format));
+			image->convert((Image::Format)new_format);
+			String format_string = Image::format_names[(Image::Format)format];
+			String new_format_string = Image::format_names[(Image::Format)new_format];
+			format_string = "Error converting from " + format_string + " to " + new_format_string + ".";
+			CHECK_MESSAGE(image->get_format() == new_format, format_string);
+		}
+	}
+
+	Ref<Image> image = memnew(Image(4, 4, false, Image::FORMAT_RGBA8));
+	PackedByteArray image_data = image->get_data();
+	ERR_PRINT_OFF;
+	image->convert((Image::Format)-1);
+	ERR_PRINT_ON;
+	CHECK_MESSAGE(image->get_data() == image_data, "Image conversion to invalid type (-1) should not alter image.");
+	Ref<Image> image2 = memnew(Image(4, 4, false, Image::FORMAT_RGBA8));
+	image_data = image2->get_data();
+	ERR_PRINT_OFF;
+	image2->convert((Image::Format)(Image::FORMAT_MAX + 1));
+	ERR_PRINT_ON;
+	CHECK_MESSAGE(image2->get_data() == image_data, "Image conversion to invalid type (Image::FORMAT_MAX + 1) should not alter image.");
 }
 
 } // namespace TestImage

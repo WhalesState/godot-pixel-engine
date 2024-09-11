@@ -2,10 +2,9 @@
 /*  dialogs.h                                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -52,12 +51,15 @@ class AcceptDialog : public Window {
 	HBoxContainer *buttons_hbox = nullptr;
 	Button *ok_button = nullptr;
 
+	bool popped_up = false;
 	bool hide_on_ok = true;
 	bool close_on_escape = true;
 
 	struct ThemeCache {
 		Ref<StyleBox> panel_style;
 		int buttons_separation = 0;
+		int buttons_min_width = 0;
+		int buttons_min_height = 0;
 	} theme_cache;
 
 	void _custom_action(const String &p_action);
@@ -66,11 +68,12 @@ class AcceptDialog : public Window {
 
 	static bool swap_cancel_ok;
 
-	void _input_from_window(const Ref<InputEvent> &p_event);
 	void _parent_focused();
 
 protected:
 	virtual Size2 _get_contents_minimum_size() const override;
+	virtual void _input_from_window(const Ref<InputEvent> &p_event) override;
+	virtual void _post_popup() override;
 
 	void _notification(int p_what);
 	static void _bind_methods();
@@ -88,12 +91,12 @@ public:
 	Label *get_label() { return message_label; }
 	static void set_swap_cancel_ok(bool p_swap);
 
-	void register_text_enter(Control *p_line_edit);
+	void register_text_enter(LineEdit *p_line_edit);
 
 	Button *get_ok_button() { return ok_button; }
 	Button *add_button(const String &p_text, bool p_right = false, const String &p_action = "");
 	Button *add_cancel_button(const String &p_cancel = "");
-	void remove_button(Control *p_button);
+	void remove_button(Button *p_button);
 
 	void set_hide_on_ok(bool p_hide);
 	bool get_hide_on_ok() const;

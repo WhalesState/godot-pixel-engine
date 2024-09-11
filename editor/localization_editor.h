@@ -2,10 +2,9 @@
 /*  localization_editor.h                                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -33,6 +32,7 @@
 #define LOCALIZATION_EDITOR_H
 
 #include "editor/editor_locale_dialog.h"
+#include "scene/gui/check_box.h"
 #include "scene/gui/tree.h"
 
 class EditorFileDialog;
@@ -53,6 +53,7 @@ class LocalizationEditor : public VBoxContainer {
 	Tree *translation_remap_options = nullptr;
 
 	Tree *translation_pot_list = nullptr;
+	CheckBox *translation_pot_add_builtin = nullptr;
 	EditorFileDialog *pot_file_open_dialog = nullptr;
 	EditorFileDialog *pot_generate_dialog = nullptr;
 	Button *pot_generate_button = nullptr;
@@ -79,6 +80,7 @@ class LocalizationEditor : public VBoxContainer {
 	void _pot_delete(Object *p_item, int p_column, int p_button, MouseButton p_mouse_button);
 	void _pot_file_open();
 	void _pot_generate_open();
+	void _pot_add_builtin_toggled();
 	void _pot_generate(const String &p_file);
 	void _update_pot_file_extensions();
 

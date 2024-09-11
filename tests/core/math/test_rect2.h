@@ -2,10 +2,9 @@
 /*  test_rect2.h                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -179,6 +178,28 @@ TEST_CASE("[Rect2] Expanding") {
 	CHECK_MESSAGE(
 			Rect2(0, 100, 1280, 720).expand(Vector2(0, 0)).is_equal_approx(Rect2(0, 0, 1280, 820)),
 			"expand() with non-contained Vector2 should return the expected result.");
+}
+
+TEST_CASE("[Rect2] Get support") {
+	const Rect2 rect = Rect2(Vector2(-1.5, 2), Vector2(4, 5));
+	CHECK_MESSAGE(
+			rect.get_support(Vector2(1, 0)) == Vector2(2.5, 2),
+			"get_support() should return the expected value.");
+	CHECK_MESSAGE(
+			rect.get_support(Vector2(0.5, 1)) == Vector2(2.5, 7),
+			"get_support() should return the expected value.");
+	CHECK_MESSAGE(
+			rect.get_support(Vector2(0.5, 1)) == Vector2(2.5, 7),
+			"get_support() should return the expected value.");
+	CHECK_MESSAGE(
+			rect.get_support(Vector2(0, -1)) == Vector2(-1.5, 2),
+			"get_support() should return the expected value.");
+	CHECK_MESSAGE(
+			rect.get_support(Vector2(0, -0.1)) == Vector2(-1.5, 2),
+			"get_support() should return the expected value.");
+	CHECK_MESSAGE(
+			rect.get_support(Vector2()) == Vector2(-1.5, 2),
+			"get_support() should return the Rect2 position when given a zero vector.");
 }
 
 TEST_CASE("[Rect2] Growing") {

@@ -2,10 +2,9 @@
 /*  test_sprite_frames.h                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -75,9 +74,10 @@ TEST_CASE("[SpriteFrames] Animation addition, list getter, renaming, removal, an
 			sname_list.size() == test_names.size(),
 			"StringName List getter returned list of expected size");
 
-	for (int i = 0; i < test_names.size(); i++) {
+	int idx = 0;
+	for (List<StringName>::ConstIterator itr = sname_list.begin(); itr != sname_list.end(); ++itr, ++idx) {
 		CHECK_MESSAGE(
-				sname_list[i] == StringName(test_names[i]),
+				*itr == StringName(test_names[idx]),
 				"StringName List getter returned expected values");
 	}
 

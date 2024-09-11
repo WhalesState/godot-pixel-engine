@@ -2,10 +2,9 @@
 /*  view_panner.h                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -35,7 +34,7 @@
 #include "core/object/ref_counted.h"
 
 class InputEvent;
-enum class Key;
+class Shortcut;
 
 class ViewPanner : public RefCounted {
 	GDCLASS(ViewPanner, RefCounted);
@@ -58,12 +57,13 @@ private:
 	PanAxis pan_axis = PAN_AXIS_BOTH;
 
 	bool is_dragging = false;
-	Key pan_key;
 	bool pan_key_pressed = false;
 	bool force_drag = false;
 
 	bool enable_rmb = false;
 	bool simple_panning_enabled = false;
+
+	Ref<Shortcut> pan_view_shortcut;
 
 	Callable pan_callback;
 	Callable zoom_callback;
@@ -74,14 +74,13 @@ public:
 	void set_callbacks(Callable p_pan_callback, Callable p_zoom_callback);
 	void set_control_scheme(ControlScheme p_scheme);
 	void set_enable_rmb(bool p_enable);
-	void set_pan_key(Key p_key);
-	Key get_pan_key() const;
+	void set_pan_shortcut(Ref<Shortcut> p_shortcut);
 	void set_simple_panning_enabled(bool p_enabled);
 	void set_scroll_speed(int p_scroll_speed);
 	void set_scroll_zoom_factor(float p_scroll_zoom_factor);
 	void set_pan_axis(PanAxis p_pan_axis);
 
-	void setup(ControlScheme p_scheme, bool p_simple_panning);
+	void setup(ControlScheme p_scheme, Ref<Shortcut> p_shortcut, bool p_simple_panning);
 
 	bool is_panning() const;
 	void set_force_drag(bool p_force);

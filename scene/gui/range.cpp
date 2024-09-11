@@ -2,10 +2,9 @@
 /*  range.cpp                                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,7 +31,7 @@
 #include "range.h"
 
 PackedStringArray Range::get_configuration_warnings() const {
-	PackedStringArray warnings = Node::get_configuration_warnings();
+	PackedStringArray warnings = Control::get_configuration_warnings();
 
 	if (shared->exp_ratio && shared->min <= 0) {
 		warnings.push_back(RTR("If \"Exp Edit\" is enabled, \"Min Value\" must be greater than 0."));
@@ -46,7 +45,7 @@ void Range::_value_changed(double p_value) {
 }
 void Range::_value_changed_notify() {
 	_value_changed(shared->val);
-	emit_signal(SNAME("value_changed"), shared->val);
+	emit_signal(SceneStringName(value_changed), shared->val);
 	queue_redraw();
 }
 

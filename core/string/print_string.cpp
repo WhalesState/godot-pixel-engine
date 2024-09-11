@@ -2,10 +2,9 @@
 /*  print_string.cpp                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -69,7 +68,7 @@ void remove_print_handler(const PrintHandlerList *p_handler) {
 	ERR_FAIL_NULL(l);
 }
 
-void __print_line(String p_string) {
+void __print_line(const String &p_string) {
 	if (!CoreGlobals::print_line_enabled) {
 		return;
 	}
@@ -86,7 +85,7 @@ void __print_line(String p_string) {
 	_global_unlock();
 }
 
-void __print_line_rich(String p_string) {
+void __print_line_rich(const String &p_string) {
 	if (!CoreGlobals::print_line_enabled) {
 		return;
 	}
@@ -179,7 +178,7 @@ void __print_line_rich(String p_string) {
 	_global_unlock();
 }
 
-void print_error(String p_string) {
+void print_error(const String &p_string) {
 	if (!CoreGlobals::print_error_enabled) {
 		return;
 	}
@@ -200,6 +199,6 @@ bool is_print_verbose_enabled() {
 	return OS::get_singleton()->is_stdout_verbose();
 }
 
-String stringify_variants(Variant p_var) {
+String stringify_variants(const Variant &p_var) {
 	return p_var.operator String();
 }

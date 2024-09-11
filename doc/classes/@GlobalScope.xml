@@ -90,7 +90,7 @@
 			<param index="0" name="from" type="float" />
 			<param index="1" name="to" type="float" />
 			<description>
-				Returns the difference between the two angles, in the range of [code][-PI, +PI][/code]. When [param from] and [param to] are opposite, returns [code]-PI[/code] if [param from] is smaller than [param to], or [code]PI[/code] otherwise.
+				Returns the difference between the two angles (in radians), in the range of [code][-PI, +PI][/code]. When [param from] and [param to] are opposite, returns [code]-PI[/code] if [param from] is smaller than [param to], or [code]PI[/code] otherwise.
 			</description>
 		</method>
 		<method name="asin">
@@ -362,13 +362,13 @@
 				[/codeblock]
 			</description>
 		</method>
-		<method name="ease">
+		<method name="ease" keywords="smooth">
 			<return type="float" />
 			<param index="0" name="x" type="float" />
 			<param index="1" name="curve" type="float" />
 			<description>
 				Returns an "eased" value of [param x] based on an easing function defined with [param curve]. This easing function is based on an exponent. The [param curve] can be any floating-point number, with specific values leading to the following behaviors:
-				[codeblock]
+				[codeblock lang=text]
 				- Lower than -1.0 (exclusive): Ease in-out
 				- 1.0: Linear
 				- Between -1.0 and 0.0 (exclusive): Ease out-in
@@ -460,8 +460,8 @@
 				    var x = i * 0.5 - 1.5
 				    print("%4.1f           %4.1f  | %4.1f" % [x, fmod(x, 1.5), fposmod(x, 1.5)])
 				[/codeblock]
-				Produces:
-				[codeblock]
+				Prints:
+				[codeblock lang=text]
 				 (x)  (fmod(x, 1.5))   (fposmod(x, 1.5))
 				-1.5           -0.0  |  0.0
 				-1.0           -1.0  |  0.5
@@ -502,7 +502,7 @@
 				[/codeblocks]
 			</description>
 		</method>
-		<method name="inverse_lerp">
+		<method name="inverse_lerp" keywords="interpolate">
 			<return type="float" />
 			<param index="0" name="from" type="float" />
 			<param index="1" name="to" type="float" />
@@ -521,7 +521,7 @@
 				See also [method lerp], which performs the reverse of this operation, and [method remap] to map a continuous series of values to another.
 			</description>
 		</method>
-		<method name="is_equal_approx">
+		<method name="is_equal_approx" keywords="roughly">
 			<return type="bool" />
 			<param index="0" name="a" type="float" />
 			<param index="1" name="b" type="float" />
@@ -587,8 +587,8 @@
 				is_same(arr_a, arr_a)  # true
 				is_same(arr_a, arr_b)  # false
 				[/codeblock]
-				These are [Variant] value types: [code]null[/code], [bool], [int], [float], [String], [StringName], [Vector2], [Vector2i], [Vector3], [Vector3i], [Vector4], [Vector4i], [Rect2], [Rect2i], [Transform2D], [Transform3D], [Plane], [AABB], [Basis], [Projection], [Color], [NodePath], [RID], [Callable] and [Signal].
-				These are [Variant] reference types: [Object], [Dictionary], [Array], [PackedByteArray], [PackedInt32Array], [PackedInt64Array], [PackedFloat32Array], [PackedFloat64Array], [PackedStringArray], [PackedVector2Array], [PackedVector3Array] and [PackedColorArray].
+				These are [Variant] value types: [code]null[/code], [bool], [int], [float], [String], [StringName], [Vector2], [Vector2i], [Vector3], [Vector3i], [Vector4], [Vector4i], [Rect2], [Rect2i], [Transform2D], [Transform3D], [Plane], [Quaternion], [AABB], [Basis], [Projection], [Color], [NodePath], [RID], [Callable] and [Signal].
+				These are [Variant] reference types: [Object], [Dictionary], [Array], [PackedByteArray], [PackedInt32Array], [PackedInt64Array], [PackedFloat32Array], [PackedFloat64Array], [PackedStringArray], [PackedVector2Array], [PackedVector3Array], [PackedVector4Array], and [PackedColorArray].
 			</description>
 		</method>
 		<method name="is_zero_approx">
@@ -599,22 +599,22 @@
 				This function is faster than using [method is_equal_approx] with one value as zero.
 			</description>
 		</method>
-		<method name="lerp">
+		<method name="lerp" keywords="interpolate">
 			<return type="Variant" />
 			<param index="0" name="from" type="Variant" />
 			<param index="1" name="to" type="Variant" />
 			<param index="2" name="weight" type="Variant" />
 			<description>
-				Linearly interpolates between two values by the factor defined in [param weight]. To perform interpolation, [param weight] should be between [code]0.0[/code] and [code]1.0[/code] (inclusive). However, values outside this range are allowed and can be used to perform [i]extrapolation[/i]. If this is not desired, use [method clamp] on the result of this function.
-				Both [param from] and [param to] must be the same type. Supported types: [int], [float], [Vector2], [Vector3], [Vector4], [Color], [Basis].
+				Linearly interpolates between two values by the factor defined in [param weight]. To perform interpolation, [param weight] should be between [code]0.0[/code] and [code]1.0[/code] (inclusive). However, values outside this range are allowed and can be used to perform [i]extrapolation[/i]. If this is not desired, use [method clampf] to limit [param weight].
+				Both [param from] and [param to] must be the same type. Supported types: [int], [float], [Vector2], [Vector3], [Vector4], [Color], [Quaternion], [Basis], [Transform2D], [Transform3D].
 				[codeblock]
 				lerp(0, 4, 0.75) # Returns 3.0
 				[/codeblock]
 				See also [method inverse_lerp] which performs the reverse of this operation. To perform eased interpolation with [method lerp], combine it with [method ease] or [method smoothstep]. See also [method remap] to map a continuous series of values to another.
-				[b]Note:[/b] For better type safety, use [method lerpf], [method Vector2.lerp], [method Vector3.lerp], [method Vector4.lerp], [method Color.lerp] or [method Basis.slerp].
+				[b]Note:[/b] For better type safety, use [method lerpf], [method Vector2.lerp], [method Vector3.lerp], [method Vector4.lerp], [method Color.lerp], [method Quaternion.slerp], [method Basis.slerp], [method Transform2D.interpolate_with], or [method Transform3D.interpolate_with].
 			</description>
 		</method>
-		<method name="lerp_angle">
+		<method name="lerp_angle" keywords="interpolate">
 			<return type="float" />
 			<param index="0" name="from" type="float" />
 			<param index="1" name="to" type="float" />
@@ -651,12 +651,9 @@
 			<return type="float" />
 			<param index="0" name="lin" type="float" />
 			<description>
-				Converts from linear energy to decibels (audio). This can be used to implement volume sliders that behave as expected (since volume isn't linear).
-				[b]Example:[/b]
+				Converts from linear energy to decibels (audio). Since volume is not normally linear, this can be used to implement volume sliders that behave as expected.
+				[b]Example:[/b] Change the Master bus's volume through a [Slider] node, which ranges from [code]0.0[/code] to [code]1.0[/code]:
 				[codeblock]
-				# "Slider" refers to a node that inherits Range such as HSlider or VSlider.
-				# Its range must be configured to go from 0 to 1.
-				# Change the bus name if you'd like to change the volume of a specific bus only.
 				AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Master"), linear_to_db($Slider.value))
 				[/codeblock]
 			</description>
@@ -680,6 +677,7 @@
 				[codeblock]
 				max(1, 7, 3, -6, 5) # Returns 7
 				[/codeblock]
+				[b]Note:[/b] When using this on vectors it will [i]not[/i] perform component-wise maximum, and will pick the largest value when compared using [code]x &lt; y[/code]. To perform component-wise maximum, use [method Vector2.max], [method Vector2i.max], [method Vector3.max], [method Vector3i.max], [method Vector4.max], and [method Vector4i.max].
 			</description>
 		</method>
 		<method name="maxf">
@@ -713,6 +711,7 @@
 				[codeblock]
 				min(1, 7, 3, -6, 5) # Returns -6
 				[/codeblock]
+				[b]Note:[/b] When using this on vectors it will [i]not[/i] perform component-wise minimum, and will pick the smallest value when compared using [code]x &lt; y[/code]. To perform component-wise minimum, use [method Vector2.min], [method Vector2i.min], [method Vector3.min], [method Vector3i.min], [method Vector4.min], and [method Vector4i.min].
 			</description>
 		</method>
 		<method name="minf">
@@ -802,8 +801,8 @@
 				for i in range(-3, 4):
 				    print("%2d       %2d  | %2d" % [i, i % 3, posmod(i, 3)])
 				[/codeblock]
-				Produces:
-				[codeblock]
+				Prints:
+				[codeblock lang=text]
 				(i)  (i % 3)   (posmod(i, 3))
 				-3        0  |  0
 				-2       -2  |  1
@@ -851,9 +850,13 @@
 				[gdscript skip-lint]
 				print_rich("[color=green][b]Hello world![/b][/color]") # Prints out "Hello world!" in green with a bold font
 				[/gdscript]
+				[csharp skip-lint]
+				GD.PrintRich("[color=green][b]Hello world![/b][/color]"); // Prints out "Hello world!" in green with a bold font
+				[/csharp]
 				[/codeblocks]
 				[b]Note:[/b] Consider using [method push_error] and [method push_warning] to print error and warning messages instead of [method print] or [method print_rich]. This distinguishes them from print messages used for debugging purposes, while also displaying a stack trace when an error or warning is printed.
 				[b]Note:[/b] On Windows, only Windows 10 and later correctly displays ANSI escape codes in standard output.
+				[b]Note:[/b] Output displayed in the editor supports clickable [code skip-lint][url=address]text[/url][/code] tags. The [code skip-lint][url][/code] tag's [code]address[/code] value is handled by [method OS.shell_open] when clicked.
 			</description>
 		</method>
 		<method name="print_verbose" qualifiers="vararg">
@@ -874,6 +877,7 @@
 		<method name="printraw" qualifiers="vararg">
 			<description>
 				Prints one or more arguments to strings in the best way possible to the OS terminal. Unlike [method print], no newline is automatically added at the end.
+				[b]Note:[/b] The OS terminal is [i]not[/i] the same as the editor's Output dock. The output sent to the OS terminal can be seen when running Godot from a terminal. On Windows, this requires using the [code]console.exe[/code] executable.
 				[codeblocks]
 				[gdscript]
 				printraw("A")
@@ -954,7 +958,7 @@
 		<method name="randf">
 			<return type="float" />
 			<description>
-				Returns a random floating point value between [code]0.0[/code] and [code]1.0[/code] (inclusive).
+				Returns a random floating-point value between [code]0.0[/code] and [code]1.0[/code] (inclusive).
 				[codeblocks]
 				[gdscript]
 				randf() # Returns e.g. 0.375671
@@ -967,7 +971,7 @@
 			<param index="0" name="from" type="float" />
 			<param index="1" name="to" type="float" />
 			<description>
-				Returns a random floating point value between [param from] and [param to] (inclusive).
+				Returns a random floating-point value between [param from] and [param to] (inclusive).
 				[codeblocks]
 				[gdscript]
 				randf_range(0, 20.5) # Returns e.g. 7.45315
@@ -981,7 +985,8 @@
 			<param index="0" name="mean" type="float" />
 			<param index="1" name="deviation" type="float" />
 			<description>
-				Returns a normally-distributed pseudo-random floating point value using Box-Muller transform with the specified [param mean] and a standard [param deviation]. This is also called Gaussian distribution.
+				Returns a [url=https://en.wikipedia.org/wiki/Normal_distribution]normally-distributed[/url], pseudo-random floating-point value from the specified [param mean] and a standard [param deviation]. This is also known as a Gaussian distribution.
+				[b]Note:[/b] This method uses the [url=https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform]Box-Muller transform[/url] algorithm.
 			</description>
 		</method>
 		<method name="randi">
@@ -1018,7 +1023,7 @@
 				[b]Note:[/b] This function is called automatically when the project is run. If you need to fix the seed to have consistent, reproducible results, use [method seed] to initialize the random number generator.
 			</description>
 		</method>
-		<method name="remap">
+		<method name="remap" keywords="range, lerp, interpolate">
 			<return type="float" />
 			<param index="0" name="value" type="float" />
 			<param index="1" name="istart" type="float" />
@@ -1031,19 +1036,20 @@
 				remap(75, 0, 100, -1, 1) # Returns 0.5
 				[/codeblock]
 				For complex use cases where multiple ranges are needed, consider using [Curve] or [Gradient] instead.
+				[b]Note:[/b] If [code]istart == istop[/code], the return value is undefined (most likely NaN, INF, or -INF).
 			</description>
 		</method>
 		<method name="rid_allocate_id">
 			<return type="int" />
 			<description>
-				Allocates a unique ID which can be used by the implementation to construct a RID. This is used mainly from native extensions to implement servers.
+				Allocates a unique ID which can be used by the implementation to construct an RID. This is used mainly from native extensions to implement servers.
 			</description>
 		</method>
 		<method name="rid_from_int64">
 			<return type="RID" />
 			<param index="0" name="base" type="int" />
 			<description>
-				Creates a RID from a [param base]. This is used mainly from native extensions to build servers.
+				Creates an RID from a [param base]. This is used mainly from native extensions to build servers.
 			</description>
 		</method>
 		<method name="rotate_toward">
@@ -1173,8 +1179,9 @@
 			<param index="1" name="to" type="float" />
 			<param index="2" name="x" type="float" />
 			<description>
-				Returns the result of smoothly interpolating the value of [param x] between [code]0[/code] and [code]1[/code], based on the where [param x] lies with respect to the edges [param from] and [param to].
-				The return value is [code]0[/code] if [code]x &lt;= from[/code], and [code]1[/code] if [code]x &gt;= to[/code]. If [param x] lies between [param from] and [param to], the returned value follows an S-shaped curve that maps [param x] between [code]0[/code] and [code]1[/code].
+				Returns a smooth cubic Hermite interpolation between [code]0[/code] and [code]1[/code].
+				For positive ranges (when [code]from &lt;= to[/code]) the return value is [code]0[/code] when [code]x &lt;= from[/code], and [code]1[/code] when [code]x &gt;= to[/code]. If [param x] lies between [param from] and [param to], the return value follows an S-shaped curve that smoothly transitions from [code]0[/code] to [code]1[/code].
+				For negative ranges (when [code]from &gt; to[/code]) the function is mirrored and returns [code]1[/code] when [code]x &lt;= to[/code] and [code]0[/code] when [code]x &gt;= from[/code].
 				This S-shaped curve is the cubic Hermite interpolator, given by [code]f(y) = 3*y^2 - 2*y^3[/code] where [code]y = (x-from) / (to-from)[/code].
 				[codeblock]
 				smoothstep(0, 2, -5.0) # Returns 0.0
@@ -1184,6 +1191,7 @@
 				[/codeblock]
 				Compared to [method ease] with a curve value of [code]-1.6521[/code], [method smoothstep] returns the smoothest possible curve with no sudden changes in the derivative. If you need to perform more advanced transitions, use [Tween] or [AnimationPlayer].
 				[url=https://raw.githubusercontent.com/godotengine/godot-docs/master/img/smoothstep_ease_comparison.png]Comparison between smoothstep() and ease(x, -1.6521) return values[/url]
+				[url=https://raw.githubusercontent.com/godotengine/godot-docs/master/img/smoothstep_range.webp]Smoothstep() return values with positive, zero, and negative ranges[/url]
 			</description>
 		</method>
 		<method name="snapped">
@@ -1191,7 +1199,7 @@
 			<param index="0" name="x" type="Variant" />
 			<param index="1" name="step" type="Variant" />
 			<description>
-				Returns the multiple of [param step] that is the closest to [param x]. This can also be used to round a floating point number to an arbitrary number of decimals.
+				Returns the multiple of [param step] that is the closest to [param x]. This can also be used to round a floating-point number to an arbitrary number of decimals.
 				The returned value is the same type of [Variant] as [param step]. Supported types: [int], [float], [Vector2], [Vector2i], [Vector3], [Vector3i], [Vector4], [Vector4i].
 				[codeblock]
 				snapped(100, 32)  # Returns 96
@@ -1208,7 +1216,7 @@
 			<param index="0" name="x" type="float" />
 			<param index="1" name="step" type="float" />
 			<description>
-				Returns the multiple of [param step] that is the closest to [param x]. This can also be used to round a floating point number to an arbitrary number of decimals.
+				Returns the multiple of [param step] that is the closest to [param x]. This can also be used to round a floating-point number to an arbitrary number of decimals.
 				A type-safe version of [method snapped], returning a [float].
 				[codeblock]
 				snappedf(32.0, 2.5)  # Returns 32.5
@@ -1239,7 +1247,7 @@
 				sqrt(10.24) # Returns 3.2
 				sqrt(-1)    # Returns NaN
 				[/codeblock]
-				[b]Note:[/b] Negative values of [param x] return NaN ("Not a Number").
+				[b]Note:[/b] Negative values of [param x] return NaN ("Not a Number"). in C#, if you need negative inputs, use [code]System.Numerics.Complex[/code].
 			</description>
 		</method>
 		<method name="step_decimals">
@@ -1308,7 +1316,7 @@
 			<description>
 				Converts the given [param variant] to the given [param type], using the [enum Variant.Type] values. This method is generous with how it handles types, it can automatically convert between array types, convert numeric [String]s to [int], and converting most things to [String].
 				If the type conversion cannot be done, this method will return the default value for that type, for example converting [Rect2] to [Vector2] will always return [constant Vector2.ZERO]. This method will never show error messages as long as [param type] is a valid Variant type.
-				The returned value is a [Variant], but the data inside and the [enum Variant.Type] will be the same as the requested type.
+				The returned value is a [Variant], but the data inside and its type will be the same as the requested type.
 				[codeblock]
 				type_convert("Hi!", TYPE_INT) # Returns 0
 				type_convert("123", TYPE_INT) # Returns 123
@@ -1377,7 +1385,7 @@
 				[/gdscript]
 				[/codeblocks]
 				Prints:
-				[codeblock]
+				[codeblock lang=text]
 				{
 				    "a": 1,
 				    "b": 2
@@ -1472,6 +1480,9 @@
 		<member name="EngineDebugger" type="EngineDebugger" setter="" getter="">
 			The [EngineDebugger] singleton.
 		</member>
+		<member name="GDExtensionManager" type="GDExtensionManager" setter="" getter="">
+			The [GDExtensionManager] singleton.
+		</member>
 		<member name="Geometry2D" type="Geometry2D" setter="" getter="">
 			The [Geometry2D] singleton.
 		</member>
@@ -1484,8 +1495,16 @@
 		<member name="InputMap" type="InputMap" setter="" getter="">
 			The [InputMap] singleton.
 		</member>
+		<member name="JavaScriptBridge" type="JavaScriptBridge" setter="" getter="">
+			The [JavaScriptBridge] singleton.
+			[b]Note:[/b] Only implemented on the Web platform.
+		</member>
 		<member name="Marshalls" type="Marshalls" setter="" getter="">
 			The [Marshalls] singleton.
+		</member>
+		<member name="NativeMenu" type="NativeMenu" setter="" getter="">
+			The [NativeMenu] singleton.
+			[b]Note:[/b] Only implemented on macOS.
 		</member>
 		<member name="OS" type="OS" setter="" getter="">
 			The [OS] singleton.
@@ -2248,6 +2267,16 @@
 		<constant name="KEY_MASK_GROUP_SWITCH" value="1073741824" enum="KeyModifierMask" is_bitfield="true">
 			Group Switch key mask.
 		</constant>
+		<constant name="KEY_LOCATION_UNSPECIFIED" value="0" enum="KeyLocation">
+			Used for keys which only appear once, or when a comparison doesn't need to differentiate the [code]LEFT[/code] and [code]RIGHT[/code] versions.
+			For example, when using [method InputEvent.is_match], an event which has [constant KEY_LOCATION_UNSPECIFIED] will match any [enum KeyLocation] on the passed event.
+		</constant>
+		<constant name="KEY_LOCATION_LEFT" value="1" enum="KeyLocation">
+			A key which is to the left of its twin.
+		</constant>
+		<constant name="KEY_LOCATION_RIGHT" value="2" enum="KeyLocation">
+			A key which is to the right of its twin.
+		</constant>
 		<constant name="MOUSE_BUTTON_NONE" value="0" enum="MouseButton">
 			Enum value which doesn't correspond to any mouse button. This is used to initialize [enum MouseButton] properties with a generic state.
 		</constant>
@@ -2397,8 +2426,7 @@
 		</constant>
 		<constant name="OK" value="0" enum="Error">
 			Methods that return [enum Error] return [constant OK] when no error occurred.
-			Since [constant OK] has value 0, and all other error constants are positive integers, it can also be used in boolean checks.
-			[b]Example:[/b]
+			Since [constant OK] has value [code]0[/code], and all other error constants are positive integers, it can also be used in boolean checks.
 			[codeblock]
 			var error = method_that_returns_error()
 			if error != OK:
@@ -2632,7 +2660,7 @@
 			hint_string = "%d:%d:%d/%d:%s" % [TYPE_ARRAY, TYPE_ARRAY, elem_type, elem_hint, elem_hint_string]
 			[/gdscript]
 			[/codeblocks]
-			Examples:
+			[b]Examples:[/b]
 			[codeblocks]
 			[gdscript]
 			hint_string = "%d:" % [TYPE_INT] # Array of integers.
@@ -2650,8 +2678,7 @@
 			[/codeblocks]
 			[b]Note:[/b] The trailing colon is required for properly detecting built-in types.
 		</constant>
-		<constant name="PROPERTY_HINT_NODE_PATH_TO_EDITED_NODE" value="19" enum="PropertyHint" is_deprecated="true">
-			[i]Deprecated.[/i] This hint is not used anywhere and will be removed in the future.
+		<constant name="PROPERTY_HINT_NODE_PATH_TO_EDITED_NODE" value="19" enum="PropertyHint" deprecated="This hint is not used by the engine.">
 		</constant>
 		<constant name="PROPERTY_HINT_OBJECT_TOO_BIG" value="20" enum="PropertyHint">
 			Hints that an object is too big to be sent via the debugger.
@@ -2665,15 +2692,16 @@
 		<constant name="PROPERTY_HINT_GLOBAL_SAVE_FILE" value="23" enum="PropertyHint">
 			Hints that a [String] property is a path to a file. Editing it will show a file dialog for picking the path for the file to be saved at. The dialog has access to the entire filesystem. The hint string can be a set of filters with wildcards like [code]"*.png,*.jpg"[/code]. See also [member FileDialog.filters].
 		</constant>
-		<constant name="PROPERTY_HINT_INT_IS_OBJECTID" value="24" enum="PropertyHint" is_deprecated="true">
-			Hints that an [int] property is an object ID.
-			[i]Deprecated.[/i] This hint is not used anywhere and will be removed in the future.
+		<constant name="PROPERTY_HINT_INT_IS_OBJECTID" value="24" enum="PropertyHint" deprecated="This hint is not used by the engine.">
 		</constant>
 		<constant name="PROPERTY_HINT_INT_IS_POINTER" value="25" enum="PropertyHint">
 			Hints that an [int] property is a pointer. Used by GDExtension.
 		</constant>
 		<constant name="PROPERTY_HINT_ARRAY_TYPE" value="26" enum="PropertyHint">
 			Hints that a property is an [Array] with the stored type specified in the hint string.
+		</constant>
+		<constant name="PROPERTY_HINT_DICTIONARY_TYPE" value="31" enum="PropertyHint">
+			Hints that a property is a [Dictionary] with the stored types specified in the hint string.
 		</constant>
 		<constant name="PROPERTY_HINT_LOCALE_ID" value="27" enum="PropertyHint">
 			Hints that a string property is a locale code. Editing it will show a locale dialog for picking language and country.
@@ -2694,10 +2722,10 @@
 			The property is not stored, and does not display in the editor. This is the default for non-exported properties.
 		</constant>
 		<constant name="PROPERTY_USAGE_STORAGE" value="2" enum="PropertyUsageFlags" is_bitfield="true">
-			The property is serialized and saved in the scene file (default).
+			The property is serialized and saved in the scene file (default for exported properties).
 		</constant>
 		<constant name="PROPERTY_USAGE_EDITOR" value="4" enum="PropertyUsageFlags" is_bitfield="true">
-			The property is shown in the [EditorInspector] (default).
+			The property is shown in the [EditorInspector] (default for exported properties).
 		</constant>
 		<constant name="PROPERTY_USAGE_INTERNAL" value="8" enum="PropertyUsageFlags" is_bitfield="true">
 			The property is excluded from the class reference.
@@ -2775,10 +2803,8 @@
 			An export preset property with this flag contains confidential information and is stored separately from the rest of the export preset configuration.
 		</constant>
 		<constant name="PROPERTY_USAGE_NO_UNDO" value="268435456" enum="PropertyUsageFlags" is_bitfield="true">
-			Prevent the property from being added to the EditorUndoRedo when changed.
 		</constant>
 		<constant name="PROPERTY_USAGE_CUSTOM" value="536870912" enum="PropertyUsageFlags" is_bitfield="true">
-			For custom properties, ie. custom property editors like a user defined object inspector.
 		</constant>
 		<constant name="PROPERTY_USAGE_DEFAULT" value="6" enum="PropertyUsageFlags" is_bitfield="true">
 			Default usage (storage and editor).

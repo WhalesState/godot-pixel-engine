@@ -2,10 +2,9 @@
 /*  line_edit.h                                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -87,7 +86,7 @@ public:
 private:
 	HorizontalAlignment alignment = HORIZONTAL_ALIGNMENT_LEFT;
 
-	bool is_editing = false;
+	bool editing = false;
 	bool editable = false;
 	bool pass = false;
 	bool text_changed_dirty = false;
@@ -207,6 +206,9 @@ private:
 		float base_scale = 1.0;
 	} theme_cache;
 
+	void _edit();
+	void _unedit();
+
 	void _clear_undo_stack();
 	void _clear_redo();
 	void _create_undo_state();
@@ -259,9 +261,7 @@ protected:
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
 
 public:
-	void edit(bool p_select_all = false);
-	void unedit();
-	bool is_being_edited() const;
+	bool is_editing() const;
 
 	void set_horizontal_alignment(HorizontalAlignment p_alignment);
 	HorizontalAlignment get_horizontal_alignment() const;

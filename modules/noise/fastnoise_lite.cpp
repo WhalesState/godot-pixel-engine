@@ -2,10 +2,9 @@
 /*  fastnoise_lite.cpp                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -321,20 +320,6 @@ real_t FastNoiseLite::get_noise_2d(real_t p_x, real_t p_y) const {
 		_domain_warp_noise.DomainWarp(p_x, p_y);
 	}
 	return _noise.GetNoise(p_x, p_y);
-}
-
-real_t FastNoiseLite::get_noise_3dv(Vector3 p_v) const {
-	return get_noise_3d(p_v.x, p_v.y, p_v.z);
-}
-
-real_t FastNoiseLite::get_noise_3d(real_t p_x, real_t p_y, real_t p_z) const {
-	p_x += offset.x;
-	p_y += offset.y;
-	p_z += offset.z;
-	if (domain_warp_enabled) {
-		_domain_warp_noise.DomainWarp(p_x, p_y, p_z);
-	}
-	return _noise.GetNoise(p_x, p_y, p_z);
 }
 
 void FastNoiseLite::_changed() {

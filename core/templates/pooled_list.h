@@ -2,10 +2,9 @@
 /*  pooled_list.h                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -56,7 +55,7 @@
 
 #include "core/templates/local_vector.h"
 
-template <class T, class U = uint32_t, bool force_trivial = false, bool zero_on_first_request = false>
+template <typename T, typename U = uint32_t, bool force_trivial = false, bool zero_on_first_request = false>
 class PooledList {
 	LocalVector<T, U, force_trivial> list;
 	LocalVector<U, U, true> freelist;
@@ -129,7 +128,7 @@ public:
 };
 
 // a pooled list which automatically keeps a list of the active members
-template <class T, class U = uint32_t, bool force_trivial = false, bool zero_on_first_request = false>
+template <typename T, typename U = uint32_t, bool force_trivial = false, bool zero_on_first_request = false>
 class TrackedPooledList {
 public:
 	U pool_used_size() const { return _pool.used_size(); }

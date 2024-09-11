@@ -2,10 +2,9 @@
 /*  register_module_types.h                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,11 +31,13 @@
 #ifndef REGISTER_MODULE_TYPES_H
 #define REGISTER_MODULE_TYPES_H
 
+#include "core/extension/gdextension_interface.h"
+
 enum ModuleInitializationLevel {
-	MODULE_INITIALIZATION_LEVEL_CORE,
-	MODULE_INITIALIZATION_LEVEL_SERVERS,
-	MODULE_INITIALIZATION_LEVEL_SCENE,
-	MODULE_INITIALIZATION_LEVEL_EDITOR
+	MODULE_INITIALIZATION_LEVEL_CORE = GDEXTENSION_INITIALIZATION_CORE,
+	MODULE_INITIALIZATION_LEVEL_SERVERS = GDEXTENSION_INITIALIZATION_SERVERS,
+	MODULE_INITIALIZATION_LEVEL_SCENE = GDEXTENSION_INITIALIZATION_SCENE,
+	MODULE_INITIALIZATION_LEVEL_EDITOR = GDEXTENSION_INITIALIZATION_EDITOR
 };
 
 void initialize_modules(ModuleInitializationLevel p_level);

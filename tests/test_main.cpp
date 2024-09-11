@@ -2,10 +2,9 @@
 /*  test_main.cpp                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -31,6 +30,13 @@
 
 #include "test_main.h"
 
+#include "modules/modules_enabled.gen.h"
+
+#ifdef TOOLS_ENABLED
+#include "editor/editor_paths.h"
+#include "editor/editor_settings.h"
+#endif // TOOLS_ENABLED
+
 #include "tests/core/config/test_project_settings.h"
 #include "tests/core/input/test_input_event.h"
 #include "tests/core/input/test_input_event_key.h"
@@ -40,12 +46,15 @@
 #include "tests/core/io/test_file_access.h"
 #include "tests/core/io/test_http_client.h"
 #include "tests/core/io/test_image.h"
+#include "tests/core/io/test_ip.h"
 #include "tests/core/io/test_json.h"
+#include "tests/core/io/test_json_native.h"
 #include "tests/core/io/test_marshalls.h"
 #include "tests/core/io/test_pck_packer.h"
 #include "tests/core/io/test_resource.h"
 #include "tests/core/io/test_xml_parser.h"
 #include "tests/core/math/test_aabb.h"
+#include "tests/core/math/test_astar.h"
 #include "tests/core/math/test_basis.h"
 #include "tests/core/math/test_color.h"
 #include "tests/core/math/test_expression.h"
@@ -56,7 +65,6 @@
 #include "tests/core/math/test_rect2.h"
 #include "tests/core/math/test_rect2i.h"
 #include "tests/core/math/test_transform_2d.h"
-#include "tests/core/math/test_transform_3d.h"
 #include "tests/core/math/test_vector2.h"
 #include "tests/core/math/test_vector2i.h"
 #include "tests/core/math/test_vector3.h"
@@ -66,6 +74,7 @@
 #include "tests/core/object/test_class_db.h"
 #include "tests/core/object/test_method_bind.h"
 #include "tests/core/object/test_object.h"
+#include "tests/core/object/test_undo_redo.h"
 #include "tests/core/os/test_os.h"
 #include "tests/core/string/test_node_path.h"
 #include "tests/core/string/test_string.h"
@@ -77,6 +86,7 @@
 #include "tests/core/templates/test_list.h"
 #include "tests/core/templates/test_local_vector.h"
 #include "tests/core/templates/test_lru.h"
+#include "tests/core/templates/test_oa_hash_map.h"
 #include "tests/core/templates/test_paged_array.h"
 #include "tests/core/templates/test_rid.h"
 #include "tests/core/templates/test_vector.h"
@@ -85,28 +95,47 @@
 #include "tests/core/test_time.h"
 #include "tests/core/threads/test_worker_thread_pool.h"
 #include "tests/core/variant/test_array.h"
+#include "tests/core/variant/test_callable.h"
 #include "tests/core/variant/test_dictionary.h"
 #include "tests/core/variant/test_variant.h"
 #include "tests/core/variant/test_variant_utility.h"
 #include "tests/scene/test_animation.h"
+#include "tests/scene/test_audio_stream_wav.h"
 #include "tests/scene/test_bit_map.h"
-#include "tests/scene/test_code_edit.h"
-#include "tests/scene/test_color_picker.h"
+#include "tests/scene/test_button.h"
+#include "tests/scene/test_camera_2d.h"
 #include "tests/scene/test_control.h"
 #include "tests/scene/test_curve.h"
 #include "tests/scene/test_curve_2d.h"
 #include "tests/scene/test_gradient.h"
+#include "tests/scene/test_gradient_texture.h"
+#include "tests/scene/test_image_texture.h"
+#include "tests/scene/test_instance_placeholder.h"
 #include "tests/scene/test_node.h"
 #include "tests/scene/test_node_2d.h"
 #include "tests/scene/test_packed_scene.h"
+#include "tests/scene/test_parallax_2d.h"
 #include "tests/scene/test_path_2d.h"
+#include "tests/scene/test_path_follow_2d.h"
 #include "tests/scene/test_sprite_frames.h"
-#include "tests/scene/test_text_edit.h"
+#include "tests/scene/test_style_box_texture.h"
 #include "tests/scene/test_theme.h"
+#include "tests/scene/test_timer.h"
 #include "tests/scene/test_viewport.h"
+#include "tests/scene/test_visual_shader.h"
 #include "tests/scene/test_window.h"
+#include "tests/servers/rendering/test_shader_preprocessor.h"
 #include "tests/servers/test_text_server.h"
 #include "tests/test_validate_testing.h"
+
+#ifndef ADVANCED_GUI_DISABLED
+#include "tests/scene/test_code_edit.h"
+#include "tests/scene/test_color_picker.h"
+#include "tests/scene/test_graph_node.h"
+#include "tests/scene/test_option_button.h"
+#include "tests/scene/test_text_edit.h"
+#include "tests/scene/test_tree.h"
+#endif // ADVANCED_GUI_DISABLED
 
 #include "modules/modules_tests.gen.h"
 
@@ -147,7 +176,7 @@ int test_main(int argc, char *argv[]) {
 	}
 	// Doctest runner.
 	doctest::Context test_context;
-	List<String> test_args;
+	LocalVector<String> test_args;
 
 	// Clean arguments of "--test" from the args.
 	for (int x = 0; x < argc; x++) {
@@ -160,7 +189,7 @@ int test_main(int argc, char *argv[]) {
 	if (test_args.size() > 0) {
 		// Convert Godot command line arguments back to standard arguments.
 		char **doctest_args = new char *[test_args.size()];
-		for (int x = 0; x < test_args.size(); x++) {
+		for (uint32_t x = 0; x < test_args.size(); x++) {
 			// Operation to convert Godot string to non wchar string.
 			CharString cs = test_args[x].utf8();
 			const char *str = cs.get_data();
@@ -172,7 +201,7 @@ int test_main(int argc, char *argv[]) {
 
 		test_context.applyCommandLine(test_args.size(), doctest_args);
 
-		for (int x = 0; x < test_args.size(); x++) {
+		for (uint32_t x = 0; x < test_args.size(); x++) {
 			delete[] doctest_args[x];
 		}
 		delete[] doctest_args;
@@ -194,7 +223,7 @@ struct GodotTestCaseListener : public doctest::IReporter {
 		String name = String(p_in.m_name);
 		String suite_name = String(p_in.m_test_suite);
 
-		if (name.find("[SceneTree]") != -1) {
+		if (name.contains("[SceneTree]") || name.contains("[Editor]")) {
 			memnew(MessageQueue);
 
 			memnew(Input);
@@ -204,7 +233,7 @@ struct GodotTestCaseListener : public doctest::IReporter {
 			OS::get_singleton()->set_has_server_feature_callback(nullptr);
 			for (int i = 0; i < DisplayServer::get_create_function_count(); i++) {
 				if (String("mock") == DisplayServer::get_create_function_name(i)) {
-					DisplayServer::create(i, "", DisplayServer::WindowMode::WINDOW_MODE_MINIMIZED, DisplayServer::VSyncMode::VSYNC_ENABLED, 0, nullptr, Vector2i(0, 0), DisplayServer::SCREEN_PRIMARY, err);
+					DisplayServer::create(i, "", DisplayServer::WindowMode::WINDOW_MODE_MINIMIZED, DisplayServer::VSyncMode::VSYNC_ENABLED, 0, nullptr, Vector2i(0, 0), DisplayServer::SCREEN_PRIMARY, DisplayServer::CONTEXT_EDITOR, err);
 					break;
 				}
 			}
@@ -226,11 +255,37 @@ struct GodotTestCaseListener : public doctest::IReporter {
 			if (!DisplayServer::get_singleton()->has_feature(DisplayServer::Feature::FEATURE_SUBWINDOWS)) {
 				SceneTree::get_singleton()->get_root()->set_embedding_subwindows(true);
 			}
+
+#ifdef TOOLS_ENABLED
+			if (name.contains("[Editor]")) {
+				Engine::get_singleton()->set_editor_hint(true);
+				EditorPaths::create();
+				EditorSettings::create();
+			}
+#endif // TOOLS_ENABLED
+
+			return;
+		}
+
+		if (name.contains("[Audio]")) {
+			// The last driver index should always be the dummy driver.
+			int dummy_idx = AudioDriverManager::get_driver_count() - 1;
+			AudioDriverManager::initialize(dummy_idx);
+			AudioServer *audio_server = memnew(AudioServer);
+			audio_server->init();
 			return;
 		}
 	}
 
 	void test_case_end(const doctest::CurrentTestCaseStats &) override {
+#ifdef TOOLS_ENABLED
+		if (EditorSettings::get_singleton()) {
+			EditorSettings::destroy();
+		}
+#endif // TOOLS_ENABLED
+
+		Engine::get_singleton()->set_editor_hint(false);
+
 		if (SceneTree::get_singleton()) {
 			SceneTree::get_singleton()->finalize();
 		}
@@ -269,6 +324,11 @@ struct GodotTestCaseListener : public doctest::IReporter {
 		if (MessageQueue::get_singleton()) {
 			MessageQueue::get_singleton()->flush();
 			memdelete(MessageQueue::get_singleton());
+		}
+
+		if (AudioServer::get_singleton()) {
+			AudioServer::get_singleton()->finish();
+			memdelete(AudioServer::get_singleton());
 		}
 	}
 

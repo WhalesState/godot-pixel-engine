@@ -2,10 +2,9 @@
 /*  noise.h                                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -288,14 +287,12 @@ public:
 	virtual real_t get_noise_2dv(Vector2 p_v) const = 0;
 	virtual real_t get_noise_2d(real_t p_x, real_t p_y) const = 0;
 
-	virtual real_t get_noise_3dv(Vector3 p_v) const = 0;
-	virtual real_t get_noise_3d(real_t p_x, real_t p_y, real_t p_z) const = 0;
 
-	Vector<Ref<Image>> _get_image(int p_width, int p_height, int p_depth, bool p_invert = false, bool p_in_3d_space = false, bool p_normalize = true) const;
-	virtual Ref<Image> get_image(int p_width, int p_height, bool p_invert = false, bool p_in_3d_space = false, bool p_normalize = true) const;
+	Vector<Ref<Image>> _get_image(int p_width, int p_height, int p_depth, bool p_invert = false, bool p_normalize = true) const;
+	virtual Ref<Image> get_image(int p_width, int p_height, bool p_invert = false, bool p_normalize = true) const;
 
-	Vector<Ref<Image>> _get_seamless_image(int p_width, int p_height, int p_depth, bool p_invert = false, bool p_in_3d_space = false, real_t p_blend_skirt = 0.1, bool p_normalize = true) const;
-	virtual Ref<Image> get_seamless_image(int p_width, int p_height, bool p_invert = false, bool p_in_3d_space = false, real_t p_blend_skirt = 0.1, bool p_normalize = true) const;
+	Vector<Ref<Image>> _get_seamless_image(int p_width, int p_height, int p_depth, bool p_invert = false, real_t p_blend_skirt = 0.1, bool p_normalize = true) const;
+	virtual Ref<Image> get_seamless_image(int p_width, int p_height, bool p_invert = false, real_t p_blend_skirt = 0.1, bool p_normalize = true) const;
 };
 
 #endif // NOISE_H

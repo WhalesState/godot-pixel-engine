@@ -2,10 +2,9 @@
 /*  editor_run_native.h                                                   */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -42,11 +41,15 @@ class EditorRunNative : public HBoxContainer {
 
 	RichTextLabel *result_dialog_log = nullptr;
 	AcceptDialog *result_dialog = nullptr;
+	ConfirmationDialog *run_native_confirm = nullptr;
+	bool run_confirmed = false;
 
 	MenuButton *remote_debug = nullptr;
 	bool first = true;
 
 	int resume_id = -1;
+
+	void _confirm_run_native();
 
 protected:
 	static void _bind_methods();

@@ -2,10 +2,9 @@
 /*  test_os.h                                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -48,18 +47,40 @@ TEST_CASE("[OS] Environment variables") {
 			OS::get_singleton()->has_environment("HOME"),
 			"The HOME environment variable should be present.");
 #endif
+}
 
-	OS::get_singleton()->set_environment("HELLO", "world");
+TEST_CASE("[OS] UTF-8 environment variables") {
+	String value = String::utf8("hell\xc3\xb6"); // "hellö", UTF-8 encoded
+
+	OS::get_singleton()->set_environment("HELLO", value);
+	String val = OS::get_singleton()->get_environment("HELLO");
 	CHECK_MESSAGE(
-			OS::get_singleton()->get_environment("HELLO") == "world",
+			val == value,
 			"The previously-set HELLO environment variable should return the expected value.");
+	CHECK_MESSAGE(
+			val.length() == 5,
+			"The previously-set HELLO environment variable was decoded as UTF-8 and should have a length of 5.");
+	OS::get_singleton()->unset_environment("HELLO");
+}
+
+TEST_CASE("[OS] Non-UTF-8 environment variables") {
+	String value = String("\xff t\xf6rkylempij\xe4vongahdus"); // hex FF and a Finnish pangram, latin-1
+	OS::get_singleton()->set_environment("HELLO", value);
+	String val = OS::get_singleton()->get_environment("HELLO");
+	CHECK_MESSAGE(
+			val == value,
+			"The previously-set HELLO environment variable should return the expected value.");
+	CHECK_MESSAGE(
+			val.length() == 23,
+			"The previously-set HELLO environment variable was not decoded from Latin-1.");
+	OS::get_singleton()->unset_environment("HELLO");
 }
 
 TEST_CASE("[OS] Command line arguments") {
 	List<String> arguments = OS::get_singleton()->get_cmdline_args();
 	bool found = false;
-	for (int i = 0; i < arguments.size(); i++) {
-		if (arguments[i] == "--test") {
+	for (const String &arg : arguments) {
+		if (arg == "--test") {
 			found = true;
 			break;
 		}
@@ -142,12 +163,14 @@ TEST_CASE("[OS] Processor count and memory information") {
 	CHECK_MESSAGE(
 			OS::get_singleton()->get_processor_count() >= 1,
 			"The returned processor count should be greater than zero.");
+#ifdef DEBUG_ENABLED
 	CHECK_MESSAGE(
 			OS::get_singleton()->get_static_memory_usage() >= 1,
 			"The returned static memory usage should be greater than zero.");
 	CHECK_MESSAGE(
 			OS::get_singleton()->get_static_memory_peak_usage() >= 1,
 			"The returned static memory peak usage should be greater than zero.");
+#endif // DEBUG_ENABLED
 }
 
 TEST_CASE("[OS] Execute") {

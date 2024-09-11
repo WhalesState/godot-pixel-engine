@@ -2,10 +2,9 @@
 /*  syntax_highlighter.h                                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -94,6 +93,8 @@ private:
 	Color symbol_color;
 	Color number_color;
 
+	bool uint_suffix_enabled = false;
+
 protected:
 	static void _bind_methods();
 
@@ -140,6 +141,8 @@ public:
 
 	void set_member_variable_color(Color p_color);
 	Color get_member_variable_color() const;
+
+	void set_uint_suffix_enabled(bool p_enabled);
 };
 
 #endif // SYNTAX_HIGHLIGHTER_H

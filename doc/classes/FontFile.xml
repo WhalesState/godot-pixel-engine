@@ -37,7 +37,7 @@
 			<param index="0" name="cache_index" type="int" />
 			<param index="1" name="size" type="Vector2i" />
 			<description>
-				Removes all rendered glyphs information from the cache entry.
+				Removes all rendered glyph information from the cache entry.
 				[b]Note:[/b] This function will not remove textures associated with the glyphs, use [method remove_texture] to remove them manually.
 			</description>
 		</method>
@@ -124,6 +124,13 @@
 			<param index="0" name="cache_index" type="int" />
 			<description>
 				Returns embolden strength, if is not equal to zero, emboldens the font outlines. Negative values reduce the outline thickness.
+			</description>
+		</method>
+		<method name="get_extra_baseline_offset" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="cache_index" type="int" />
+			<description>
+				Returns extra baseline offset (as a fraction of font height).
 			</description>
 		</method>
 		<method name="get_extra_spacing" qualifiers="const">
@@ -440,6 +447,14 @@
 				Sets embolden strength, if is not equal to zero, emboldens the font outlines. Negative values reduce the outline thickness.
 			</description>
 		</method>
+		<method name="set_extra_baseline_offset">
+			<return type="void" />
+			<param index="0" name="cache_index" type="int" />
+			<param index="1" name="baseline_offset" type="float" />
+			<description>
+				Sets extra baseline offset (as a fraction of font height).
+			</description>
+		</method>
 		<method name="set_extra_spacing">
 			<return type="void" />
 			<param index="0" name="cache_index" type="int" />
@@ -559,7 +574,7 @@
 			<param index="0" name="cache_index" type="int" />
 			<param index="1" name="transform" type="Transform2D" />
 			<description>
-				Sets 2D transform, applied to the font outlines, can be used for slanting, flipping and rotating glyphs.
+				Sets 2D transform, applied to the font outlines, can be used for slanting, flipping, and rotating glyphs.
 			</description>
 		</method>
 		<method name="set_variation_coordinates">
@@ -580,6 +595,9 @@
 		</member>
 		<member name="data" type="PackedByteArray" setter="set_data" getter="get_data" default="PackedByteArray()">
 			Contents of the dynamic font source file.
+		</member>
+		<member name="disable_embedded_bitmaps" type="bool" setter="set_disable_embedded_bitmaps" getter="get_disable_embedded_bitmaps" default="true">
+			If set to [code]true[/code], embedded font bitmap loading is disabled (bitmap-only and color fonts ignore this property).
 		</member>
 		<member name="fixed_size" type="int" setter="set_fixed_size" getter="get_fixed_size" default="0">
 			Font size, used only for the bitmap fonts.
@@ -615,7 +633,7 @@
 			Source font size used to generate MSDF textures. Higher values allow for more precision, but are slower to render and require more memory. Only increase this value if you notice a visible lack of precision in glyph rendering.
 		</member>
 		<member name="multichannel_signed_distance_field" type="bool" setter="set_multichannel_signed_distance_field" getter="is_multichannel_signed_distance_field" default="false">
-			If set to [code]true[/code], glyphs of all sizes are rendered using single multichannel signed distance field (MSDF) generated from the dynamic font vector data. Since this approach does not rely on rasterizing the font every time its size changes, this allows for resizing the font in real-time without any performance penalty. Text will also not look grainy for [Control]s that are scaled down. As a downside, font hinting is not available with MSDF. The lack of font hinting may result in less crisp and less readable fonts at small sizes.
+			If set to [code]true[/code], glyphs of all sizes are rendered using single multichannel signed distance field (MSDF) generated from the dynamic font vector data. Since this approach does not rely on rasterizing the font every time its size changes, this allows for resizing the font in real-time without any performance penalty. Text will also not look grainy for [Control]s that are scaled down (or for [Label3D]s viewed from a long distance). As a downside, font hinting is not available with MSDF. The lack of font hinting may result in less crisp and less readable fonts at small sizes.
 			[b]Note:[/b] If using font outlines, [member msdf_pixel_range] must be set to at least [i]twice[/i] the size of the largest font outline.
 			[b]Note:[/b] MSDF font rendering does not render glyphs with overlapping shapes correctly. Overlapping shapes are not valid per the OpenType standard, but are still commonly found in many font files, especially those converted by Google Fonts. To avoid issues with overlapping glyphs, consider downloading the font file directly from the type foundry instead of relying on Google Fonts.
 		</member>

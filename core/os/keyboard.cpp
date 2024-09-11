@@ -2,10 +2,9 @@
 /*  keyboard.cpp                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -371,7 +370,7 @@ String keycode_get_string(Key p_code) {
 		codestr += "+";
 	}
 	if ((p_code & KeyModifierMask::CMD_OR_CTRL) != Key::NONE) {
-		if (OS::get_singleton()->has_feature("macos") || OS::get_singleton()->has_feature("web_macos") || OS::get_singleton()->has_feature("web_ios")) {
+		if (OS::get_singleton()->has_feature("macos") || OS::get_singleton()->has_feature("web_macos")) {
 			codestr += find_keycode_name(Key::META);
 		} else {
 			codestr += find_keycode_name(Key::CTRL);
@@ -411,7 +410,7 @@ Key find_keycode(const String &p_codestr) {
 		return keycode;
 	}
 
-	String last_part = code_parts[code_parts.size() - 1];
+	const String &last_part = code_parts[code_parts.size() - 1];
 	const _KeyCodeText *kct = &_keycodes[0];
 
 	while (kct->text) {
@@ -423,7 +422,7 @@ Key find_keycode(const String &p_codestr) {
 	}
 
 	for (int part = 0; part < code_parts.size() - 1; part++) {
-		String code_part = code_parts[part];
+		const String &code_part = code_parts[part];
 		if (code_part.nocasecmp_to(find_keycode_name(Key::SHIFT)) == 0) {
 			keycode |= KeyModifierMask::SHIFT;
 		} else if (code_part.nocasecmp_to(find_keycode_name(Key::CTRL)) == 0) {

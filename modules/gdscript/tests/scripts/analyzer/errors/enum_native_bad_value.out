@@ -1,2 +1,2 @@
 GDTEST_ANALYZER_ERROR
-Cannot find member "THIS_DOES_NOT_EXIST" in base "BoxContainer.AlignmentMode".
+Cannot find member "THIS_DOES_NOT_EXIST" in base "TileSet.TileShape".

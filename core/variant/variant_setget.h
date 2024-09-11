@@ -2,10 +2,9 @@
 /*  variant_setget.h                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -34,7 +33,6 @@
 
 #include "variant.h"
 
-#include "core/core_string_names.h"
 #include "core/debugger/engine_debugger.h"
 #include "core/object/class_db.h"
 #include "core/templates/local_vector.h"
@@ -317,9 +315,6 @@ SETGET_NUMBER_STRUCT(Plane, double, d)
 SETGET_STRUCT_FUNC_INDEX(Basis, Vector3, x, set_column, get_column, 0)
 SETGET_STRUCT_FUNC_INDEX(Basis, Vector3, y, set_column, get_column, 1)
 SETGET_STRUCT_FUNC_INDEX(Basis, Vector3, z, set_column, get_column, 2)
-
-SETGET_STRUCT(Transform3D, Basis, basis)
-SETGET_STRUCT(Transform3D, Vector3, origin)
 
 SETGET_STRUCT_CUSTOM(Projection, Vector4, x, columns[0])
 SETGET_STRUCT_CUSTOM(Projection, Vector4, y, columns[1])

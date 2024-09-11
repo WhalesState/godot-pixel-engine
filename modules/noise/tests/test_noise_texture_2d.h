@@ -2,10 +2,9 @@
 /*  test_noise_texture_2d.h                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -136,7 +135,7 @@ TEST_CASE("[NoiseTexture][SceneTree] Getter and setter") {
 	noise_texture->set_noise(noise);
 	CHECK(noise_texture->get_noise() == noise);
 	noise_texture->set_noise(nullptr);
-	CHECK(noise_texture->get_noise() == nullptr);
+	CHECK(noise_texture->get_noise().is_null());
 
 	noise_texture->set_width(8);
 	noise_texture->set_height(4);
@@ -154,11 +153,6 @@ TEST_CASE("[NoiseTexture][SceneTree] Getter and setter") {
 	CHECK(noise_texture->get_invert() == true);
 	noise_texture->set_invert(false);
 	CHECK(noise_texture->get_invert() == false);
-
-	noise_texture->set_in_3d_space(true);
-	CHECK(noise_texture->is_in_3d_space() == true);
-	noise_texture->set_in_3d_space(false);
-	CHECK(noise_texture->is_in_3d_space() == false);
 
 	noise_texture->set_generate_mipmaps(true);
 	CHECK(noise_texture->is_generating_mipmaps() == true);
@@ -191,7 +185,7 @@ TEST_CASE("[NoiseTexture][SceneTree] Getter and setter") {
 	noise_texture->set_color_ramp(gradient);
 	CHECK(noise_texture->get_color_ramp() == gradient);
 	noise_texture->set_color_ramp(nullptr);
-	CHECK(noise_texture->get_color_ramp() == nullptr);
+	CHECK(noise_texture->get_color_ramp().is_null());
 }
 
 TEST_CASE("[NoiseTexture2D][SceneTree] Generating a basic noise texture with mipmaps and color ramp modulation") {

@@ -2,10 +2,9 @@
 /*  gl_manager_windows_angle.cpp                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -66,6 +65,11 @@ Vector<EGLint> GLManagerANGLE_Windows::_get_platform_context_attribs() const {
 	ret.push_back(EGL_NONE);
 
 	return ret;
+}
+
+void GLManagerANGLE_Windows::window_resize(DisplayServer::WindowID p_window_id, int p_width, int p_height) {
+	window_make_current(p_window_id);
+	eglWaitNative(EGL_CORE_NATIVE_ENGINE);
 }
 
 #endif // WINDOWS_ENABLED && GLES3_ENABLED

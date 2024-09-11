@@ -13,9 +13,6 @@
 			The [Gradient] used to fill the texture.
 		</member>
 		<member name="resource_local_to_scene" type="bool" setter="set_local_to_scene" getter="is_local_to_scene" overrides="Resource" default="false" />
-		<member name="use_hdr" type="bool" setter="set_use_hdr" getter="is_using_hdr" default="false">
-			If [code]true[/code], the generated texture will support high dynamic range ([constant Image.FORMAT_RGBAF] format). This allows for glow effects to work if Environment.glow_enabled is [code]true[/code]. If [code]false[/code], the generated texture will use low dynamic range; overbright colors will be clamped ([constant Image.FORMAT_RGBA8] format).
-		</member>
 		<member name="width" type="int" setter="set_width" getter="get_width" default="256">
 			The number of color samples that will be obtained from the [Gradient].
 		</member>

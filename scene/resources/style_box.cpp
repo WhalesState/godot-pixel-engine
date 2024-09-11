@@ -2,10 +2,9 @@
 /*  style_box.cpp                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -124,9 +123,6 @@ void StyleBox::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_content_margin", "margin", "offset"), &StyleBox::set_content_margin);
 	ClassDB::bind_method(D_METHOD("set_content_margin_all", "offset"), &StyleBox::set_content_margin_all);
 	ClassDB::bind_method(D_METHOD("get_content_margin", "margin"), &StyleBox::get_content_margin);
-
-	ClassDB::bind_method(D_METHOD("get_expand_margin_begin"), &StyleBox::get_expand_margin_begin);
-	ClassDB::bind_method(D_METHOD("get_expand_margin_end"), &StyleBox::get_expand_margin_end);
 
 	ClassDB::bind_method(D_METHOD("get_margin", "margin"), &StyleBox::get_margin);
 	ClassDB::bind_method(D_METHOD("get_offset"), &StyleBox::get_offset);

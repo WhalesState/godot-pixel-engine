@@ -2,10 +2,9 @@
 /*  zip_io.cpp                                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -54,7 +53,7 @@ int godot_unzip_get_current_file_info(unzFile p_zip_file, unz_file_info64 &r_fil
 	return err;
 }
 
-int godot_unzip_locate_file(unzFile p_zip_file, String p_filepath, bool p_case_sensitive) {
+int godot_unzip_locate_file(unzFile p_zip_file, const String &p_filepath, bool p_case_sensitive) {
 	int err = unzGoToFirstFile(p_zip_file);
 	while (err == UNZ_OK) {
 		unz_file_info64 current_file_info;

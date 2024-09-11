@@ -2,10 +2,9 @@
 /*  canvas_item.h                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -140,6 +139,8 @@ private:
 
 	void _notify_transform(CanvasItem *p_node);
 
+	virtual void _physics_interpolated_changed() override;
+
 	static CanvasItem *current_item_drawn;
 	friend class Viewport;
 	void _refresh_texture_repeat_cache() const;
@@ -150,6 +151,9 @@ private:
 	void _notify_transform_deferred();
 
 protected:
+	virtual void _update_self_texture_repeat(RS::CanvasItemTextureRepeat p_texture_repeat);
+	virtual void _update_self_texture_filter(RS::CanvasItemTextureFilter p_texture_filter);
+
 	_FORCE_INLINE_ void _notify_transform() {
 		_notify_transform(this);
 		if (is_inside_tree() && !block_transform_notify && notify_local_transform) {
@@ -237,7 +241,7 @@ public:
 	Color get_modulate() const;
 	Color get_modulate_in_tree() const;
 
-	void set_self_modulate(const Color &p_self_modulate);
+	virtual void set_self_modulate(const Color &p_self_modulate);
 	Color get_self_modulate() const;
 
 	void set_visibility_layer(uint32_t p_visibility_layer);
@@ -248,7 +252,7 @@ public:
 
 	/* ORDERING */
 
-	void set_z_index(int p_z);
+	virtual void set_z_index(int p_z);
 	int get_z_index() const;
 	int get_effective_z_index() const;
 
@@ -260,15 +264,15 @@ public:
 
 	/* DRAWING API */
 
-	void draw_dashed_line(const Point2 &p_from, const Point2 &p_to, const Color &p_color, real_t p_width = -1.0, real_t p_dash = 2.0, bool p_aligned = true);
+	void draw_dashed_line(const Point2 &p_from, const Point2 &p_to, const Color &p_color, real_t p_width = -1.0, real_t p_dash = 2.0, bool p_aligned = true, bool p_antialiased = false);
 	void draw_line(const Point2 &p_from, const Point2 &p_to, const Color &p_color, real_t p_width = -1.0, bool p_antialiased = false);
 	void draw_polyline(const Vector<Point2> &p_points, const Color &p_color, real_t p_width = -1.0, bool p_antialiased = false);
 	void draw_polyline_colors(const Vector<Point2> &p_points, const Vector<Color> &p_colors, real_t p_width = -1.0, bool p_antialiased = false);
 	void draw_arc(const Vector2 &p_center, real_t p_radius, real_t p_start_angle, real_t p_end_angle, int p_point_count, const Color &p_color, real_t p_width = -1.0, bool p_antialiased = false);
-	void draw_multiline(const Vector<Point2> &p_points, const Color &p_color, real_t p_width = -1.0);
-	void draw_multiline_colors(const Vector<Point2> &p_points, const Vector<Color> &p_colors, real_t p_width = -1.0);
-	void draw_rect(const Rect2 &p_rect, const Color &p_color, bool p_filled = true, real_t p_width = -1.0);
-	void draw_circle(const Point2 &p_pos, real_t p_radius, const Color &p_color);
+	void draw_multiline(const Vector<Point2> &p_points, const Color &p_color, real_t p_width = -1.0, bool p_antialiased = false);
+	void draw_multiline_colors(const Vector<Point2> &p_points, const Vector<Color> &p_colors, real_t p_width = -1.0, bool p_antialiased = false);
+	void draw_rect(const Rect2 &p_rect, const Color &p_color, bool p_filled = true, real_t p_width = -1.0, bool p_antialiased = false);
+	void draw_circle(const Point2 &p_pos, real_t p_radius, const Color &p_color, bool p_filled = true, real_t p_width = -1.0, bool p_antialiased = false);
 	void draw_texture(const Ref<Texture2D> &p_texture, const Point2 &p_pos, const Color &p_modulate = Color(1, 1, 1, 1));
 	void draw_texture_rect(const Ref<Texture2D> &p_texture, const Rect2 &p_rect, bool p_tile = false, const Color &p_modulate = Color(1, 1, 1), bool p_transpose = false);
 	void draw_texture_rect_region(const Ref<Texture2D> &p_texture, const Rect2 &p_rect, const Rect2 &p_src_rect, const Color &p_modulate = Color(1, 1, 1), bool p_transpose = false, bool p_clip_uv = false);
@@ -360,6 +364,7 @@ public:
 	virtual Rect2 get_anchorable_rect() const { return Rect2(0, 0, 0, 0); };
 
 	int get_canvas_layer() const;
+	CanvasLayer *get_canvas_layer_node() const;
 
 	CanvasItem();
 	~CanvasItem();

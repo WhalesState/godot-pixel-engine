@@ -2,10 +2,9 @@
 /*  atlas_texture.h                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -37,6 +36,8 @@
 class AtlasTexture : public Texture2D {
 	GDCLASS(AtlasTexture, Texture2D);
 	RES_BASE_EXTENSION("atlastex");
+
+	Rect2 _get_region_rect() const;
 
 protected:
 	Ref<Texture2D> atlas;

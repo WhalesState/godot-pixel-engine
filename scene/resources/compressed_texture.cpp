@@ -2,10 +2,9 @@
 /*  compressed_texture.cpp                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -33,7 +32,7 @@
 
 #include "scene/resources/bit_map.h"
 
-Error CompressedTexture2D::_load_data(const String &p_path, int &r_width, int &r_height, Ref<Image> &image, bool &r_request_3d, bool &r_request_normal, bool &r_request_roughness, int &mipmap_limit, int p_size_limit) {
+Error CompressedTexture2D::_load_data(const String &p_path, int &r_width, int &r_height, Ref<Image> &image, bool &r_request_normal, bool &r_request_roughness, int &mipmap_limit, int p_size_limit) {
 	alpha_cache.unref();
 
 	ERR_FAIL_COND_V(image.is_null(), ERR_INVALID_PARAMETER);
@@ -65,13 +64,11 @@ Error CompressedTexture2D::_load_data(const String &p_path, int &r_width, int &r
 
 #ifdef TOOLS_ENABLED
 
-	r_request_3d = request_3d_callback && df & FORMAT_BIT_DETECT_3D;
 	r_request_roughness = request_roughness_callback && df & FORMAT_BIT_DETECT_ROUGNESS;
 	r_request_normal = request_normal_callback && df & FORMAT_BIT_DETECT_NORMAL;
 
 #else
 
-	r_request_3d = false;
 	r_request_roughness = false;
 	r_request_normal = false;
 
@@ -97,13 +94,6 @@ void CompressedTexture2D::set_path(const String &p_path, bool p_take_over) {
 	Resource::set_path(p_path, p_take_over);
 }
 
-void CompressedTexture2D::_requested_3d(void *p_ud) {
-	CompressedTexture2D *ct = (CompressedTexture2D *)p_ud;
-	Ref<CompressedTexture2D> ctex(ct);
-	ERR_FAIL_NULL(request_3d_callback);
-	request_3d_callback(ctex);
-}
-
 void CompressedTexture2D::_requested_roughness(void *p_ud, const String &p_normal_path, RS::TextureDetectRoughnessChannel p_roughness_channel) {
 	CompressedTexture2D *ct = (CompressedTexture2D *)p_ud;
 	Ref<CompressedTexture2D> ctex(ct);
@@ -118,7 +108,6 @@ void CompressedTexture2D::_requested_normal(void *p_ud) {
 	request_normal_callback(ctex);
 }
 
-CompressedTexture2D::TextureFormatRequestCallback CompressedTexture2D::request_3d_callback = nullptr;
 CompressedTexture2D::TextureFormatRoughnessRequestCallback CompressedTexture2D::request_roughness_callback = nullptr;
 CompressedTexture2D::TextureFormatRequestCallback CompressedTexture2D::request_normal_callback = nullptr;
 
@@ -131,12 +120,11 @@ Error CompressedTexture2D::load(const String &p_path) {
 	Ref<Image> image;
 	image.instantiate();
 
-	bool request_3d;
 	bool request_normal;
 	bool request_roughness;
 	int mipmap_limit;
 
-	Error err = _load_data(p_path, lw, lh, image, request_3d, request_normal, request_roughness, mipmap_limit);
+	Error err = _load_data(p_path, lw, lh, image, request_normal, request_roughness, mipmap_limit);
 	if (err) {
 		return err;
 	}
@@ -162,14 +150,6 @@ Error CompressedTexture2D::load(const String &p_path) {
 	}
 
 #ifdef TOOLS_ENABLED
-
-	if (request_3d) {
-		//print_line("request detect 3D at " + p_path);
-		RS::get_singleton()->texture_set_detect_3d_callback(texture, _requested_3d, this);
-	} else {
-		//print_line("not requesting detect 3D at " + p_path);
-		RS::get_singleton()->texture_set_detect_3d_callback(texture, nullptr, nullptr);
-	}
 
 	if (request_roughness) {
 		//print_line("request detect srgb at " + p_path);
@@ -394,6 +374,32 @@ Ref<Image> CompressedTexture2D::load_image_from_file(Ref<FileAccess> f, int p_si
 			return image;
 		}
 
+	} else if (data_format == DATA_FORMAT_BASIS_UNIVERSAL) {
+		int sw = w;
+		int sh = h;
+		uint32_t size = f->get_32();
+		if (p_size_limit > 0 && (sw > p_size_limit || sh > p_size_limit)) {
+			//can't load this due to size limit
+			sw = MAX(sw >> 1, 1);
+			sh = MAX(sh >> 1, 1);
+			f->seek(f->get_position() + size);
+			return Ref<Image>();
+		}
+		Vector<uint8_t> pv;
+		pv.resize(size);
+		{
+			uint8_t *wr = pv.ptrw();
+			f->get_buffer(wr, size);
+		}
+		Ref<Image> img;
+		img = Image::basis_universal_unpacker(pv);
+		if (img.is_null() || img->is_empty()) {
+			ERR_FAIL_COND_V(img.is_null() || img->is_empty(), Ref<Image>());
+		}
+		format = img->get_format();
+		sw = MAX(sw >> 1, 1);
+		sh = MAX(sh >> 1, 1);
+		return img;
 	} else if (data_format == DATA_FORMAT_IMAGE) {
 		int size = Image::get_image_data_size(w, h, format, mipmaps ? true : false);
 

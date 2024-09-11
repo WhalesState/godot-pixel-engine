@@ -2,10 +2,9 @@
 /*  editor_layouts_dialog.cpp                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,10 +31,8 @@
 #include "editor_layouts_dialog.h"
 
 #include "core/io/config_file.h"
-#include "core/object/class_db.h"
-#include "core/os/keyboard.h"
-#include "editor/editor_scale.h"
 #include "editor/editor_settings.h"
+#include "editor/themes/editor_scale.h"
 #include "scene/gui/item_list.h"
 #include "scene/gui/line_edit.h"
 #include "scene/gui/margin_container.h"
@@ -61,7 +58,7 @@ void EditorLayoutsDialog::_update_ok_disable_state() {
 	if (layout_names->is_anything_selected()) {
 		get_ok_button()->set_disabled(false);
 	} else {
-		get_ok_button()->set_disabled(!name->is_visible() || name->get_text().is_empty());
+		get_ok_button()->set_disabled(!name->is_visible() || name->get_text().strip_edges().is_empty());
 	}
 }
 
@@ -81,8 +78,8 @@ void EditorLayoutsDialog::ok_pressed() {
 		for (int i = 0; i < selected_items.size(); ++i) {
 			emit_signal(SNAME("name_confirmed"), layout_names->get_item_text(selected_items[i]));
 		}
-	} else if (name->is_visible() && !name->get_text().is_empty()) {
-		emit_signal(SNAME("name_confirmed"), name->get_text());
+	} else if (name->is_visible() && !name->get_text().strip_edges().is_empty()) {
+		emit_signal(SNAME("name_confirmed"), name->get_text().strip_edges());
 	}
 }
 
@@ -105,7 +102,7 @@ void EditorLayoutsDialog::_post_popup() {
 		layout_names->add_item(E);
 	}
 	if (name->is_visible()) {
-		name->edit();
+		name->grab_focus();
 	} else {
 		layout_names->grab_focus();
 	}
@@ -116,6 +113,7 @@ EditorLayoutsDialog::EditorLayoutsDialog() {
 	add_child(makevb);
 
 	layout_names = memnew(ItemList);
+	layout_names->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 	layout_names->set_auto_height(true);
 	layout_names->set_custom_minimum_size(Size2(300 * EDSCALE, 50 * EDSCALE));
 	layout_names->set_visible(true);
@@ -135,7 +133,7 @@ EditorLayoutsDialog::EditorLayoutsDialog() {
 	name->set_anchor_and_offset(SIDE_RIGHT, Control::ANCHOR_END, -5);
 	name->connect(SceneStringName(gui_input), callable_mp(this, &EditorLayoutsDialog::_line_gui_input));
 	name->connect(SceneStringName(focus_entered), callable_mp(this, &EditorLayoutsDialog::_deselect_layout_names));
-	name->connect("text_changed", callable_mp(this, &EditorLayoutsDialog::_update_ok_disable_state).unbind(1));
+	name->connect(SceneStringName(text_changed), callable_mp(this, &EditorLayoutsDialog::_update_ok_disable_state).unbind(1));
 }
 
 void EditorLayoutsDialog::set_name_line_enabled(bool p_enabled) {

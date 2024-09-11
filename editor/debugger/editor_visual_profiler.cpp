@@ -2,10 +2,9 @@
 /*  editor_visual_profiler.cpp                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,9 +31,9 @@
 #include "editor_visual_profiler.h"
 
 #include "core/os/os.h"
-#include "editor/editor_scale.h"
 #include "editor/editor_settings.h"
 #include "editor/editor_string_names.h"
+#include "editor/themes/editor_scale.h"
 #include "scene/resources/image_texture.h"
 
 void EditorVisualProfiler::add_frame_metric(const Metric &p_metric) {
@@ -104,6 +103,8 @@ void EditorVisualProfiler::clear() {
 	variables->clear();
 	//activate->set_pressed(false);
 
+	graph_limit = 1000.0f / CLAMP(int(EDITOR_GET("debugger/profiler_target_fps")), 1, 1000);
+
 	updating_frame = true;
 	cursor_metric_edit->set_min(0);
 	cursor_metric_edit->set_max(0);
@@ -117,7 +118,7 @@ String EditorVisualProfiler::_get_time_as_text(float p_time) {
 	int dmode = display_mode->get_selected();
 
 	if (dmode == DISPLAY_FRAME_TIME) {
-		return TS->format_number(String::num(p_time, 2)) + " " + RTR("ms");
+		return TS->format_number(String::num(p_time, 2)) + " " + TTR("ms");
 	} else if (dmode == DISPLAY_FRAME_PERCENT) {
 		return TS->format_number(String::num(p_time * 100 / graph_limit, 2)) + " " + TS->percent_sign();
 	}
@@ -160,7 +161,7 @@ void EditorVisualProfiler::_update_plot() {
 	}
 
 	uint8_t *wr = graph_image.ptrw();
-	const Color background_color = get_theme_color(SNAME("dark_color_2"), EditorStringName(Editor));
+	const Color background_color = get_theme_color("dark_color_2", EditorStringName(Editor));
 
 	// Clear the previous frame and set the background color.
 	for (int i = 0; i < desired_len; i += 4) {
@@ -447,9 +448,9 @@ void EditorVisualProfiler::_graph_tex_draw() {
 		return;
 	}
 
-	Ref<Font> font = get_theme_font(SNAME("font"), SNAME("Label"));
-	int font_size = get_theme_font_size(SNAME("font_size"), SNAME("Label"));
-	const Color color = get_theme_color(SNAME("font_color"), EditorStringName(Editor));
+	Ref<Font> font = get_theme_font(SceneStringName(font), SNAME("Label"));
+	int font_size = get_theme_font_size(SceneStringName(font_size), SNAME("Label"));
+	const Color color = get_theme_color(SceneStringName(font_color), EditorStringName(Editor));
 
 	if (seeking) {
 		int max_frames = frame_metrics.size();
@@ -751,7 +752,7 @@ EditorVisualProfiler::EditorVisualProfiler() {
 	display_mode = memnew(OptionButton);
 	display_mode->add_item(TTR("Frame Time (ms)"));
 	display_mode->add_item(TTR("Frame %"));
-	display_mode->connect("item_selected", callable_mp(this, &EditorVisualProfiler::_combo_changed));
+	display_mode->connect(SceneStringName(item_selected), callable_mp(this, &EditorVisualProfiler::_combo_changed));
 
 	hb->add_child(display_mode);
 
@@ -771,7 +772,7 @@ EditorVisualProfiler::EditorVisualProfiler() {
 	cursor_metric_edit = memnew(SpinBox);
 	cursor_metric_edit->set_h_size_flags(SIZE_FILL);
 	hb->add_child(cursor_metric_edit);
-	cursor_metric_edit->connect("value_changed", callable_mp(this, &EditorVisualProfiler::_cursor_metric_changed));
+	cursor_metric_edit->connect(SceneStringName(value_changed), callable_mp(this, &EditorVisualProfiler::_cursor_metric_changed));
 
 	hb->add_theme_constant_override("separation", 8 * EDSCALE);
 
@@ -812,6 +813,8 @@ EditorVisualProfiler::EditorVisualProfiler() {
 
 	int metric_size = CLAMP(int(EDITOR_GET("debugger/profiler_frame_history_size")), 60, 10000);
 	frame_metrics.resize(metric_size);
+
+	graph_limit = 1000.0f / CLAMP(int(EDITOR_GET("debugger/profiler_target_fps")), 1, 1000);
 
 	frame_delay = memnew(Timer);
 	frame_delay->set_wait_time(0.1);

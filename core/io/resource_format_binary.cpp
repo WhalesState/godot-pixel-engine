@@ -2,10 +2,9 @@
 /*  resource_format_binary.cpp                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -56,7 +55,6 @@ enum {
 	VARIANT_PLANE = 13,
 	VARIANT_AABB = 15,
 	VARIANT_BASIS = 16,
-	VARIANT_TRANSFORM3D = 17,
 	VARIANT_TRANSFORM2D = 18,
 	VARIANT_COLOR = 20,
 	VARIANT_NODE_PATH = 22,
@@ -89,11 +87,12 @@ enum {
 	OBJECT_EXTERNAL_RESOURCE = 1,
 	OBJECT_INTERNAL_RESOURCE = 2,
 	OBJECT_EXTERNAL_RESOURCE_INDEX = 3,
-	// Version 2: added 64 bits support for float and int.
-	// Version 3: changed nodepath encoding.
-	// Version 4: new string ID for ext/subresources, breaks forward compat.
+	// Version 2: Added 64-bit support for float and int.
+	// Version 3: Changed NodePath encoding.
+	// Version 4: New string ID for ext/subresources, breaks forward compat.
 	// Version 5: Ability to store script class in the header.
-	FORMAT_VERSION = 5,
+	// Version 6: Added PackedVector4Array Variant type.
+	FORMAT_VERSION = 6,
 	FORMAT_VERSION_CAN_RENAME_DEPS = 1,
 	FORMAT_VERSION_NO_NODEPATH_PROPERTY = 3,
 };
@@ -302,22 +301,6 @@ Error ResourceLoaderBinary::parse_variant(Variant &r_v) {
 			r_v = v;
 
 		} break;
-		case VARIANT_TRANSFORM3D: {
-			Transform3D v;
-			v.basis.rows[0].x = f->get_real();
-			v.basis.rows[0].y = f->get_real();
-			v.basis.rows[0].z = f->get_real();
-			v.basis.rows[1].x = f->get_real();
-			v.basis.rows[1].y = f->get_real();
-			v.basis.rows[1].z = f->get_real();
-			v.basis.rows[2].x = f->get_real();
-			v.basis.rows[2].y = f->get_real();
-			v.basis.rows[2].z = f->get_real();
-			v.origin.x = f->get_real();
-			v.origin.y = f->get_real();
-			v.origin.z = f->get_real();
-			r_v = v;
-		} break;
 		case VARIANT_PROJECTION: {
 			Projection v;
 			v.columns[0].x = f->get_real();
@@ -421,7 +404,7 @@ Error ResourceLoaderBinary::parse_variant(Variant &r_v) {
 						path = remaps[path];
 					}
 
-					Ref<Resource> res = ResourceLoader::load(path, exttype);
+					Ref<Resource> res = ResourceLoader::load(path, exttype, cache_mode_for_external);
 
 					if (res.is_null()) {
 						WARN_PRINT(String("Couldn't load resource: " + path).utf8().get_data());
@@ -674,7 +657,7 @@ Error ResourceLoaderBinary::load() {
 		}
 
 		external_resources.write[i].path = path; //remap happens here, not on load because on load it can actually be used for filesystem dock resource remap
-		external_resources.write[i].load_token = ResourceLoader::_load_start(path, external_resources[i].type, use_sub_threads ? ResourceLoader::LOAD_THREAD_DISTRIBUTE : ResourceLoader::LOAD_THREAD_FROM_CURRENT, ResourceFormatLoader::CACHE_MODE_REUSE);
+		external_resources.write[i].load_token = ResourceLoader::_load_start(path, external_resources[i].type, use_sub_threads ? ResourceLoader::LOAD_THREAD_DISTRIBUTE : ResourceLoader::LOAD_THREAD_FROM_CURRENT, cache_mode_for_external);
 		if (!external_resources[i].load_token.is_valid()) {
 			if (!ResourceLoader::get_abort_on_missing_resources()) {
 				ResourceLoader::notify_dependency_error(local_path, path, external_resources[i].type);
@@ -725,48 +708,60 @@ Error ResourceLoaderBinary::load() {
 		String t = get_unicode_string();
 
 		Ref<Resource> res;
-
-		if (cache_mode == ResourceFormatLoader::CACHE_MODE_REPLACE && ResourceCache::has(path)) {
-			//use the existing one
-			Ref<Resource> cached = ResourceCache::get_ref(path);
-			if (cached->get_class() == t) {
-				cached->reset_state();
-				res = cached;
-			}
-		}
+		Resource *r = nullptr;
 
 		MissingResource *missing_resource = nullptr;
 
-		if (res.is_null()) {
-			//did not replace
-
-			Object *obj = ClassDB::instantiate(t);
-			if (!obj) {
-				if (ResourceLoader::is_creating_missing_resources_if_class_unavailable_enabled()) {
-					//create a missing resource
-					missing_resource = memnew(MissingResource);
-					missing_resource->set_original_class(t);
-					missing_resource->set_recording_properties(true);
-					obj = missing_resource;
-				} else {
-					error = ERR_FILE_CORRUPT;
-					ERR_FAIL_V_MSG(ERR_FILE_CORRUPT, local_path + ":Resource of unrecognized type in file: " + t + ".");
+		if (main) {
+			res = ResourceLoader::get_resource_ref_override(local_path);
+			r = res.ptr();
+		}
+		if (!r) {
+			if (cache_mode == ResourceFormatLoader::CACHE_MODE_REPLACE && ResourceCache::has(path)) {
+				//use the existing one
+				Ref<Resource> cached = ResourceCache::get_ref(path);
+				if (cached->get_class() == t) {
+					cached->reset_state();
+					res = cached;
 				}
 			}
 
-			Resource *r = Object::cast_to<Resource>(obj);
-			if (!r) {
-				String obj_class = obj->get_class();
-				error = ERR_FILE_CORRUPT;
-				memdelete(obj); //bye
-				ERR_FAIL_V_MSG(ERR_FILE_CORRUPT, local_path + ":Resource type in resource field not a resource, type is: " + obj_class + ".");
-			}
+			if (res.is_null()) {
+				//did not replace
 
-			res = Ref<Resource>(r);
-			if (!path.is_empty() && cache_mode != ResourceFormatLoader::CACHE_MODE_IGNORE) {
-				r->set_path(path, cache_mode == ResourceFormatLoader::CACHE_MODE_REPLACE); //if got here because the resource with same path has different type, replace it
-			} else if (!path.is_resource_file()) {
-				r->set_path_cache(path);
+				Object *obj = ClassDB::instantiate(t);
+				if (!obj) {
+					if (ResourceLoader::is_creating_missing_resources_if_class_unavailable_enabled()) {
+						//create a missing resource
+						missing_resource = memnew(MissingResource);
+						missing_resource->set_original_class(t);
+						missing_resource->set_recording_properties(true);
+						obj = missing_resource;
+					} else {
+						error = ERR_FILE_CORRUPT;
+						ERR_FAIL_V_MSG(ERR_FILE_CORRUPT, local_path + ":Resource of unrecognized type in file: " + t + ".");
+					}
+				}
+
+				r = Object::cast_to<Resource>(obj);
+				if (!r) {
+					String obj_class = obj->get_class();
+					error = ERR_FILE_CORRUPT;
+					memdelete(obj); //bye
+					ERR_FAIL_V_MSG(ERR_FILE_CORRUPT, local_path + ":Resource type in resource field not a resource, type is: " + obj_class + ".");
+				}
+
+				res = Ref<Resource>(r);
+			}
+		}
+
+		if (r) {
+			if (!path.is_empty()) {
+				if (cache_mode != ResourceFormatLoader::CACHE_MODE_IGNORE) {
+					r->set_path(path, cache_mode == ResourceFormatLoader::CACHE_MODE_REPLACE); // If got here because the resource with same path has different type, replace it.
+				} else {
+					r->set_path_cache(path);
+				}
 			}
 			r->set_scene_unique_id(id);
 		}
@@ -817,6 +812,19 @@ Error ResourceLoaderBinary::load() {
 					Array get_array = get_value;
 					if (!set_array.is_same_typed(get_array)) {
 						value = Array(set_array, get_array.get_typed_builtin(), get_array.get_typed_class_name(), get_array.get_typed_script());
+					}
+				}
+			}
+
+			if (value.get_type() == Variant::DICTIONARY) {
+				Dictionary set_dict = value;
+				bool is_get_valid = false;
+				Variant get_value = res->get(name, &is_get_valid);
+				if (is_get_valid && get_value.get_type() == Variant::DICTIONARY) {
+					Dictionary get_dict = get_value;
+					if (!set_dict.is_same_typed(get_dict)) {
+						value = Dictionary(set_dict, get_dict.get_typed_key_builtin(), get_dict.get_typed_key_class_name(), get_dict.get_typed_key_script(),
+								get_dict.get_typed_value_builtin(), get_dict.get_typed_value_class_name(), get_dict.get_typed_value_script());
 					}
 				}
 			}
@@ -1178,7 +1186,22 @@ Ref<Resource> ResourceFormatLoaderBinary::load(const String &p_path, const Strin
 	ERR_FAIL_COND_V_MSG(err != OK, Ref<Resource>(), "Cannot open file '" + p_path + "'.");
 
 	ResourceLoaderBinary loader;
-	loader.cache_mode = p_cache_mode;
+	switch (p_cache_mode) {
+		case CACHE_MODE_IGNORE:
+		case CACHE_MODE_REUSE:
+		case CACHE_MODE_REPLACE:
+			loader.cache_mode = p_cache_mode;
+			loader.cache_mode_for_external = CACHE_MODE_REUSE;
+			break;
+		case CACHE_MODE_IGNORE_DEEP:
+			loader.cache_mode = CACHE_MODE_IGNORE;
+			loader.cache_mode_for_external = p_cache_mode;
+			break;
+		case CACHE_MODE_REPLACE_DEEP:
+			loader.cache_mode = CACHE_MODE_REPLACE;
+			loader.cache_mode_for_external = p_cache_mode;
+			break;
+	}
 	loader.use_sub_threads = p_use_sub_threads;
 	loader.progress = r_progress;
 	String path = !p_original_path.is_empty() ? p_original_path : p_path;
@@ -1673,23 +1696,6 @@ void ResourceFormatSaverBinaryInstance::write_variant(Ref<FileAccess> f, const V
 			f->store_real(val.rows[2].z);
 
 		} break;
-		case Variant::TRANSFORM3D: {
-			f->store_32(VARIANT_TRANSFORM3D);
-			Transform3D val = p_property;
-			f->store_real(val.basis.rows[0].x);
-			f->store_real(val.basis.rows[0].y);
-			f->store_real(val.basis.rows[0].z);
-			f->store_real(val.basis.rows[1].x);
-			f->store_real(val.basis.rows[1].y);
-			f->store_real(val.basis.rows[1].z);
-			f->store_real(val.basis.rows[2].x);
-			f->store_real(val.basis.rows[2].y);
-			f->store_real(val.basis.rows[2].z);
-			f->store_real(val.origin.x);
-			f->store_real(val.origin.y);
-			f->store_real(val.origin.z);
-
-		} break;
 		case Variant::PROJECTION: {
 			f->store_32(VARIANT_PROJECTION);
 			Projection val = p_property;
@@ -1809,8 +1815,8 @@ void ResourceFormatSaverBinaryInstance::write_variant(Ref<FileAccess> f, const V
 			f->store_32(VARIANT_ARRAY);
 			Array a = p_property;
 			f->store_32(uint32_t(a.size()));
-			for (int i = 0; i < a.size(); i++) {
-				write_variant(f, a[i], resource_map, external_resources, string_map);
+			for (const Variant &var : a) {
+				write_variant(f, var, resource_map, external_resources, string_map);
 			}
 
 		} break;
@@ -1877,8 +1883,20 @@ void ResourceFormatSaverBinaryInstance::write_variant(Ref<FileAccess> f, const V
 			for (int i = 0; i < len; i++) {
 				save_unicode_string(f, r[i]);
 			}
-
 		} break;
+
+		case Variant::PACKED_VECTOR2_ARRAY: {
+			f->store_32(VARIANT_PACKED_VECTOR2_ARRAY);
+			Vector<Vector2> arr = p_property;
+			int len = arr.size();
+			f->store_32(len);
+			const Vector2 *r = arr.ptr();
+			for (int i = 0; i < len; i++) {
+				f->store_real(r[i].x);
+				f->store_real(r[i].y);
+			}
+		} break;
+
 		case Variant::PACKED_VECTOR3_ARRAY: {
 			f->store_32(VARIANT_PACKED_VECTOR3_ARRAY);
 			Vector<Vector3> arr = p_property;
@@ -1890,20 +1908,8 @@ void ResourceFormatSaverBinaryInstance::write_variant(Ref<FileAccess> f, const V
 				f->store_real(r[i].y);
 				f->store_real(r[i].z);
 			}
-
 		} break;
-		case Variant::PACKED_VECTOR2_ARRAY: {
-			f->store_32(VARIANT_PACKED_VECTOR2_ARRAY);
-			Vector<Vector2> arr = p_property;
-			int len = arr.size();
-			f->store_32(len);
-			const Vector2 *r = arr.ptr();
-			for (int i = 0; i < len; i++) {
-				f->store_real(r[i].x);
-				f->store_real(r[i].y);
-			}
 
-		} break;
 		case Variant::PACKED_COLOR_ARRAY: {
 			f->store_32(VARIANT_PACKED_COLOR_ARRAY);
 			Vector<Color> arr = p_property;
@@ -1981,9 +1987,8 @@ void ResourceFormatSaverBinaryInstance::_find_resources(const Variant &p_variant
 
 		case Variant::ARRAY: {
 			Array varray = p_variant;
-			int len = varray.size();
-			for (int i = 0; i < len; i++) {
-				const Variant &v = varray.get(i);
+			_find_resources(varray.get_typed_script());
+			for (const Variant &v : varray) {
 				_find_resources(v);
 			}
 
@@ -1991,6 +1996,8 @@ void ResourceFormatSaverBinaryInstance::_find_resources(const Variant &p_variant
 
 		case Variant::DICTIONARY: {
 			Dictionary d = p_variant;
+			_find_resources(d.get_typed_key_script());
+			_find_resources(d.get_typed_value_script());
 			List<Variant> keys;
 			d.get_key_list(&keys);
 			for (const Variant &E : keys) {

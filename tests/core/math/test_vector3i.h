@@ -2,10 +2,9 @@
 /*  test_vector3i.h                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -91,6 +90,12 @@ TEST_CASE("[Vector3i] Length methods") {
 	CHECK_MESSAGE(
 			vector2.length() == doctest::Approx(53.8516480713450403125),
 			"Vector3i length should work as expected.");
+	CHECK_MESSAGE(
+			vector1.distance_squared_to(vector2) == 1400,
+			"Vector3i distance_squared_to should work as expected and return exact result.");
+	CHECK_MESSAGE(
+			vector1.distance_to(vector2) == doctest::Approx(37.41657386773941385584),
+			"Vector3i distance_to should work as expected.");
 }
 
 TEST_CASE("[Vector3i] Operators") {

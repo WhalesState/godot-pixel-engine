@@ -2,10 +2,9 @@
 /*  scene_create_dialog.cpp                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -34,9 +33,9 @@
 #include "core/io/dir_access.h"
 #include "editor/create_dialog.h"
 #include "editor/editor_node.h"
-#include "editor/editor_scale.h"
 #include "editor/editor_string_names.h"
 #include "editor/gui/editor_validation_panel.h"
+#include "editor/themes/editor_scale.h"
 #include "scene/2d/node_2d.h"
 #include "scene/gui/box_container.h"
 #include "scene/gui/check_box.h"
@@ -64,14 +63,14 @@ void SceneCreateDialog::config(const String &p_dir) {
 	directory = p_dir;
 	root_name_edit->set_text("");
 	scene_name_edit->set_text("");
-	scene_name_edit->call_deferred(SNAME("edit"));
+	callable_mp((Control *)scene_name_edit, &Control::grab_focus).call_deferred();
 	validation_panel->update();
 }
 
 void SceneCreateDialog::accept_create() {
 	if (!get_ok_button()->is_disabled()) {
 		hide();
-		emit_signal(SNAME("confirmed"));
+		emit_signal(SceneStringName(confirmed));
 	}
 }
 
@@ -265,7 +264,7 @@ SceneCreateDialog::SceneCreateDialog() {
 		root_name_edit = memnew(LineEdit);
 		gc->add_child(root_name_edit);
 		root_name_edit->set_tooltip_text(TTR("When empty, the root node name is derived from the scene name based on the \"editor/naming/node_name_casing\" project setting."));
-		root_name_edit->set_auto_translate(false);
+		root_name_edit->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 		root_name_edit->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 		root_name_edit->connect("text_submitted", callable_mp(this, &SceneCreateDialog::accept_create).unbind(1));
 	}
@@ -282,8 +281,8 @@ SceneCreateDialog::SceneCreateDialog() {
 	validation_panel->set_accept_button(get_ok_button());
 
 	node_type_group->connect(SceneStringName(pressed), callable_mp(validation_panel, &EditorValidationPanel::update).unbind(1));
-	scene_name_edit->connect("text_changed", callable_mp(validation_panel, &EditorValidationPanel::update).unbind(1));
-	root_name_edit->connect("text_changed", callable_mp(validation_panel, &EditorValidationPanel::update).unbind(1));
+	scene_name_edit->connect(SceneStringName(text_changed), callable_mp(validation_panel, &EditorValidationPanel::update).unbind(1));
+	root_name_edit->connect(SceneStringName(text_changed), callable_mp(validation_panel, &EditorValidationPanel::update).unbind(1));
 
 	set_title(TTR("Create New Scene"));
 	set_min_size(Size2i(400 * EDSCALE, 0));

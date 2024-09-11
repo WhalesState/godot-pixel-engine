@@ -2,10 +2,9 @@
 /*  instance_placeholder.h                                                */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -46,6 +45,10 @@ class InstancePlaceholder : public Node {
 	};
 
 	List<PropSet> stored_values;
+
+private:
+	void set_value_on_instance(InstancePlaceholder *p_placeholder, Node *p_instance, const PropSet &p_set);
+	Node *try_get_node(InstancePlaceholder *p_placeholder, Node *p_instance, const NodePath &p_path);
 
 protected:
 	bool _set(const StringName &p_name, const Variant &p_value);

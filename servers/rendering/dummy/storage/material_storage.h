@@ -2,10 +2,9 @@
 /*  material_storage.h                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -32,13 +31,32 @@
 #ifndef MATERIAL_STORAGE_DUMMY_H
 #define MATERIAL_STORAGE_DUMMY_H
 
+#include "core/templates/rid_owner.h"
+#include "servers/rendering/shader_compiler.h"
+#include "servers/rendering/shader_language.h"
 #include "servers/rendering/storage/material_storage.h"
 #include "servers/rendering/storage/utilities.h"
 
 namespace RendererDummy {
 
 class MaterialStorage : public RendererMaterialStorage {
+private:
+	static MaterialStorage *singleton;
+
+	struct DummyShader {
+		HashMap<StringName, ShaderLanguage::ShaderNode::Uniform> uniforms;
+	};
+
+	mutable RID_Owner<DummyShader> shader_owner;
+
+	ShaderCompiler dummy_compiler;
+
 public:
+	static MaterialStorage *get_singleton() { return singleton; }
+
+	MaterialStorage();
+	~MaterialStorage();
+
 	/* GLOBAL SHADER UNIFORM API */
 
 	virtual void global_shader_parameter_add(const StringName &p_name, RS::GlobalShaderParameterType p_type, const Variant &p_value) override {}
@@ -59,15 +77,17 @@ public:
 
 	/* SHADER API */
 
-	virtual RID shader_allocate() override { return RID(); }
-	virtual void shader_initialize(RID p_rid) override {}
-	virtual void shader_free(RID p_rid) override{};
+	bool owns_shader(RID p_rid) { return shader_owner.owns(p_rid); }
 
-	virtual void shader_set_code(RID p_shader, const String &p_code) override {}
+	virtual RID shader_allocate() override;
+	virtual void shader_initialize(RID p_rid) override;
+	virtual void shader_free(RID p_rid) override;
+
+	virtual void shader_set_code(RID p_shader, const String &p_code) override;
 	virtual void shader_set_path_hint(RID p_shader, const String &p_code) override {}
 
 	virtual String shader_get_code(RID p_shader) const override { return ""; }
-	virtual void get_shader_parameter_list(RID p_shader, List<PropertyInfo> *p_param_list) const override {}
+	virtual void get_shader_parameter_list(RID p_shader, List<PropertyInfo> *p_param_list) const override;
 
 	virtual void shader_set_default_texture_parameter(RID p_shader, const StringName &p_name, RID p_texture, int p_index) override {}
 	virtual RID shader_get_default_texture_parameter(RID p_shader, const StringName &p_name, int p_index) const override { return RID(); }

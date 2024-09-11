@@ -2,10 +2,9 @@
 /*  godot_lsp.h                                                           */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -201,7 +200,7 @@ struct LocationLink {
 
 	/**
 	 * The range that should be selected and revealed when this link is being followed, e.g the name of a function.
-	 * Must be contained by the the `targetRange`. See also `DocumentSymbol#range`
+	 * Must be contained by the `targetRange`. See also `DocumentSymbol#range`
 	 */
 	Range targetSelectionRange;
 };
@@ -237,7 +236,7 @@ struct ReferenceContext {
 	/**
 	 * Include the declaration of the current symbol.
 	 */
-	bool includeDeclaration;
+	bool includeDeclaration = false;
 };
 
 struct ReferenceParams : TextDocumentPositionParams {
@@ -1065,7 +1064,7 @@ struct CompletionItem {
 		}
 		if (p_dict.has("documentation")) {
 			Variant doc = p_dict["documentation"];
-			if (doc.get_type() == Variant::STRING) {
+			if (doc.is_string()) {
 				documentation.value = doc;
 			} else if (doc.get_type() == Variant::DICTIONARY) {
 				Dictionary v = doc;

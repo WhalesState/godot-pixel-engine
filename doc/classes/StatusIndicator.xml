@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="StatusIndicator" inherits="Node" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_rect" qualifiers="const">
+			<return type="Rect2" />
+			<description>
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="icon" type="Texture2D" setter="set_icon" getter="get_icon">
+		</member>
+		<member name="menu" type="NodePath" setter="set_menu" getter="get_menu" default="NodePath(&quot;&quot;)">
+		</member>
+		<member name="tooltip" type="String" setter="set_tooltip" getter="get_tooltip" default="&quot;&quot;">
+		</member>
+		<member name="visible" type="bool" setter="set_visible" getter="is_visible" default="true">
+		</member>
+	</members>
+	<signals>
+		<signal name="pressed">
+			<param index="0" name="mouse_button" type="int" />
+			<param index="1" name="mouse_position" type="Vector2i" />
+			<description>
+			</description>
+		</signal>
+	</signals>
+</class>

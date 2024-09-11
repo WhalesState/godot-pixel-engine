@@ -2,10 +2,9 @@
 /*  ring_buffer.h                                                         */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -198,7 +197,7 @@ public:
 		int old_size = size();
 		int new_size = 1 << p_power;
 		int mask = new_size - 1;
-		data.resize(1 << p_power);
+		data.resize(int64_t(1) << int64_t(p_power));
 		if (old_size < new_size && read_pos > write_pos) {
 			for (int i = 0; i < write_pos; i++) {
 				data.write[(old_size + i) & mask] = data[i];
@@ -212,10 +211,10 @@ public:
 		size_mask = mask;
 	}
 
-	RingBuffer<T>(int p_power = 0) {
+	RingBuffer(int p_power = 0) {
 		resize(p_power);
 	}
-	~RingBuffer<T>() {}
+	~RingBuffer() {}
 };
 
 #endif // RING_BUFFER_H

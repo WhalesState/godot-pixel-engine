@@ -3,7 +3,7 @@
 godot \- multi\-platform 2D and 3D game engine with a feature\-rich editor
 .SH SYNOPSIS
 .B godot
-[\fI\,options\/\fR] [path to scene or 'project.pixel_designer' file]
+[\fI\,options\/\fR] [path to scene or 'project.godot' file]
 .SH DESCRIPTION
 Godot Engine is an advanced, feature\-packed, multi\-platform 2D and 3D game
 engine.
@@ -38,10 +38,10 @@ Quit after the first iteration.
 Use a specific locale (<locale> being a two\-letter code).
 .TP
 \fB\-\-path\fR <directory>
-Path to a project (<directory> must contain a 'project.pixel_designer' file).
+Path to a project (<directory> must contain a 'project.godot' file).
 .TP
 \fB\-u\fR, \fB\-\-upwards\fR
-Scan folders upwards for project.pixel_designer file.
+Scan folders upwards for project.godot file.
 .TP
 \fB\-\-main\-pack\fR <file>
 Path to a pack (.pck) file to load.
@@ -161,6 +161,12 @@ Disallow dumping the base types (used with \fB\-\-doctool\fR).
 .TP
 \fB\-\-build\-solutions\fR
 Build the scripting solutions (e.g. for C# projects). Implies \-\-editor and requires a valid project to edit.
+.TP
+\fB\-\-dump\-gdextension\-interface\fR
+Generate GDExtension header file 'gdextension_interface.h' in the current folder. This file is the base file required to implement a GDExtension.
+.TP
+\fB\-\-dump\-extension\-api\fR
+Generate JSON dump of the Godot API for GDExtension bindings named 'extension_api.json' in the current folder.
 .TP
 \fB\-\-test\fR <test>
 Run a unit test ('string', 'math', 'physics', 'physics_2d', 'render', 'oa_hash_map', 'gui', 'shaderlang', 'gd_tokenizer', 'gd_parser', 'gd_compiler', 'gd_bytecode', 'ordered_hash_map', 'astar').

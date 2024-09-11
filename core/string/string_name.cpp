@@ -2,10 +2,9 @@
 /*  string_name.cpp                                                       */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -40,18 +39,33 @@ StaticCString StaticCString::create(const char *p_ptr) {
 	return scs;
 }
 
-StringName::_Data *StringName::_table[STRING_TABLE_LEN];
+bool StringName::_Data::operator==(const String &p_name) const {
+	if (cname) {
+		return p_name == cname;
+	} else {
+		return name == p_name;
+	}
+}
+
+bool StringName::_Data::operator!=(const String &p_name) const {
+	return !operator==(p_name);
+}
+
+bool StringName::_Data::operator==(const char *p_name) const {
+	if (cname) {
+		return strcmp(cname, p_name) == 0;
+	} else {
+		return name == p_name;
+	}
+}
+
+bool StringName::_Data::operator!=(const char *p_name) const {
+	return !operator==(p_name);
+}
 
 StringName _scs_create(const char *p_chr, bool p_static) {
 	return (p_chr[0] ? StringName(StaticCString::create(p_chr), p_static) : StringName());
 }
-
-bool StringName::configured = false;
-Mutex StringName::mutex;
-
-#ifdef DEBUG_ENABLED
-bool StringName::debug_stringname = false;
-#endif
 
 void StringName::setup() {
 	ERR_FAIL_COND(configured);
@@ -149,19 +163,19 @@ void StringName::unref() {
 }
 
 bool StringName::operator==(const String &p_name) const {
-	if (!_data) {
-		return (p_name.length() == 0);
+	if (_data) {
+		return _data->operator==(p_name);
 	}
 
-	return (_data->get_name() == p_name);
+	return p_name.is_empty();
 }
 
 bool StringName::operator==(const char *p_name) const {
-	if (!_data) {
-		return (p_name[0] == 0);
+	if (_data) {
+		return _data->operator==(p_name);
 	}
 
-	return (_data->get_name() == p_name);
+	return p_name[0] == 0;
 }
 
 bool StringName::operator!=(const String &p_name) const {
@@ -178,9 +192,47 @@ bool StringName::operator!=(const StringName &p_name) const {
 	return _data != p_name._data;
 }
 
-void StringName::operator=(const StringName &p_name) {
+char32_t StringName::operator[](int p_index) const {
+	if (_data) {
+		if (_data->cname) {
+			CRASH_BAD_INDEX(p_index, static_cast<long>(strlen(_data->cname)));
+			return _data->cname[p_index];
+		} else {
+			return _data->name[p_index];
+		}
+	}
+
+	CRASH_BAD_INDEX(p_index, 0);
+	return 0;
+}
+
+int StringName::length() const {
+	if (_data) {
+		if (_data->cname) {
+			return strlen(_data->cname);
+		} else {
+			return _data->name.length();
+		}
+	}
+
+	return 0;
+}
+
+bool StringName::is_empty() const {
+	if (_data) {
+		if (_data->cname) {
+			return _data->cname[0] == 0;
+		} else {
+			return _data->name.is_empty();
+		}
+	}
+
+	return true;
+}
+
+StringName &StringName::operator=(const StringName &p_name) {
 	if (this == &p_name) {
-		return;
+		return *this;
 	}
 
 	unref();
@@ -188,6 +240,8 @@ void StringName::operator=(const StringName &p_name) {
 	if (p_name._data && p_name._data->refcount.ref()) {
 		_data = p_name._data;
 	}
+
+	return *this;
 }
 
 StringName::StringName(const StringName &p_name) {
@@ -201,11 +255,10 @@ StringName::StringName(const StringName &p_name) {
 }
 
 void StringName::assign_static_unique_class_name(StringName *ptr, const char *p_name) {
-	mutex.lock();
+	MutexLock lock(mutex);
 	if (*ptr == StringName()) {
 		*ptr = StringName(p_name, true);
 	}
-	mutex.unlock();
 }
 
 StringName::StringName(const char *p_name, bool p_static) {
@@ -227,7 +280,7 @@ StringName::StringName(const char *p_name, bool p_static) {
 
 	while (_data) {
 		// compare hash first
-		if (_data->hash == hash && _data->get_name() == p_name) {
+		if (_data->hash == hash && _data->operator==(p_name)) {
 			break;
 		}
 		_data = _data->next;
@@ -286,7 +339,7 @@ StringName::StringName(const StaticCString &p_static_string, bool p_static) {
 
 	while (_data) {
 		// compare hash first
-		if (_data->hash == hash && _data->get_name() == p_static_string.ptr) {
+		if (_data->hash == hash && _data->operator==(p_static_string.ptr)) {
 			break;
 		}
 		_data = _data->next;
@@ -344,7 +397,7 @@ StringName::StringName(const String &p_name, bool p_static) {
 	_data = _table[idx];
 
 	while (_data) {
-		if (_data->hash == hash && _data->get_name() == p_name) {
+		if (_data->hash == hash && _data->operator==(p_name)) {
 			break;
 		}
 		_data = _data->next;
@@ -403,7 +456,7 @@ StringName StringName::search(const char *p_name) {
 
 	while (_data) {
 		// compare hash first
-		if (_data->hash == hash && _data->get_name() == p_name) {
+		if (_data->hash == hash && _data->operator==(p_name)) {
 			break;
 		}
 		_data = _data->next;
@@ -440,7 +493,7 @@ StringName StringName::search(const char32_t *p_name) {
 
 	while (_data) {
 		// compare hash first
-		if (_data->hash == hash && _data->get_name() == p_name) {
+		if (_data->hash == hash && _data->operator==(p_name)) {
 			break;
 		}
 		_data = _data->next;
@@ -466,7 +519,7 @@ StringName StringName::search(const String &p_name) {
 
 	while (_data) {
 		// compare hash first
-		if (_data->hash == hash && p_name == _data->get_name()) {
+		if (_data->hash == hash && _data->operator==(p_name)) {
 			break;
 		}
 		_data = _data->next;
@@ -485,15 +538,15 @@ StringName StringName::search(const String &p_name) {
 }
 
 bool operator==(const String &p_name, const StringName &p_string_name) {
-	return p_name == p_string_name.operator String();
+	return p_string_name.operator==(p_name);
 }
 bool operator!=(const String &p_name, const StringName &p_string_name) {
-	return p_name != p_string_name.operator String();
+	return p_string_name.operator!=(p_name);
 }
 
 bool operator==(const char *p_name, const StringName &p_string_name) {
-	return p_name == p_string_name.operator String();
+	return p_string_name.operator==(p_name);
 }
 bool operator!=(const char *p_name, const StringName &p_string_name) {
-	return p_name != p_string_name.operator String();
+	return p_string_name.operator!=(p_name);
 }

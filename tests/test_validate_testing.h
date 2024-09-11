@@ -2,10 +2,9 @@
 /*  test_validate_testing.h                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -178,6 +177,13 @@ TEST_SUITE("Validate tests") {
 		color_arr.push_back(Color(1, 1, 1));
 		color_arr.push_back(Color(2, 2, 2));
 		INFO(color_arr);
+
+		PackedVector4Array vec4_arr;
+		vec4_arr.push_back(Vector4(0, 0, 0, 0));
+		vec4_arr.push_back(Vector4(1, 1, 1, 1));
+		vec4_arr.push_back(Vector4(2, 2, 2, 2));
+		vec4_arr.push_back(Vector4(3, 3, 3, 3));
+		INFO(vec4_arr);
 
 		// doctest string concatenation.
 		CHECK_MESSAGE(true, var, " ", vec2, " ", rect2, " ", color);

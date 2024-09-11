@@ -2,10 +2,9 @@
 /*  test_vector3.h                                                        */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -369,7 +368,6 @@ TEST_CASE("[Vector3] Plane methods") {
 	const Vector3 vector = Vector3(1.2, 3.4, 5.6);
 	const Vector3 vector_y = Vector3(0, 1, 0);
 	const Vector3 vector_normal = Vector3(0.88763458893247992491, 0.26300284116517923701, 0.37806658417494515320);
-	const Vector3 vector_non_normal = Vector3(5.4, 1.6, 2.3);
 	CHECK_MESSAGE(
 			vector.bounce(vector_y) == Vector3(1.2, -3.4, 5.6),
 			"Vector3 bounce on a plane with normal of the Y axis should.");
@@ -395,6 +393,8 @@ TEST_CASE("[Vector3] Plane methods") {
 			vector.slide(vector_normal).is_equal_approx(Vector3(-2.41848149148878681437, 2.32785733585517427722237, 4.0587949202918130235)),
 			"Vector3 slide with normal should return expected value.");
 	// There's probably a better way to test these ones?
+#ifdef MATH_CHECKS
+	const Vector3 vector_non_normal = Vector3(5.4, 1.6, 2.3);
 	ERR_PRINT_OFF;
 	CHECK_MESSAGE(
 			vector.bounce(vector_non_normal).is_equal_approx(Vector3()),
@@ -406,6 +406,7 @@ TEST_CASE("[Vector3] Plane methods") {
 			vector.slide(vector_non_normal).is_equal_approx(Vector3()),
 			"Vector3 slide should return empty Vector3 with non-normalized input.");
 	ERR_PRINT_ON;
+#endif // MATH_CHECKS
 }
 
 TEST_CASE("[Vector3] Rounding methods") {

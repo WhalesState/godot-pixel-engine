@@ -2,10 +2,9 @@
 /*  editor_atlas_packer.cpp                                               */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -73,8 +72,7 @@ void EditorAtlasPacker::chart_pack(Vector<Chart> &charts, int &r_width, int &r_h
 				Vector2 vtx = chart.vertices[chart.faces[j].vertex[k]];
 				vtx -= aabb.position;
 				vtx /= divide_by;
-				vtx.x = MIN(vtx.x, w - 1);
-				vtx.y = MIN(vtx.y, h - 1);
+				vtx = vtx.min(Vector2(w - 1, h - 1));
 				v[k] = vtx;
 			}
 

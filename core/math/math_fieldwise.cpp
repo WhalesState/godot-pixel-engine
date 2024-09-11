@@ -2,10 +2,9 @@
 /*  math_fieldwise.cpp                                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -179,25 +178,6 @@ Variant fieldwise_assign(const Variant &p_target, const Variant &p_source, const
 			else TRY_TRANSFER_FIELD("zx", rows[2][0])
 			else TRY_TRANSFER_FIELD("zy", rows[2][1])
 			else TRY_TRANSFER_FIELD("zz", rows[2][2])
-
-			return target;
-		}
-
-		case Variant::TRANSFORM3D: {
-			SETUP_TYPE(Transform3D)
-
-			/**/ TRY_TRANSFER_FIELD("xx", basis.rows[0][0])
-			else TRY_TRANSFER_FIELD("xy", basis.rows[0][1])
-			else TRY_TRANSFER_FIELD("xz", basis.rows[0][2])
-			else TRY_TRANSFER_FIELD("yx", basis.rows[1][0])
-			else TRY_TRANSFER_FIELD("yy", basis.rows[1][1])
-			else TRY_TRANSFER_FIELD("yz", basis.rows[1][2])
-			else TRY_TRANSFER_FIELD("zx", basis.rows[2][0])
-			else TRY_TRANSFER_FIELD("zy", basis.rows[2][1])
-			else TRY_TRANSFER_FIELD("zz", basis.rows[2][2])
-			else TRY_TRANSFER_FIELD("xo", origin.x)
-			else TRY_TRANSFER_FIELD("yo", origin.y)
-			else TRY_TRANSFER_FIELD("zo", origin.z)
 
 			return target;
 		}

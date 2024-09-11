@@ -2,10 +2,9 @@
 /*  sprite_frames.cpp                                                     */
 /**************************************************************************/
 /*                         This file is part of:                          */
-/*                      GODOT ENGINE - PIXEL ENGINE                       */
+/*                             GODOT ENGINE                               */
 /*                        https://godotengine.org                         */
 /**************************************************************************/
-/* Copyright (c) 2023-present Pixel Engine (modified/created files only)  */
 /* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
 /* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
 /*                                                                        */
@@ -105,6 +104,12 @@ void SpriteFrames::add_animation(const StringName &p_anim) {
 
 bool SpriteFrames::has_animation(const StringName &p_anim) const {
 	return animations.has(p_anim);
+}
+
+void SpriteFrames::duplicate_animation(const StringName &p_from, const StringName &p_to) {
+	ERR_FAIL_COND_MSG(!animations.has(p_from), vformat("SpriteFrames doesn't have animation '%s'.", p_from));
+	ERR_FAIL_COND_MSG(animations.has(p_to), vformat("Animation '%s' already exists.", p_to));
+	animations[p_to] = animations[p_from];
 }
 
 void SpriteFrames::remove_animation(const StringName &p_anim) {
@@ -215,9 +220,29 @@ void SpriteFrames::_set_animations(const Array &p_animations) {
 	}
 }
 
+#ifdef TOOLS_ENABLED
+void SpriteFrames::get_argument_options(const StringName &p_function, int p_idx, List<String> *r_options) const {
+	const String pf = p_function;
+	if (p_idx == 0) {
+		if (pf == "has_animation" || pf == "remove_animation" || pf == "rename_animation" ||
+				pf == "set_animation_speed" || pf == "get_animation_speed" ||
+				pf == "set_animation_loop" || pf == "get_animation_loop" ||
+				pf == "add_frame" || pf == "set_frame" || pf == "remove_frame" ||
+				pf == "get_frame_count" || pf == "get_frame_texture" || pf == "get_frame_duration" ||
+				pf == "clear") {
+			for (const String &E : get_animation_names()) {
+				r_options->push_back(E.quote());
+			}
+		}
+	}
+	Resource::get_argument_options(p_function, p_idx, r_options);
+}
+#endif
+
 void SpriteFrames::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("add_animation", "anim"), &SpriteFrames::add_animation);
 	ClassDB::bind_method(D_METHOD("has_animation", "anim"), &SpriteFrames::has_animation);
+	ClassDB::bind_method(D_METHOD("duplicate_animation", "anim_from", "anim_to"), &SpriteFrames::duplicate_animation);
 	ClassDB::bind_method(D_METHOD("remove_animation", "anim"), &SpriteFrames::remove_animation);
 	ClassDB::bind_method(D_METHOD("rename_animation", "anim", "newname"), &SpriteFrames::rename_animation);
 
