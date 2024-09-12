@@ -26,13 +26,6 @@
 		</constructor>
 		<constructor name="Projection">
 			<return type="Projection" />
-			<param index="0" name="from" type="Transform3D" />
-			<description>
-				Constructs a Projection as a copy of the given [Transform3D].
-			</description>
-		</constructor>
-		<constructor name="Projection">
-			<return type="Projection" />
 			<param index="0" name="x_axis" type="Vector4" />
 			<param index="1" name="y_axis" type="Vector4" />
 			<param index="2" name="z_axis" type="Vector4" />

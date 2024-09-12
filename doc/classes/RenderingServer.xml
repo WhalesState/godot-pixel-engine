@@ -1170,6 +1170,13 @@
 				[b]Note:[/b] The [param image] must have the same width, height and format as the current [param texture] data. Otherwise, an error will be printed and the original texture won't be modified. If you need to use different width, height or format, use [method texture_replace] instead.
 			</description>
 		</method>
+		<method name="texture_bind">
+			<return type="void" />
+			<param index="0" name="texture" type="RID" />
+			<param index="1" name="texture_no" type="int" />
+			<description>
+			</description>
+		</method>
 		<method name="texture_get_format" qualifiers="const">
 			<return type="int" enum="Image.Format" />
 			<param index="0" name="texture" type="RID" />
@@ -1917,13 +1924,10 @@
 		<constant name="GLOBAL_VAR_TYPE_TRANSFORM_2D" value="22" enum="GlobalShaderParameterType">
 			2-dimensional transform global shader parameter ([code]global uniform mat2x3 ...[/code]). Exposed as a [Transform2D] in the editor UI.
 		</constant>
-		<constant name="GLOBAL_VAR_TYPE_TRANSFORM" value="23" enum="GlobalShaderParameterType">
-			3-dimensional transform global shader parameter ([code]global uniform mat3x4 ...[/code]). Exposed as a [Transform3D] in the editor UI.
-		</constant>
-		<constant name="GLOBAL_VAR_TYPE_SAMPLER2D" value="24" enum="GlobalShaderParameterType">
+		<constant name="GLOBAL_VAR_TYPE_SAMPLER2D" value="23" enum="GlobalShaderParameterType">
 			2D sampler global shader parameter ([code]global uniform sampler2D ...[/code]). Exposed as a [Texture2D] in the editor UI.
 		</constant>
-		<constant name="GLOBAL_VAR_TYPE_MAX" value="25" enum="GlobalShaderParameterType">
+		<constant name="GLOBAL_VAR_TYPE_MAX" value="24" enum="GlobalShaderParameterType">
 			Represents the size of the [enum GlobalShaderParameterType] enum.
 		</constant>
 		<constant name="RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME" value="0" enum="RenderingInfo">

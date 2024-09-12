@@ -1119,12 +1119,6 @@
 			Default [InputEventAction] to move up in the UI.
 			[b]Note:[/b] Default [code]ui_*[/code] actions cannot be removed as they are necessary for the internal logic of several [Control]s. The events assigned to the action can however be modified.
 		</member>
-		<member name="input_devices/buffering/agile_event_flushing" type="bool" setter="" getter="" default="false">
-			If [code]true[/code], key/touch/joystick events will be flushed just before every idle and physics frame.
-			If [code]false[/code], such events will be flushed only once per process frame, between iterations of the engine.
-			Enabling this can greatly improve the responsiveness to input, specially in devices that need to run multiple physics frames per visible (process) frame, because they can't run at the target frame rate.
-			[b]Note:[/b] Currently implemented only on Android.
-		</member>
 		<member name="input_devices/compatibility/legacy_just_pressed_behavior" type="bool" setter="" getter="" default="false">
 			If [code]true[/code], [method Input.is_action_just_pressed] and [method Input.is_action_just_released] will only return [code]true[/code] if the action is still in the respective state, i.e. an action that is pressed [i]and[/i] released on the same frame will be missed.
 			If [code]false[/code], no input will be lost.

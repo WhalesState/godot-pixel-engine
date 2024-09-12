@@ -34,7 +34,6 @@
 #include "core/math/math_funcs.h"
 #include "core/math/plane.h"
 #include "core/math/rect2.h"
-#include "core/math/transform_2d.h"
 #include "core/string/ustring.h"
 
 real_t Projection::determinant() const {
@@ -772,46 +771,11 @@ void Projection::add_jitter_offset(const Vector2 &p_offset) {
 	columns[3][1] += p_offset.y;
 }
 
-Projection::operator Transform2D() const {
-	Transform2D tr;
-
-	tr[0][0] = columns[0][0];
-	tr[1][0] = columns[0][1];
-	tr[0][1] = columns[1][0];
-	tr[1][1] = columns[1][1];
-	tr[2][0] = columns[2][0];
-	tr[2][1] = columns[2][1];
-
-	return tr;
-}
-
 Projection::Projection(const Vector4 &p_x, const Vector4 &p_y, const Vector4 &p_z, const Vector4 &p_w) {
 	columns[0] = p_x;
 	columns[1] = p_y;
 	columns[2] = p_z;
 	columns[3] = p_w;
-}
-
-Projection::Projection(const Transform2D &p_transform) {
-	const Transform2D &tr = p_transform;
-	real_t *m = &columns[0][0];
-
-	m[0] = tr[0][0];
-	m[1] = tr[1][0];
-	m[2] = 0.0;
-	m[3] = 0.0;
-	m[4] = tr[0][1];
-	m[5] = tr[1][1];
-	m[6] = 0.0;
-	m[7] = 0.0;
-	m[8] = 0.0;
-	m[9] = 0.0;
-	m[10] = 1.0;
-	m[11] = 0.0;
-	m[12] = tr[2][0];
-	m[13] = tr[2][1];
-	m[14] = 0.0;
-	m[15] = 1.0;
 }
 
 Projection::~Projection() {

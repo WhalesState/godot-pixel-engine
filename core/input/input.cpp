@@ -972,8 +972,6 @@ void Input::parse_input_event(const Ref<InputEvent> &p_event) {
 		if (buffered_events.is_empty() || !buffered_events.back()->get()->accumulate(p_event)) {
 			buffered_events.push_back(p_event);
 		}
-	} else if (agile_input_event_flushing) {
-		buffered_events.push_back(p_event);
 	} else {
 		_parse_input_event_impl(p_event, false);
 	}
@@ -1001,14 +999,6 @@ void Input::flush_buffered_events() {
 
 		_parse_input_event_impl(e, false);
 	}
-}
-
-bool Input::is_agile_input_event_flushing() {
-	return agile_input_event_flushing;
-}
-
-void Input::set_agile_input_event_flushing(bool p_enable) {
-	agile_input_event_flushing = p_enable;
 }
 
 void Input::set_use_accumulated_input(bool p_enable) {

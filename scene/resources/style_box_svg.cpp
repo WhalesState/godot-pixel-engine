@@ -212,7 +212,9 @@ Rect2 StyleBoxSvg::get_draw_rect(const Rect2 &p_rect) const {
 
 float StyleBoxSvg::get_texture_margin(Side p_side) const {
 	float margin = 0.0;
-	int bfc = border_width + int(flat_corners);
+	// Calculate both border width and some flat corner exeptions.
+	bool corners = bool(corner_radius[CORNER_TOP_LEFT] + corner_radius[CORNER_TOP_RIGHT] + corner_radius[CORNER_BOTTOM_LEFT] + corner_radius[CORNER_BOTTOM_RIGHT]) && flat_corners;
+	int bfc = border_width + int(corners) + (int(corners && (border_width == 1)) * 2);
 	switch (p_side) {
 		case SIDE_LEFT: {
 			margin = MAX(MAX(border_width, Math::ceil(MAX(bfc + corner_radius[CORNER_TOP_LEFT], bfc + corner_radius[CORNER_BOTTOM_LEFT]) / 2.0)) - expand[SIDE_LEFT], 0) * scale;
@@ -265,8 +267,10 @@ void StyleBoxSvg::draw(RID p_canvas_item, const Rect2 &p_rect) const {
 	if (needs_update) {
 		String svg = "<svg width=\"16\" height=\"16\" xmlns=\"http://www.w3.org/2000/svg\">";
 		svg += vformat(" <path fill=\"#%s\" fill-opacity=\"%s\"", fill_color.to_html(false), fill_color.a);
+		svg += " shape-rendering=\"crispEdges\"";
 		if (border_width > 0 && border_color.a > 0.0) {
-			svg += vformat(" stroke=\"#%s\" stroke-opacity=\"%s\" stroke-width=\"%s\"", border_color.to_html(false), border_color.a, border_width);
+			svg += vformat(" stroke=\"#%s\" stroke-opacity=\"%s\" stroke-width=\"%s\"", border_color.to_html(false), border_color.a, border_width * 2);
+			svg += " paint-order=\"stroke fill\"";
 			String line_join = "miter";
 			if (border_line_join == LINE_JOIN_BEVEL) {
 				line_join = "bevel";
@@ -276,7 +280,7 @@ void StyleBoxSvg::draw(RID p_canvas_item, const Rect2 &p_rect) const {
 			svg += vformat(" stroke-linejoin=\"%s\"", line_join);
 		}
 		svg += " d=\"";
-		Point2 b = Point2(border_width, border_width) / 2.0;
+		Point2 b = Point2(border_width, border_width);
 		// Top Left corner.
 		Point2 c = Point2(corner_radius[CORNER_TOP_LEFT], corner_radius[CORNER_TOP_LEFT]) / 2.0;
 		if (c.x > 0) {

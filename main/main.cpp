@@ -116,6 +116,7 @@
 static Engine *engine = nullptr;
 static ProjectSettings *globals = nullptr;
 static Input *input = nullptr;
+static WorkerThreadPool *worker_thread_pool = nullptr;
 static InputMap *input_map = nullptr;
 static TranslationServer *translation_server = nullptr;
 static Performance *performance = nullptr;
@@ -542,6 +543,8 @@ Error Main::test_setup() {
 
 	register_core_settings(); // Here globals are present.
 
+	worker_thread_pool = memnew(WorkerThreadPool);
+
 	translation_server = memnew(TranslationServer);
 	tsman = memnew(TextServerManager);
 
@@ -642,6 +645,8 @@ void Main::test_cleanup() {
 	ResourceSaver::remove_custom_savers();
 	PropertyListHelper::clear_base_helpers();
 
+	WorkerThreadPool::get_singleton()->finish();
+
 #ifdef TOOLS_ENABLED
 	GDExtensionManager::get_singleton()->deinitialize_extensions(GDExtension::INITIALIZATION_LEVEL_EDITOR);
 	uninitialize_modules(MODULE_INITIALIZATION_LEVEL_EDITOR);
@@ -672,6 +677,9 @@ void Main::test_cleanup() {
 	}
 	if (tsman) {
 		memdelete(tsman);
+	}
+	if (worker_thread_pool) {
+		memdelete(worker_thread_pool);
 	}
 	if (globals) {
 		memdelete(globals);
@@ -763,6 +771,7 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 
 	register_core_settings(); //here globals are present
 
+	worker_thread_pool = memnew(WorkerThreadPool);
 	translation_server = memnew(TranslationServer);
 	performance = memnew(Performance);
 	GDREGISTER_CLASS(Performance);
@@ -2160,6 +2169,10 @@ error:
 	if (translation_server) {
 		memdelete(translation_server);
 	}
+	if (worker_thread_pool) {
+		worker_thread_pool->finish();
+		memdelete(worker_thread_pool);
+	}
 	if (globals) {
 		memdelete(globals);
 	}
@@ -2632,9 +2645,6 @@ Error Main::setup2(bool p_show_boot_logo) {
 
 		Input *id = Input::get_singleton();
 		if (id) {
-			bool agile_input_event_flushing = GLOBAL_DEF("input_devices/buffering/agile_event_flushing", false);
-			id->set_agile_input_event_flushing(agile_input_event_flushing);
-
 			if (bool(GLOBAL_DEF_BASIC("input_devices/pointing/emulate_touch_from_mouse", false)) &&
 					!(editor || project_manager)) {
 				if (!DisplayServer::get_singleton()->is_touchscreen_available()) {
@@ -3374,7 +3384,6 @@ int Main::start() {
 			OS::get_singleton()->benchmark_end_measure("Startup", "Editor");
 		}
 #endif
-		sml->set_auto_accept_quit(GLOBAL_GET("application/config/auto_accept_quit"));
 
 		if (!editor && !project_manager) {
 			//standard helpers that can be changed from main config
@@ -3671,10 +3680,6 @@ bool Main::iteration() {
 	bool exit = false;
 
 	for (int iters = 0; iters < advance.physics_steps; ++iters) {
-		if (Input::get_singleton()->is_agile_input_event_flushing()) {
-			Input::get_singleton()->flush_buffered_events();
-		}
-
 		Engine::get_singleton()->_in_physics = true;
 		Engine::get_singleton()->_physics_frames++;
 
@@ -3699,10 +3704,6 @@ bool Main::iteration() {
 		physics_process_max = MAX(OS::get_singleton()->get_ticks_usec() - physics_begin, physics_process_max);
 
 		Engine::get_singleton()->_in_physics = false;
-	}
-
-	if (Input::get_singleton()->is_agile_input_event_flushing()) {
-		Input::get_singleton()->flush_buffered_events();
 	}
 
 	uint64_t process_begin = OS::get_singleton()->get_ticks_usec();
@@ -3845,6 +3846,8 @@ void Main::cleanup(bool p_force) {
 	ResourceLoader::clear_translation_remaps();
 	ResourceLoader::clear_path_remaps();
 
+	WorkerThreadPool::get_singleton()->finish();
+
 	ScriptServer::finish_languages();
 
 	// Sync pending commands that may have been queued from a different thread during ScriptServer finalization
@@ -3899,6 +3902,9 @@ void Main::cleanup(bool p_force) {
 	}
 	if (tsman) {
 		memdelete(tsman);
+	}
+	if (worker_thread_pool) {
+		memdelete(worker_thread_pool);
 	}
 	if (globals) {
 		memdelete(globals);

@@ -769,6 +769,7 @@ bool ClassDB::is_abstract(const StringName &p_class) {
 	if (!ti->gdextension) {
 		return true;
 	}
+	return ti->gdextension->create_instance2 == nullptr;
 }
 
 bool ClassDB::is_virtual(const StringName &p_class) {
@@ -2280,6 +2281,13 @@ void ClassDB::cleanup() {
 	resource_base_extensions.clear();
 	compat_classes.clear();
 	native_structs.clear();
+}
+
+// Array to use in optional parameters on methods and the DEFVAL_ARRAY macro.
+Array ClassDB::default_array_arg = Array::create_read_only();
+
+bool ClassDB::is_default_array_arg(const Array &p_array) {
+	return p_array.is_same_instance(default_array_arg);
 }
 
 //

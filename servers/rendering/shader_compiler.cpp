@@ -169,7 +169,7 @@ static String f2sp0(float p_float) {
 	return num;
 }
 
-static String get_constant_text(SL::DataType p_type, const Vector<SL::ConstantNode::Value> &p_values) {
+static String get_constant_text(SL::DataType p_type, const Vector<SL::Scalar> &p_values, bool p_is_op) {
 	switch (p_type) {
 		case SL::TYPE_BOOL:
 			return p_values[0].boolean ? "true" : "false";
@@ -189,7 +189,7 @@ static String get_constant_text(SL::DataType p_type, const Vector<SL::ConstantNo
 		}
 
 		case SL::TYPE_INT:
-			return itos(p_values[0].sint);
+			return itos(p_is_op ? Math::abs(p_values[0].sint) : p_values[0].sint); // To prevent writing unary minus twice in operator expression parsing.
 		case SL::TYPE_IVEC2:
 		case SL::TYPE_IVEC3:
 		case SL::TYPE_IVEC4: {
@@ -222,7 +222,7 @@ static String get_constant_text(SL::DataType p_type, const Vector<SL::ConstantNo
 			return text;
 		} break;
 		case SL::TYPE_FLOAT:
-			return f2sp0(p_values[0].real);
+			return f2sp0(p_is_op ? Math::abs(p_values[0].real) : p_values[0].real); // To prevent writing unary minus twice in operator expression parsing.
 		case SL::TYPE_VEC2:
 		case SL::TYPE_VEC3:
 		case SL::TYPE_VEC4: {
@@ -430,7 +430,7 @@ static String _get_global_shader_uniform_from_type_and_index(const String &p_buf
 	}
 }
 
-String ShaderCompiler::_dump_node_code(const SL::Node *p_node, int p_level, GeneratedCode &r_gen_code, IdentifierActions &p_actions, const DefaultIdentifierActions &p_default_actions, bool p_assigning, bool p_use_scope) {
+String ShaderCompiler::_dump_node_code(const SL::Node *p_node, int p_level, GeneratedCode &r_gen_code, IdentifierActions &p_actions, const DefaultIdentifierActions &p_default_actions, bool p_assigning, bool p_use_scope, bool p_is_op) {
 	String code;
 
 	switch (p_node->type) {
@@ -1069,7 +1069,7 @@ String ShaderCompiler::_dump_node_code(const SL::Node *p_node, int p_level, Gene
 			SL::ConstantNode *cnode = (SL::ConstantNode *)p_node;
 
 			if (cnode->array_size == 0) {
-				return get_constant_text(cnode->datatype, cnode->values);
+				return get_constant_text(cnode->datatype, cnode->values, p_is_op);
 			} else {
 				if (cnode->get_datatype() == SL::TYPE_STRUCT) {
 					code += _mkid(cnode->struct_name);
@@ -1107,18 +1107,18 @@ String ShaderCompiler::_dump_node_code(const SL::Node *p_node, int p_level, Gene
 				case SL::OP_ASSIGN_BIT_AND:
 				case SL::OP_ASSIGN_BIT_OR:
 				case SL::OP_ASSIGN_BIT_XOR:
-					code = _dump_node_code(onode->arguments[0], p_level, r_gen_code, p_actions, p_default_actions, true) + _opstr(onode->op) + _dump_node_code(onode->arguments[1], p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
+					code = _dump_node_code(onode->arguments[0], p_level, r_gen_code, p_actions, p_default_actions, true, true, true) + _opstr(onode->op) + _dump_node_code(onode->arguments[1], p_level, r_gen_code, p_actions, p_default_actions, p_assigning, true, true);
 					break;
 				case SL::OP_BIT_INVERT:
 				case SL::OP_NEGATE:
 				case SL::OP_NOT:
 				case SL::OP_DECREMENT:
 				case SL::OP_INCREMENT:
-					code = _opstr(onode->op) + _dump_node_code(onode->arguments[0], p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
+					code = _opstr(onode->op) + _dump_node_code(onode->arguments[0], p_level, r_gen_code, p_actions, p_default_actions, p_assigning, true, true);
 					break;
 				case SL::OP_POST_DECREMENT:
 				case SL::OP_POST_INCREMENT:
-					code = _dump_node_code(onode->arguments[0], p_level, r_gen_code, p_actions, p_default_actions, p_assigning) + _opstr(onode->op);
+					code = _dump_node_code(onode->arguments[0], p_level, r_gen_code, p_actions, p_default_actions, p_assigning, true, true) + _opstr(onode->op);
 					break;
 				case SL::OP_CALL:
 				case SL::OP_STRUCT:
@@ -1212,7 +1212,7 @@ String ShaderCompiler::_dump_node_code(const SL::Node *p_node, int p_level, Gene
 							}
 						}
 
-						String node_code = _dump_node_code(onode->arguments[i], p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
+						String node_code = _dump_node_code(onode->arguments[i], p_level, r_gen_code, p_actions, p_default_actions, p_assigning, true, true);
 						if (is_texture_func && i == 1) {
 							// If we're doing a texture lookup we need to check our texture argument
 							StringName texture_uniform;
@@ -1291,19 +1291,19 @@ String ShaderCompiler::_dump_node_code(const SL::Node *p_node, int p_level, Gene
 					}
 				} break;
 				case SL::OP_INDEX: {
-					code += _dump_node_code(onode->arguments[0], p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
+					code += _dump_node_code(onode->arguments[0], p_level, r_gen_code, p_actions, p_default_actions, p_assigning, true, true);
 					code += "[";
-					code += _dump_node_code(onode->arguments[1], p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
+					code += _dump_node_code(onode->arguments[1], p_level, r_gen_code, p_actions, p_default_actions, p_assigning, true, true);
 					code += "]";
 
 				} break;
 				case SL::OP_SELECT_IF: {
 					code += "(";
-					code += _dump_node_code(onode->arguments[0], p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
+					code += _dump_node_code(onode->arguments[0], p_level, r_gen_code, p_actions, p_default_actions, p_assigning, true, true);
 					code += "?";
-					code += _dump_node_code(onode->arguments[1], p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
+					code += _dump_node_code(onode->arguments[1], p_level, r_gen_code, p_actions, p_default_actions, p_assigning, true, true);
 					code += ":";
-					code += _dump_node_code(onode->arguments[2], p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
+					code += _dump_node_code(onode->arguments[2], p_level, r_gen_code, p_actions, p_default_actions, p_assigning, true, true);
 					code += ")";
 
 				} break;
@@ -1315,7 +1315,7 @@ String ShaderCompiler::_dump_node_code(const SL::Node *p_node, int p_level, Gene
 					if (p_use_scope) {
 						code += "(";
 					}
-					code += _dump_node_code(onode->arguments[0], p_level, r_gen_code, p_actions, p_default_actions, p_assigning) + " " + _opstr(onode->op) + " " + _dump_node_code(onode->arguments[1], p_level, r_gen_code, p_actions, p_default_actions, p_assigning);
+					code += _dump_node_code(onode->arguments[0], p_level, r_gen_code, p_actions, p_default_actions, p_assigning) + " " + _opstr(onode->op) + " " + _dump_node_code(onode->arguments[1], p_level, r_gen_code, p_actions, p_default_actions, p_assigning, true, true);
 					if (p_use_scope) {
 						code += ")";
 					}

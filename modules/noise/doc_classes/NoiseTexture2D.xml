@@ -33,9 +33,6 @@
 		<member name="height" type="int" setter="set_height" getter="get_height" default="512">
 			Height of the generated texture (in pixels).
 		</member>
-		<member name="in_3d_space" type="bool" setter="set_in_3d_space" getter="is_in_3d_space" default="false">
-			Determines whether the noise image is calculated in 3D space. May result in reduced contrast.
-		</member>
 		<member name="invert" type="bool" setter="set_invert" getter="get_invert" default="false">
 			If [code]true[/code], inverts the noise texture. White becomes black, black becomes white.
 		</member>

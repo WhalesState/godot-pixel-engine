@@ -324,7 +324,6 @@ void GDExtension::_register_extension_class_internal(GDExtensionClassLibraryPtr 
 	extension->gdextension.get_virtual = p_extension_funcs->get_virtual_func;
 	extension->gdextension.get_virtual_call_data = p_extension_funcs->get_virtual_call_data_func;
 	extension->gdextension.call_virtual_with_data = p_extension_funcs->call_virtual_with_data_func;
-	extension->gdextension.get_rid = p_extension_funcs->get_rid_func;
 
 	extension->gdextension.reloadable = self->reloadable;
 #ifdef TOOLS_ENABLED

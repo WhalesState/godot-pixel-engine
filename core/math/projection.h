@@ -40,7 +40,6 @@ class Vector;
 struct AABB;
 struct Plane;
 struct Rect2;
-struct Transform2D;
 struct Vector2;
 
 struct [[nodiscard]] Projection {
@@ -126,7 +125,6 @@ struct [[nodiscard]] Projection {
 	void add_jitter_offset(const Vector2 &p_offset);
 	void make_scale(const Vector3 &p_scale);
 	int get_pixels_per_meter(int p_for_pixel_width) const;
-	operator Transform2D() const;
 
 	void flip_y();
 
@@ -149,7 +147,6 @@ struct [[nodiscard]] Projection {
 
 	Projection();
 	Projection(const Vector4 &p_x, const Vector4 &p_y, const Vector4 &p_z, const Vector4 &p_w);
-	Projection(const Transform2D &p_transform2d);
 	~Projection();
 };
 

@@ -867,21 +867,34 @@ else:  # GCC, Clang
         env.Append(CCFLAGS=["-Werror"])
 
 if hasattr(detect, "get_program_suffix"):
-    suffix = "." + detect.get_program_suffix()
+    if detect.get_program_suffix() == "windows":
+        suffix = ".win"
+    else:
+        suffix = "." + detect.get_program_suffix()
 else:
-    suffix = "." + env["platform"]
+    if env["platform"] == "windows":
+        suffix = ".win"
+    else:
+        suffix = "." + env["platform"]
 
-suffix += "." + env["target"]
+if env["target"] == "editor":
+    suffix += ".e"
+else:
+    suffix += "." + env["target"]
+
 if env.dev_build:
     suffix += ".dev"
 
 if env["precision"] == "double":
-    suffix += ".double"
+    suffix += ".d"
 
-suffix += "." + env["arch"]
+if env["arch"] == "x86_64":
+    suffix += ".x64"
+else:
+    suffix += "." + env["arch"]
 
 if not env["threads"]:
-    suffix += ".nothreads"
+    suffix += ".nt"
 
 suffix += env.extra_suffix
 
@@ -1052,7 +1065,6 @@ if "check_c_headers" in env:
             env.AppendUnique(CPPDEFINES=[headers[header]])
 
 
-# FIXME: This method mixes both cosmetic progress stuff and cache handling...
 methods.show_progress(env)
 # TODO: replace this with `env.Dump(format="json")`
 # once we start requiring SCons 4.0 as min version.
@@ -1084,3 +1096,5 @@ def purge_flaky_files():
 
 
 atexit.register(purge_flaky_files)
+
+methods.clean_cache(env)

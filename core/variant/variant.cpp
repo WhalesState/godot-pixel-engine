@@ -313,7 +313,6 @@ bool Variant::can_convert(Variant::Type p_type_from, Variant::Type p_type_to) {
 		} break;
 		case PROJECTION: {
 			static const Type valid[] = {
-				TRANSFORM2D,
 				NIL
 			};
 
@@ -622,10 +621,8 @@ bool Variant::can_convert_strict(Variant::Type p_type_from, Variant::Type p_type
 			valid_types = valid;
 
 		} break;
-
 		case PROJECTION: {
 			static const Type valid[] = {
-				TRANSFORM2D,
 				NIL
 			};
 
@@ -1883,17 +1880,7 @@ Variant::operator Basis() const {
 }
 
 Variant::operator Projection() const {
-	if (type == TRANSFORM2D) {
-		const Transform2D &t = *_data._transform2d;
-		Transform2D m;
-		m[0][0] = t.columns[0][0];
-		m[1][0] = t.columns[0][1];
-		m[0][1] = t.columns[1][0];
-		m[1][1] = t.columns[1][1];
-		m[2][0] = t.columns[2][0];
-		m[2][1] = t.columns[2][1];
-		return m;
-	} else if (type == PROJECTION) {
+	if (type == PROJECTION) {
 		return *_data._projection;
 	} else {
 		return Projection();
