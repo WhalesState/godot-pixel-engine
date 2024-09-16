@@ -53,6 +53,9 @@ public:
 		if (RendererDummy::TextureStorage::get_singleton()->owns_texture(p_rid)) {
 			RendererDummy::TextureStorage::get_singleton()->texture_free(p_rid);
 			return true;
+		} else if (RendererDummy::MaterialStorage::get_singleton()->owns_shader(p_rid)) {
+			RendererDummy::MaterialStorage::get_singleton()->shader_free(p_rid);
+			return true;
 		}
 		return false;
 	}

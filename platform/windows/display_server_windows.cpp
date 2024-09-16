@@ -3795,7 +3795,7 @@ LRESULT DisplayServerWindows::MouseProc(int code, WPARAM wParam, LPARAM lParam) 
 	_THREAD_SAFE_METHOD_
 
 	uint64_t delta = OS::get_singleton()->get_ticks_msec() - time_since_popup;
-	if (delta > 250) {
+	if (delta > 25) {
 		switch (wParam) {
 			case WM_NCLBUTTONDOWN:
 			case WM_NCRBUTTONDOWN:
@@ -4405,7 +4405,7 @@ LRESULT DisplayServerWindows::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 
 			// Note: Handle popup closing here, since mouse event is not emulated and hook will not be called.
 			uint64_t delta = OS::get_singleton()->get_ticks_msec() - time_since_popup;
-			if (delta > 250) {
+			if (delta > 25) {
 				Point2i pos = Point2i(coords.x, coords.y) - _get_screens_origin();
 				List<WindowID>::Element *C = nullptr;
 				List<WindowID>::Element *E = popup_list.back();

@@ -267,7 +267,6 @@ void StyleBoxSvg::draw(RID p_canvas_item, const Rect2 &p_rect) const {
 	if (needs_update) {
 		String svg = "<svg width=\"16\" height=\"16\" xmlns=\"http://www.w3.org/2000/svg\">";
 		svg += vformat(" <path fill=\"#%s\" fill-opacity=\"%s\"", fill_color.to_html(false), fill_color.a);
-		svg += " shape-rendering=\"crispEdges\"";
 		if (border_width > 0 && border_color.a > 0.0) {
 			svg += vformat(" stroke=\"#%s\" stroke-opacity=\"%s\" stroke-width=\"%s\"", border_color.to_html(false), border_color.a, border_width * 2);
 			svg += " paint-order=\"stroke fill\"";

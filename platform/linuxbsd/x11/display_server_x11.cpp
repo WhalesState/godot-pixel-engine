@@ -4190,7 +4190,7 @@ bool DisplayServerX11::mouse_process_popups() {
 	}
 
 	uint64_t delta = OS::get_singleton()->get_ticks_msec() - time_since_popup;
-	if (delta < 250) {
+	if (delta < 25) {
 		return false;
 	}
 

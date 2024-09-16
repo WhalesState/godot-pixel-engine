@@ -1122,17 +1122,16 @@ bool CanvasItemEditor::_gui_input_rulers_and_guides(const Ref<InputEvent> &p_eve
 				_is_hovering_guide(m->get_position());
 			}
 
-			// Start dragging a guide
+			// Start dragging a guide.
 			if (b.is_valid() && b->get_button_index() == MouseButton::LEFT && b->is_pressed()) {
-				// Press button
 				if (b->get_position().x < RULER_WIDTH && b->get_position().y < RULER_WIDTH) {
-					// Drag a new double guide
+					// Drag a new double guide.
 					drag_type = DRAG_DOUBLE_GUIDE;
 					dragged_guide_index = -1;
 					return true;
 				} else if (b->get_position().x < RULER_WIDTH || b->get_position().y < RULER_WIDTH) {
-					// Check if we drag an existing horizontal guide
-					_is_hovering_guide(b->get_position(), true, b->is_ctrl_pressed());
+					// Check if we drag a new or existing guide.
+					_is_hovering_guide(b->get_position(), true);
 					return true;
 				}
 			}

@@ -49,7 +49,7 @@ class StyleBoxFlat : public StyleBox {
 	Vector2 skew;
 	bool anti_aliased = true;
 
-	int corner_detail = 8;
+	int corner_detail = 4;
 	int shadow_size = 0;
 	Point2 shadow_offset;
 	real_t aa_size = 1;
