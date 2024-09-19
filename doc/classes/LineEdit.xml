@@ -63,6 +63,12 @@
 				Clears the current selection.
 			</description>
 		</method>
+		<method name="edit">
+			<return type="void" />
+			<description>
+				Allows entering edit mode whether the [LineEdit] is focused or not.
+			</description>
+		</method>
 		<method name="get_menu" qualifiers="const">
 			<return type="PopupMenu" />
 			<description>
@@ -164,6 +170,12 @@
 			<return type="void" />
 			<description>
 				Selects the whole [String].
+			</description>
+		</method>
+		<method name="unedit">
+			<return type="void" />
+			<description>
+				Allows exiting edit mode while preserving focus.
 			</description>
 		</method>
 	</methods>

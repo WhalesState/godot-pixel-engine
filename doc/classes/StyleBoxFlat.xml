@@ -123,7 +123,7 @@
 		<member name="border_width_top" type="int" setter="set_border_width" getter="get_border_width" default="0">
 			Border width for the top border.
 		</member>
-		<member name="corner_detail" type="int" setter="set_corner_detail" getter="get_corner_detail" default="8">
+		<member name="corner_detail" type="int" setter="set_corner_detail" getter="get_corner_detail" default="4">
 			This sets the number of vertices used for each corner. Higher values result in rounder corners but take more processing power to compute. When choosing a value, you should take the corner radius ([method set_corner_radius_all]) into account.
 			For corner radii less than 10, [code]4[/code] or [code]5[/code] should be enough. For corner radii less than 30, values between [code]8[/code] and [code]12[/code] should be enough.
 			A corner detail of [code]1[/code] will result in chamfered corners instead of rounded corners, which is useful for some artistic effects.

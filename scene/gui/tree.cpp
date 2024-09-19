@@ -5500,11 +5500,7 @@ String Tree::get_tooltip(const Point2 &p_pos) const {
 	}
 
 	if (it) {
-		const String item_tooltip = it->get_tooltip_text(col);
-		if (item_tooltip.is_empty()) {
-			return it->get_text(col);
-		}
-		return item_tooltip;
+		return it->get_tooltip_text(col);
 	}
 
 	return Control::get_tooltip(p_pos);
@@ -5787,7 +5783,7 @@ Tree::Tree() {
 	popup_menu->hide();
 	add_child(popup_menu, false, INTERNAL_MODE_FRONT);
 
-	popup_editor = memnew(Popup);
+	popup_editor = memnew(PopupPanel);
 	add_child(popup_editor, false, INTERNAL_MODE_FRONT);
 
 	popup_editor_vb = memnew(VBoxContainer);

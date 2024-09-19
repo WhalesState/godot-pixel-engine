@@ -206,9 +206,6 @@ private:
 		float base_scale = 1.0;
 	} theme_cache;
 
-	void _edit();
-	void _unedit();
-
 	void _clear_undo_stack();
 	void _clear_redo();
 	void _create_undo_state();
@@ -261,6 +258,8 @@ protected:
 	virtual void gui_input(const Ref<InputEvent> &p_event) override;
 
 public:
+	void edit();
+	void unedit();
 	bool is_editing() const;
 
 	void set_horizontal_alignment(HorizontalAlignment p_alignment);
