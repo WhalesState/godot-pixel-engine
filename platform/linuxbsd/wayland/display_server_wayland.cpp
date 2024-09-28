@@ -369,8 +369,6 @@ Ref<Image> DisplayServerWayland::clipboard_get_image() const {
 		err = image->load_tga_from_buffer(wayland_thread.selection_get_mime("image/x-tga"));
 	} else if (wayland_thread.selection_has_mime("image/x-targa")) {
 		err = image->load_tga_from_buffer(wayland_thread.selection_get_mime("image/x-targa"));
-	} else if (wayland_thread.selection_has_mime("image/ktx")) {
-		err = image->load_ktx_from_buffer(wayland_thread.selection_get_mime("image/ktx"));
 	}
 
 	ERR_FAIL_COND_V(err != OK, Ref<Image>());

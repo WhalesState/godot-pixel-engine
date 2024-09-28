@@ -1404,8 +1404,6 @@ void TextureStorage::_update_render_target(RenderTarget *rt) {
 		return;
 	}
 
-	Config *config = Config::get_singleton();
-
 	if (rt->is_transparent) {
 		rt->color_internal_format = GL_RGBA8;
 		rt->color_format = GL_RGBA;
@@ -1585,7 +1583,6 @@ void GLES3::TextureStorage::check_backbuffer(RenderTarget *rt, const bool uses_s
 		return;
 	}
 
-	Config *config = Config::get_singleton();
 	GLenum texture_target = GL_TEXTURE_2D;
 	if (rt->backbuffer_fbo == 0) {
 		glGenFramebuffers(1, &rt->backbuffer_fbo);

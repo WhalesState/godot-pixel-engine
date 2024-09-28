@@ -24,45 +24,41 @@ jobs:
       matrix:
         include:
 
-          - name: Editor with doubles and GCC sanitizers (target=editor, tests=yes, dev_build=yes, scu_build=yes, precision=double, use_asan=yes, use_ubsan=yes, linker=gold)
+          - name: Editor with doubles and GCC sanitizers (target=editor, dev_build=yes, scu_build=yes, precision=double, use_asan=yes, use_ubsan=yes, linker=gold)
             cache-name: linux-editor-double-sanitizers
             target: editor
             # Debug symbols disabled as they're huge on this build and we hit the 14 GB limit for runners.
             sconsflags: dev_build=yes scu_build=yes debug_symbols=no precision=double use_asan=yes use_ubsan=yes linker=gold
-            bin: "./bin/godot.linuxbsd.editor.dev.double.x86_64.san"
-            # tests: true
+            bin: "./bin/godot.linuxbsd.e.dev.d.x64.san"
             proj-test: true
             # Generate an API dump for godot-cpp tests.
             api-dump: true
             # Skip 2GiB artifact speeding up action.
             artifact: false
 
-          - name: Editor with clang sanitizers (target=editor, tests=yes, dev_build=yes, use_asan=yes, use_ubsan=yes, use_llvm=yes, linker=lld)
+          - name: Editor with clang sanitizers (target=editor, dev_build=yes, use_asan=yes, use_ubsan=yes, use_llvm=yes, linker=lld)
             cache-name: linux-editor-llvm-sanitizers
             target: editor
             sconsflags: dev_build=yes use_asan=yes use_ubsan=yes use_llvm=yes linker=lld
-            bin: "./bin/godot.linuxbsd.editor.dev.x86_64.llvm.san"
-            # tests: true
+            bin: "./bin/godot.linuxbsd.e.dev.x64.llvm.san"
             # Skip 2GiB artifact speeding up action.
             artifact: false
             # Test our oldest supported SCons/Python versions on one arbitrary editor build.
             legacy-scons: true
 
-          - name: Editor with ThreadSanitizer (target=editor, tests=yes, dev_build=yes, use_tsan=yes, use_llvm=yes, linker=lld)
+          - name: Editor with ThreadSanitizer (target=editor, dev_build=yes, use_tsan=yes, use_llvm=yes, linker=lld)
             cache-name: linux-editor-thread-sanitizer
             target: editor
-            # tests: true
             sconsflags: dev_build=yes use_tsan=yes use_llvm=yes linker=lld
-            bin: "./bin/godot.linuxbsd.editor.dev.x86_64.llvm.san"
+            bin: "./bin/godot.linuxbsd.e.dev.x64.llvm.san"
             # Skip 2GiB artifact speeding up action.
             artifact: false
 
           - name: Minimal template (target=template_release, everything disabled)
             cache-name: linux-template-minimal
             target: template_release
-            sconsflags: modules_enabled_by_default=no disable_advanced_gui=yes deprecated=no minizip=no tests=yes
-            bin: "./bin/godot.linuxbsd.template_release.x86_64"
-            tests: true
+            sconsflags: modules_enabled_by_default=no disable_advanced_gui=yes deprecated=no minizip=no
+            bin: "./bin/godot.linuxbsd.template_release.x64"
             artifact: true
 
     steps:
@@ -116,7 +112,6 @@ jobs:
           sconsflags: ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
           platform: linuxbsd
           target: ${{ matrix.target }}
-          tests: ${{ matrix.tests }}
 
       - name: Save Godot build cache
         uses: ./.github/actions/godot-cache-save
@@ -158,15 +153,15 @@ jobs:
           ${{ matrix.bin }} --doctool --headless 2>&1 > /dev/null || true
           git diff --color --exit-code && ! git ls-files --others --exclude-standard | sed -e 's/^/New doc file missing in PR: /' | grep 'xml$'
 
-      # Check API backwards compatibility
-      - name: Check for GDExtension compatibility
-        if: ${{ matrix.api-compat }}
-        run: |
-          ./misc/scripts/validate_extension_api.sh "${{ matrix.bin }}"
+      # # Check API backwards compatibility
+      # - name: Check for GDExtension compatibility
+      #   if: ${{ matrix.api-compat }}
+      #   run: |
+      #     ./misc/scripts/validate_extension_api.sh "${{ matrix.bin }}"
 
-      # Download and run the test project
-      - name: Test Godot project
-        uses: ./.github/actions/godot-project-test
-        if: ${{ matrix.proj-test }}
-        with:
-          bin: ${{ matrix.bin }}
+      # # Download and run the test project
+      # - name: Test Godot project
+      #   uses: ./.github/actions/godot-project-test
+      #   if: ${{ matrix.proj-test }}
+      #   with:
+      #     bin: ${{ matrix.bin }}

@@ -67,8 +67,6 @@
 #include "scene/theme/theme_db.h"
 #include "servers/display_server.h"
 
-constexpr int GODOT4_CONFIG_VERSION = 5;
-
 ProjectManager *ProjectManager::singleton = nullptr;
 
 // Notifications.

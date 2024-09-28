@@ -38,7 +38,6 @@
 #include <ConvectionKernels.h>
 
 struct CVTTCompressionJobParams {
-	bool is_signed = false;
 	int bytes_per_pixel = 0;
 	cvtt::BC7EncodingPlan bc7_plan;
 	cvtt::Options options;
@@ -69,7 +68,6 @@ static void _digest_row_task(const CVTTCompressionJobParams &p_job_params, const
 	int y_end = y_start + 4;
 
 	int bytes_per_pixel = p_job_params.bytes_per_pixel;
-	bool is_signed = p_job_params.is_signed;
 
 	cvtt::PixelBlockU8 input_blocks_ldr[cvtt::NumParallelBlocks];
 
@@ -151,7 +149,6 @@ void image_compress_cvtt(Image *p_image, Image::UsedChannels p_channels) {
 
 	Image::Format target_format = Image::FORMAT_BPTC_RGBA;
 
-	bool is_signed = false;
 	p_image->convert(Image::FORMAT_RGBA8); //still uses RGBA to convert
 
 	const uint8_t *rb = p_image->get_data().ptr();
@@ -167,7 +164,6 @@ void image_compress_cvtt(Image *p_image, Image::UsedChannels p_channels) {
 	int64_t dst_ofs = 0;
 
 	CVTTCompressionJobQueue job_queue;
-	job_queue.job_params.is_signed = is_signed;
 	job_queue.job_params.options = options;
 	job_queue.job_params.bytes_per_pixel = 4;
 	cvtt::Kernels::ConfigureBC7EncodingPlanFromQuality(job_queue.job_params.bc7_plan, 5);
@@ -222,7 +218,6 @@ void image_compress_cvtt(Image *p_image, Image::UsedChannels p_channels) {
 
 void image_decompress_cvtt(Image *p_image) {
 	Image::Format target_format;
-	bool is_signed = false;
 
 	Image::Format input_format = p_image->get_format();
 

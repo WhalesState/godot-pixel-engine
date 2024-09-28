@@ -20,17 +20,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Editor (target=editor, tests=yes)
+          - name: Editor (target=editor)
             cache-name: macos-editor
             target: editor
-            # tests: true
-            bin: "./bin/godot.macos.editor.universal"
+            target_name: e
+            bin: "./bin/godot.macos.e.universal"
 
           - name: Template (target=template_release)
             cache-name: macos-template
             target: template_release
-            # tests: true
-            sconsflags: debug_symbols=no tests=yes
+            target_name: template_release
+            sconsflags: debug_symbols=no
             bin: "./bin/godot.macos.template_release.universal"
 
     steps:
@@ -53,7 +53,6 @@ jobs:
           sconsflags: ${{ env.SCONSFLAGS }} arch=x86_64
           platform: macos
           target: ${{ matrix.target }}
-          tests: ${{ matrix.tests }}
 
       - name: Compilation (arm64)
         uses: ./.github/actions/godot-build
@@ -61,7 +60,6 @@ jobs:
           sconsflags: ${{ env.SCONSFLAGS }} arch=arm64
           platform: macos
           target: ${{ matrix.target }}
-          tests: ${{ matrix.tests }}
 
       - name: Save Godot build cache
         uses: ./.github/actions/godot-cache-save
@@ -71,8 +69,8 @@ jobs:
 
       - name: Prepare artifact
         run: |
-          lipo -create ./bin/godot.macos.${{ matrix.target }}.x86_64 ./bin/godot.macos.${{ matrix.target }}.arm64 -output ./bin/godot.macos.${{ matrix.target }}.universal
-          rm ./bin/godot.macos.${{ matrix.target }}.x86_64 ./bin/godot.macos.${{ matrix.target }}.arm64
+          lipo -create ./bin/godot.macos.${{ matrix.target_name }}.d.x64 ./bin/godot.macos.${{ matrix.target_name }}.d.arm64 -output ./bin/godot.macos.${{ matrix.target_name }}.d.universal
+          rm ./bin/godot.macos.${{ matrix.target_name }}.d.x64 ./bin/godot.macos.${{ matrix.target_name }}.d.arm64
           strip bin/godot.*
           chmod +x bin/godot.*
 

@@ -133,6 +133,8 @@ class DisplayServerX11 : public DisplayServer {
 	bool keep_screen_on = false;
 #endif
 
+	NativeMenu *native_menu = nullptr;
+
 #if defined(DBUS_ENABLED)
 	FreeDesktopPortalDesktop *portal_desktop = nullptr;
 #endif

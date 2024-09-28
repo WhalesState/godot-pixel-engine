@@ -196,7 +196,6 @@ Dictionary DebugAdapterParser::_launch_process(const Dictionary &p_params) const
 	if (platform_string == "host") {
 		EditorRunBar::get_singleton()->play_main_scene();
 	} else {
-		int device = args.get("device", -1);
 		int idx = -1;
 		if (platform_string == "web") {
 			for (int i = 0; i < EditorExport::get_singleton()->get_export_platform_count(); i++) {

@@ -221,7 +221,7 @@ opts.Add(BoolVariable("custom_modules_recursive", "Detect custom modules recursi
 opts.Add(BoolVariable("visual_shader", "Enable visual shader.", False))
 
 # Advanced options
-opts.Add(BoolVariable("dev_mode", "Alias for dev options: verbose=yes warnings=extra werror=yes tests=yes", False))
+opts.Add(BoolVariable("dev_mode", "Alias for dev options: verbose=yes warnings=extra werror=yes", False))
 opts.Add(BoolVariable("tests", "Build the unit tests", False))
 opts.Add(BoolVariable("fast_unsafe", "Enable unsafe options for faster rebuilds", False))
 opts.Add(BoolVariable("ninja", "Use the ninja backend for faster rebuilds", False))

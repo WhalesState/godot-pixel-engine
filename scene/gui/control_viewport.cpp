@@ -489,10 +489,10 @@ void ControlViewport::_draw_rulers() {
 		}
 	} else {
 		real_t basic_rule = 16.0;
-		for (int i = 0; basic_rule * zoom > 128; i++) {
+		while (basic_rule * zoom > 128) {
 			basic_rule /= 2.0;
 		}
-		for (int i = 0; basic_rule * zoom < 128; i++) {
+		while (basic_rule * zoom < 128) {
 			basic_rule *= 2.0;
 		}
 		ruler_transform.scale(Size2(basic_rule, basic_rule));

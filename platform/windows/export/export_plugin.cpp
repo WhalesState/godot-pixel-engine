@@ -347,8 +347,6 @@ bool EditorExportPlatformWindows::get_export_option_visibility(const EditorExpor
 		return false;
 	}
 
-	bool advanced_options_enabled = p_preset->are_advanced_options_enabled();
-
 	// Hide codesign.
 	bool codesign = p_preset->get("codesign/enable");
 	if (!codesign && p_option != "codesign/enable" && p_option.begins_with("codesign/")) {

@@ -521,7 +521,7 @@ public:
 	uint32_t texture_get_width(RID p_texture) const;
 	uint32_t texture_get_height(RID p_texture) const;
 	uint32_t texture_get_depth(RID p_texture) const;
-	void texture_bind(RID p_texture, uint32_t p_texture_no);
+	void texture_bind(RID p_texture, uint32_t p_texture_no) override;
 
 	/* TEXTURE ATLAS API */
 

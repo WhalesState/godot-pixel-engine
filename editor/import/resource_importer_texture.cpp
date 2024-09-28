@@ -538,7 +538,6 @@ Error ResourceImporterTexture::import(const String &p_source_file, const String 
 			formats_imported.push_back("etc2_astc");
 		}
 
-		bool has_alpha = image->detect_alpha() != Image::ALPHA_NONE;
 		bool use_uncompressed = false;
 
 		if (use_uncompressed) {
