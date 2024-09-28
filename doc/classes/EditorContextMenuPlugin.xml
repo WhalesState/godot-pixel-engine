@@ -26,10 +26,12 @@
 			<description>
 				Add custom options to the context menu of the currently specified slot.
 				To trigger a [param shortcut] before the context menu is created, please additionally call the [method add_menu_shortcut] function.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				func _popup_menu(paths):
 				    add_context_menu_item("File Custom options", handle, ICON)
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</method>
 		<method name="add_menu_shortcut">
@@ -39,10 +41,12 @@
 			<description>
 				To register the shortcut for the context menu, call this function within the [method Object._init] function, even if the context menu has not been created yet.
 				Note that this method should only be invoked from [method Object._init]; otherwise, the shortcut will not be registered correctly.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				func _init():
 				    add_menu_shortcut(SHORTCUT, handle);
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</method>
 	</methods>

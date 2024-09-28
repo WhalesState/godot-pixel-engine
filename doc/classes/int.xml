@@ -83,11 +83,13 @@
 			<param index="0" name="right" type="int" />
 			<description>
 				Returns the remainder after dividing two [int]s. Uses truncated division, which returns a negative number if the dividend is negative. If this is not desired, consider using [method @GlobalScope.posmod].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(6 % 2) # Prints 0
 				print(11 % 4) # Prints 3
 				print(-5 % 3) # Prints -2
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator &amp;">
@@ -95,16 +97,20 @@
 			<param index="0" name="right" type="int" />
 			<description>
 				Performs the bitwise [code]AND[/code] operation.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(0b1100 &amp; 0b1010) # Prints 8 (binary 1000)
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 				This is useful for retrieving binary flags from a variable.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				var flags = 0b101
 				# Check if the first or second bit are enabled.
 				if flags &amp; 0b011:
 				    do_stuff() # This line will run.
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator *">
@@ -119,9 +125,11 @@
 			<param index="0" name="right" type="Vector2" />
 			<description>
 				Multiplies each component of the [Vector2] by the [int].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(2 * Vector2(1, 4)) # Prints (2, 8)
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator *">
@@ -178,9 +186,11 @@
 			<param index="0" name="right" type="float" />
 			<description>
 				Raises an [int] to a power of a [float]. The result is a [float].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(2 ** 0.5) # Prints 1.4142135623731
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator **">
@@ -188,9 +198,11 @@
 			<param index="0" name="right" type="int" />
 			<description>
 				Raises the left [int] to a power of the right [int].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(3 ** 4) # Prints 81
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator +">
@@ -226,9 +238,11 @@
 			<param index="0" name="right" type="float" />
 			<description>
 				Divides the [int] by the [float]. The result is a [float].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(10 / 3.0) # Prints 3.33333333333333
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator /">
@@ -236,10 +250,12 @@
 			<param index="0" name="right" type="int" />
 			<description>
 				Divides the two [int]s. The result is an [int]. This will truncate the [float], discarding anything after the floating point.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(6 / 2) # Prints 3
 				print(5 / 3) # Prints 1
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator &lt;">
@@ -261,10 +277,12 @@
 			<param index="0" name="right" type="int" />
 			<description>
 				Performs the bitwise shift left operation. Effectively the same as multiplying by a power of 2.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(0b1010 &lt;&lt; 1) # Prints 20 (binary 10100)
 				print(0b1010 &lt;&lt; 3) # Prints 80 (binary 1010000)
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator &lt;=">
@@ -328,10 +346,12 @@
 			<param index="0" name="right" type="int" />
 			<description>
 				Performs the bitwise shift right operation. Effectively the same as dividing by a power of 2.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(0b1010 &gt;&gt; 1) # Prints 5 (binary 101)
 				print(0b1010 &gt;&gt; 2) # Prints 2 (binary 10)
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator ^">
@@ -339,9 +359,11 @@
 			<param index="0" name="right" type="int" />
 			<description>
 				Performs the bitwise [code]XOR[/code] operation.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(0b1100 ^ 0b1010) # Prints 6 (binary 110)
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator unary+">
@@ -361,24 +383,30 @@
 			<param index="0" name="right" type="int" />
 			<description>
 				Performs the bitwise [code]OR[/code] operation.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(0b1100 | 0b1010) # Prints 14 (binary 1110)
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 				This is useful for storing binary flags in a variable.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				var flags = 0
 				flags |= 0b101 # Turn the first and third bits on.
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator ~">
 			<return type="int" />
 			<description>
 				Performs the bitwise [code]NOT[/code] operation on the [int]. Due to [url=https://en.wikipedia.org/wiki/Two%27s_complement]2's complement[/url], it's effectively equal to [code]-(int + 1)[/code].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(~4) # Prints -5
 				print(~(-7)) # Prints 6
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 	</operators>

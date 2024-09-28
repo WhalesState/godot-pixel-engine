@@ -114,7 +114,8 @@
 			<description>
 				Starts an edit for multiple carets. The edit must be ended with [method end_multicaret_edit]. Multicaret edits can be used to edit text at multiple carets and delay merging the carets until the end, so the caret indexes aren't affected immediately. [method begin_multicaret_edit] and [method end_multicaret_edit] can be nested, and the merge will happen at the last [method end_multicaret_edit].
 				Example usage:
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				begin_complex_operation()
 				begin_multicaret_edit()
 				for i in range(get_caret_count()):
@@ -123,7 +124,8 @@
 				    # Logic here.
 				end_multicaret_edit()
 				end_complex_operation()
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</method>
 		<method name="cancel_ime">

@@ -72,14 +72,16 @@
 			<description>
 				Register a reference to an object that will be erased if the "do" history is deleted. This is useful for objects added by the "do" action and removed by the "undo" action.
 				When the "do" history is deleted, if the object is a [RefCounted], it will be unreferenced. Otherwise, it will be freed. Do not use for resources.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				var node = Node2D.new()
 				undo_redo.create_action("Add node")
 				undo_redo.add_do_method(add_child.bind(node))
 				undo_redo.add_do_reference(node)
 				undo_redo.add_undo_method(remove_child.bind(node))
 				undo_redo.commit_action()
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</method>
 		<method name="add_undo_method">
@@ -104,14 +106,16 @@
 			<description>
 				Register a reference to an object that will be erased if the "undo" history is deleted. This is useful for objects added by the "undo" action and removed by the "do" action.
 				When the "undo" history is deleted, if the object is a [RefCounted], it will be unreferenced. Otherwise, it will be freed. Do not use for resources.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				var node = $Node2D
 				undo_redo.create_action("Remove node")
 				undo_redo.add_do_method(remove_child.bind(node))
 				undo_redo.add_undo_method(add_child.bind(node))
 				undo_redo.add_undo_reference(node)
 				undo_redo.commit_action()
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</method>
 		<method name="clear_history">

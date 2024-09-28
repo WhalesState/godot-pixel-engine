@@ -5,7 +5,8 @@
 	</brief_description>
 	<description>
 		This class implements a writer that allows storing the multiple blobs in a zip archive.
-		[codeblock]
+		[codeblocks]
+		[gdscript]
 		func write_zip_file():
 		    var writer := ZIPPacker.new()
 		    var err := writer.open("user://archive.zip")
@@ -17,7 +18,8 @@
 
 		    writer.close()
 		    return OK
-		[/codeblock]
+		[/gdscript]
+		[/codeblocks]
 	</description>
 	<tutorials>
 	</tutorials>

@@ -14,7 +14,7 @@
 		To keep track of the scene hierarchy (especially when instantiating scenes into other scenes), an "owner" can be set for the node with the [member owner] property. This keeps track of who instantiated what. This is mostly useful when writing editors and tools, though.
 		Finally, when a node is freed with [method Object.free] or [method queue_free], it will also free all its children.
 		[b]Groups:[/b] Nodes can be added to as many groups as you want to be easy to manage, you could create groups like "enemies" or "collectables" for example, depending on your game. See [method add_to_group], [method is_in_group] and [method remove_from_group]. You can then retrieve all nodes in these groups, iterate them and even call methods on groups via the methods on [SceneTree].
-		[b]Networking with nodes:[/b] After connecting to a server (or making one, see [ENetMultiplayerPeer]), it is possible to use the built-in RPC (remote procedure call) system to communicate over the network. By calling [method rpc] with a method name, it will be called locally and in all connected peers (peers = clients and the server that accepts connections). To identify which node receives the RPC call, Godot will use its [NodePath] (make sure node names are the same on all peers). Also, take a look at the high-level networking tutorial and corresponding demos.
+		[b]Networking with nodes:[/b] After connecting to a server (or making one, see ENetMultiplayerPeer), it is possible to use the built-in RPC (remote procedure call) system to communicate over the network. By calling rpc with a method name, it will be called locally and in all connected peers (peers = clients and the server that accepts connections). To identify which node receives the RPC call, Godot will use its [NodePath] (make sure node names are the same on all peers). Also, take a look at the high-level networking tutorial and corresponding demos.
 		[b]Note:[/b] The [code]script[/code] property is part of the [Object] class, not [Node]. It isn't exposed like most properties but does have a setter and getter (see [method Object.set_script] and [method Object.get_script]).
 	</description>
 	<tutorials>
@@ -42,7 +42,8 @@
 				The elements in the array returned from this method are displayed as warnings in the Scene dock if the script that overrides it is a [code]tool[/code] script.
 				Returning an empty array produces no warnings.
 				Call [method update_configuration_warnings] when the warnings need to be updated for this node.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				@export var energy = 0:
 				    set(value):
 				        energy = value
@@ -53,7 +54,8 @@
 				        return ["Energy must be 0 or greater."]
 				    else:
 				        return []
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</method>
 		<method name="_input" qualifiers="virtual">
@@ -291,7 +293,8 @@
 			<description>
 				Fetches a child node by its index. Each child node has an index relative its siblings (see [method get_index]). The first child is at index 0. Negative values can also be used to start from the end of the list. This method can be used in combination with [method get_child_count] to iterate over this node's children. If no child exists at the given index, this method returns [code]null[/code] and an error is generated.
 				If [param include_internal] is [code]false[/code], internal children are ignored (see [method add_child]'s [code]internal[/code] parameter).
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				# Assuming the following are children of this node, in order:
 				# First, Middle, Last.
 
@@ -299,7 +302,8 @@
 				var b = get_child(1).name  # b is "Middle"
 				var b = get_child(2).name  # b is "Last"
 				var c = get_child(-1).name # c is "Last"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 				[b]Note:[/b] To fetch a node by [NodePath], use [method get_node].
 			</description>
 		</method>
@@ -740,7 +744,7 @@
 			<param index="1" name="keep_global_transform" type="bool" default="true" />
 			<description>
 				Changes the parent of this [Node] to the [param new_parent]. The node needs to already have a parent. The node's [member owner] is preserved if its owner is still reachable from the new location (i.e., the node is still a descendant of the new parent after the operation).
-				If [param keep_global_transform] is [code]true[/code], the node's global transform will be preserved if supported. [Node2D], [Node3D] and [Control] support this argument (but [Control] keeps only position).
+				If [param keep_global_transform] is [code]true[/code], the node's global transform will be preserved if supported. [Node2D], Node3D and [Control] support this argument (but [Control] keeps only position).
 			</description>
 		</method>
 		<method name="replace_by">
@@ -1106,13 +1110,15 @@
 		<constant name="NOTIFICATION_TRANSLATION_CHANGED" value="2010">
 			Notification received when translations may have changed. Can be triggered by the user changing the locale, changing [member auto_translate_mode] or when the node enters the scene tree. Can be used to respond to language changes, for example to change the UI strings on the fly. Useful when working with the built-in translation support, like [method Object.tr].
 			[b]Note:[/b] This notification is received alongside [constant NOTIFICATION_ENTER_TREE], so if you are instantiating a scene, the child nodes will not be initialized yet. You can use it to setup translations for this node, child nodes created from script, or if you want to access child nodes added in the editor, make sure the node is ready using [method is_node_ready].
-			[codeblock]
+			[codeblocks]
+			[gdscript]
 			func _notification(what):
 			    if what == NOTIFICATION_TRANSLATION_CHANGED:
 			        if not is_node_ready():
 			            await ready # Wait until ready signal.
 			        $Label.text = atr("%d Bananas") % banana_counter
-			[/codeblock]
+			[/gdscript]
+			[/codeblocks]
 		</constant>
 		<constant name="NOTIFICATION_WM_ABOUT" value="2011">
 			Notification received from the OS when a request for "About" information is sent.

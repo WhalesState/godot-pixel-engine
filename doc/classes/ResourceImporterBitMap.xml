@@ -4,7 +4,7 @@
 		Imports a [BitMap] resource (2D array of boolean values).
 	</brief_description>
 	<description>
-		[BitMap] resources are typically used as click masks in [TextureButton] and [TouchScreenButton].
+		[BitMap] resources are typically used as click masks in [TextureButton] and TouchScreenButton.
 	</description>
 	<tutorials>
 		<link title="Importing images">$DOCS_URL/tutorials/assets_pipeline/importing_images.html</link>

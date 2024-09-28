@@ -30,12 +30,14 @@
 			<param index="2" name="method" type="StringName" />
 			<description>
 				Calls the given [param method] on each node inside this tree added to the given [param group]. Use [param flags] to customize this method's behavior (see [enum GroupCallFlags]). Additional arguments for [param method] can be passed at the end of this method. Nodes that cannot call [param method] (either because the method doesn't exist or the arguments do not match) are ignored.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				# Calls "hide" to all nodes of the "enemies" group, at the end of the frame and in reverse tree order.
 				get_tree().call_group_flags(
 				        SceneTree.GROUP_CALL_DEFERRED | SceneTree.GROUP_CALL_REVERSE,
 				        "enemies", "hide")
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 				[b]Note:[/b] In C#, [param method] must be in snake_case when referring to built-in Godot methods. Prefer using the names exposed in the [code]MethodName[/code] class to avoid allocating a new [StringName] on each call.
 			</description>
 		</method>
@@ -209,14 +211,13 @@
 	<members>
 		<member name="auto_accept_quit" type="bool" setter="set_auto_accept_quit" getter="is_auto_accept_quit" default="true">
 			If [code]true[/code], the application automatically accepts quitting requests.
-			For mobile platforms, see [member quit_on_go_back].
 		</member>
 		<member name="current_scene" type="Node" setter="set_current_scene" getter="get_current_scene">
 			The root node of the currently loaded main scene, usually as a direct child of [member root]. See also [method change_scene_to_file], [method change_scene_to_packed], and [method reload_current_scene].
 			[b]Warning:[/b] Setting this property directly may not work as expected, as it does [i]not[/i] add or remove any nodes from this tree.
 		</member>
 		<member name="debug_paths_hint" type="bool" setter="set_debug_paths_hint" getter="is_debugging_paths_hint" default="false">
-			If [code]true[/code], curves from [Path2D] and [Path3D] nodes will be visible when running the game from the editor for debugging purposes.
+			If [code]true[/code], curves from [Path2D] and Path3D nodes will be visible when running the game from the editor for debugging purposes.
 			[b]Note:[/b] This property is not designed to be changed at run-time. Changing the value of [member debug_paths_hint] while the project is running will not have the desired effect.
 		</member>
 		<member name="edited_scene_root" type="Node" setter="set_edited_scene_root" getter="get_edited_scene_root">

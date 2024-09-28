@@ -16,11 +16,13 @@
 			<description>
 				Ensures the given [param control] is visible (must be a direct or indirect child of the ScrollContainer). Used by [member follow_focus].
 				[b]Note:[/b] This will not work on a node that was just added during the same frame. If you want to scroll to a newly added child, you must wait until the next frame using [signal SceneTree.process_frame]:
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				add_child(child_node)
 				await get_tree().process_frame
 				ensure_control_visible(child_node)
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</method>
 		<method name="get_h_scroll_bar">
@@ -56,10 +58,12 @@
 		<member name="scroll_horizontal" type="int" setter="set_h_scroll" getter="get_h_scroll" default="0">
 			The current horizontal scroll value.
 			[b]Note:[/b] If you are setting this value in the [method Node._ready] function or earlier, it needs to be wrapped with [method Object.set_deferred], since scroll bar's [member Range.max_value] is not initialized yet.
-			[codeblock]
+			[codeblocks]
+			[gdscript]
 			func _ready():
 			    set_deferred("scroll_horizontal", 600)
-			[/codeblock]
+			[/gdscript]
+			[/codeblocks]
 		</member>
 		<member name="scroll_horizontal_custom_step" type="float" setter="set_horizontal_custom_step" getter="get_horizontal_custom_step" default="-1.0">
 			Overrides the [member ScrollBar.custom_step] used when clicking the internal scroll bar's horizontal increment and decrement buttons or when using arrow keys when the [ScrollBar] is focused.
@@ -67,10 +71,12 @@
 		<member name="scroll_vertical" type="int" setter="set_v_scroll" getter="get_v_scroll" default="0">
 			The current vertical scroll value.
 			[b]Note:[/b] Setting it early needs to be deferred, just like in [member scroll_horizontal].
-			[codeblock]
+			[codeblocks]
+			[gdscript]
 			func _ready():
 			    set_deferred("scroll_vertical", 600)
-			[/codeblock]
+			[/gdscript]
+			[/codeblocks]
 		</member>
 		<member name="scroll_vertical_custom_step" type="float" setter="set_vertical_custom_step" getter="get_vertical_custom_step" default="-1.0">
 			Overrides the [member ScrollBar.custom_step] used when clicking the internal scroll bar's vertical increment and decrement buttons or when using arrow keys when the [ScrollBar] is focused.
@@ -108,6 +114,10 @@
 		</constant>
 	</constants>
 	<theme_items>
+		<theme_item name="h_separation" data_type="constant" type="int" default="0">
+		</theme_item>
+		<theme_item name="v_separation" data_type="constant" type="int" default="0">
+		</theme_item>
 		<theme_item name="panel" data_type="style" type="StyleBox">
 			The background [StyleBox] of the [ScrollContainer].
 		</theme_item>

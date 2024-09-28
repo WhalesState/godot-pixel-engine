@@ -4,7 +4,7 @@
 		Virtual base class for applying visual properties to an object, such as color and roughness.
 	</brief_description>
 	<description>
-		[Material] is a base resource used for coloring and shading geometry. All materials inherit from it and almost all [VisualInstance3D] derived nodes carry a [Material]. A few flags and parameters are shared between all material types and are configured here.
+		[Material] is a base resource used for coloring and shading geometry. All materials inherit from it and almost all VisualInstance3D derived nodes carry a [Material]. A few flags and parameters are shared between all material types and are configured here.
 		Importantly, you can inherit from [Material] to create your own custom material type in script or in GDExtension.
 	</description>
 	<tutorials>

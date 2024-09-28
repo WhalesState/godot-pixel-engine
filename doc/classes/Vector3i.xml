@@ -221,9 +221,11 @@
 			<param index="0" name="right" type="Vector3i" />
 			<description>
 				Gets the remainder of each component of the [Vector3i] with the components of the given [Vector3i]. This operation uses truncated division, which is often not desired as it does not work well with negative numbers. Consider using [method @GlobalScope.posmod] instead if you want to handle negative numbers.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector3i(10, -20, 30) % Vector3i(7, 8, 9)) # Prints "(3, -4, 3)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator %">
@@ -231,9 +233,11 @@
 			<param index="0" name="right" type="int" />
 			<description>
 				Gets the remainder of each component of the [Vector3i] with the given [int]. This operation uses truncated division, which is often not desired as it does not work well with negative numbers. Consider using [method @GlobalScope.posmod] instead if you want to handle negative numbers.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector3i(10, -20, 30) % 7) # Prints "(3, -6, 2)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator *">
@@ -241,9 +245,11 @@
 			<param index="0" name="right" type="Vector3i" />
 			<description>
 				Multiplies each component of the [Vector3i] by the components of the given [Vector3i].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector3i(10, 20, 30) * Vector3i(3, 4, 5)) # Prints "(30, 80, 150)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator *">
@@ -251,9 +257,11 @@
 			<param index="0" name="right" type="float" />
 			<description>
 				Multiplies each component of the [Vector3i] by the given [float]. Returns a [Vector3].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector3i(10, 15, 20) * 0.9) # Prints "(9, 13.5, 18)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator *">
@@ -268,9 +276,11 @@
 			<param index="0" name="right" type="Vector3i" />
 			<description>
 				Adds each component of the [Vector3i] by the components of the given [Vector3i].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector3i(10, 20, 30) + Vector3i(3, 4, 5)) # Prints "(13, 24, 35)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator -">
@@ -278,9 +288,11 @@
 			<param index="0" name="right" type="Vector3i" />
 			<description>
 				Subtracts each component of the [Vector3i] by the components of the given [Vector3i].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector3i(10, 20, 30) - Vector3i(3, 4, 5)) # Prints "(7, 16, 25)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator /">
@@ -288,9 +300,11 @@
 			<param index="0" name="right" type="Vector3i" />
 			<description>
 				Divides each component of the [Vector3i] by the components of the given [Vector3i].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector3i(10, 20, 30) / Vector3i(2, 5, 3)) # Prints "(5, 4, 10)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator /">
@@ -298,9 +312,11 @@
 			<param index="0" name="right" type="float" />
 			<description>
 				Divides each component of the [Vector3i] by the given [float]. Returns a [Vector3].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector3i(10, 20, 30) / 2.9) # Prints "(5, 10, 15)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator /">

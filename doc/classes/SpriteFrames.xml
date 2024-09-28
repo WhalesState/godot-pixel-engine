@@ -4,7 +4,7 @@
 		Sprite frame library for AnimatedSprite2D and AnimatedSprite3D.
 	</brief_description>
 	<description>
-		Sprite frame library for an [AnimatedSprite2D] or [AnimatedSprite3D] node. Contains frames and animation data for playback.
+		Sprite frame library for an [AnimatedSprite2D] or AnimatedSprite3D node. Contains frames and animation data for playback.
 	</description>
 	<tutorials>
 	</tutorials>
@@ -80,10 +80,12 @@
 			<param index="1" name="idx" type="int" />
 			<description>
 				Returns a relative duration of the frame [param idx] in the [param anim] animation (defaults to [code]1.0[/code]). For example, a frame with a duration of [code]2.0[/code] is displayed twice as long as a frame with a duration of [code]1.0[/code]. You can calculate the absolute duration (in seconds) of a frame using the following formula:
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				absolute_duration = relative_duration / (animation_fps * abs(playing_speed))
-				[/codeblock]
-				In this example, [code]playing_speed[/code] refers to either [method AnimatedSprite2D.get_playing_speed] or [method AnimatedSprite3D.get_playing_speed].
+				[/gdscript]
+				[/codeblocks]
+				In this example, [code]playing_speed[/code] refers to either [method AnimatedSprite2D.get_playing_speed] or AnimatedSprite3D.get_playing_speed.
 			</description>
 		</method>
 		<method name="get_frame_texture" qualifiers="const">

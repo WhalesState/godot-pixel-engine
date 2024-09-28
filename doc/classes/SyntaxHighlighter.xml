@@ -44,7 +44,8 @@
 				Returns syntax highlighting data for a single line. If the line is not cached, calls [method _get_line_syntax_highlighting] to calculate the data.
 				The return [Dictionary] is column number to [Dictionary]. The column number notes the start of a region, the region will end if another region is found, or at the end of the line. The nested [Dictionary] contains the data for that region, currently only the key "color" is supported.
 				[b]Example return:[/b]
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				var color_map = {
 				    0: {
 				        "color": Color(1, 0, 0)
@@ -53,7 +54,8 @@
 				        "color": Color(0, 1, 0)
 				    }
 				}
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 				This will color columns 0-4 red, and columns 5-eol in green.
 			</description>
 		</method>

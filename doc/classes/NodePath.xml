@@ -7,27 +7,33 @@
 		The [NodePath] built-in [Variant] type represents a path to a node or property in a hierarchy of nodes. It is designed to be efficiently passed into many built-in methods (such as [method Node.get_node], [method Object.set_indexed], [method Tween.tween_property], etc.) without a hard dependence on the node or property they point to.
 		A node path is represented as a [String] composed of slash-separated ([code]/[/code]) node names and colon-separated ([code]:[/code]) property names (also called "subnames"). Similar to a filesystem path, [code]".."[/code] and [code]"."[/code] are special node names. They refer to the parent node and the current node, respectively.
 		The following examples are paths relative to the current node:
-		[codeblock]
+		[codeblocks]
+		[gdscript]
 		^"A"     # Points to the direct child A.
 		^"A/B"   # Points to A's child B.
 		^"."     # Points to the current node.
 		^".."    # Points to the parent node.
 		^"../C"  # Points to the sibling node C.
 		^"../.." # Points to the grandparent node.
-		[/codeblock]
+		[/gdscript]
+		[/codeblocks]
 		A leading slash means the path is absolute, and begins from the [SceneTree]:
-		[codeblock]
+		[codeblocks]
+		[gdscript]
 		^"/root"            # Points to the SceneTree's root Window.
 		^"/root/Title"      # May point to the main scene's root node named "Title".
 		^"/root/Global"     # May point to an autoloaded node or scene named "Global".
-		[/codeblock]
+		[/gdscript]
+		[/codeblocks]
 		Despite their name, node paths may also point to a property:
-		[codeblock]
+		[codeblocks]
+		[gdscript]
 		^":position"           # Points to this object's position.
 		^":position:x"         # Points to this object's position in the x axis.
 		^"Camera3D:rotation:y" # Points to the child Camera3D and its y rotation.
 		^"/root:size:x"        # Points to the root Window and its width.
-		[/codeblock]
+		[/gdscript]
+		[/codeblocks]
 		In some situations, it's possible to omit the leading [code]:[/code] when pointing to an object's property. As an example, this is the case with [method Object.set_indexed] and [method Tween.tween_property], as those methods call [method NodePath.get_as_property_path] under the hood. However, it's generally recommended to keep the [code]:[/code] prefix.
 		Node paths cannot check whether they are valid and may point to nodes or properties that do not exist. Their meaning depends entirely on the context in which they're used.
 		You usually do not have to worry about the [NodePath] type, as strings are automatically converted to the type when necessary. There are still times when defining node paths is useful. For example, exported [NodePath] properties allow you to easily select any node within the currently edited scene. They are also automatically updated when moving, renaming or deleting nodes in the scene tree editor. See also [annotation @GDScript.@export_node_path].
@@ -58,7 +64,8 @@
 				Constructs a [NodePath] from a [String]. The created path is absolute if prefixed with a slash (see [method is_absolute]).
 				The "subnames" optionally included after the path to the target node can point to properties, and can also be nested.
 				Examples of strings that could be node paths:
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				# Points to the Sprite2D node.
 				"Level/RigidBody2D/Sprite2D"
 
@@ -75,7 +82,8 @@
 
 				# Points to the RigidBody2D node as an absolute path beginning from the SceneTree.
 				"/root/Level/RigidBody2D"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 				[b]Note:[/b] In GDScript, it's also possible to convert a constant string into a node path by prefixing it with [code]^[/code]. [code]^"path/to/node"[/code] is equivalent to [code]NodePath("path/to/node")[/code].
 			</description>
 		</constructor>

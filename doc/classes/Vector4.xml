@@ -332,9 +332,11 @@
 			<param index="0" name="right" type="Vector4" />
 			<description>
 				Multiplies each component of the [Vector4] by the components of the given [Vector4].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector4(10, 20, 30, 40) * Vector4(3, 4, 5, 6)) # Prints "(30, 80, 150, 240)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator *">
@@ -342,9 +344,11 @@
 			<param index="0" name="right" type="float" />
 			<description>
 				Multiplies each component of the [Vector4] by the given [float].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector4(10, 20, 30, 40) * 2) # Prints "(20, 40, 60, 80)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator *">
@@ -359,9 +363,11 @@
 			<param index="0" name="right" type="Vector4" />
 			<description>
 				Adds each component of the [Vector4] by the components of the given [Vector4].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector4(10, 20, 30, 40) + Vector4(3, 4, 5, 6)) # Prints "(13, 24, 35, 46)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator -">
@@ -369,9 +375,11 @@
 			<param index="0" name="right" type="Vector4" />
 			<description>
 				Subtracts each component of the [Vector4] by the components of the given [Vector4].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector4(10, 20, 30, 40) - Vector4(3, 4, 5, 6)) # Prints "(7, 16, 25, 34)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator /">
@@ -379,9 +387,11 @@
 			<param index="0" name="right" type="Vector4" />
 			<description>
 				Divides each component of the [Vector4] by the components of the given [Vector4].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector4(10, 20, 30, 40) / Vector4(2, 5, 3, 4)) # Prints "(5, 4, 10, 10)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator /">
@@ -389,9 +399,11 @@
 			<param index="0" name="right" type="float" />
 			<description>
 				Divides each component of the [Vector4] by the given [float].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector4(10, 20, 30, 40) / 2 # Prints "(5, 10, 15, 20)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator /">

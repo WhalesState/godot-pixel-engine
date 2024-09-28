@@ -30,7 +30,7 @@
 			The library is initialized at the same time as the core features of the engine.
 		</constant>
 		<constant name="INITIALIZATION_LEVEL_SERVERS" value="1" enum="InitializationLevel">
-			The library is initialized at the same time as the engine's servers (such as [RenderingServer] or [PhysicsServer3D]).
+			The library is initialized at the same time as the engine's servers (such as [RenderingServer] or PhysicsServer3D).
 		</constant>
 		<constant name="INITIALIZATION_LEVEL_SCENE" value="2" enum="InitializationLevel">
 			The library is initialized at the same time as the engine's scene-related classes.

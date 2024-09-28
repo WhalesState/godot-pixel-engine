@@ -242,7 +242,7 @@
 			<param index="1" name="y" type="int" />
 			<description>
 				Returns the color of the pixel at [code](x, y)[/code].
-				This is the same as [method get_pixelv], but with two integer arguments instead of a [Vector2i] argument.
+				This is the same as [method get_pixel_v], but with two integer arguments instead of a [Vector2i] argument.
 			</description>
 		</method>
 		<method name="get_pixel_contours" qualifiers="const">
@@ -661,7 +661,7 @@
 				img.set_pixel(1, 2, Color.RED) # Sets the color at (1, 2) to red.
 				[/gdscript]
 				[/codeblocks]
-				This is the same as [method set_pixelv], but with a two integer arguments instead of a [Vector2i] argument.
+				This is the same as [method set_pixel_v], but with a two integer arguments instead of a [Vector2i] argument.
 			</description>
 		</method>
 		<method name="set_pixel_contours">

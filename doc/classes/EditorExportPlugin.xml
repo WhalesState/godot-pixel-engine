@@ -126,7 +126,8 @@
 			<param index="0" name="platform" type="EditorExportPlatform" />
 			<description>
 				Return a [Dictionary] of override values for export options, that will be used instead of user-provided values. Overridden options will be hidden from the user interface.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				class MyExportPlugin extends EditorExportPlugin:
 				    func _get_name() -&gt; String:
 				        return "MyExportPlugin"
@@ -142,7 +143,8 @@
 				        return {
 				            "binary_format/embed_pck": true,
 				        }
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</method>
 		<method name="_get_name" qualifiers="virtual const">

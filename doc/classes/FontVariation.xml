@@ -16,12 +16,14 @@
 		[/gdscript]
 		[/codeblocks]
 		To set the coordinate of multiple variation axes:
-		[codeblock]
+		[codeblocks]
+		[gdscript]
 		var fv = FontVariation.new();
 		var ts = TextServerManager.get_primary_interface()
 		fv.base_font = load("res://BarlowCondensed-Regular.ttf")
 		fv.variation_opentype = { ts.name_to_tag("wght"): 900, ts.name_to_tag("custom_hght"): 900 }
-		[/codeblock]
+		[/gdscript]
+		[/codeblocks]
 	</description>
 	<tutorials>
 	</tutorials>
@@ -59,7 +61,7 @@
 		</member>
 		<member name="variation_embolden" type="float" setter="set_variation_embolden" getter="get_variation_embolden" default="0.0">
 			If is not equal to zero, emboldens the font outlines. Negative values reduce the outline thickness.
-			[b]Note:[/b] Emboldened fonts might have self-intersecting outlines, which will prevent MSDF fonts and [TextMesh] from working correctly.
+			[b]Note:[/b] Emboldened fonts might have self-intersecting outlines, which will prevent MSDF fonts and TextMesh from working correctly.
 		</member>
 		<member name="variation_face_index" type="int" setter="set_variation_face_index" getter="get_variation_face_index" default="0">
 			Active face index in the TrueType / OpenType collection file.

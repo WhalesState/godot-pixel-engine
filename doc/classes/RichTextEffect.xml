@@ -11,10 +11,6 @@
 		# The RichTextEffect will be usable like this: `[example]Some text[/example]`
 		var bbcode = "example"
 		[/gdscript]
-		[csharp skip-lint]
-		// The RichTextEffect will be usable like this: `[example]Some text[/example]`
-		string bbcode = "example";
-		[/csharp]
 		[/codeblocks]
 		[b]Note:[/b] As soon as a [RichTextLabel] contains at least one [RichTextEffect], it will continuously process the effect unless the project is paused. This may impact battery life negatively.
 	</description>

@@ -30,9 +30,11 @@
 			<description>
 				Constructs a new [PackedColorArray]. Optionally, you can pass in a generic [Array] that will be converted.
 				[b]Note:[/b] When initializing a [PackedColorArray] with elements, it must be initialized with an [Array] of [Color] values:
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				var array = PackedColorArray([Color(0.1, 0.2, 0.3), Color(0.4, 0.5, 0.6)])
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</constructor>
 	</constructors>

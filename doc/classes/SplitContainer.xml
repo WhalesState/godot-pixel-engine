@@ -64,7 +64,7 @@
 		<theme_item name="grabber_thickness" data_type="constant" type="int" default="4">
 		</theme_item>
 		<theme_item name="minimum_grab_thickness" data_type="constant" type="int" default="6">
-			The minimum thickness of the area users can click on to grab the splitting line. If [theme_item separation] or [theme_item h_grabber] / [theme_item v_grabber]'s thickness are too small, this ensure that the splitting line can still be dragged.
+			The minimum thickness of the area users can click on to grab the splitting line. If [theme_item separation] thickness is too small, this ensure that the splitting line can still be dragged.
 		</theme_item>
 		<theme_item name="separation" data_type="constant" type="int" default="12">
 			The space between sides of the container.

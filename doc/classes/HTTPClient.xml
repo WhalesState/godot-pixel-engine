@@ -60,12 +60,14 @@
 			<return type="Dictionary" />
 			<description>
 				Returns all response headers as a [Dictionary]. Each entry is composed by the header name, and a [String] containing the values separated by [code]"; "[/code]. The casing is kept the same as the headers were received.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				{
 				    "content-length": 12,
 				    "Content-Type": "application/json; charset=UTF-8",
 				}
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</method>
 		<method name="get_status" qualifiers="const">

@@ -5,7 +5,8 @@
 	</brief_description>
 	<description>
 		When packing nested containers using [PackedDataContainer], they are recursively packed into [PackedDataContainerRef] (only applies to [Array] and [Dictionary]). Their data can be retrieved the same way as from [PackedDataContainer].
-		[codeblock]
+		[codeblocks]
+		[gdscript]
 		var packed = PackedDataContainer.new()
 		packed.pack([1, 2, 3, ["abc", "def"], 4, 5, 6])
 
@@ -25,7 +26,8 @@
 		# 4
 		# 5
 		# 6
-		[/codeblock]
+		[/gdscript]
+		[/codeblocks]
 	</description>
 	<tutorials>
 	</tutorials>

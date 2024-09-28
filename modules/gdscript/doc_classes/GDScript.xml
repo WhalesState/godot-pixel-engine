@@ -17,11 +17,13 @@
 			<description>
 				Returns a new instance of the script.
 				For example:
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				var MyClass = load("myclass.gd")
 				var instance = MyClass.new()
 				assert(instance.get_script() == MyClass)
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</method>
 	</methods>

@@ -7,7 +7,7 @@
 		The [Transform2D] built-in [Variant] type is a 2×3 [url=https://en.wikipedia.org/wiki/Matrix_(mathematics)]matrix[/url] representing a transformation in 2D space. It contains three [Vector2] values: [member x], [member y], and [member origin]. Together, they can represent translation, rotation, scale, and skew.
 		The [member x] and [member y] axes form a 2×2 matrix, known as the transform's [b]basis[/b]. The length of each axis ([method Vector2.length]) influences the transform's scale, while the direction of all axes influence the rotation. Usually, both axes are perpendicular to one another. However, when you rotate one axis individually, the transform becomes skewed. Applying a skewed transform to a 2D sprite will make the sprite appear distorted.
 		For a general introduction, see the [url=$DOCS_URL/tutorials/math/matrices_and_transforms.html]Matrices and transforms[/url] tutorial.
-		[b]Note:[/b] Unlike [Transform3D], there is no 2D equivalent to the [Basis] type. All mentions of "basis" refer to the [member x] and [member y] components of [Transform2D].
+		[b]Note:[/b] Unlike Transform3D, there is no 2D equivalent to the [Basis] type. All mentions of "basis" refer to the [member x] and [member y] components of [Transform2D].
 	</description>
 	<tutorials>
 		<link title="Math documentation index">$DOCS_URL/tutorials/math/index.html</link>
@@ -254,7 +254,8 @@
 			The identity [Transform2D]. A transform with no translation, no rotation, and its scale being [code]1[/code]. When multiplied by another [Variant] such as [Rect2] or another [Transform2D], no transformation occurs. This means that:
 			- The [member x] points right ([constant Vector2.RIGHT]);
 			- The [member y] points up ([constant Vector2.UP]).
-			[codeblock]
+			[codeblocks]
+			[gdscript]
 			var transform = Transform2D.IDENTITY
 			print("| X | Y | Origin")
 			print("| %s | %s | %s" % [transform.x.x, transform.y.x, transform.origin.x])
@@ -263,7 +264,8 @@
 			# | X | Y | Origin
 			# | 1 | 0 | 0
 			# | 0 | 1 | 0
-			[/codeblock]
+			[/gdscript]
+			[/codeblocks]
 			This is identical to creating [constructor Transform2D] without any parameters. This constant can be used to make your code clearer, and for consistency with C#.
 		</constant>
 		<constant name="FLIP_X" value="Transform2D(-1, 0, 0, 1, 0, 0)">

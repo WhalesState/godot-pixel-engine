@@ -57,7 +57,7 @@
 		<method name="is_current" qualifiers="const">
 			<return type="bool" />
 			<description>
-				Returns [code]true[/code] if this [Camera2D] is the active camera (see [method Viewport.get_camera_2d]).
+				Returns [code]true[/code] if this [Camera2D] is the active camera (see Viewport.get_camera_2d).
 			</description>
 		</method>
 		<method name="make_current">
@@ -133,7 +133,7 @@
 			If [code]true[/code], draws the camera's screen rectangle in the editor.
 		</member>
 		<member name="enabled" type="bool" setter="set_enabled" getter="is_enabled" default="true">
-			Controls whether the camera can be active or not. If [code]true[/code], the [Camera2D] will become the main camera when it enters the scene tree and there is no active camera currently (see [method Viewport.get_camera_2d]).
+			Controls whether the camera can be active or not. If [code]true[/code], the [Camera2D] will become the main camera when it enters the scene tree and there is no active camera currently (see Viewport.get_camera_2d).
 			When the camera is currently active and [member enabled] is set to [code]false[/code], the next enabled [Camera2D] in the scene tree will become active.
 		</member>
 		<member name="ignore_rotation" type="bool" setter="set_ignore_rotation" getter="is_ignoring_rotation" default="true">

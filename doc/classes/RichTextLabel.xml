@@ -206,7 +206,8 @@
 			<description>
 				Installs a custom effect. This can also be done in the RichTextLabel inspector using the [member custom_effects] property. [param effect] should be a valid [RichTextEffect].
 				Example RichTextEffect:
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				# effect.gd
 				class_name MyCustomEffect
 				extends RichTextEffect
@@ -214,9 +215,11 @@
 				var bbcode = "my_custom_effect"
 
 				# ...
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 				Registering the above effect in RichTextLabel from script:
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				# rich_text_label.gd
 				extends RichTextLabel
 
@@ -225,7 +228,8 @@
 
 				    # Alternatively, if not using `class_name` in the script that extends RichTextEffect:
 				    install_effect(preload("res://effect.gd").new())
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</method>
 		<method name="invalidate_paragraph">

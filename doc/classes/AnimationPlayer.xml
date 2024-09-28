@@ -104,10 +104,12 @@
 			<description>
 				See also [method AnimationMixer.capture].
 				You can use this method to use more detailed options for capture than those performed by [member playback_auto_capture]. When [member playback_auto_capture] is [code]false[/code], this method is almost the same as the following:
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				capture(name, duration, trans_type, ease_type)
 				play(name, custom_blend, custom_speed, from_end)
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 				If [param name] is blank, it specifies [member assigned_animation].
 				If [param duration] is a negative value, the duration is set to the interval between the current position and the first key, when [param from_end] is [code]true[/code], uses the interval between the current position and the last key instead.
 				[b]Note:[/b] The [param duration] takes [member speed_scale] into account, but [param custom_speed] does not, because the capture cache is interpolated with the blend result and the result may contain multiple animations.
@@ -196,7 +198,7 @@
 			<param index="1" name="new_name" type="StringName" />
 			<description>
 				Emitted when a queued animation plays after the previous animation finished. See also [method AnimationPlayer.queue].
-				[b]Note:[/b] The signal is not emitted when the animation is changed via [method AnimationPlayer.play] or by an [AnimationTree].
+				[b]Note:[/b] The signal is not emitted when the animation is changed via [method AnimationPlayer.play] or by an AnimationTree.
 			</description>
 		</signal>
 		<signal name="current_animation_changed">

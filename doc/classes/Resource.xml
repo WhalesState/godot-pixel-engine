@@ -25,14 +25,16 @@
 			<description>
 				Override this method to customize the newly duplicated resource created from [method PackedScene.instantiate], if the original's [member resource_local_to_scene] is set to [code]true[/code].
 				[b]Example:[/b] Set a random [code]damage[/code] value to every local resource from an instantiated scene.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				extends Resource
 
 				var damage = 0
 
 				func _setup_local_to_scene():
 				    damage = randi_range(10, 40)
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</method>
 		<method name="duplicate" qualifiers="const">
@@ -53,13 +55,15 @@
 			<description>
 				Emits the [signal changed] signal. This method is called automatically for some built-in resources.
 				[b]Note:[/b] For custom resources, it's recommended to call this method whenever a meaningful change occurs, such as a modified property. This ensures that custom [Object]s depending on the resource are properly updated.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				var damage:
 				    set(new_value):
 				        if damage != new_value:
 				            damage = new_value
 				            emit_changed()
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</method>
 		<method name="generate_scene_unique_id" qualifiers="static">
@@ -77,7 +81,7 @@
 		<method name="get_rid" qualifiers="const">
 			<return type="RID" />
 			<description>
-				Returns the [RID] of this resource (or an empty RID). Many resources (such as [Texture2D], [Mesh], and so on) are high-level abstractions of resources stored in a specialized server ([DisplayServer], [RenderingServer], etc.), so this function will return the original [RID].
+				Returns the [RID] of this resource (or an empty RID). Many resources (such as [Texture2D], Mesh, and so on) are high-level abstractions of resources stored in a specialized server ([DisplayServer], [RenderingServer], etc.), so this function will return the original [RID].
 			</description>
 		</method>
 		<method name="setup_local_to_scene" deprecated="This method should only be called internally.">

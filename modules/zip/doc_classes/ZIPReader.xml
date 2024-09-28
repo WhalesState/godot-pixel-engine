@@ -5,7 +5,8 @@
 	</brief_description>
 	<description>
 		This class implements a reader that can extract the content of individual files inside a zip archive.
-		[codeblock]
+		[codeblocks]
+		[gdscript]
 		func read_zip_file():
 		    var reader := ZIPReader.new()
 		    var err := reader.open("user://archive.zip")
@@ -14,7 +15,8 @@
 		    var res := reader.read_file("hello.txt")
 		    reader.close()
 		    return res
-		[/codeblock]
+		[/gdscript]
+		[/codeblocks]
 	</description>
 	<tutorials>
 	</tutorials>

@@ -51,13 +51,15 @@
 			<description>
 				Connects this signal to the specified [param callable]. Optional [param flags] can be also added to configure the connection's behavior (see [enum Object.ConnectFlags] constants). You can provide additional arguments to the connected [param callable] by using [method Callable.bind].
 				A signal can only be connected once to the same [Callable]. If the signal is already connected, returns [constant ERR_INVALID_PARAMETER] and pushes an error message, unless the signal is connected with [constant Object.CONNECT_REFERENCE_COUNTED]. To prevent this, use [method is_connected] first to check for existing connections.
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				for button in $Buttons.get_children():
 				    button.pressed.connect(_on_pressed.bind(button))
 
 				func _on_pressed(button):
 				    print(button.name, " was pressed")
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</method>
 		<method name="disconnect">

@@ -245,7 +245,7 @@ TEST_CASE("[Curve2D] Linear sampling should return exact value") {
 	}
 }
 
-TEST_CASE("[Curve3D] Linear sampling should return exact value") {
+TEST_CASE("Curve3D Linear sampling should return exact value") {
 	Ref<Curve3D> curve = memnew(Curve3D);
 	real_t len = 2048.0;
 

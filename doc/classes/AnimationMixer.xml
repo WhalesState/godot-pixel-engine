@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <class name="AnimationMixer" inherits="Node" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
 	<brief_description>
-		Base class for [AnimationPlayer] and [AnimationTree].
+		Base class for [AnimationPlayer] and AnimationTree.
 	</brief_description>
 	<description>
-		Base class for [AnimationPlayer] and [AnimationTree] to manage animation lists. It also has general properties and methods for playback and blending.
+		Base class for [AnimationPlayer] and AnimationTree to manage animation lists. It also has general properties and methods for playback and blending.
 		After instantiating the playback information data within the extended class, the blending is processed by the [AnimationMixer].
 	</description>
 	<tutorials>
@@ -153,8 +153,8 @@
 			This means that if the total amount of blending is [code]0.0[/code], the result is equal to the [code]"RESET"[/code] animation.
 			If the number of tracks between the blended animations is different, the animation with the missing track is treated as if it had the initial value.
 			If [code]false[/code], The blend does not use the deterministic algorithm. The total weight is normalized and always [code]1.0[/code]. If the number of tracks between the blended animations is different, nothing is done about the animation that is missing a track.
-			[b]Note:[/b] In [AnimationTree], the blending with [AnimationNodeAdd2], [AnimationNodeAdd3], [AnimationNodeSub2] or the weight greater than [code]1.0[/code] may produce unexpected results.
-			For example, if [AnimationNodeAdd2] blends two nodes with the amount [code]1.0[/code], then total weight is [code]2.0[/code] but it will be normalized to make the total amount [code]1.0[/code] and the result will be equal to [AnimationNodeBlend2] with the amount [code]0.5[/code].
+			[b]Note:[/b] In AnimationTree, the blending with AnimationNodeAdd2, AnimationNodeAdd3, AnimationNodeSub2 or the weight greater than [code]1.0[/code] may produce unexpected results.
+			For example, if AnimationNodeAdd2 blends two nodes with the amount [code]1.0[/code], then total weight is [code]2.0[/code] but it will be normalized to make the total amount [code]1.0[/code] and the result will be equal to AnimationNodeBlend2 with the amount [code]0.5[/code].
 		</member>
 		<member name="reset_on_save" type="bool" setter="set_reset_on_save_enabled" getter="is_reset_on_save_enabled" default="true">
 			This is used by the editor. If set to [code]true[/code], the scene will be saved with the effects of the reset animation (the animation with the key [code]"RESET"[/code]) applied as if it had been seeked to time 0, with the editor keeping the values that the scene had before saving.
@@ -227,7 +227,7 @@
 			An [constant Animation.UPDATE_CONTINUOUS] or [constant Animation.UPDATE_CAPTURE] track value takes precedence when blending the [constant Animation.UPDATE_CONTINUOUS] or [constant Animation.UPDATE_CAPTURE] track values and the [constant Animation.UPDATE_DISCRETE] track values. This is the default behavior for [AnimationPlayer].
 		</constant>
 		<constant name="ANIMATION_CALLBACK_MODE_DISCRETE_FORCE_CONTINUOUS" value="2" enum="AnimationCallbackModeDiscrete">
-			Always treat the [constant Animation.UPDATE_DISCRETE] track value as [constant Animation.UPDATE_CONTINUOUS] with [constant Animation.INTERPOLATION_NEAREST]. This is the default behavior for [AnimationTree].
+			Always treat the [constant Animation.UPDATE_DISCRETE] track value as [constant Animation.UPDATE_CONTINUOUS] with [constant Animation.INTERPOLATION_NEAREST]. This is the default behavior for AnimationTree.
 			If a value track has un-interpolatable type key values, it is internally converted to use [constant ANIMATION_CALLBACK_MODE_DISCRETE_RECESSIVE] with [constant Animation.UPDATE_DISCRETE].
 			Un-interpolatable type list:
 			- [constant @GlobalScope.TYPE_NIL]

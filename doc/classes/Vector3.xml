@@ -500,9 +500,11 @@
 			<param index="0" name="right" type="Vector3" />
 			<description>
 				Multiplies each component of the [Vector3] by the components of the given [Vector3].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector3(10, 20, 30) * Vector3(3, 4, 5)) # Prints "(30, 80, 150)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator *">
@@ -524,9 +526,11 @@
 			<param index="0" name="right" type="Vector3" />
 			<description>
 				Adds each component of the [Vector3] by the components of the given [Vector3].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector3(10, 20, 30) + Vector3(3, 4, 5)) # Prints "(13, 24, 35)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator -">
@@ -534,9 +538,11 @@
 			<param index="0" name="right" type="Vector3" />
 			<description>
 				Subtracts each component of the [Vector3] by the components of the given [Vector3].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector3(10, 20, 30) - Vector3(3, 4, 5)) # Prints "(7, 16, 25)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator /">
@@ -544,9 +550,11 @@
 			<param index="0" name="right" type="Vector3" />
 			<description>
 				Divides each component of the [Vector3] by the components of the given [Vector3].
-				[codeblock]
+				[codeblocks]
+				[gdscript]
 				print(Vector3(10, 20, 30) / Vector3(2, 5, 3)) # Prints "(5, 4, 10)"
-				[/codeblock]
+				[/gdscript]
+				[/codeblocks]
 			</description>
 		</operator>
 		<operator name="operator /">

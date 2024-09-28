@@ -5,7 +5,8 @@
 	</brief_description>
 	<description>
 		JavaScriptObject is used to interact with JavaScript objects retrieved or created via [method JavaScriptBridge.get_interface], [method JavaScriptBridge.create_object], or [method JavaScriptBridge.create_callback].
-		[codeblock]
+		[codeblocks]
+		[gdscript]
 		extends Node
 
 		var _my_js_callback = JavaScriptBridge.create_callback(myCallback) # This reference must be kept
@@ -29,7 +30,8 @@
 		    # ...
 		    # [0, 9, [JavaScriptObject:1180]]
 		    print(args)
-		[/codeblock]
+		[/gdscript]
+		[/codeblocks]
 		[b]Note:[/b] Only available in the Web platform.
 	</description>
 	<tutorials>
