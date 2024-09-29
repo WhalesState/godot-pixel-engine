@@ -272,6 +272,7 @@ private:
 
 	/* Text */
 	Text text;
+	RID text_ci;
 
 	bool setting_text = false;
 
@@ -671,6 +672,8 @@ protected:
 
 	// Line hiding.
 	bool hiding_enabled = false;
+
+	RID _get_text_canvas_item() const;
 
 	void _set_hiding_enabled(bool p_enabled);
 	bool _is_hiding_enabled() const;
@@ -1097,6 +1100,7 @@ public:
 	String get_custom_word_separators() const;
 
 	TextEdit(const String &p_placeholder = String());
+	~TextEdit();
 };
 
 VARIANT_ENUM_CAST(TextEdit::EditAction);
