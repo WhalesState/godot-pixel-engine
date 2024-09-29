@@ -211,7 +211,7 @@ opts.Add(BoolVariable("threads", "Enable threading support", True))
 
 # Components
 opts.Add(BoolVariable("deprecated", "Enable compatibility code for deprecated and removed features", True))
-opts.Add(EnumVariable("precision", "Set the floating-point precision level", "double", ("single", "double")))
+opts.Add(EnumVariable("precision", "Set the floating-point precision level", "single", ("single", "double")))
 opts.Add(BoolVariable("minizip", "Enable ZIP archive support using minizip", True))
 opts.Add(BoolVariable("brotli", "Enable Brotli for decompresson and WOFF2 fonts support", True))
 opts.Add(BoolVariable("opengl3", "Enable the OpenGL/GLES3 rendering driver", True))
@@ -867,34 +867,21 @@ else:  # GCC, Clang
         env.Append(CCFLAGS=["-Werror"])
 
 if hasattr(detect, "get_program_suffix"):
-    if detect.get_program_suffix() == "windows":
-        suffix = ".win"
-    else:
-        suffix = "." + detect.get_program_suffix()
+    suffix = "." + detect.get_program_suffix()
 else:
-    if env["platform"] == "windows":
-        suffix = ".win"
-    else:
-        suffix = "." + env["platform"]
+    suffix = "." + env["platform"]
 
-if env["target"] == "editor":
-    suffix += ".e"
-else:
-    suffix += "." + env["target"]
-
+suffix += "." + env["target"]
 if env.dev_build:
     suffix += ".dev"
 
 if env["precision"] == "double":
-    suffix += ".d"
+    suffix += ".double"
 
-if env["arch"] == "x86_64":
-    suffix += ".x64"
-else:
-    suffix += "." + env["arch"]
+suffix += "." + env["arch"]
 
 if not env["threads"]:
-    suffix += ".nt"
+    suffix += ".nothreads"
 
 suffix += env.extra_suffix
 
@@ -1065,6 +1052,7 @@ if "check_c_headers" in env:
             env.AppendUnique(CPPDEFINES=[headers[header]])
 
 
+# FIXME: This method mixes both cosmetic progress stuff and cache handling...
 methods.show_progress(env)
 # TODO: replace this with `env.Dump(format="json")`
 # once we start requiring SCons 4.0 as min version.

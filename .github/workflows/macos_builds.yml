@@ -6,7 +6,7 @@ on:
 env:
   # Used for the cache key. Add version suffix to force clean build.
   GODOT_BASE_BRANCH: master
-  SCONSFLAGS: verbose=yes warnings=extra werror=yes module_text_server_fb_enabled=yes
+  SCONSFLAGS: optimize=speed precision=double verbose=yes warnings=extra werror=yes
 
 concurrency:
   group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-macos
@@ -20,18 +20,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Editor (target=editor)
-            cache-name: macos-editor
+          - name: Editor with doubles (target=editor, optimize=speed, precision=double)
+            cache-name: macos-editor-double
             target: editor
-            target_name: e
-            bin: "./bin/godot.macos.e.universal"
+            bin: "./bin/godot.macos.editor.double.universal"
 
-          - name: Template (target=template_release)
-            cache-name: macos-template
+          - name: Template (target=template_release, optimize=speed, precision=double)
+            cache-name: macos-template-release-double
             target: template_release
-            target_name: template_release
-            sconsflags: debug_symbols=no
-            bin: "./bin/godot.macos.template_release.universal"
+            bin: "./bin/godot.macos.template_release.double.universal"
 
     steps:
       - uses: actions/checkout@v4
@@ -69,8 +66,8 @@ jobs:
 
       - name: Prepare artifact
         run: |
-          lipo -create ./bin/godot.macos.${{ matrix.target_name }}.d.x64 ./bin/godot.macos.${{ matrix.target_name }}.d.arm64 -output ./bin/godot.macos.${{ matrix.target_name }}.d.universal
-          rm ./bin/godot.macos.${{ matrix.target_name }}.d.x64 ./bin/godot.macos.${{ matrix.target_name }}.d.arm64
+          lipo -create ./bin/godot.macos.${{ matrix.target }}.double.x86_64 ./bin/godot.macos.${{ matrix.target }}.double.arm64 -output ./bin/godot.macos.${{ matrix.target }}.double.universal
+          rm ./bin/godot.macos.${{ matrix.target }}.double.x86_64 ./bin/godot.macos.${{ matrix.target }}.double.arm64
           strip bin/godot.*
           chmod +x bin/godot.*
 

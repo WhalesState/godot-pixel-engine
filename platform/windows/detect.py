@@ -201,7 +201,7 @@ def get_doc_path():
 def get_flags():
     arch = detect_build_env_arch() or detect_arch()
 
-    return { "arch": arch, "supported": [] }
+    return {"arch": arch, "supported": []}
 
 
 def build_res_file(target, source, env: "SConsEnvironment"):
@@ -348,8 +348,6 @@ def configure_msvc(env: "SConsEnvironment", vcvars_msvc_config):
 
         env.AppendUnique(CPPDEFINES=["R128_STDC_ONLY"])
         env.extra_suffix = ".llvm" + env.extra_suffix
-
-    env["MAXLINELENGTH"] = 8192  # Windows Vista and beyond, so always applicable.
 
     if env["silence_msvc"] and not env.GetOption("clean"):
         from tempfile import mkstemp

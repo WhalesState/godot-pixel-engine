@@ -7,7 +7,7 @@ on:
 env:
   # Used for the cache key. Add version suffix to force clean build.
   GODOT_BASE_BRANCH: master
-  SCONSFLAGS: verbose=yes warnings=extra werror=yes module_text_server_fb_enabled=yes "angle_libs=${{github.workspace}}/"
+  SCONSFLAGS: verbose=yes warnings=extra werror=yes "angle_libs=${{github.workspace}}/"
   SCONS_CACHE_MSVC_CONFIG: true
 
 concurrency:
@@ -23,25 +23,25 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Editor (target=editor)
-            cache-name: windows-editor
+          - name: Editor (target=editor, optimize=speed, precision=double)
+            cache-name: windows-editor-double
             target: editor
             # Skip debug symbols, they're way too big with MSVC.
-            sconsflags: debug_symbols=no vsproj=yes vsproj_gen_only=no windows_subsystem=console
-            bin: "./bin/godot.win.e.x64.exe"
+            sconsflags: optimize=speed precision=double
+            bin: "./bin/godot.windows.editor.double.x86_64.exe"
             artifact: true
 
-          - name: Editor w/ clang-cl (target=editor, use_llvm=yes)
-            cache-name: windows-editor-clang
+          - name: Editor w/ clang-cl double (target=editor,optimize=speed, use_llvm=yes)
+            cache-name: windows-editor-clang-double
             target: editor
-            sconsflags: debug_symbols=no windows_subsystem=console use_llvm=yes
-            bin: ./bin/godot.win.e.x64.llvm.exe
+            sconsflags: optimize=speed precision=double use_llvm=yes
+            bin: ./bin/godot.windows.editor.double.x86_64.llvm.exe
 
-          - name: Template (target=template_release)
-            cache-name: windows-template
+          - name: Template (target=template_release, optimize=speed, precision=double)
+            cache-name: windows-template-double
             target: template_release
-            sconsflags: debug_symbols=no
-            bin: "./bin/godot.win.template_release.x64.console.exe"
+            sconsflags: optimize=speed precision=double
+            bin: "./bin/godot.windows.template_release.double.x86_64.exe"
             artifact: true
 
     steps:
