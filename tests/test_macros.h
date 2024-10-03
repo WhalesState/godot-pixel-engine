@@ -97,7 +97,6 @@ DOCTEST_STRINGIFY_VARIANT(Transform2D);
 DOCTEST_STRINGIFY_VARIANT(Plane);
 DOCTEST_STRINGIFY_VARIANT(AABB);
 DOCTEST_STRINGIFY_VARIANT(Basis);
-DOCTEST_STRINGIFY_VARIANT(Transform3D);
 
 DOCTEST_STRINGIFY_VARIANT(::Color); // Disambiguate from `doctest::Color`.
 DOCTEST_STRINGIFY_VARIANT(StringName);
@@ -118,7 +117,6 @@ DOCTEST_STRINGIFY_VARIANT(PackedStringArray);
 DOCTEST_STRINGIFY_VARIANT(PackedVector2Array);
 DOCTEST_STRINGIFY_VARIANT(PackedVector3Array);
 DOCTEST_STRINGIFY_VARIANT(PackedColorArray);
-DOCTEST_STRINGIFY_VARIANT(PackedVector4Array);
 
 // Register test commands to be launched from the command-line.
 // For instance: REGISTER_TEST_COMMAND("gdscript-parser" &test_parser_func).

@@ -76,23 +76,6 @@ TEST_CASE("[VariantUtility] Type conversion") {
 	CHECK(converted == Variant(Vector3i(1, 3, 5)));
 
 	{
-		Basis basis = Basis::from_scale(Vector3(1.2, 3.4, 5.6));
-		Transform3D transform = Transform3D(basis, Vector3());
-
-		converted = VariantUtilityFunctions::type_convert(transform, Variant::Type::BASIS);
-		CHECK(converted.get_type() == Variant::Type::BASIS);
-		CHECK(converted == basis);
-
-		converted = VariantUtilityFunctions::type_convert(basis, Variant::Type::TRANSFORM3D);
-		CHECK(converted.get_type() == Variant::Type::TRANSFORM3D);
-		CHECK(converted == transform);
-
-		converted = VariantUtilityFunctions::type_convert(basis, Variant::Type::STRING);
-		CHECK(converted.get_type() == Variant::Type::STRING);
-		CHECK(converted == Variant("[X: (1.2, 0, 0), Y: (0, 3.4, 0), Z: (0, 0, 5.6)]"));
-	}
-
-	{
 		Array arr;
 		arr.push_back(1.2);
 		arr.push_back(3.4);

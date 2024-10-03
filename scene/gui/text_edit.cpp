@@ -3069,8 +3069,8 @@ Control::CursorShape TextEdit::get_cursor_shape(const Point2 &p_pos) const {
 		return CURSOR_ARROW;
 	}
 
-	int xmargin_end = get_size().width - style->get_margin(SIDE_RIGHT);
-	if (draw_minimap && p_pos.x > xmargin_end - minimap_width && p_pos.x <= xmargin_end) {
+	int xmargin_end = get_size().width - style->get_margin(SIDE_RIGHT) - (v_scroll->is_visible_in_tree() ? v_scroll->get_combined_minimum_size().width : 0);
+	if (draw_minimap && p_pos.x >= xmargin_end - minimap_width && p_pos.x <= xmargin_end) {
 		return CURSOR_ARROW;
 	}
 	return get_default_cursor_shape();
@@ -4428,7 +4428,6 @@ Rect2i TextEdit::get_rect_at_line_column(int p_line, int p_column) const {
 
 int TextEdit::get_minimap_line_at_pos(const Point2i &p_pos) const {
 	float rows = p_pos.y;
-	rows -= theme_cache.style_normal->get_margin(SIDE_TOP);
 	rows /= (minimap_char_size.y + minimap_line_spacing);
 	rows += _get_v_scroll_offset();
 
@@ -8111,9 +8110,9 @@ void TextEdit::_scroll_lines_down() {
 void TextEdit::_update_minimap_hover() {
 	const Point2 mp = get_local_mouse_pos();
 	Ref<StyleBox> style = editable ? theme_cache.style_normal : theme_cache.style_readonly;
-	const int xmargin_end = get_size().width - style->get_margin(SIDE_RIGHT);
+	const int xmargin_end = get_size().width - style->get_margin(SIDE_RIGHT) - (v_scroll->is_visible_in_tree() ? v_scroll->get_combined_minimum_size().width : 0);
 
-	bool hovering_sidebar = mp.x > xmargin_end - minimap_width && mp.x < xmargin_end;
+	bool hovering_sidebar = mp.x >= xmargin_end - minimap_width && mp.x <= xmargin_end;
 	if (!hovering_sidebar) {
 		if (hovering_minimap) {
 			// Only redraw if the hovering status changed.
@@ -8139,7 +8138,7 @@ void TextEdit::_update_minimap_click() {
 	Point2 mp = get_local_mouse_pos();
 	Ref<StyleBox> style = editable ? theme_cache.style_normal : theme_cache.style_readonly;
 
-	int xmargin_end = get_size().width - style->get_margin(SIDE_RIGHT);
+	int xmargin_end = get_size().width - style->get_margin(SIDE_RIGHT) - (v_scroll->is_visible_in_tree() ? v_scroll->get_combined_minimum_size().width : 0);
 	if (!dragging_minimap && (mp.x < xmargin_end - minimap_width || mp.x > xmargin_end)) {
 		minimap_clicked = false;
 		return;

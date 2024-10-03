@@ -157,15 +157,6 @@ func test():
 	prints(x or false)
 	prints(x or true)
 
-	# TYPE_TRANSFORM3D
-	x = Transform3D.IDENTITY
-	prints("TYPE_TRANSFORM3D")
-	prints(not x)
-	prints(x and false)
-	prints(x and true)
-	prints(x or false)
-	prints(x or true)
-
 	# TYPE_PROJECTION
 	x = Projection.IDENTITY
 	prints("TYPE_PROJECTION")

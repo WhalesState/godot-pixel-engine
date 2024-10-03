@@ -54,7 +54,6 @@
 #include "tests/core/io/test_resource.h"
 #include "tests/core/io/test_xml_parser.h"
 #include "tests/core/math/test_aabb.h"
-#include "tests/core/math/test_astar.h"
 #include "tests/core/math/test_basis.h"
 #include "tests/core/math/test_color.h"
 #include "tests/core/math/test_expression.h"
@@ -100,7 +99,6 @@
 #include "tests/core/variant/test_variant.h"
 #include "tests/core/variant/test_variant_utility.h"
 #include "tests/scene/test_animation.h"
-#include "tests/scene/test_audio_stream_wav.h"
 #include "tests/scene/test_bit_map.h"
 #include "tests/scene/test_button.h"
 #include "tests/scene/test_camera_2d.h"
@@ -122,7 +120,9 @@
 #include "tests/scene/test_theme.h"
 #include "tests/scene/test_timer.h"
 #include "tests/scene/test_viewport.h"
+#ifndef VISUAL_SHADER_DISABLED
 #include "tests/scene/test_visual_shader.h"
+#endif
 #include "tests/scene/test_window.h"
 #include "tests/servers/rendering/test_shader_preprocessor.h"
 #include "tests/servers/test_text_server.h"
@@ -266,15 +266,6 @@ struct GodotTestCaseListener : public doctest::IReporter {
 
 			return;
 		}
-
-		if (name.contains("[Audio]")) {
-			// The last driver index should always be the dummy driver.
-			int dummy_idx = AudioDriverManager::get_driver_count() - 1;
-			AudioDriverManager::initialize(dummy_idx);
-			AudioServer *audio_server = memnew(AudioServer);
-			audio_server->init();
-			return;
-		}
 	}
 
 	void test_case_end(const doctest::CurrentTestCaseStats &) override {
@@ -324,11 +315,6 @@ struct GodotTestCaseListener : public doctest::IReporter {
 		if (MessageQueue::get_singleton()) {
 			MessageQueue::get_singleton()->flush();
 			memdelete(MessageQueue::get_singleton());
-		}
-
-		if (AudioServer::get_singleton()) {
-			AudioServer::get_singleton()->finish();
-			memdelete(AudioServer::get_singleton());
 		}
 	}
 

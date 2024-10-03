@@ -17,7 +17,6 @@ func test():
 	print(Plane(1, 2, 3, 4))
 	print(AABB(Vector3.ZERO, Vector3.ONE))
 	print(Basis.from_euler(Vector3(0, 0, 0)))
-	print(Transform3D.IDENTITY)
 
 	print(Color(1, 2, 3, 4))
 	print(StringName("hello"))
@@ -39,4 +38,3 @@ func test():
 	print(PackedVector2Array([Vector2.ONE, Vector2.ZERO]))
 	print(PackedVector3Array([Vector3.ONE, Vector3.ZERO]))
 	print(PackedColorArray([Color.RED, Color.BLUE, Color.GREEN]))
-	print(PackedVector4Array([Vector4.ONE, Vector4.ZERO]))

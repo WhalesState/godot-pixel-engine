@@ -108,9 +108,6 @@ public:
 	Ref<Script> get_script() const override {
 		return Ref<Script>();
 	}
-	const Variant get_rpc_config() const override {
-		return Variant();
-	}
 	ScriptLanguage *get_language() override {
 		return nullptr;
 	}

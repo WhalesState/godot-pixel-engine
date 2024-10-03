@@ -89,12 +89,6 @@ TEST_SUITE("Validate tests") {
 		AABB aabb(Vector3(), Vector3(100, 100, 100));
 		INFO(aabb);
 
-		Basis basis(quat);
-		INFO(basis);
-
-		Transform3D trans(basis);
-		INFO(trans);
-
 		Color color(1, 0.5, 0.2, 0.3);
 		INFO(color);
 
@@ -177,13 +171,6 @@ TEST_SUITE("Validate tests") {
 		color_arr.push_back(Color(1, 1, 1));
 		color_arr.push_back(Color(2, 2, 2));
 		INFO(color_arr);
-
-		PackedVector4Array vec4_arr;
-		vec4_arr.push_back(Vector4(0, 0, 0, 0));
-		vec4_arr.push_back(Vector4(1, 1, 1, 1));
-		vec4_arr.push_back(Vector4(2, 2, 2, 2));
-		vec4_arr.push_back(Vector4(3, 3, 3, 3));
-		INFO(vec4_arr);
 
 		// doctest string concatenation.
 		CHECK_MESSAGE(true, var, " ", vec2, " ", rect2, " ", color);

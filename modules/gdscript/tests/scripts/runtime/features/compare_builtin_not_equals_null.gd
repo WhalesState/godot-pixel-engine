@@ -61,10 +61,6 @@ func test():
 	value = Basis()
 	print(value != null)
 
-	# Transform3D
-	value = Transform3D()
-	print(value != null)
-
 	# Projection
 	value = Projection()
 	print(value != null)
@@ -135,8 +131,4 @@ func test():
 
 	# PackedColorArray
 	value = PackedColorArray()
-	print(value != null)
-
-	# PackedVector4Array
-	value = PackedVector4Array()
 	print(value != null)

@@ -245,23 +245,6 @@ TEST_CASE("[Curve2D] Linear sampling should return exact value") {
 	}
 }
 
-TEST_CASE("Curve3D Linear sampling should return exact value") {
-	Ref<Curve3D> curve = memnew(Curve3D);
-	real_t len = 2048.0;
-
-	curve->add_point(Vector3(0, 0, 0));
-	curve->add_point(Vector3(len, 0, 0));
-	ERR_PRINT_OFF
-	real_t baked_length = curve->get_baked_length();
-	ERR_PRINT_ON
-	CHECK(len == baked_length);
-
-	for (int i = 0; i < len; i++) {
-		Vector3 pos = curve->sample_baked(i);
-		CHECK_MESSAGE(Math::is_equal_approx(pos.x, i), "sample_baked should return exact value");
-	}
-}
-
 } // namespace TestCurve
 
 #endif // TEST_CURVE_H

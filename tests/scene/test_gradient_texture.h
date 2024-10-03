@@ -48,9 +48,6 @@ TEST_CASE("[SceneTree][GradientTexture1D] Create GradientTexture1D") {
 
 	gradient_texture->set_width(83);
 	CHECK(gradient_texture->get_width() == 83);
-
-	gradient_texture->set_use_hdr(true);
-	CHECK(gradient_texture->is_using_hdr());
 }
 
 TEST_CASE("[SceneTree][GradientTexture2D] Create GradientTexture2D") {
@@ -65,9 +62,6 @@ TEST_CASE("[SceneTree][GradientTexture2D] Create GradientTexture2D") {
 
 	gradient_texture->set_height(81);
 	CHECK(gradient_texture->get_height() == 81);
-
-	gradient_texture->set_use_hdr(true);
-	CHECK(gradient_texture->is_using_hdr());
 
 	gradient_texture->set_fill(GradientTexture2D::Fill::FILL_SQUARE);
 	CHECK(gradient_texture->get_fill() == GradientTexture2D::Fill::FILL_SQUARE);

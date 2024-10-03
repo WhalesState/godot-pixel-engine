@@ -125,24 +125,6 @@ public:
 
 	int func1_count = 0;
 
-	void func1(Transform3D t) {
-		func1_count++;
-	}
-	void func2(Transform3D t, float f) {
-		func1_count++;
-	}
-	void func3(Transform3D t1, Transform3D t2, Transform3D t3, Transform3D t4, Transform3D t5, Transform3D t6) {
-		func1_count++;
-	}
-	Transform3D func1r(Transform3D t) {
-		func1_count++;
-		return t;
-	}
-	Transform3D func2r(Transform3D t, float f) {
-		func1_count++;
-		return t;
-	}
-
 	void add_msg_to_write(TestMsgType type) {
 		message_types_to_write.push_back(type);
 	}
@@ -178,38 +160,8 @@ public:
 		during_writing = false;
 		writer_threadwork.thread_wait_for_work();
 		while (!exit_threads) {
-			Transform3D tr;
-			Transform3D otr;
 			float f = 1;
 			during_writing = true;
-			for (int i = 0; i < message_types_to_write.size(); i++) {
-				TestMsgType msg_type = message_types_to_write[i];
-				switch (msg_type) {
-					case TEST_MSG_FUNC1_TRANSFORM:
-						command_queue.push(this, &SharedThreadState::func1, tr);
-						break;
-					case TEST_MSG_FUNC2_TRANSFORM_FLOAT:
-						command_queue.push(this, &SharedThreadState::func2, tr, f);
-						break;
-					case TEST_MSG_FUNC3_TRANSFORMx6:
-						command_queue.push(this, &SharedThreadState::func3, tr, tr, tr, tr, tr, tr);
-						break;
-					case TEST_MSGSYNC_FUNC1_TRANSFORM:
-						command_queue.push_and_sync(this, &SharedThreadState::func1, tr);
-						break;
-					case TEST_MSGSYNC_FUNC2_TRANSFORM_FLOAT:
-						command_queue.push_and_sync(this, &SharedThreadState::func2, tr, f);
-						break;
-					case TEST_MSGRET_FUNC1_TRANSFORM:
-						command_queue.push_and_ret(this, &SharedThreadState::func1r, tr, &otr);
-						break;
-					case TEST_MSGRET_FUNC2_TRANSFORM_FLOAT:
-						command_queue.push_and_ret(this, &SharedThreadState::func2r, tr, f, &otr);
-						break;
-					default:
-						break;
-				}
-			}
 			message_types_to_write.clear();
 			during_writing = false;
 

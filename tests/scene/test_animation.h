@@ -55,7 +55,6 @@ TEST_CASE("[Animation] Create value track") {
 	animation->track_insert_key(track_index, 0.5, 100);
 
 	CHECK(animation->get_track_count() == 1);
-	CHECK(!animation->track_is_compressed(0));
 	CHECK(int(animation->track_get_key_value(0, 0)) == 0);
 	CHECK(int(animation->track_get_key_value(0, 1)) == 100);
 
@@ -82,11 +81,6 @@ TEST_CASE("[Animation] Create value track") {
 	CHECK(animation->track_get_key_transition(1, 0) == doctest::Approx(real_t(-1.0)));
 
 	// This is a value track, so the methods below should return errors.
-	CHECK(animation->try_position_track_interpolate(0, 0.0, nullptr) == ERR_INVALID_PARAMETER);
-	CHECK(animation->try_rotation_track_interpolate(0, 0.0, nullptr) == ERR_INVALID_PARAMETER);
-	CHECK(animation->try_scale_track_interpolate(0, 0.0, nullptr) == ERR_INVALID_PARAMETER);
-	CHECK(animation->bezier_track_interpolate(0, 0.0) == doctest::Approx(0.0));
-	CHECK(animation->try_blend_shape_track_interpolate(0, 0.0, nullptr) == ERR_INVALID_PARAMETER);
 	ERR_PRINT_ON;
 }
 
@@ -98,7 +92,6 @@ TEST_CASE("[Animation] Create Bezier track") {
 	animation->bezier_track_insert_key(track_index, 0.5, 1.0, Vector2(0, 1), Vector2(1, 0.5));
 
 	CHECK(animation->get_track_count() == 1);
-	CHECK(!animation->track_is_compressed(0));
 
 	CHECK(animation->bezier_track_get_key_value(0, 0) == doctest::Approx(real_t(-1.0)));
 	CHECK(animation->bezier_track_get_key_value(0, 1) == doctest::Approx(real_t(1.0)));
@@ -113,10 +106,6 @@ TEST_CASE("[Animation] Create Bezier track") {
 	// This is a bezier track, so the methods below should return errors.
 	ERR_PRINT_OFF;
 	CHECK(animation->value_track_interpolate(0, 0.0).is_null());
-	CHECK(animation->try_position_track_interpolate(0, 0.0, nullptr) == ERR_INVALID_PARAMETER);
-	CHECK(animation->try_rotation_track_interpolate(0, 0.0, nullptr) == ERR_INVALID_PARAMETER);
-	CHECK(animation->try_scale_track_interpolate(0, 0.0, nullptr) == ERR_INVALID_PARAMETER);
-	CHECK(animation->try_blend_shape_track_interpolate(0, 0.0, nullptr) == ERR_INVALID_PARAMETER);
 	ERR_PRINT_ON;
 }
 

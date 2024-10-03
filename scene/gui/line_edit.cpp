@@ -52,6 +52,7 @@ void LineEdit::edit() {
 
 	if (!has_focus()) {
 		grab_focus();
+		return;
 	}
 
 	if (!editable || editing) {
@@ -564,6 +565,7 @@ void LineEdit::gui_input(const Ref<InputEvent> &p_event) {
 	if (editable && !editing && k->is_action_pressed("ui_text_submit", false)) {
 		edit();
 		emit_signal(SNAME("editing_toggled"), true);
+		accept_event();
 		return;
 	}
 

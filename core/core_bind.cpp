@@ -1461,6 +1461,7 @@ void ClassDB::get_argument_options(const StringName &p_function, int p_idx, List
 }
 #endif
 
+
 void ClassDB::_bind_methods() {
 	::ClassDB::bind_method(D_METHOD("get_class_list"), &ClassDB::get_class_list);
 	::ClassDB::bind_method(D_METHOD("get_inheriters_from_class", "class"), &ClassDB::get_inheriters_from_class);

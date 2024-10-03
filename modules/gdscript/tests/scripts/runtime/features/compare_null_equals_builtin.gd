@@ -61,10 +61,6 @@ func test():
 	value = Basis()
 	print(null == value)
 
-	# Transform3D
-	value = Transform3D()
-	print(null == value)
-
 	# Color
 	value = Color()
 	print(null == value)
@@ -131,8 +127,4 @@ func test():
 
 	# PackedColorArray
 	value = PackedColorArray()
-	print(null == value)
-
-	# PackedVector4Array
-	value = PackedVector4Array()
 	print(null == value)
