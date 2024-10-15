@@ -828,7 +828,6 @@ void TextEdit::_notification(int p_what) {
 				int viewport_height = (draw_amount - 1) * minimap_line_height;
 				int control_height = _get_control_height() - viewport_height;
 				int viewport_offset_y = round(get_scroll_pos_for_line(first_vis_line + 1) * control_height) / ((v_scroll->get_max() <= minimap_visible_lines) ? (minimap_visible_lines - draw_amount) : (v_scroll->get_max() - draw_amount));
-				viewport_offset_y += style->get_margin(SIDE_TOP);
 
 				// Calculate the first line.
 				int num_lines_before = round((viewport_offset_y) / minimap_line_height);
@@ -852,9 +851,9 @@ void TextEdit::_notification(int p_what) {
 				}
 
 				if (rtl) {
-					RenderingServer::get_singleton()->canvas_item_add_rect(text_ci, Rect2(size.width - xmargin_end - minimap_width, viewport_offset_y, minimap_width, viewport_height), viewport_color);
+					RenderingServer::get_singleton()->canvas_item_add_rect(text_ci, Rect2(size.width - xmargin_end - minimap_width, viewport_offset_y + style->get_margin(SIDE_TOP), minimap_width, viewport_height), viewport_color);
 				} else {
-					RenderingServer::get_singleton()->canvas_item_add_rect(text_ci, Rect2(xmargin_end, viewport_offset_y, minimap_width, viewport_height), viewport_color);
+					RenderingServer::get_singleton()->canvas_item_add_rect(text_ci, Rect2(xmargin_end, viewport_offset_y + style->get_margin(SIDE_TOP), minimap_width, viewport_height), viewport_color);
 				}
 
 				for (int i = 0; i < minimap_draw_amount; i++) {
@@ -4427,7 +4426,7 @@ Rect2i TextEdit::get_rect_at_line_column(int p_line, int p_column) const {
 }
 
 int TextEdit::get_minimap_line_at_pos(const Point2i &p_pos) const {
-	float rows = p_pos.y;
+	float rows = p_pos.y - (editable ? theme_cache.style_normal->get_margin(SIDE_TOP) : theme_cache.style_readonly->get_margin(SIDE_TOP));
 	rows /= (minimap_char_size.y + minimap_line_spacing);
 	rows += _get_v_scroll_offset();
 
@@ -4443,7 +4442,6 @@ int TextEdit::get_minimap_line_at_pos(const Point2i &p_pos) const {
 	int viewport_height = (draw_amount - 1) * minimap_line_height;
 	int control_height = _get_control_height() - viewport_height;
 	int viewport_offset_y = round(get_scroll_pos_for_line(first_vis_line + 1) * control_height) / ((v_scroll->get_max() <= minimap_visible_lines) ? (minimap_visible_lines - draw_amount) : (v_scroll->get_max() - draw_amount));
-	viewport_offset_y += editable ? theme_cache.style_normal->get_margin(SIDE_TOP) : theme_cache.style_readonly->get_margin(SIDE_TOP);
 
 	// Calculate the first line.
 	int num_lines_before = round((viewport_offset_y) / minimap_line_height);

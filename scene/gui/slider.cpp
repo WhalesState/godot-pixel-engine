@@ -93,11 +93,13 @@ void Slider::gui_input(const Ref<InputEvent> &p_event) {
 					grab_focus();
 				}
 				set_value(get_value() + get_step());
+				accept_event();
 			} else if (mb->is_pressed() && mb->get_button_index() == MouseButton::WHEEL_DOWN) {
 				if (get_focus_mode() != FOCUS_NONE) {
 					grab_focus();
 				}
 				set_value(get_value() - get_step());
+				accept_event();
 			}
 		}
 	}

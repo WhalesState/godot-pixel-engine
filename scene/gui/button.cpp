@@ -30,9 +30,7 @@
 
 #include "button.h"
 
-#include "core/string/translation.h"
 #include "scene/theme/theme_db.h"
-#include "servers/rendering_server.h"
 
 Size2 Button::get_minimum_size() const {
 	Ref<Texture2D> _icon = icon;
@@ -212,6 +210,13 @@ void Button::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_DRAW: {
+			// Reshape and update size min. if text is invalidated by an external source (e.g., oversampling).
+			if (text_buf.is_valid() && !TS->shaped_text_is_ready(text_buf->get_rid())) {
+				_shape();
+
+				update_minimum_size();
+			}
+
 			const RID ci = get_canvas_item();
 			const Size2 size = get_size();
 
@@ -437,6 +442,9 @@ void Button::_notification(int p_what) {
 				text_buf->set_alignment(align_rtl_checked);
 
 				float text_buf_width = Math::ceil(MAX(1.0f, drawable_size_remained.width)); // The space's width filled by the text_buf.
+				if (autowrap_mode != TextServer::AUTOWRAP_OFF && !Math::is_equal_approx(text_buf_width, text_buf->get_width())) {
+					update_minimum_size();
+				}
 				text_buf->set_width(text_buf_width);
 
 				Point2 text_ofs;
