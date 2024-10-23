@@ -350,6 +350,13 @@
 				[b]Note:[/b] [method warp_mouse] is only supported on Windows, macOS and Linux. It has no effect on Android, iOS and Web.
 			</description>
 		</method>
+		<method name="warp_mouse_motion">
+			<return type="Vector2" />
+			<param index="0" name="motion_event" type="InputEventMouseMotion" />
+			<param index="1" name="rect" type="Rect2" />
+			<description>
+			</description>
+		</method>
 	</methods>
 	<members>
 		<member name="emulate_mouse_from_touch" type="bool" setter="set_emulate_mouse_from_touch" getter="is_emulating_mouse_from_touch">
