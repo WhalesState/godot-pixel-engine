@@ -35,7 +35,6 @@
 
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/os.hpp>
-#include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/classes/rendering_server.hpp>
 #include <godot_cpp/classes/translation_server.hpp>
 #include <godot_cpp/core/error_macros.hpp>
@@ -44,12 +43,9 @@
 
 using namespace godot;
 
-#define GLOBAL_GET(m_var) ProjectSettings::get_singleton()->get_setting_with_override(m_var)
-
 #elif defined(GODOT_MODULE)
 // Headers for building as built-in module.
 
-#include "core/config/project_settings.h"
 #include "core/error/error_macros.h"
 #include "core/string/print_string.h"
 #include "core/string/translation_server.h"
@@ -1244,6 +1240,27 @@ TextServer::FontAntialiasing TextServerFallback::_font_get_antialiasing(const RI
 	return fd->antialiasing;
 }
 
+void TextServerFallback::_font_set_lcd_subpixel_layout(const RID &p_font_rid, TextServer::FontLCDSubpixelLayout p_lcd_subpixel_layout) {
+	FontFallback *fd = _get_font_data(p_font_rid);
+	ERR_FAIL_NULL(fd);
+
+	MutexLock lock(fd->mutex);
+	if (fd->lcd_subpixel_layout != p_lcd_subpixel_layout) {
+		if (fd->antialiasing == TextServer::FONT_ANTIALIASING_LCD) {
+			_font_clear_cache(fd);
+		}
+		fd->lcd_subpixel_layout = p_lcd_subpixel_layout;
+	}
+}
+
+TextServer::FontLCDSubpixelLayout TextServerFallback::_font_get_lcd_subpixel_layout(const RID &p_font_rid) const {
+	FontFallback *fd = _get_font_data(p_font_rid);
+	ERR_FAIL_NULL_V(fd, TextServer::FontLCDSubpixelLayout::FONT_LCD_SUBPIXEL_LAYOUT_NONE);
+
+	MutexLock lock(fd->mutex);
+	return fd->lcd_subpixel_layout;
+}
+
 void TextServerFallback::_font_set_disable_embedded_bitmaps(const RID &p_font_rid, bool p_disable_embedded_bitmaps) {
 	FontFallback *fd = _get_font_data(p_font_rid);
 	ERR_FAIL_NULL(fd);
@@ -1981,9 +1998,8 @@ Vector2 TextServerFallback::_font_get_glyph_advance(const RID &p_font_rid, int64
 
 	int mod = 0;
 	if (fd->antialiasing == FONT_ANTIALIASING_LCD) {
-		TextServer::FontLCDSubpixelLayout layout = lcd_subpixel_layout.get();
-		if (layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
-			mod = (layout << 24);
+		if (fd->lcd_subpixel_layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
+			mod = (fd->lcd_subpixel_layout << 24);
 		}
 	}
 
@@ -2041,9 +2057,8 @@ Vector2 TextServerFallback::_font_get_glyph_offset(const RID &p_font_rid, const 
 
 	int mod = 0;
 	if (fd->antialiasing == FONT_ANTIALIASING_LCD) {
-		TextServer::FontLCDSubpixelLayout layout = lcd_subpixel_layout.get();
-		if (layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
-			mod = (layout << 24);
+		if (fd->lcd_subpixel_layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
+			mod = (fd->lcd_subpixel_layout << 24);
 		}
 	}
 
@@ -2093,9 +2108,8 @@ Vector2 TextServerFallback::_font_get_glyph_size(const RID &p_font_rid, const Ve
 
 	int mod = 0;
 	if (fd->antialiasing == FONT_ANTIALIASING_LCD) {
-		TextServer::FontLCDSubpixelLayout layout = lcd_subpixel_layout.get();
-		if (layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
-			mod = (layout << 24);
+		if (fd->lcd_subpixel_layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
+			mod = (fd->lcd_subpixel_layout << 24);
 		}
 	}
 
@@ -2145,9 +2159,8 @@ Rect2 TextServerFallback::_font_get_glyph_uv_rect(const RID &p_font_rid, const V
 
 	int mod = 0;
 	if (fd->antialiasing == FONT_ANTIALIASING_LCD) {
-		TextServer::FontLCDSubpixelLayout layout = lcd_subpixel_layout.get();
-		if (layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
-			mod = (layout << 24);
+		if (fd->lcd_subpixel_layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
+			mod = (fd->lcd_subpixel_layout << 24);
 		}
 	}
 
@@ -2187,9 +2200,8 @@ int64_t TextServerFallback::_font_get_glyph_texture_idx(const RID &p_font_rid, c
 
 	int mod = 0;
 	if (fd->antialiasing == FONT_ANTIALIASING_LCD) {
-		TextServer::FontLCDSubpixelLayout layout = lcd_subpixel_layout.get();
-		if (layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
-			mod = (layout << 24);
+		if (fd->lcd_subpixel_layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
+			mod = (fd->lcd_subpixel_layout << 24);
 		}
 	}
 
@@ -2229,9 +2241,8 @@ RID TextServerFallback::_font_get_glyph_texture_rid(const RID &p_font_rid, const
 
 	int mod = 0;
 	if (fd->antialiasing == FONT_ANTIALIASING_LCD) {
-		TextServer::FontLCDSubpixelLayout layout = lcd_subpixel_layout.get();
-		if (layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
-			mod = (layout << 24);
+		if (fd->lcd_subpixel_layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
+			mod = (fd->lcd_subpixel_layout << 24);
 		}
 	}
 
@@ -2277,9 +2288,8 @@ Size2 TextServerFallback::_font_get_glyph_texture_size(const RID &p_font_rid, co
 
 	int mod = 0;
 	if (fd->antialiasing == FONT_ANTIALIASING_LCD) {
-		TextServer::FontLCDSubpixelLayout layout = lcd_subpixel_layout.get();
-		if (layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
-			mod = (layout << 24);
+		if (fd->lcd_subpixel_layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
+			mod = (fd->lcd_subpixel_layout << 24);
 		}
 	}
 
@@ -2658,10 +2668,9 @@ void TextServerFallback::_font_draw_glyph(const RID &p_font_rid, const RID &p_ca
 	if (!fd->msdf && ffsd->face) {
 		// LCD layout, bits 24, 25, 26
 		if (fd->antialiasing == FONT_ANTIALIASING_LCD) {
-			TextServer::FontLCDSubpixelLayout layout = lcd_subpixel_layout.get();
-			if (layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
+			if (fd->lcd_subpixel_layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
 				lcd_aa = true;
-				index = index | (layout << 24);
+				index = index | (fd->lcd_subpixel_layout << 24);
 			}
 		}
 		// Subpixel X-shift, bits 27, 28
@@ -2767,10 +2776,9 @@ void TextServerFallback::_font_draw_glyph_outline(const RID &p_font_rid, const R
 	if (!fd->msdf && ffsd->face) {
 		// LCD layout, bits 24, 25, 26
 		if (fd->antialiasing == FONT_ANTIALIASING_LCD) {
-			TextServer::FontLCDSubpixelLayout layout = lcd_subpixel_layout.get();
-			if (layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
+			if (fd->lcd_subpixel_layout != FONT_LCD_SUBPIXEL_LAYOUT_NONE) {
 				lcd_aa = true;
-				index = index | (layout << 24);
+				index = index | (fd->lcd_subpixel_layout << 24);
 			}
 		}
 		// Subpixel X-shift, bits 27, 28
@@ -4695,13 +4703,8 @@ PackedInt32Array TextServerFallback::_string_get_word_breaks(const String &p_str
 	return ret;
 }
 
-void TextServerFallback::_update_settings() {
-	lcd_subpixel_layout.set((TextServer::FontLCDSubpixelLayout)(int)GLOBAL_GET("gui/theme/lcd_subpixel_layout"));
-}
-
 TextServerFallback::TextServerFallback() {
 	_insert_feature_sets();
-	ProjectSettings::get_singleton()->connect("settings_changed", callable_mp(this, &TextServerFallback::_update_settings));
 };
 
 void TextServerFallback::_cleanup() {
