@@ -39,10 +39,18 @@ namespace TestVector2i {
 
 TEST_CASE("[Vector2i] Constructor methods") {
 	const Vector2i vector_empty = Vector2i();
-	const Vector2i vector_zero = Vector2i(0, 0);
+	const Vector2i vector_zero = Vector2i();
+	const Vector2i vector_zero_int = Vector2i(0);
+	const Vector2i vector_zero_float = Vector2i(0.0f);
 	CHECK_MESSAGE(
 			vector_empty == vector_zero,
 			"Vector2i Constructor with no inputs should return a zero Vector2i.");
+	CHECK_MESSAGE(
+			vector_zero_int == vector_zero,
+			"Vector2i Constructor with single int input should return a zero Vector2i.");
+	CHECK_MESSAGE(
+			vector_zero_float == vector_zero,
+			"Vector2i Constructor with single float input should return a zero Vector2i.");
 }
 
 TEST_CASE("[Vector2i] Axis methods") {
