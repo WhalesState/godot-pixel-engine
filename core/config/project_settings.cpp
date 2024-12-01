@@ -978,11 +978,13 @@ Error ProjectSettings::save_custom(const String &p_path, const CustomMap &p_cust
 		project_features = ProjectSettings::get_required_features();
 	}
 	// Check the rendering API.
-	if (!project_features.has("gl_compatibility")) {
-		project_features.append("gl_compatibility");
+	if (!project_features.has("GL Compatibility")) {
+		project_features.append("GL Compatibility");
 	}
 	project_features = _trim_to_supported_features(project_features);
-	set_setting("application/config/features", project_features);
+	if (get_setting("application/config/features") != project_features) {
+		set_setting("application/config/features", project_features);
+	}
 #endif // TOOLS_ENABLED
 
 	RBSet<_VCSort> vclist;
